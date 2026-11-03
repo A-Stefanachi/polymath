@@ -164,3 +164,11 @@ jobs:
         run: pnpm --filter @polymath/content-schema test
         env:
           REQUIRE_DB: "1"
+      - name: content:sync integration tests on a throwaway database (BL-0018)
+        # validate_graph.py (the oracle for the skill count) and the Python hash oracle need PyYAML.
+        run: |
+          python3 -m pip install -r tools/ci/requirements-spec.txt
+          pnpm --filter @polymath/content-sync test
+        env:
+          REQUIRE_DB: "1"
+          POLYMATH_TEST_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres

@@ -1,0 +1,9 @@
+{
+  "tpl.elec.divider-fault-drill.yaml": "340eb01c81ff3e8b6adcead34b903aa519b7e532a2338ff152913fd5fe6c79b7",
+  "tpl.elec.rc-lowpass-netlist.yaml": "c5e47a8c615e84c1639079ef7f0958d0eb81c8f2f7717364290dde7bc2f1dba1",
+  "tpl.elec.series-parallel-req-mc.yaml": "7536e356ec44b7ec2f53f087aaff664ec163e64d93109d0616e59e1969aa4a38",
+  "tpl.elec.voltage-divider-vout.yaml": "c6a8e1ccf27ac8fede7cd3801f2641b3a6b14863ea162bb513dc8981d52bab7a",
+  "tpl.math.complex-division-rectangular.yaml": "423924bf0cae0a77fc6595e40ce5082adad0606d66c914a184404964d61dd296",
+  "tpl.math.derivative-product-sine.yaml": "9e15c1a8e2fd26c16aca90d5a21bc8e6b580f0d477e201ca231246dc0f1e58e8",
+  "tpl.sw.debounce-counter-c.yaml": "e71f29bc60d751e35a9740133a804a2f58a1dc6ee7e361740c40c66913fd16d8"
+}

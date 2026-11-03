@@ -19,6 +19,7 @@ Direct dependencies and their licences (CLAUDE.md section 5). Transitive depende
 | `lucide-react` | 1.67.0 | ISC |
 | `next` | 16.4.4 | MIT |
 | `openapi-typescript` | 7.13.0 | MIT |
+| `postgres` | 3.4.9 | Unlicense |
 | `react` | 19.3.1 | MIT |
 | `react-dom` | 19.3.1 | MIT |
 | `supabase` (CLI) | 2.121.0 | MIT |
