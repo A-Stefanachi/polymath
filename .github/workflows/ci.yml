@@ -82,8 +82,13 @@ jobs:
       - name: pytest (each service)
         run: bash tools/ci/service-tests.sh
 
-  spec:
-    name: spec (reference validators and verifier tests)
+  # BL-0195: every specification-package validator, as one required check. It runs on every push
+  # rather than only when docs/, content/, schemas/, backlog/ or reference/ change: a required
+  # check skipped by a path filter never reports, and the pull request would wait forever. A
+  # finding in a file the change did not touch is still red (fix it, or record it in
+  # polymath-app-spec/docs/CHANGELOG.md with an owner).
+  package-checks:
+    name: package-checks
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -97,12 +102,5 @@ jobs:
           activate-environment: true
       - name: install validator dependencies
         run: uv pip install -r tools/ci/requirements-spec.txt
-      - name: validate_graph
-        run: python -B polymath-app-spec/reference/validate_graph.py
-      - name: validate_projects
-        run: python -B polymath-app-spec/reference/validate_projects.py
-      - name: validate_templates
-        run: python -B polymath-app-spec/reference/validate_templates.py
-      - name: pytest reference/verifiers/tests
-        working-directory: polymath-app-spec/reference/verifiers
-        run: python -B -m pytest tests -q -p no:cacheprovider
+      - name: check_package, validate_*, lint_claims, scheduler vectors, verifier tests
+        run: PYTHON=python bash tools/ci/spec-validators.sh
