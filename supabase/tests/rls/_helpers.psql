@@ -1,0 +1,209 @@
+-- BL-0011: shared harness for the RLS tests (doc 12 section 13.2). NOT a test: pg_prove only runs
+-- *.sql files, so every test includes this file with `\ir _helpers.psql` right after `begin;`.
+--
+-- Everything happens inside the caller's transaction and the test ends with `rollback`, so the shared
+-- local database is left exactly as found (other agents use it at the same time). Fixture ids are
+-- unique to this suite: users 0000a011-..., skills math.rlstest.*, module math.rlstest.
+--
+-- Usage in a test:
+--   select rls_test.act_as(rls_test.user_a());   -- role authenticated, JWT sub = A
+--   select is((select count(*) from public.profiles where id = rls_test.user_b()), 0::bigint, '...');
+--   reset role;
+--   select rls_test.act_as_anon();               -- role anon, no JWT
+-- Helper functions stay callable after a role switch because the schema grants usage to PUBLIC.
+
+create extension if not exists pgtap with schema extensions;
+set search_path = public, extensions;
+
+create schema rls_test;
+grant usage on schema rls_test to public;
+
+create function rls_test.user_a() returns uuid language sql immutable as $$ select '0000a011-0000-4000-8000-00000000000a'::uuid $$;
+create function rls_test.user_b() returns uuid language sql immutable as $$ select '0000a011-0000-4000-8000-00000000000b'::uuid $$;
+create function rls_test.user_c() returns uuid language sql immutable as $$ select '0000a011-0000-4000-8000-00000000000c'::uuid $$;  -- admin
+grant execute on all functions in schema rls_test to public;
+
+-- Run the following statements as `authenticated` with the JWT claims PostgREST would set. Both the
+-- JSON form (request.jwt.claims) and the legacy single-claim form are set, so auth.uid() works either way.
+-- `set local role` inside a plpgsql function lasts until the end of the transaction or `reset role`.
+create function rls_test.act_as(p_user uuid) returns void language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', p_user, 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claim.sub', p_user::text, true);
+  perform set_config('request.jwt.claim.role', 'authenticated', true);
+  set local role authenticated;
+end $$;
+
+create function rls_test.act_as_anon() returns void language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims', json_build_object('role', 'anon')::text, true);
+  perform set_config('request.jwt.claim.sub', '', true);
+  perform set_config('request.jwt.claim.role', 'anon', true);
+  set local role anon;
+end $$;
+
+create function rls_test.act_as_service() returns void language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims', json_build_object('role', 'service_role')::text, true);
+  perform set_config('request.jwt.claim.sub', '', true);
+  perform set_config('request.jwt.claim.role', 'service_role', true);
+  set local role service_role;
+end $$;
+
+-- Tables that carry one row per learner in the fixture, with the column holding the owner id.
+create table rls_test.owned_tables (tbl text primary key, owner_col text not null);
+insert into rls_test.owned_tables values
+  ('profiles', 'id'), ('weekly_plans', 'user_id'), ('plan_slots', 'user_id'), ('sessions', 'user_id'),
+  ('session_tasks', 'user_id'), ('attempts', 'user_id'), ('skill_state', 'user_id'), ('review_log', 'user_id'),
+  ('user_projects', 'user_id'), ('project_evidence', 'user_id'), ('evidence_challenges', 'user_id'),
+  ('project_grants', 'user_id'), ('tutor_threads', 'user_id'), ('tutor_messages', 'user_id'),
+  ('checkpoints', 'user_id'), ('events', 'user_id'), ('push_subscriptions', 'user_id'),
+  ('privacy_requests', 'user_id'), ('experiment_assignments', 'user_id'), ('item_reports', 'user_id'),
+  ('llm_calls', 'user_id'), ('items', 'user_id');
+grant select on rls_test.owned_tables to public;
+
+-- Row counts the current role sees per owned table: rows of p_me, rows of p_other (an explicit
+-- `where owner = other`), and rows of anybody else. Runs with the caller's privileges (not definer).
+create function rls_test.counts(p_me uuid, p_other uuid)
+returns table (tbl text, own bigint, other bigint, foreign_rows bigint) language plpgsql as $$
+declare r record;
+begin
+  for r in select o.tbl as t, o.owner_col as c from rls_test.owned_tables o order by 1 loop
+    tbl := r.t;
+    execute format('select count(*) from public.%1$I where %2$I = $1', r.t, r.c) into own using p_me;
+    execute format('select count(*) from public.%1$I where %2$I = $1', r.t, r.c) into other using p_other;
+    execute format('select count(*) from public.%1$I where %2$I is not null and %2$I <> $1', r.t, r.c) into foreign_rows using p_me;
+    return next;
+  end loop;
+end $$;
+
+-- SQLSTATE a statement fails with, or 'none' when it succeeds (errors are caught, not swallowed: the
+-- caller asserts on the returned code). Used where a loop over many statements needs one assertion.
+create function rls_test.sqlstate_of(p_sql text) returns text language plpgsql as $$
+begin
+  execute p_sql;
+  return 'none';
+exception when others then
+  return sqlstate;
+end $$;
+
+-- Operations on a table that the current role is NOT refused with 42501 (empty string = all denied).
+create function rls_test.writes_not_denied(p_tbl text) returns text language plpgsql as $$
+declare v_col text; v_ops text[]; v_op text; v_out text := '';
+begin
+  select attname into v_col from pg_attribute
+   where attrelid = ('public.' || quote_ident(p_tbl))::regclass and attnum > 0 and not attisdropped order by attnum limit 1;
+  v_ops := array[
+    format('insert into public.%I default values', p_tbl),
+    format('update public.%I set %I = %I', p_tbl, v_col, v_col),
+    format('delete from public.%I', p_tbl)];
+  foreach v_op in array v_ops loop
+    if rls_test.sqlstate_of(v_op) <> '42501' then v_out := v_out || p_tbl || ': ' || split_part(v_op, ' ', 1) || '; '; end if;
+  end loop;
+  return v_out;
+end $$;
+
+-- Tables of schema p_schema the current role can read at least one statement from (should be none for anon).
+create function rls_test.readable_tables(p_schema text) returns text language plpgsql as $$
+declare r record; v_out text := '';
+begin
+  for r in select c.relname from pg_class c where c.relnamespace = p_schema::regnamespace and c.relkind in ('r', 'p', 'v') order by 1 loop
+    if rls_test.sqlstate_of(format('select 1 from %I.%I limit 1', p_schema, r.relname)) <> '42501' then
+      v_out := v_out || r.relname || '; ';
+    end if;
+  end loop;
+  return v_out;
+end $$;
+grant execute on all functions in schema rls_test to public;
+
+-- ST-RLS-01 allow-list: public/app_private tables allowed to have RLS disabled, each with a reason.
+create table rls_test.no_rls_allowed (tbl text primary key, reason text not null);
+grant select on rls_test.no_rls_allowed to public;
+\ir no-rls-allowlist.psql
+
+-- ---------------------------------------------------------------------------------------------
+-- Fixture (as the migration/superuser role): users A, B, admin C, one content tree, and one row of
+-- every user-owned table for A and for B.
+-- ---------------------------------------------------------------------------------------------
+insert into auth.users (id, email) values
+  (rls_test.user_a(), 'rls-a@example.test'),
+  (rls_test.user_b(), 'rls-b@example.test'),
+  (rls_test.user_c(), 'rls-c@example.test');          -- the on_auth_user_created trigger adds the profiles
+insert into public.admin_users (user_id) values (rls_test.user_c());
+
+insert into public.modules (key, node, module, title, order_index) values ('math.rlstest', 'math', 'rlstest', 'RLS test module', 0);
+insert into public.skills (key, node, module, title, tier_target, est_minutes, license, source, status, task_kinds, grader_types) values
+  ('math.rlstest.pub',   'math', 'rlstest', 'verified skill', 'L1', 5, 'original', 'rls-test', 'verified', '{worked_example,retrieval}', '{exact_numeric}'),
+  ('math.rlstest.draft', 'math', 'rlstest', 'draft skill',    'L1', 5, 'original', 'rls-test', 'draft',    '{worked_example,retrieval}', '{exact_numeric}');
+insert into public.item_templates (key, skill_key, task_kind, grader_type, version, status, body, license, source) values
+  ('tpl.math.rlstest-t', 'math.rlstest.pub', 'problem', 'exact_numeric', 1, 'verified', '{"secret":"generator"}', 'original', 'rls-test');
+insert into public.projects (key, title, ladder_level, est_hours, status, license, source, spec)
+  values ('prj.L0.rlstest', 'RLS test project', 0, 1, 'verified', 'original', 'rls-test', '{"expected":"hidden"}');
+insert into public.project_steps (key, project_key, position, title, est_min, session_type, verification_spec)
+  values ('prj.L0.rlstest#s01', 'prj.L0.rlstest', 1, 'step', 60, 'focus', '{"expected":"hidden"}');
+insert into public.experiments (key, description, started_at, status, allocation_treatment_pct, design) values
+  ('exp.rlstest', 'running, user level', now() - interval '1 day', 'running', 50, '{}'),
+  ('exp.rlstest-draft', 'not running', null, 'draft', 50, '{}'),
+  ('exp.rlstest-assign', 'running, no assignments yet', now() - interval '1 day', 'running', 50, '{}'),
+  ('exp.rlstest-skill', 'skill level', now() - interval '1 day', 'running', 50, '{"unit_type":"skill"}');
+
+-- A shared (user_id null) verified item and, per learner, a verified own item with a secret.
+insert into public.items (id, template_key, template_version, seed, params, rendered, verification_report, status, user_id)
+  values ('0000a011-0000-4000-8000-0000000000f0', 'tpl.math.rlstest-t', 1, 1, '{"p":1}', '{"prompt":"x"}',
+          '{"verifier":"v","agreed":true}', 'verified', null);
+create function rls_test.seed_user(p_user uuid, p_tag text, p_n int) returns void language plpgsql as $$
+declare
+  v_item uuid := ('0000a011-0000-4000-8000-0000000000' || lpad(p_n::text, 2, '0'))::uuid;
+  v_plan uuid; v_session uuid; v_up uuid; v_ch uuid; v_thread uuid; v_msg uuid;
+begin
+  insert into public.items (id, template_key, template_version, seed, params, rendered, verification_report, status, user_id)
+    values (v_item, 'tpl.math.rlstest-t', 1, 100 + p_n, '{"p":1}', '{"prompt":"x"}', '{"verifier":"v","agreed":true,"key":42}', 'verified', p_user);
+  insert into public.item_secrets (item_id, answer_key, hidden_tests) values (v_item, '{"a":42}', '{"t":1}');
+  insert into public.attempts (user_id, item_id, started_at, submitted_at, response, grade, grade_status, client_attempt_id)
+    values (p_user, v_item, now() - interval '1 min', now(), '{"v":1}',
+            '{"status":"graded","score":1,"correct":true,"graders":[]}', 'graded', gen_random_uuid());
+  insert into public.skill_state (user_id, skill_key) values (p_user, 'math.rlstest.pub');
+  insert into public.review_log (user_id, skill_key, rating) values (p_user, 'math.rlstest.pub', 3);
+  insert into public.weekly_plans (user_id, week_start, target_minutes) values (p_user, '2026-11-02', 480) returning id into v_plan;
+  insert into public.plan_slots (plan_id, user_id, day, session_type, planned_min, context) values (v_plan, p_user, '2026-11-03', 'micro', 20, 'phone');
+  insert into public.sessions (user_id, session_type, context, planned_min, available_minutes) values (p_user, 'micro', 'phone', 10, 10) returning id into v_session;
+  insert into public.session_tasks (session_id, position, task_kind, skill_key, user_id, item_id) values (v_session, 1, 'retrieval', 'math.rlstest.pub', p_user, v_item);
+  insert into public.user_projects (user_id, project_key) values (p_user, 'prj.L0.rlstest') returning id into v_up;
+  insert into public.evidence_challenges (user_id, user_project_id, step_key, code, expires_at)
+    values (p_user, v_up, 'prj.L0.rlstest#s01', 'PM-' || p_tag, now() + interval '1 day') returning id into v_ch;
+  insert into public.project_evidence (user_project_id, user_id, step_key, evidence_kind, content, challenge_id)
+    values (v_up, p_user, 'prj.L0.rlstest#s01', 'note', '{}', v_ch);
+  insert into public.project_grants (user_id, user_project_id, project_key, skill_key, tier, status)
+    values (p_user, v_up, 'prj.L0.rlstest', 'math.rlstest.pub', 'L1', 'pending');
+  insert into public.tutor_threads (user_id) values (p_user) returning id into v_thread;
+  insert into public.tutor_messages (thread_id, role, content, user_id) values (v_thread, 'assistant', 'hello', p_user) returning id into v_msg;
+  insert into public.checkpoints (user_id, scope_node, reason) values (p_user, 'math', 'manual');
+  insert into public.events (user_id, name) values (p_user, 'rlstest.seen');
+  insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values (p_user, 'https://push.example.test/' || p_tag, 'k', 'a');
+  insert into public.privacy_requests (user_id, kind) values (p_user, 'export');
+  insert into public.experiment_assignments (experiment_key, user_id, arm, unit_type, unit_key, block_index, rng_seed)
+    values ('exp.rlstest', p_user, 'control', 'user', p_user::text, 0, 'seed');
+  insert into public.item_reports (user_id, item_id, reason) values (p_user, v_item, 'ambiguous');
+  insert into public.llm_calls (user_id, purpose, provider, model, prompt_version) values (p_user, 'tutor', 'fake', 'fake', 'rls-test');
+end $$;
+select rls_test.seed_user(rls_test.user_a(), '2AAA-2AAA', 1);
+select rls_test.seed_user(rls_test.user_b(), '2BBB-2BBB', 2);
+
+-- Mutation hook for tools/rls-mutation.sh: `psql -v rls_mutation=<name>` breaks attempts' protection
+-- INSIDE this transaction (rolled back with it), to prove the ST-RLS checks can fail. Never set by
+-- pnpm test:rls / pg_prove, so the \if branch is skipped there.
+\if :{?rls_mutation}
+  select :'rls_mutation' = 'disable_rls' as m_disable, :'rls_mutation' = 'open_policy' as m_open \gset
+  \if :m_disable
+    alter table public.attempts disable row level security;
+  \endif
+  \if :m_open
+    drop policy attempts_select_own on public.attempts;
+    create policy attempts_select_own on public.attempts for select to authenticated using (true);
+  \endif
+\endif
+
+-- Admin-only tables: one job and one content sync run, both tagged so they are recognisable.
+select public.enqueue_job('content_postprocess', '{"t":"rlstest"}'::jsonb, null, 'rlstest-dedupe');
+insert into public.content_sync_runs (git_sha) values ('rlstest');

@@ -147,6 +147,8 @@ jobs:
           PG_BINDIR: /usr/lib/postgresql/17/bin
       - name: pnpm test:db (pgTAP under supabase/tests)
         run: pnpm test:db
+      - name: pnpm test:rls (RLS harness and ST-RLS suite, BL-0011/BL-0012)
+        run: pnpm test:rls
       - name: generated DB types are committed and current (BL-0010)
         run: pnpm gen:db-types && git diff --exit-code packages/shared-types
       - name: content-schema key regexes equal the DB check constraints (BL-0013)
