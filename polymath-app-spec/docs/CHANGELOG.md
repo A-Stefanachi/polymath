@@ -6,6 +6,14 @@ Record go/no-go outcomes, lean-gate releases, and scope-down choices here before
 
 <!-- Entries appear newest first. -->
 
+## 2026-11-03: worker heartbeat table and function default privileges (00a I3)
+
+Decision: the founder delegated the two schema questions of the Wave 2 review (PR #4) to the build agent's judgment. Both are recorded as 00a I3: `app_private.worker_heartbeat` (the one-row heartbeat doc 03 sections 8.4 and 8.6 call for, read by `GET /health`) and a global default-privileges entry so new functions are not executable by PUBLIC (a baseline gap found by ST-RLS-19).
+
+- Evidence: migrations `20261103000000_default_privileges_functions` and `20261103000100_worker_heartbeat`; `pnpm db:diff-reference` matches `schemas/schema.sql`; ST-RLS-19's function check passes (it was a pgTAP `todo`); a pgTAP test covers the heartbeat grants and the one-row rule; the worker writes the row every 5 minutes.
+- Not decided here: the staging run of the OA-9 / ST-RLS-19 probe (`infra/VERIFIED.md`) happens when migrations are first pushed to staging (BL-0029).
+- Next three tasks: BL-0021 (email-code sign-in), BL-0022 (API skeleton), BL-0019 (grading-core).
+
 ## 2026-11-03: data region London for now (OQ-02); BL-0001 started
 
 Decision: the founder keeps the staging Supabase project in `eu-west-2` (London) for the moment. This is a UK jurisdiction, not the EU default of OQ-02; the UK has an EU adequacy decision. Revisit before the study history grows or before any beta learner has an account, when a move means migrating data. The non-EU choice keeps `deepseek/deepseek-v4.1-flash` as the strong model; `z-ai/glm-5.3` on Mistral's EU endpoint stays the alternative if the region moves to the EU.

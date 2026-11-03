@@ -1,0 +1,11 @@
+-- New functions are executable by nobody but their owner until a migration grants them
+-- (CLAUDE.md section 9; doc 12 ST-RLS-19).
+--
+-- The baseline's `alter default privileges in schema public revoke ... on functions from public`
+-- cannot remove PostgreSQL's built-in default (EXECUTE for PUBLIC on every new function): a
+-- schema-level entry can only add to or subtract from the global default entry, and PUBLIC is
+-- granted by the global one. So a function created later without its own REVOKE was callable by
+-- anon and authenticated. This global entry for the role that runs migrations (postgres) removes
+-- PUBLIC's default EXECUTE in every schema. Existing functions are unchanged (all were revoked by
+-- the baseline); every new function still gets its explicit GRANT in its own migration.
+alter default privileges for role postgres revoke execute on functions from public;

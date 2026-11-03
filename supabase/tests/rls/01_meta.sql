@@ -56,13 +56,9 @@ create function public.rls_test_ungranted_fn() returns int language sql as 'sele
 select rls_test.act_as(rls_test.user_a());
 select throws_ok($$select * from public.rls_test_ungranted$$, '42501', null,
                  'ST-RLS-19: a new public table with no grant is denied to authenticated (42501)');
--- KNOWN BASELINE DEFECT (reported, schema not changed): `alter default privileges in schema public
--- revoke ... on functions from ... public` cannot remove the built-in PUBLIC EXECUTE default, so a
--- function created WITHOUT its own explicit REVOKE is callable by authenticated and anon. The baseline
--- is safe today only because it revokes on every existing function (checked above); a future migration
--- that forgets the REVOKE would expose its function. Fix: a migration with
--- `alter default privileges for role postgres revoke execute on functions from public` (no IN SCHEMA).
-select todo('baseline defect: default privileges do not revoke PUBLIC EXECUTE on new functions', 1);
+-- A function created WITHOUT its own explicit REVOKE must not be callable: the schema-level default
+-- privileges of the baseline could not remove PostgreSQL's built-in PUBLIC EXECUTE, so migration
+-- 20261103000000_default_privileges_functions adds the global entry for the migration role (00a I3).
 select throws_ok($$select public.rls_test_ungranted_fn()$$, '42501', null,
                  'ST-RLS-19: a new public function with no grant is denied to authenticated (42501)');
 reset role;

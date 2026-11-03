@@ -12,7 +12,8 @@ transition (SKIP LOCKED, attempts, backoff, lease expiry). This module only driv
 
 Jobs carry ids, never content (CLAUDE.md rule 2.5): this module logs ids, kinds and counts only, never the
 payload or the exception text. Handlers are at-least-once and must be idempotent (section 8.5). The worker
-never writes `skill_state`, `review_log` or `sessions` (rule 2.8); this module touches `jobs` only.
+never writes `skill_state`, `review_log` or `sessions` (rule 2.8); this module touches `jobs` and the one
+heartbeat row (`app_private.record_worker_heartbeat`, 00a I3) only.
 """
 
 from __future__ import annotations
@@ -361,10 +362,23 @@ class Worker:
         if n:
             log.warning("stale_jobs_requeued", count=n)
 
+    async def record_heartbeat(self) -> None:
+        """Overwrite the one heartbeat row read by GET /health (doc 03 sections 8.4 and 8.6, 00a I3)."""
+        git_sha = os.environ.get("GIT_SHA") or None
+        await self._query(
+            "select app_private.record_worker_heartbeat(%s, %s)",
+            self.worker_id[:128],
+            git_sha[:64] if git_sha else None,
+        )
+
     async def _heartbeat_tick(self) -> None:
-        # The specification names no heartbeat table (doc 03 sections 8.4 and 8.6 say "row/metric"), so the
-        # heartbeat is a structured log line plus an in-process timestamp until a migration adds the row.
+        # The row is the signal /health and the "worker down" alert read; the log line is for humans.
+        # A failed write is logged and retried at the next tick: it must never stop the worker.
         self.last_heartbeat_at = time.time()
+        try:
+            await self.record_heartbeat()
+        except DB_ERRORS as e:
+            log.error("worker_heartbeat_failed", worker_id=self.worker_id, error_type=type(e).__name__)
         log.info("worker_heartbeat", worker_id=self.worker_id, running=dict(self._running))
 
     def request_stop(self) -> None:
