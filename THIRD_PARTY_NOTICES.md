@@ -5,6 +5,9 @@ Direct dependencies and their licences (CLAUDE.md section 5). Transitive depende
 | Package | Version | Licence |
 |---|---|---|
 | `@eslint/js` | 9.39.5 | MIT |
+| `@playwright/test` (BL-0021, dev) | 1.63.0 | Apache-2.0 |
+| `@supabase/ssr` (BL-0021) | 0.12.7 | MIT |
+| `@supabase/supabase-js` (BL-0021) | 2.118.0 | MIT |
 | `@tailwindcss/postcss` | 4.3.4 | MIT |
 | `@types/node` | 24.19.2 | MIT |
 | `@types/react` | 19.3.0 | MIT |

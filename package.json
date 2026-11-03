@@ -17,6 +17,7 @@
     "db:reset": "supabase db reset",
     "db:stop": "supabase stop",
     "db:diff-reference": "python3 -B tools/db/diff_reference.py",
+    "e2e:auth": "pnpm --filter @polymath/web e2e:auth",
     "test:db": "supabase test db",
     "test:rls": "bash tools/rls-test.sh",
     "gen:db-types": "node tools/gen/gen-types.mjs db",

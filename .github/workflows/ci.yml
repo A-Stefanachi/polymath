@@ -184,6 +184,12 @@ jobs:
         run: pnpm --filter @polymath/content-schema test
         env:
           REQUIRE_DB: "1"
+      - name: e2e:auth sign-in by emailed code and link, local Mailpit (BL-0021)
+        # Uses the local development keys read from supabase status; the app and the suite refuse a
+        # non-local Supabase URL. Chromium comes from Playwright's own install step.
+        run: |
+          pnpm --filter @polymath/web exec playwright install --with-deps chromium
+          pnpm e2e:auth
       - name: content:sync integration tests on a throwaway database (BL-0018)
         # validate_graph.py (the oracle for the skill count) and the Python hash oracle need PyYAML.
         run: |

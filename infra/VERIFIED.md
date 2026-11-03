@@ -26,3 +26,18 @@ Assumption: a secret key (`sb_secret_...`) runs as the `service_role` Postgres r
 |---|---|---|
 | Local | 2026-11-03 | PostgreSQL 17.11 on x86_64-pc-linux-gnu |
 | Staging | 2026-11-03 | PostgreSQL 17.11 on x86_64-pc-linux-gnu (read-only query through the management API) |
+
+## Email code sign-in on a real iPhone (BL-0021, S01 AC-5)
+
+Assumption: in Safari on iOS, the six-digit code from the sign-in email can be pasted or autofilled into the code field (`autocomplete="one-time-code"`) and signs in; the kept link opens in the browser and signs in too. The local Playwright tests cover the server side only.
+
+| Environment | Date | Result |
+|---|---|---|
+| Staging, real iPhone, Safari | pending | pending: the founder runs the steps below and fills in this row |
+
+Steps (staging, a real inbox on custom SMTP):
+1. On the iPhone open `/welcome` of the staging app in Safari. Enter the founder's email and tap "Email me a code".
+2. Open the email in the Mail app. Note whether it arrived in the inbox or in junk, and how long it took.
+3. Return to Safari. Tap the code field: iOS should offer the code above the keyboard. Tap it (autofill), or copy the code in Mail and paste it. Tap "Sign in". Expect the app at `/`.
+4. Sign out (clear site data), request a new code, and this time tap the link in the email. Expect to be signed in at `/`.
+5. Add to Home Screen and repeat step 3 inside the installed app (the link may open in Safari instead; that is expected, the code path is the one that must work). Record the result of each step here.

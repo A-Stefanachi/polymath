@@ -1,0 +1,14 @@
+<!-- Sign-in email (BL-0021; doc 09 S01). One email carries the six-digit code (primary path) and
+     a sign-in link (kept, for people who open the email on the same device). The link goes to the
+     app's own callback with the token hash, so it verifies on the server and needs no stored
+     PKCE verifier; it works in any browser. Used for existing users (magic_link) and for new
+     users (confirmation): both files are identical. -->
+<h2>Your Polymath sign-in code</h2>
+<p>Enter this code on the sign-in page:</p>
+<p style="font-size: 28px; letter-spacing: 6px; font-family: monospace;"><strong>{{ .Token }}</strong></p>
+<p>The code works once and expires in 15 minutes.</p>
+<p>
+  Or <a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&amp;type=email">open this sign-in link</a>.
+  It may open in your browser instead of the installed app.
+</p>
+<p>If you did not ask for this email, you can ignore it.</p>
