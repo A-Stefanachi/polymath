@@ -55,7 +55,14 @@ export function splitLines(text: string): string[] {
 const PY_SPACE = `[\\s\\x1c-\\x1f\\x85]`;
 const STRIP = new RegExp(`^${PY_SPACE}+|${PY_SPACE}+$`, "gu");
 
+const LSTRIP = new RegExp(`^${PY_SPACE}+`, "u");
+
 /** Python's str.strip() with no argument: Unicode whitespace on both ends. */
 export function pyStrip(text: string): string {
   return text.replace(STRIP, "");
+}
+
+/** Python's str.lstrip() with no argument. */
+export function pyLstrip(text: string): string {
+  return text.replace(LSTRIP, "");
 }

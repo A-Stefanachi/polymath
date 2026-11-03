@@ -1,7 +1,8 @@
-// File walking and per-file scanning for pnpm claims:lint (BL-0006).
+// File walking and per-file scanning for pnpm claims:lint (BL-0006; allow-context rule BL-0194).
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
+import { buildContext, excuse } from "./context.ts";
 import { splitLines, pyStrip } from "./pyre.ts";
 import { hitsInLine, type PatternSource } from "./rules.ts";
 
@@ -18,12 +19,20 @@ export type Finding = {
 
 export type AllowEntry = { path: string; reason: string };
 
-/** Scans one file's text. Every hit is a violation; allow-listed files are handled by the caller. */
-export function scanText(text: string): Finding[] {
+/**
+ * Scans one file's text, as scan_text in the reference: each hit is excused by the allow-context
+ * rule (reason set) or is a violation. Markdown files get the section rule; others the
+ * context-key rule.
+ */
+export function scanText(text: string, isMarkdown: boolean): Finding[] {
   const lines = splitLines(text);
+  const ctx = buildContext(lines, isMarkdown);
   const out: Finding[] = [];
   lines.forEach((ln, i) => {
-    for (const hit of hitsInLine(ln)) {
+    const hits = hitsInLine(ln);
+    if (hits.length === 0) return;
+    const reason = excuse(ctx, i, isMarkdown);
+    for (const hit of hits) {
       out.push({
         file: "",
         line: i + 1,
@@ -31,6 +40,7 @@ export function scanText(text: string): Finding[] {
         fragment: hit.fragment,
         source: hit.source,
         snippet: pyStrip(ln).slice(0, 160),
+        ...(reason === undefined ? {} : { reason }),
       });
     }
   });
@@ -115,17 +125,62 @@ export function loadAllowlist(file: string): AllowEntry[] {
 
 export type RepoResult = { files: number; findings: Finding[] };
 
-export function scanRepo(root: string, allow: AllowEntry[]): RepoResult {
-  const files = repoFiles(root);
+function scanFiles(root: string, files: string[], allow: AllowEntry[]): RepoResult {
   const findings: Finding[] = [];
   for (const file of files) {
     const text = readText(file);
     if (text === undefined) continue;
     const rel = path.relative(root, file).split(path.sep).join("/");
     const allowed = allow.find((a) => a.path === rel);
-    for (const f of scanText(text)) {
-      findings.push({ ...f, file: rel, ...(allowed ? { reason: `allowlist: ${allowed.reason}` } : {}) });
+    for (const f of scanText(text, file.endsWith(".md"))) {
+      const reason = f.reason ?? (allowed ? `allowlist: ${allowed.reason}` : undefined);
+      findings.push({ ...f, file: rel, ...(reason === undefined ? {} : { reason }) });
     }
   }
   return { files: files.length, findings };
+}
+
+/** pnpm claims:lint: the repository, with the allow-context rule, then the allow-list. */
+export function scanRepo(root: string, allow: AllowEntry[]): RepoResult {
+  return scanFiles(root, repoFiles(root), allow);
+}
+
+// The reference script's own file set (iter_files in reference/lint_claims.py), for the parity
+// test: docs, content and backlog of the package, then its README.md and CLAUDE.md.
+const REF_DIRS = ["docs", "content", "backlog"];
+const REF_FILES = ["README.md", "CLAUDE.md"];
+const REF_EXTS = new Set([".md", ".yaml", ".yml", ".txt", ".json", ".sql", ".py"]);
+const REF_SKIP_NAMES = new Set(["lint_claims.py", "scheduler_test_vectors.json"]);
+const REF_SKIP_DIRS = new Set(["__pycache__", ".pytest_cache", "node_modules", ".git"]);
+
+function walkReference(dir: string, out: string[]): void {
+  let entries: string[];
+  try {
+    entries = readdirSync(dir).sort();
+  } catch {
+    return;
+  }
+  for (const name of entries) {
+    const full = path.join(dir, name);
+    if (statSync(full).isDirectory()) {
+      if (!REF_SKIP_DIRS.has(name)) walkReference(full, out);
+    } else if (!REF_SKIP_NAMES.has(name) && REF_EXTS.has(path.extname(name).toLowerCase())) {
+      out.push(full);
+    }
+  }
+}
+
+/** The specification package scanned exactly as the reference script scans it, no allow-list. */
+export function scanPackage(packageRoot: string): RepoResult {
+  const files: string[] = [];
+  for (const d of REF_DIRS) walkReference(path.join(packageRoot, d), files);
+  for (const f of REF_FILES) {
+    const p = path.join(packageRoot, f);
+    try {
+      if (statSync(p).isFile()) files.push(p);
+    } catch {
+      // optional file
+    }
+  }
+  return scanFiles(packageRoot, files, []);
 }
