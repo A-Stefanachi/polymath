@@ -26,6 +26,20 @@ repos:
           (^(.*/)?[^/]*\.tsx$)|(^(.*/)?[^/]*\.mjs$)|(^(.*/)?[^/]*\.cjs$)
         pass_filenames: false
         require_serial: true
+      - id: actionlint
+        name: actionlint
+        entry: "bash .autoswe/gates.sh --hook actionlint"
+        language: system
+        files: >-
+          (?x)(^\.github/workflows/[^/]*\.yml$)|
+          (^\.github/workflows/[^/]*\.yaml$)
+        pass_filenames: true
+      - id: shellcheck
+        name: shellcheck
+        entry: "bash .autoswe/gates.sh --hook shellcheck"
+        language: system
+        files: '(^(.*/)?[^/]*\.sh$)'
+        pass_filenames: true
       - id: tsc
         name: tsc
         entry: "bash .autoswe/gates.sh --hook tsc"

@@ -1,0 +1,82 @@
+# CI for every push and pull request (BL-0003; doc 03 section 13, doc 07 section 10, NFR-06).
+# Branch protection on main requires the jobs below to pass (infra/BRANCH-PROTECTION.md).
+# Third-party actions are pinned to commit SHAs; the tag is in the trailing comment.
+name: ci
+
+# Runs on every branch push. Pull-request events run only for forks: a same-repository PR's
+# head commit already has the push run's checks, which is what branch protection reads.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  typescript:
+    name: typescript (lint, typecheck, vitest)
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1 (version from packageManager)
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -w lint
+      - run: pnpm -w typecheck
+      - run: pnpm -w test
+
+  python:
+    name: python (ruff, pytest)
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: |
+            services/*/pyproject.toml
+            services/*/uv.lock
+      - name: ruff
+        run: uvx ruff@0.16.9 check services && uvx ruff@0.16.9 format --check services
+      - name: pytest (each service)
+        run: bash tools/ci/service-tests.sh
+
+  spec:
+    name: spec (reference validators and verifier tests)
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: tools/ci/requirements-spec.txt
+          activate-environment: true
+      - name: install validator dependencies
+        run: uv pip install -r tools/ci/requirements-spec.txt
+      - name: validate_graph
+        run: python -B polymath-app-spec/reference/validate_graph.py
+      - name: validate_projects
+        run: python -B polymath-app-spec/reference/validate_projects.py
+      - name: validate_templates
+        run: python -B polymath-app-spec/reference/validate_templates.py
+      - name: pytest reference/verifiers/tests
+        working-directory: polymath-app-spec/reference/verifiers
+        run: python -B -m pytest tests -q -p no:cacheprovider

@@ -1,2 +1,3 @@
 task,start,end,founder_hours,agent_wait_minutes,notes
 BL-0002,2026-11-03,2026-11-03,,30,Repo scaffold by agent; founder_hours to be filled in by the founder after review (doc 13 section 3.3)
+BL-0003,2026-11-03,2026-11-03,,25,CI workflow by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)

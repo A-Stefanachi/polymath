@@ -621,6 +621,14 @@ file_gate ruff-lint '(^(.*/)?[^/]*\.py$)|(^(.*/)?[^/]*\.pyi$)' ruff - 0 0 t_ruff
 t_eslint() { pnpm -w lint; }
 repo_gate eslint pnpm - 0 0 t_eslint -
 
+# --- actionlint (lint) ---
+t_actionlint() { actionlint "$@"; }
+file_gate actionlint '(^\.github/workflows/[^/]*\.yml$)|(^\.github/workflows/[^/]*\.yaml$)' actionlint - 0 0 t_actionlint -
+
+# --- shellcheck (lint) ---
+t_shellcheck() { shellcheck -S warning "$@"; }
+file_gate shellcheck '(^(.*/)?[^/]*\.sh$)' shellcheck - 0 0 t_shellcheck -
+
 # --- tsc (types) ---
 t_tsc() { pnpm -w typecheck; }
 repo_gate tsc pnpm - 0 0 t_tsc -

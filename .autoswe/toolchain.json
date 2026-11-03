@@ -60,6 +60,29 @@
       "scope": "repo"
     },
     {
+      "name": "actionlint",
+      "category": "lint",
+      "globs": [
+        ".github/workflows/*.yml",
+        ".github/workflows/*.yaml"
+      ],
+      "check": "actionlint {files}",
+      "full": "@files",
+      "on_edit": "check",
+      "requires": "actionlint"
+    },
+    {
+      "name": "shellcheck",
+      "category": "lint",
+      "globs": [
+        "**/*.sh"
+      ],
+      "check": "shellcheck -S warning {files}",
+      "full": "@files",
+      "on_edit": "check",
+      "requires": "shellcheck"
+    },
+    {
       "name": "tsc",
       "category": "types",
       "globs": [
