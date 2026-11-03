@@ -1,0 +1,12 @@
+{
+  "name": "@polymath/claims-lint",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Claims-policy lint of contract section 8 (BL-0006, BL-0194), run by pnpm claims:lint.",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  }
+}

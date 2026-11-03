@@ -1,0 +1,106 @@
+# CI for every push and pull request (BL-0003; doc 03 section 13, doc 07 section 10, NFR-06).
+# Branch protection on main requires the jobs below to pass (infra/BRANCH-PROTECTION.md).
+# Third-party actions are pinned to commit SHAs; the tag is in the trailing comment.
+name: ci
+
+# Runs on every branch push. Pull-request events run only for forks: a same-repository PR's
+# head commit already has the push run's checks, which is what branch protection reads.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  typescript:
+    name: typescript (lint, typecheck, vitest)
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1 (version from packageManager)
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -w lint
+      - run: pnpm lint:boundaries
+      - run: pnpm claims:lint
+      - run: pnpm -w typecheck
+      - run: pnpm -w test
+
+  secrets:
+    name: secrets (gitleaks tree and history, negative control)
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GITLEAKS_VERSION: "8.30.1"
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # ST-SEC-01 scans the whole history
+      - name: install gitleaks (pinned, checksum verified)
+        run: |
+          curl -sSfL -o /tmp/gitleaks.tgz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  /tmp/gitleaks.tgz" | sha256sum -c -
+          tar -xzf /tmp/gitleaks.tgz -C /tmp gitleaks
+          sudo install /tmp/gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+      - run: bash tools/ci/secrets-check.sh
+
+  python:
+    name: python (ruff, pytest)
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: |
+            services/*/pyproject.toml
+            services/*/uv.lock
+      - name: ruff
+        run: |
+          uvx ruff@0.16.9 check services tools --extend-exclude tools/boundaries/fixtures
+          uvx ruff@0.16.9 format --check services tools --extend-exclude tools/boundaries/fixtures
+      - name: pytest (each service)
+        run: bash tools/ci/service-tests.sh
+
+  # BL-0195: every specification-package validator, as one required check. It runs on every push
+  # rather than only when docs/, content/, schemas/, backlog/ or reference/ change: a required
+  # check skipped by a path filter never reports, and the pull request would wait forever. A
+  # finding in a file the change did not touch is still red (fix it, or record it in
+  # polymath-app-spec/docs/CHANGELOG.md with an owner).
+  package-checks:
+    name: package-checks
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: tools/ci/requirements-spec.txt
+          activate-environment: true
+      - name: install validator dependencies
+        run: uv pip install -r tools/ci/requirements-spec.txt
+      - name: check_package, validate_*, lint_claims, scheduler vectors, verifier tests
+        run: PYTHON=python bash tools/ci/spec-validators.sh

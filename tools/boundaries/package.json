@@ -1,0 +1,15 @@
+{
+  "name": "@polymath/boundaries",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Module boundary rules of doc 03 section 13.1 (BL-0004), run by pnpm lint:boundaries.",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "dependency-cruiser": "18.6.0"
+  }
+}

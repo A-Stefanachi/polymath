@@ -1,0 +1,82 @@
+---
+# GENERATED from .autoswe/toolchain.json by autoswe toolchain.py
+# (python3 "$AUTOSWE_TOOLCHAIN" render --precommit). Each hook runs
+# `bash .autoswe/gates.sh --hook NAME`, the same command as the gate.
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-format
+        name: ruff-format
+        entry: "bash .autoswe/gates.sh --hook ruff-format"
+        language: system
+        files: '(^(.*/)?[^/]*\.py$)|(^(.*/)?[^/]*\.pyi$)'
+        pass_filenames: true
+      - id: ruff-lint
+        name: ruff-lint
+        entry: "bash .autoswe/gates.sh --hook ruff-lint"
+        language: system
+        files: '(^(.*/)?[^/]*\.py$)|(^(.*/)?[^/]*\.pyi$)'
+        pass_filenames: true
+      - id: eslint
+        name: eslint
+        entry: "bash .autoswe/gates.sh --hook eslint"
+        language: system
+        files: >-
+          (?x)(^(.*/)?[^/]*\.js$)|(^(.*/)?[^/]*\.jsx$)|(^(.*/)?[^/]*\.ts$)|
+          (^(.*/)?[^/]*\.tsx$)|(^(.*/)?[^/]*\.mjs$)|(^(.*/)?[^/]*\.cjs$)
+        pass_filenames: false
+        require_serial: true
+      - id: actionlint
+        name: actionlint
+        entry: "bash .autoswe/gates.sh --hook actionlint"
+        language: system
+        files: >-
+          (?x)(^\.github/workflows/[^/]*\.yml$)|
+          (^\.github/workflows/[^/]*\.yaml$)
+        pass_filenames: true
+      - id: shellcheck
+        name: shellcheck
+        entry: "bash .autoswe/gates.sh --hook shellcheck"
+        language: system
+        files: '(^(.*/)?[^/]*\.sh$)'
+        pass_filenames: true
+      - id: tsc
+        name: tsc
+        entry: "bash .autoswe/gates.sh --hook tsc"
+        language: system
+        files: '(^(.*/)?[^/]*\.ts$)|(^(.*/)?[^/]*\.tsx$)'
+        pass_filenames: false
+        require_serial: true
+      - id: boundaries
+        name: boundaries
+        entry: "bash .autoswe/gates.sh --hook boundaries"
+        language: system
+        files: >-
+          (?x)(^apps/web/src/.*$)|(^packages/[^/]*/src/.*$)|
+          (^services/(.*/)?[^/]*\.py$)|(^services/(.*/)?[^/]*\.sql$)|
+          (^tools/boundaries/.*$)
+        pass_filenames: false
+        require_serial: true
+      - id: claims
+        name: claims
+        entry: "bash .autoswe/gates.sh --hook claims"
+        language: system
+        files: >-
+          (?x)(^apps/web/src/.*$)|(^packages/[^/]*/src/.*$)|(^prompts/.*$)|
+          (^polymath-app-spec/docs/.*$)|(^polymath-app-spec/content/.*$)|
+          (^polymath-app-spec/backlog/.*$)|(^(.*/)?[^/]*\.md$)|
+          (^tools/claims-lint/.*$)
+        pass_filenames: false
+        require_serial: true
+      - id: bandit
+        name: bandit
+        entry: "bash .autoswe/gates.sh --hook bandit"
+        language: system
+        files: '(^(.*/)?[^/]*\.py$)'
+        pass_filenames: true
+      - id: gitleaks
+        name: gitleaks
+        entry: "bash .autoswe/gates.sh --hook gitleaks"
+        language: system
+        files: "(^(.*/)?[^/]*$)"
+        pass_filenames: true

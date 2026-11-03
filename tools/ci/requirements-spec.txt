@@ -1,0 +1,11 @@
+# Python packages the specification validators and reference tests import
+# (polymath-app-spec/reference/**). Python 3.12 only (contract 3). Used by CI and by
+# `uv run --no-project --with-requirements tools/ci/requirements-spec.txt`.
+PyYAML==6.0.3
+jsonschema==4.26.0
+sympy==1.14.0
+mpmath==1.3.0
+numpy==2.5.3
+Pint==0.26.2
+pglast==8.7
+pytest==9.2.0
