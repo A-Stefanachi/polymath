@@ -16,6 +16,7 @@ Direct dependencies and their licences (CLAUDE.md section 5). Transitive depende
 | `clsx` | 2.1.1 | MIT |
 | `eslint` | 9.39.5 | MIT |
 | `eslint-config-next` | 16.4.4 | MIT |
+| `fast-check` (dev, grading-core) | 4.10.2 | MIT |
 | `lucide-react` | 1.67.0 | ISC |
 | `next` | 16.4.4 | MIT |
 | `openapi-typescript` | 7.13.0 | MIT |

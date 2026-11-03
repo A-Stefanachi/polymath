@@ -1,0 +1,120 @@
+{
+  "description": "Extra parity cases for BL-0019: units, prefixes, number forms and complex literals that grader_vectors.json does not reach. Both graders must agree on every one. Left out on purpose: inputs on which the reference raises instead of returning a grade ('()' gives a TypeError in parse_complex), results that are infinite (JSON cannot hold them), and pint units outside the port's table (dB, degC, inch, foot and the like).",
+  "sections": [
+    {
+      "name": "units:volt",
+      "spec": { "kind": "numeric", "unit": "V", "tolerance": { "rel": 1e-9 }, "bare_number_means": "V" },
+      "reference": 1.0,
+      "inputs": [
+        "1 V", "1000 mV", "0.001 kV", "1000000 uV", "1000000 µV", "1000000 μV", "1e6 uV", "1 volt", "1 volts",
+        "1000 millivolt", "0.001 kilovolt", "1e-6 MV", "1e-3 kV", "1 V*A/A", "1 V**1", "2 V**2/V", "1 V/1",
+        "1", "1.", ".1e1", "+1", "-1 V", "1e0 V", "1E0 V", "  1   V  ", "1,0 V", "1,0", "1 mv", "1 Mv", "1 foo",
+        "1 A", "1 V*A", "1 V/A", "1 s", "1 m", "1 V^2", "1 V**2", "1 V**-1", "1 V**", "1 V*", "1 *V", "1 /V",
+        "1 V/", "1 V.A", "1 V-A", "1 V**2**0", "1 V**+1", "1 3", "1 2 V", "1 V*2", "1 2*V", "1 V/2", "1 (V)",
+        "1 V!", "1 V,", "1,000 V", "1,0,0 V", "1.0,0 V", "1 V V", "1 V s/s", "V", "1 1", "1 dimensionless",
+        "abcdefghijklmnopqrstuvwxyz", "1 abcdefghijklmnopqrstuv", "1 abcdefghijklmnopqrstuvw",
+        "1 V*A*s/A/s/s*s*A/A/A/A"
+      ]
+    },
+    {
+      "name": "units:ohm",
+      "spec": { "kind": "numeric", "unit": "ohm", "tolerance": { "rel": 0.01, "abs": 0.001 }, "bare_number_means": "ohm" },
+      "reference": 1000.0,
+      "wrong": [
+        { "tag": "mc.parallel-instead-of-series", "value": 500.0, "feedback_md": "That is the parallel value." },
+        { "tag": "mc.no-feedback", "value": 2000.0 }
+      ],
+      "inputs": [
+        "1 kohm", "1 kΩ", "1 kOhm", "1 kOhms", "1 kilohm", "1000 ohm", "1000 Ω", "1000 Ohm", "1000 ohms",
+        "0.001 Mohm", "1e-3 MΩ", "1000", "1 V/mA", "1000 V/A", "500 ohm", "500", "2 kohm", "0.5 kohm",
+        "1.01 kohm", "1.011 kohm", "990 ohm", "989 ohm", "1 Gohm", "1 mohm", "1 uohm", "1 µΩ", "1 A", "1 S",
+        "5 ohm*A", "1 k ohm", "1 k", "1 e", "1 kohmx", "1 ohmx"
+      ]
+    },
+    {
+      "name": "units:time",
+      "spec": { "kind": "numeric", "unit": "s", "tolerance": { "rel": 1e-9 } },
+      "reference": 60.0,
+      "inputs": [
+        "60 s", "1 min", "1 minute", "1 mins", "1 minutes", "60000 ms", "0.001 ks", "0.016666666666666666 h",
+        "1 hr", "1 h", "3600 s", "1 d", "60", "60 Hz", "60 1/Hz", "60 Hz**-1", "6e7 us", "6e10 ns", "1 sec",
+        "1 second", "1 seconds"
+      ]
+    },
+    {
+      "name": "units:power-and-charge",
+      "spec": { "kind": "numeric", "unit": "W", "tolerance": { "rel": 1e-9 }, "bare_number_means": "W" },
+      "reference": 0.5,
+      "inputs": [
+        "0.5 W", "500 mW", "0.0005 kW", "0.5", "0.5 J/s", "0.5 V*A", "1800 J/h", "1800 Wh/h", "0.5 kg*m**2/s**3",
+        "0.5 N*m/s", "0.5 C*V/s", "0.5 A**2*ohm", "0.5 V**2/ohm", "0.5 V**2*S", "0.5 J", "0.5 C", "0.5 Wb"
+      ]
+    },
+    {
+      "name": "units:dimensionless",
+      "spec": { "kind": "numeric", "unit": "dimensionless", "tolerance": { "rel": 1e-9 }, "bare_number_means": "dimensionless" },
+      "reference": 0.25,
+      "inputs": [
+        "0.25", "0.25 dimensionless", "0.25 V/V", "250 mV/V", "0.25 ohm/ohm", "0.25 A", "0.25 rad", "1 rad",
+        "0,25", "25e-2", "25e-2 V/V", "0.25 mol/mol", "0.25 1"
+      ]
+    },
+    {
+      "name": "units:charge-conductance",
+      "spec": { "kind": "numeric", "unit": "mS", "tolerance": { "rel": 1e-9 } },
+      "reference": 2.0,
+      "inputs": ["2 mS", "0.002 S", "2000 uS", "2 mA/V", "2 mA/V", "500 ohm**-1", "0.002 1/ohm", "2 mC", "2 mF"]
+    },
+    {
+      "name": "numbers:forms",
+      "spec": { "kind": "numeric", "unit": "A", "tolerance": { "rel": 0.01, "abs": 0.001 }, "bare_number_means": "A" },
+      "reference": 0.0,
+      "inputs": [
+        "0 A", "0", "0.0005 A", "0.5 mA", "0.0011 A", "-0.0005 A", "-0.5 mA", "1e-4", "1e-4 A", "1e", "e1",
+        "--1", "+-1", "1.2.3", "1..2", "..1", ".", "+", "-", "+.", ".e1", "1e+", "1e+3 mA", "1e-3 A", "0x10",
+        "inf", "nan", "NaN A", "Infinity", "1_000", "1 000", "1 0 A", " ", "\t", ", A", "1,", ",1", ",",
+        "123456789012345678901234567890123456789012345678901234567890123",
+        "1234567890123456789012345678901234567890123456789012345678901234",
+        "12345678901234567890123456789012345678901234567890123456789012345",
+        "0.000000000000000000000000000000000000000000000000000000000001"
+      ]
+    },
+    {
+      "name": "complex:forms",
+      "spec": { "kind": "complex", "tolerance": { "abs": 0.01 } },
+      "reference": [3.0, -2.0],
+      "inputs": [
+        "3-2j", "3 - 2i", "3 -2j", "(3-2j)", "((3-2j))", "3-2*j", "3-j*2", "3+-2j", "3--2j", "+3-2j", "3+0-2j",
+        "3.00-2.00j", "3.-2.j", "3.0e0-2e0j", "30e-1-20e-1j", "03", "003", "00003-2j", "03-2j", "3-02j", "3-0.2e1j",
+        "3.001-1.999j", "3.02-2j", "3-2.02j", "3+2j", "-3-2j", "3", "-2j", "2.5-0.5j", "j", "i", "ii", "jj", "1j",
+        "2j3", "3j2", "3 2", "3-2j-", "3-2j+", "3-", "-", "+", "*", "**", "(", ")", "(3-2j", "3-2j)",
+        "3*", "*3", "3**", "3 - 2 i", "3 - 2 I", "3-2J", "3e", "3e+", "3.e", "e3", "3ej", "3ei", "1_0", "1/2",
+        "3%2", "3//2", "3,2", "3;2", "abc", "j(2)", "2(3)", "3(j)", "(3)(2)", "__import__('os')", "3-2j\n",
+        "2**2-2*2-3j*0+3-2j", "(1+j)**2", "(1-j)**2", "j**2", "j**3", "j**-1", "2**-1", "2**0.5", "(-8)**0.5",
+        "(-8)**2", "(-8)**-2", "(-8)**3", "0**0", "0**1", "0**-1", "0j**0", "0j**2", "0j**-1", "0**0.5", "0**j",
+        "2**j", "j**j", "(1+j)**0.5", "(1+j)**(1+j)", "10**64", "10**65", "10**-64", "10**-65", "9**64", "9**65",
+        "2**64", "2**65", "1e300**1", "1e200**2","(3-2j)**1", "(3-2j)**0", "(3-2j)**-1",
+        "--3-2j", "---3-2j", "-(-3+2j)", "-(3-2j)", "+(3-2j)", "-3*-1-2j", "1*3-2*1j", "3*1-1*2j", "-2**2+7-2j",
+        "2**2**2", "2**2**3", "2**-2**2", "(2**2)**2", "-2**-2", "007", "00", "0", "0.0", "0e0", "0j", "09.5",
+        "09.5-2j", "00.5", "0.5.5", "5.5.5", "1e5j", "1e-5j", "1E5", "1E5j", "1.5E+2", "1.5e+2j"
+      ]
+    },
+    {
+      "name": "complex:wrong-answers",
+      "spec": { "kind": "complex", "tolerance": { "abs": 0.01, "rel": 0.01 } },
+      "reference": [0.0, 2.0],
+      "wrong": [
+        { "tag": "mc.sign", "value": [0.0, -2.0], "feedback_md": "Check the sign." },
+        { "tag": "mc.real-only", "value": 2.0 }
+      ],
+      "inputs": ["2j", "-2j", "2", "0+2j", "1e-3+2j", "-4**0.5", "(-4)**0.5", "4**0.5", "2.02j", "2.03j", "j*2"]
+    },
+    {
+      "name": "complex:wrong-answers-real-ref",
+      "spec": { "kind": "complex", "tolerance": { "rel": 0.05 } },
+      "reference": [100.0, 50.0],
+      "wrong": [{ "tag": "mc.swap", "value": [50.0, 100.0], "feedback_md": "Real and imaginary parts are swapped." }],
+      "inputs": ["100+50j", "50+100j", "104+52j", "106+50j", "100+53j", "100"]
+    }
+  ]
+}
