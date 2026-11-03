@@ -19,6 +19,25 @@ export const welcome = {
   privacy: "Privacy summary, data export and deletion",
 } as const;
 
+// Consent screen (FR-004, doc 11 section 8, doc 12). Founder self-consent only for now; the full beta
+// flow comes in M5. The text is versioned by CONSENT_VERSION in src/lib/profile/consent.ts.
+export const consent = {
+  title: "Your data and research use",
+  intro: "Before you start, here is what this app records and how it may be used. You can use the app either way.",
+  loggedHeading: "What is logged",
+  logged: "Your answers, session times, hints used, tutor messages and uploads, so that practice can be scheduled and the app can be evaluated.",
+  researchHeading: "What research use means",
+  research: "With your agreement, this data may be analysed to compare two ways of organising the same course. Without it, your data is still used to run the app for you, and is left out of those analyses.",
+  whoHeading: "Who sees it",
+  who: "Only the person running the study, in a form that uses an internal id instead of your name. Tutor text is processed by a third-party provider.",
+  withdrawHeading: "How to withdraw",
+  withdraw: "You can withdraw at any time without penalty. A settings page for this is planned; until then, tell the person running the study and it will be recorded.",
+  accept: "I agree to research use of my data",
+  decline: "Continue without research use",
+  saving: "Saving",
+  saveFailed: "We could not save your choice. Nothing was lost; try again in a moment.",
+} as const;
+
 // S02 Onboarding (doc 09). Steps 1 to 3 here; reminders (step 4) come with the notification task.
 export const onboarding = {
   title: "Set up your practice",

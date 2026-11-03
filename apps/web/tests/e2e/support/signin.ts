@@ -1,6 +1,13 @@
 import { expect, type Page } from "@playwright/test";
 import { adminClient } from "./mail";
 
+/** On the consent screen: agrees to research use and waits for the app to move on to onboarding. */
+export async function acceptConsent(page: Page): Promise<void> {
+  await expect(page).toHaveURL(/\/consent$/);
+  await page.getByRole("button", { name: "I agree to research use of my data" }).click();
+  await expect(page).toHaveURL(/\/onboarding$/);
+}
+
 /**
  * Signs a learner in through the app's own link route (`/auth/callback?token_hash=...`), with the
  * token minted by the admin API. It exercises the same server-side verification as the emailed

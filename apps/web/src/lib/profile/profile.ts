@@ -2,6 +2,8 @@
 import type { components } from "@polymath/shared-types";
 import { ApiError } from "@/lib/api/errors";
 import { json, type ApiContext } from "@/lib/api/route";
+import { checkEvent } from "@/lib/events/emit";
+import { CONSENT_PURPOSES, CONSENT_VERSION } from "./consent.ts";
 import { privilegedDb } from "@/server/privileged/db";
 import { createProfileStore, type ProfileChanges, type ProfileRow, type ProfileStore } from "@/server/privileged/profile-store";
 
@@ -28,9 +30,24 @@ export function isTimeZone(value: string): boolean {
   }
 }
 
+/**
+ * A consent can be recorded for a known purpose, under the current version, one purpose per request.
+ * Anything else (another purpose, an old or invented version) is refused, so the stored record can
+ * only say what the app actually showed. `at` from the client is ignored: the store stamps it.
+ */
+function toConsent(consents: NonNullable<ProfileUpdate["consents"]>): NonNullable<ProfileChanges["consent"]> {
+  const entries = Object.entries(consents);
+  const [purpose, record] = entries[0] ?? [];
+  if (entries.length !== 1 || !record || !(CONSENT_PURPOSES as readonly string[]).includes(purpose ?? "")) {
+    fail("consents", "send exactly one known purpose, for example research");
+  }
+  if (record.version !== CONSENT_VERSION) fail("consents", `version must be the current consent version ${CONSENT_VERSION}`);
+  const event = checkEvent("consent_recorded", { consent_version: record.version, research: record.granted });
+  return { purpose: "research", version: record.version, granted: record.granted, event };
+}
+
 /** Turns a validated-by-schema body into column changes, applying the product rules the schema cannot. */
 export function toChanges(body: ProfileUpdate): ProfileChanges {
-  if (body.consents !== undefined) fail("consents", "consents are recorded on the consent screen, not through this route");
   if (body.weekly_minutes_target !== undefined && (body.weekly_minutes_target < WEEKLY_MINUTES_MIN || body.weekly_minutes_target > WEEKLY_MINUTES_MAX)) {
     fail("weekly_minutes_target", `must be between ${String(WEEKLY_MINUTES_MIN)} and ${String(WEEKLY_MINUTES_MAX)} minutes`);
   }
@@ -46,6 +63,7 @@ export function toChanges(body: ProfileUpdate): ProfileChanges {
   if (body.reminder_time_local !== undefined) changes.reminder_time_local = body.reminder_time_local;
   if (body.bedtime_local !== undefined) changes.bedtime_local = body.bedtime_local;
   if (body.reminder_prefs !== undefined) changes.reminder_prefs = body.reminder_prefs;
+  if (body.consents !== undefined) changes.consent = toConsent(body.consents);
   if (body.adult_attested === true) changes.attestAdult = true;
   if (body.onboarded === true) changes.markOnboarded = true;
   return changes;

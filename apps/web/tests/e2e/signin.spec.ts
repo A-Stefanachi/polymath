@@ -44,7 +44,7 @@ test("AC-1 the emailed six-digit code signs in and lands on / with a profiles ro
   expect(code).toMatch(/^\d{6}$/);
   await codeField.fill(`${code.slice(0, 3)} ${code.slice(3)}`); // pasted with a space
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/\/onboarding$/); // S01 AC-2: a new learner is not onboarded yet
+  await expect(page).toHaveURL(/\/consent$/); // S01 AC-2 + BL-0028: a new learner sees consent, then onboarding
   await expectProfileRow(page);
 });
 
@@ -52,7 +52,7 @@ test("AC-2 the same email holds a working link; following it signs in", async ({
   const sentAt = await requestCode(page);
   const { link } = await readSignInMail(email, sentAt);
   await page.goto(linkOnApp(link, baseURL ?? ""));
-  await expect(page).toHaveURL(/\/onboarding$/); // S01 AC-2: a new learner is not onboarded yet
+  await expect(page).toHaveURL(/\/consent$/); // S01 AC-2 + BL-0028: a new learner sees consent, then onboarding
   await expectProfileRow(page);
 });
 
@@ -61,7 +61,7 @@ test("AC-4 ST-AUTH-03: a consumed code and a consumed link are rejected and crea
   const { code, link } = await readSignInMail(email, sentAt);
   await page.getByLabel("6-digit code").fill(code);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/\/onboarding$/); // S01 AC-2: a new learner is not onboarded yet
+  await expect(page).toHaveURL(/\/consent$/); // S01 AC-2 + BL-0028: a new learner sees consent, then onboarding
 
   // Same code again, signed out.
   await context.clearCookies();

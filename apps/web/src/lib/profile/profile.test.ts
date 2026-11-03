@@ -5,6 +5,7 @@ import { logger } from "@/lib/logger";
 import { defineRoute, type ApiDeps } from "@/lib/api/route";
 import { createTestUser, dbReachable, deleteTestUser, testSql } from "@/lib/api/test-db";
 import { createProfileStore } from "@/server/privileged/profile-store";
+import { CONSENT_VERSION } from "./consent.ts";
 import { isTimeZone, readProfile, writeProfile } from "./profile.ts";
 
 const sql = testSql();
@@ -33,6 +34,7 @@ describe.skipIf(!reachable)("profile routes (database)", () => {
     other = await createTestUser(sql);
   });
   afterAll(async () => {
+    await sql`delete from public.events where user_id = ${me}`;
     await deleteTestUser(sql, me);
     await deleteTestUser(sql, other);
     await sql.end();
@@ -84,11 +86,38 @@ describe.skipIf(!reachable)("profile routes (database)", () => {
     }
   });
 
-  it("consents sent through PATCH are rejected and not stored", async () => {
-    const res = await send({ consents: { research: { version: "x", granted: true } } });
-    expect(res.status).toBe(400);
+  it("consents of another version or purpose, or several purposes, are rejected and nothing is stored", async () => {
+    for (const bad of [
+      { research: { version: "1999-01", granted: true } },
+      { marketing: { version: CONSENT_VERSION, granted: true } },
+      { research: { version: CONSENT_VERSION, granted: true }, marketing: { version: CONSENT_VERSION, granted: true } },
+      {},
+    ]) {
+      expect((await send({ consents: bad })).status).toBe(400);
+    }
     const rows = await sql`select consents from public.profiles where id = ${me}`;
     expect(rows[0]?.consents).toEqual({});
+    const events = await sql`select 1 from public.events where user_id = ${me} and name = 'consent_recorded'`;
+    expect(events).toHaveLength(0);
+  });
+
+  it("a consent under the current version is stamped by the server and writes one consent_recorded event; repeating it writes none", async () => {
+    const body = { consents: { research: { version: CONSENT_VERSION, granted: true, at: "1999-01-01T00:00:00Z" } } };
+    const before = Date.now();
+    expect((await send(body)).status).toBe(200);
+    expect((await send(body)).status).toBe(200);
+    const profile = (await read()) as { consents: { research: { version: string; granted: boolean; at: string } } };
+    expect(profile.consents.research).toMatchObject({ version: CONSENT_VERSION, granted: true });
+    expect(Date.parse(profile.consents.research.at)).toBeGreaterThanOrEqual(before - 2000);
+    const events = await sql<{ props: unknown }[]>`select props from public.events where user_id = ${me} and name = 'consent_recorded'`;
+    expect(events.map((e) => e.props)).toEqual([{ consent_version: CONSENT_VERSION, research: true }]);
+  });
+
+  it("a changed decision (withdrawal) replaces the record and adds a second event", async () => {
+    expect((await send({ consents: { research: { version: CONSENT_VERSION, granted: false } } })).status).toBe(200);
+    expect(((await read()) as { consents: { research: { granted: boolean } } }).consents.research.granted).toBe(false);
+    const events = await sql`select 1 from public.events where user_id = ${me} and name = 'consent_recorded'`;
+    expect(events).toHaveLength(2);
   });
 
   it("onboarded and adult_attested are set once and cannot be unset", async () => {

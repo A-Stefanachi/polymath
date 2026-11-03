@@ -25,3 +25,4 @@ BL-0021,2026-11-03,2026-11-03,,60,Email-code sign-in with link and proxy and Pla
 BL-0022,2026-11-03,2026-11-03,,60,API skeleton (zod from OpenAPI, error envelope, idempotency, rate limit, health) by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
 BL-0023,2026-11-03,2026-11-03,,45,Profile routes and onboarding form by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
 BL-0024,2026-11-03,2026-11-03,,40,Event catalogue generator, emitEvent and postEvents by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
+BL-0028,2026-11-03,2026-11-03,,30,Founder self-consent screen and consent_recorded event by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)

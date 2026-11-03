@@ -2,6 +2,7 @@
 // caller's id from the verified claims, and only the writable columns of ProfileUpdate are named,
 // so a protected column (cohort_id, id, created_at, consents) can never be reached from a body.
 import type { Sql } from "./db.ts";
+import { insertEvents } from "./events-store.ts";
 
 export type ProfileRow = {
   id: string;
@@ -34,6 +35,12 @@ export type ProfileChanges = {
   attestAdult?: true;
   /** Sets onboarded_at once. */
   markOnboarded?: true;
+  /**
+   * A consent decision for one purpose. The store stamps `at` itself and, when the stored record
+   * changes, writes `event` as a `consent_recorded` row in the same transaction. Repeating the
+   * stored decision writes nothing.
+   */
+  consent?: { purpose: "research"; version: string; granted: boolean; event: Record<string, unknown> };
 };
 
 export type ProfileStore = {
@@ -54,6 +61,17 @@ export function createProfileStore(sql: Sql): ProfileStore {
     get: async (userId) => (await SELECT(sql, userId))[0] ?? null,
     update: (userId, c) =>
       sql.begin(async (tx) => {
+        if (c.consent) {
+          const { purpose, version, granted, event } = c.consent;
+          const rows = await tx<{ consents: Record<string, { version?: string; granted?: boolean }> }[]>`
+            select consents from public.profiles where id = ${userId} for update`;
+          const stored = rows[0]?.consents[purpose];
+          if (rows[0] && !(stored?.version === version && stored.granted === granted)) {
+            const record = { version, granted, at: new Date().toISOString() };
+            await tx`update public.profiles set consents = consents || ${tx.json({ [purpose]: record })} where id = ${userId}`;
+            await insertEvents(tx as unknown as Sql, [{ userId, name: "consent_recorded", props: event }]);
+          }
+        }
         await tx`
           update public.profiles set
             display_name = coalesce(${c.display_name ?? null}, display_name),

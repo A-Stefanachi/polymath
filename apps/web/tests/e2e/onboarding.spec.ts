@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { adminClient, deleteUserByEmail, learnerFromCookies } from "./support/mail";
-import { signInAs } from "./support/signin";
+import { acceptConsent, signInAs } from "./support/signin";
 
 // BL-0023 acceptance; S01 AC-2 and S02 (doc 09). The browser runs in Europe/Rome so the
 // time-zone auto-detection is visible.
@@ -11,7 +11,7 @@ test.afterAll(async () => {
 
 test("S01 AC-2 + S02: a new learner lands on onboarding; finishing saves, and the values persist after reload", async ({ page }) => {
   await signInAs(page, email);
-  await expect(page).toHaveURL(/\/onboarding$/);
+  await acceptConsent(page); // consent comes before onboarding (BL-0028)
 
   // Step 1: goal and adult attestation; Next is refused until it is ticked.
   await expect(page.getByText("Step 1 of 3")).toBeVisible();
