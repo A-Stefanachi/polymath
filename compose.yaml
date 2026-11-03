@@ -1,0 +1,16 @@
+# Lean-slice worker on the founder's laptop (00a I2; BL-0029): `docker compose up worker`.
+# Queue-only: the worker opens outbound connections to the staging database and claims jobs; it
+# exposes no port. Secrets come from the untracked .env next to this file (DATABASE_URL_PRIVILEGED,
+# the session-pooler URL of the staging project, and GIT_SHA), never from this file (CLAUDE.md 2.5).
+services:
+  worker:
+    build:
+      context: services/worker
+      args:
+        GIT_SHA: ${GIT_SHA:-unknown}
+    command: ["python", "-m", "polymath_worker.run_worker"]
+    env_file: .env
+    environment:
+      APP_ENV: ${APP_ENV:-staging}
+    restart: unless-stopped
+    stop_grace_period: 30s # SIGTERM drain is 25 s (doc 03 section 8.4)

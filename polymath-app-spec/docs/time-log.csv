@@ -19,3 +19,4 @@ BL-0016,2026-11-03,2026-11-03,,25,Job queue worker loop by agent (autoswe direct
 BL-0018,2026-11-03,2026-11-03,,90,content:sync tool by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
 BL-0017,2026-11-03,2026-11-03,,20,Verification engine and item report writer by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
 BL-0016,2026-11-03,2026-11-03,,25,00a I3 follow-up (heartbeat row and function default privileges) by agent; founder_hours to be filled in by the founder after review (doc 13 section 3.3)
+BL-0029,2026-11-03,,,20,Staging deploy workflow and laptop worker compose prepared by agent; deploy pending founder settings (infra/DEPLOY-STAGING.md)

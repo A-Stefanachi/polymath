@@ -1,0 +1,122 @@
+# Deploy to staging on every push to main (BL-0029; doc 03 section 9, 00a I2).
+#   1. migrate: supabase db push applies supabase/migrations not yet on the staging project.
+#   2. web:     Vercel CLI builds apps/web and deploys it (the Vercel GitHub app is not installed;
+#               infra/ACCOUNTS.md), then checks /api/v1/health reports the deployed commit.
+# The lean-slice worker runs on the founder's laptop in queue-only mode (00a I2), so nothing is
+# deployed for it here; WORKER_URL stays unset on Vercel.
+#
+# Needs the GitHub environment "staging" (infra/DEPLOY-STAGING.md): secrets SUPABASE_ACCESS_TOKEN,
+# SUPABASE_DB_PASSWORD, VERCEL_TOKEN; variables SUPABASE_PROJECT_REF, VERCEL_ORG_ID,
+# VERCEL_PROJECT_ID, STAGING_URL. Until they exist the workflow skips with a warning naming what
+# is missing (a green run that deployed nothing), rather than failing in the middle of a deploy.
+name: deploy-staging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false # never cancel a migration half way
+
+env:
+  VERCEL_CLI: "64.7.0"
+
+jobs:
+  migrate:
+    name: migrate (supabase db push)
+    runs-on: ubuntu-24.04
+    environment: staging
+    timeout-minutes: 15
+    outputs:
+      configured: ${{ steps.cfg.outputs.configured }}
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      STAGING_URL: ${{ vars.STAGING_URL }}
+    steps:
+      - name: staging environment is configured
+        id: cfg
+        run: |
+          missing=()
+          for v in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD SUPABASE_PROJECT_REF VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID STAGING_URL; do
+            [ -n "${!v}" ] || missing+=("$v")
+          done
+          if ((${#missing[@]})); then
+            echo "::warning::staging deploy skipped: GitHub environment 'staging' lacks ${missing[*]} (see infra/DEPLOY-STAGING.md)"
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.cfg.outputs.configured == 'true'
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1 (version from packageManager)
+        if: steps.cfg.outputs.configured == 'true'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: steps.cfg.outputs.configured == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - if: steps.cfg.outputs.configured == 'true'
+        run: pnpm install --frozen-lockfile
+      - name: link the staging project
+        if: steps.cfg.outputs.configured == 'true'
+        run: pnpm exec supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+      - name: migrations to apply (dry run)
+        if: steps.cfg.outputs.configured == 'true'
+        run: pnpm exec supabase db push --dry-run --password "$SUPABASE_DB_PASSWORD"
+      - name: supabase db push
+        if: steps.cfg.outputs.configured == 'true'
+        run: pnpm exec supabase db push --password "$SUPABASE_DB_PASSWORD"
+
+  web:
+    name: web (Vercel deploy and health check)
+    needs: migrate
+    if: needs.migrate.outputs.configured == 'true'
+    runs-on: ubuntu-24.04
+    environment: staging
+    timeout-minutes: 20
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      STAGING_URL: ${{ vars.STAGING_URL }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1 (version from packageManager)
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Environment variables (Supabase URL and keys, GIT_SHA, APP_ENV=staging) live in the Vercel
+      # project, never in this file (doc 03 section 9.2). The commit is passed at build time.
+      - name: vercel pull (staging = Vercel "preview" target)
+        run: pnpm dlx "vercel@${VERCEL_CLI}" pull --yes --environment=preview --token="$VERCEL_TOKEN"
+      - name: vercel build
+        run: pnpm dlx "vercel@${VERCEL_CLI}" build --token="$VERCEL_TOKEN" --build-env GIT_SHA="$GITHUB_SHA"
+      - name: vercel deploy
+        id: deploy
+        run: |
+          url=$(pnpm dlx "vercel@${VERCEL_CLI}" deploy --prebuilt --token="$VERCEL_TOKEN" --env GIT_SHA="$GITHUB_SHA")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+      - name: point the staging alias at this deployment
+        run: pnpm dlx "vercel@${VERCEL_CLI}" alias set "${{ steps.deploy.outputs.url }}" "${STAGING_URL#https://}" --token="$VERCEL_TOKEN"
+      - name: /api/v1/health reports this commit (BL-0029 acceptance 1)
+        run: |
+          for _ in 1 2 3 4 5 6; do
+            body=$(curl -sS --max-time 20 "$STAGING_URL/api/v1/health" || true)
+            echo "$body"
+            if printf '%s' "$body" | grep -q "\"git_sha\":\"$GITHUB_SHA\""; then exit 0; fi
+            sleep 10
+          done
+          echo "::error::$STAGING_URL/api/v1/health does not report $GITHUB_SHA"
+          exit 1
