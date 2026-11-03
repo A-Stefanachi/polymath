@@ -637,6 +637,10 @@ repo_gate tsc pnpm - 0 0 t_tsc -
 t_boundaries() { pnpm -s lint:boundaries; }
 repo_gate boundaries pnpm - 0 0 t_boundaries -
 
+# --- claims (lint) ---
+t_claims() { pnpm -s claims:lint; }
+repo_gate claims pnpm - 0 0 t_claims -
+
 # --- bandit (security) ---
 t_bandit() { printf '%s\0' "$@" | matcher bandit bandit .autoswe/baselines/bandit.json batch -- bandit -q -f json -ll -ii @TARGETS@; }
 file_gate bandit '(^(.*/)?[^/]*\.py$)' bandit - 0 0 t_bandit -

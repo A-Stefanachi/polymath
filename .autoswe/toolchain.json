@@ -109,6 +109,23 @@
       ]
     },
     {
+      "name": "claims",
+      "category": "lint",
+      "scope": "repo",
+      "check": "pnpm -s claims:lint",
+      "requires": "pnpm",
+      "globs": [
+        "apps/web/src/**",
+        "packages/*/src/**",
+        "prompts/**",
+        "polymath-app-spec/docs/**",
+        "polymath-app-spec/content/**",
+        "polymath-app-spec/backlog/**",
+        "**/*.md",
+        "tools/claims-lint/**"
+      ]
+    },
+    {
       "name": "bandit",
       "category": "security",
       "globs": [

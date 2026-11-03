@@ -57,6 +57,17 @@ repos:
           (^tools/boundaries/.*$)
         pass_filenames: false
         require_serial: true
+      - id: claims
+        name: claims
+        entry: "bash .autoswe/gates.sh --hook claims"
+        language: system
+        files: >-
+          (?x)(^apps/web/src/.*$)|(^packages/[^/]*/src/.*$)|(^prompts/.*$)|
+          (^polymath-app-spec/docs/.*$)|(^polymath-app-spec/content/.*$)|
+          (^polymath-app-spec/backlog/.*$)|(^(.*/)?[^/]*\.md$)|
+          (^tools/claims-lint/.*$)
+        pass_filenames: false
+        require_serial: true
       - id: bandit
         name: bandit
         entry: "bash .autoswe/gates.sh --hook bandit"

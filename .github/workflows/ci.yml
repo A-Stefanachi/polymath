@@ -35,6 +35,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm -w lint
       - run: pnpm lint:boundaries
+      - run: pnpm claims:lint
       - run: pnpm -w typecheck
       - run: pnpm -w test
 

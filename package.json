@@ -11,7 +11,8 @@
     "lint": "pnpm -r --if-present lint",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
-    "lint:boundaries": "node tools/boundaries/src/cli.ts"
+    "lint:boundaries": "node tools/boundaries/src/cli.ts",
+    "claims:lint": "node tools/claims-lint/src/cli.ts"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
