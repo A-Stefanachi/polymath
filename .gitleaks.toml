@@ -16,4 +16,6 @@ paths = [
   '''(^|/)node_modules/''',
   '''(^|/)\.venv/''',
   '''(^|/)\.git/''',
+  # Agent worktrees are full copies of this repository (git-ignored); they are scanned in their own checkout.
+  '''(^|/)\.claude/worktrees/''',
 ]

@@ -18,6 +18,7 @@ Direct dependencies and their licences (CLAUDE.md section 5). Transitive depende
 | `next` | 16.4.4 | MIT |
 | `react` | 19.3.1 | MIT |
 | `react-dom` | 19.3.1 | MIT |
+| `supabase` (CLI) | 2.121.0 | MIT |
 | `tailwind-merge` | 3.7.0 | MIT |
 | `tailwindcss` | 4.3.4 | MIT |
 | `tw-animate-css` | 1.4.0 | MIT |

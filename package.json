@@ -12,12 +12,16 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
     "lint:boundaries": "node tools/boundaries/src/cli.ts",
-    "claims:lint": "node tools/claims-lint/src/cli.ts"
+    "claims:lint": "node tools/claims-lint/src/cli.ts",
+    "db:start": "supabase start -x studio,edge-runtime,logflare,vector,imgproxy,supavisor,realtime,postgres-meta",
+    "db:reset": "supabase db reset",
+    "db:stop": "supabase stop"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
     "@types/node": "24.19.2",
     "eslint": "9.39.5",
+    "supabase": "2.121.0",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.1",
     "vitest": "5.1.0"
