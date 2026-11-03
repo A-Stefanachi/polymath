@@ -43,3 +43,4 @@ Thumbs.db
 .autoswe/STEER.md
 CLAUDE.local.md
 .claude/agent-memory/
+.claude/worktrees/

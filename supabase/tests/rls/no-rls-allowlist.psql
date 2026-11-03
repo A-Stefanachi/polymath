@@ -1,0 +1,7 @@
+-- ST-RLS-01 allow-list (BL-0012): tables of schema public or app_private that may have row level
+-- security disabled. One line per table with a reason; every line is checked to be a real table
+-- without RLS, so a stale entry fails the test. Empty on purpose: the baseline enables RLS everywhere
+-- (jobs and idempotency_keys have RLS and no learner policy). It is a psql include (not .txt) because
+-- the tests run in a container that can only read files through psql's \ir.
+--
+-- insert into rls_test.no_rls_allowed values ('table_name', 'why it is safe without RLS');

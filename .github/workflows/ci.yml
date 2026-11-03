@@ -33,6 +33,8 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: generated API types are committed and current (BL-0010)
+        run: pnpm gen:api-types && git diff --exit-code packages/shared-types
       - run: pnpm -w lint
       - run: pnpm lint:boundaries
       - run: pnpm claims:lint
@@ -81,6 +83,10 @@ jobs:
           uvx ruff@0.16.9 format --check services tools --extend-exclude tools/boundaries/fixtures
       - name: pytest (each service)
         run: bash tools/ci/service-tests.sh
+      - name: docker build services/worker (BL-0014)
+        run: docker build --build-arg GIT_SHA="${GITHUB_SHA}" -t polymath-worker:ci services/worker
+      - name: worker image runs as non-root with ngspice
+        run: docker run --rm polymath-worker:ci sh -c 'test "$(id -un)" = worker && command -v ngspice && python -c "import polymath_worker.main"'
 
   # BL-0195: every specification-package validator, as one required check. It runs on every push
   # rather than only when docs/, content/, schemas/, backlog/ or reference/ change: a required
@@ -104,3 +110,65 @@ jobs:
         run: uv pip install -r tools/ci/requirements-spec.txt
       - name: check_package, validate_*, lint_claims, scheduler vectors, verifier tests
         run: PYTHON=python bash tools/ci/spec-validators.sh
+
+  # Wave 2: the migrated database (BL-0008 onwards). Local Supabase in Docker for the database
+  # tests, and a throwaway PostgreSQL 17 cluster for pnpm db:diff-reference.
+  database:
+    name: database (migrations, reference diff, SQL tests)
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1 (version from packageManager)
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: install PostgreSQL 17 server binaries (PGDG)
+        run: |
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y --no-install-recommends postgresql-17
+          /usr/lib/postgresql/17/bin/initdb --version
+      - name: supabase start (Postgres 17, auth, REST, storage)
+        run: pnpm db:start
+      - name: supabase db reset (migrations apply on an empty database)
+        run: pnpm db:reset
+      - name: public tables equal the create table public statements of schema.sql
+        run: |
+          tables=$(psql -Atc "select count(*) from information_schema.tables where table_schema='public'" "postgresql://postgres:postgres@127.0.0.1:54322/postgres")
+          expected=$(grep -ciE '^create table (if not exists )?public\.' polymath-app-spec/schemas/schema.sql)
+          echo "public tables: $tables, create table public statements: $expected"
+          test "$tables" = "$expected"
+      - name: pnpm db:diff-reference
+        run: pnpm db:diff-reference
+        env:
+          PG_BINDIR: /usr/lib/postgresql/17/bin
+      - name: pnpm test:db (pgTAP under supabase/tests)
+        run: pnpm test:db
+      - name: pnpm test:rls (RLS harness and ST-RLS suite, BL-0011/BL-0012)
+        run: pnpm test:rls
+      - name: RLS mutation check (the tests fail when attempts loses its protection)
+        run: bash tools/rls-mutation.sh
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.12"
+      - name: worker tests incl. job queue integration (BL-0016)
+        run: cd services/worker && uv run --frozen pytest
+        env:
+          POLYMATH_TEST_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+      - name: generated DB types are committed and current (BL-0010)
+        run: pnpm gen:db-types && git diff --exit-code packages/shared-types
+      - name: content-schema key regexes equal the DB check constraints (BL-0013)
+        run: pnpm --filter @polymath/content-schema test
+        env:
+          REQUIRE_DB: "1"
+      - name: content:sync integration tests on a throwaway database (BL-0018)
+        # validate_graph.py (the oracle for the skill count) and the Python hash oracle need PyYAML.
+        run: |
+          python3 -m pip install -r tools/ci/requirements-spec.txt
+          pnpm --filter @polymath/content-sync test
+        env:
+          REQUIRE_DB: "1"
+          POLYMATH_TEST_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
