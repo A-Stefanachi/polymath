@@ -1,0 +1,6 @@
+[project]
+name = "polymath-worker"
+version = "0.0.0"
+description = "Polymath worker: job queue, graders and verifiers (doc 03 section 4.3). Filled in by BL-0014."
+requires-python = "==3.12.*"
+dependencies = []
