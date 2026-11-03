@@ -8,7 +8,7 @@ Settings → Branches → Branch protection rules (or a ruleset) for `main`:
 |---|---|
 | Require a pull request before merging | on, 1 approval; dismiss stale approvals on new commits |
 | Require status checks to pass | on; require branches to be up to date |
-| Required checks (from `.github/workflows/ci.yml`) | `typescript (lint, typecheck, vitest)`, `secrets (gitleaks tree and history, negative control)`, `python (ruff, pytest)`, `package-checks` |
+| Required checks (from `.github/workflows/ci.yml`) | `typescript (lint, typecheck, vitest)`, `secrets (gitleaks tree and history, negative control)`, `python (ruff, pytest)`, `package-checks`, `database (migrations, reference diff, SQL tests)`, `python-vs-ts parity` |
 | Block force pushes | on |
 | Restrict deletions | on |
 | Allow merge methods | squash only |
