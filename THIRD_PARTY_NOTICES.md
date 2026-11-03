@@ -26,6 +26,25 @@ Direct dependencies and their licences (CLAUDE.md section 5). Transitive depende
 | `typescript-eslint` | 8.72.1 | MIT |
 | `vitest` | 5.1.0 | MIT |
 
+## Worker (Python, `services/worker/uv.lock`)
+
+Direct dependencies of `services/worker` (BL-0014). Licences read from the package metadata on PyPI on 2026-11-03; transitive dependencies are in `uv.lock`.
+
+| Package | Version | Licence |
+|---|---|---|
+| `fastapi` | 0.136.0 | MIT |
+| `mpmath` | 1.3.0 | BSD-3-Clause |
+| `numpy` | 2.5.3 | BSD-3-Clause |
+| `pint` | 0.26.2 | BSD-3-Clause |
+| `pyyaml` | 6.0.3 | MIT |
+| `structlog` | 26.1.0 | MIT OR Apache-2.0 |
+| `sympy` | 1.14.0 | BSD-3-Clause |
+| `uvicorn` | 0.54.0 | BSD-3-Clause |
+| `httpx` (dev) | 0.28.1 | BSD-3-Clause |
+| `pytest` (dev) | 9.2.0 | MIT |
+
+The worker image also installs the Debian `ngspice` package (BSD-3-Clause for the simulator core, with some modules under other permissive licences) and copies the `uv` binary (MIT OR Apache-2.0).
+
 ## Optional native dependency to confirm
 
 `next` pulls in `sharp` 0.35.5 (Apache-2.0) as an optional dependency for image optimisation, and `sharp` ships prebuilt `libvips` binaries under LGPL-3.0-or-later. They are linked dynamically and not modified. LGPL is not a plain permissive licence, so CLAUDE.md section 12 item 5 applies: the founder confirms or excludes it before the app serves optimised images.
