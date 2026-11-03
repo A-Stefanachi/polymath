@@ -1,0 +1,170 @@
+schema_version: 1
+key: tpl.math.systems-x
+version: 2
+authoring_status: ready
+skill_key: math.alg.systems-2x2
+task_kind: problem
+grader_type: exact_numeric
+difficulty_prior: 0.45
+title: 2x2 system by elimination
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-01'
+  llm_assistance:
+    used: true
+    roles:
+    - draft_template
+    - hints
+    - misconception_tags
+    model: claude-opus-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts:
+  - phone
+  - desktop
+  est_seconds: 150
+  phone_suitable: true
+  offline_gradable: true
+parameters:
+- name: xv
+  type: int
+  min: -6
+  max: 9
+  description: The value of x, chosen first
+  nonzero: true
+- name: yv
+  type: int
+  min: -6
+  max: 9
+  description: The value of y, chosen first
+  nonzero: true
+- name: a1
+  type: int
+  min: 2
+  max: 5
+  description: x coefficient, first equation
+- name: b1
+  type: int
+  min: 2
+  max: 5
+  description: y coefficient, first equation
+- name: a2
+  type: int
+  min: 2
+  max: 5
+  description: x coefficient, second equation
+- name: bb2
+  type: int
+  min: 2
+  max: 5
+  description: Size of the negative y coefficient, second equation
+derived:
+- name: c1
+  expr: a1 * xv + b1 * yv
+- name: c2
+  expr: a2 * xv - bb2 * yv
+- name: ea
+  expr: a1 * bb2 + a2 * b1
+- name: rhs
+  expr: c1 * bb2 + c2 * b1
+- name: m1a
+  expr: a1 * bb2
+- name: m1b
+  expr: b1 * bb2
+- name: m1c
+  expr: c1 * bb2
+- name: m2a
+  expr: a2 * b1
+- name: m2c
+  expr: c2 * b1
+constraints:
+- id: x-not-y
+  expr: xv != yv
+  reason: If x equals y the learner cannot be caught reporting the wrong unknown.
+- id: needs-scaling
+  expr: b1 != bb2
+  reason: Unequal y coefficients make the learner scale before eliminating, and keep the add-without-eliminating mistake detectable.
+render:
+  stem_md: 'Solve the system and give $x$:
+
+
+    $${{a1|int}}x + {{b1|int}}y = {{c1|int}}$$
+
+
+    $${{a2|int}}x - {{bb2|int}}y = {{c2|int}}$$'
+  answer_prompt: Enter the value of x.
+  alt_text: 'Two equations: {{a1|int}} x plus {{b1|int}} y equals {{c1|int}}, and {{a2|int}} x minus {{bb2|int}} y equals
+    {{c2|int}}. Find x.'
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      sol: (c1 * bb2 + b1 * c2) / (a1 * bb2 + a2 * b1)
+  steps:
+  - id: s1
+    text_md: 'Scale so the $y$ terms cancel. First equation times ${{bb2|int}}$: ${{m1a|int}}x + {{m1b|int}}y = {{m1c|int}}$.
+      Second equation times ${{b1|int}}$: ${{m2a|int}}x - {{m1b|int}}y = {{m2c|int}}$.'
+  - id: s2
+    text_md: 'Add the two new equations: ${{ea|int}}x = {{rhs|int}}$.'
+  - id: s3
+    text_md: Divide by ${{ea|int}}$ to get $x = {{sol|int}}$.
+answer:
+  kind: numeric
+  value: sol
+  unit: dimensionless
+  accept_units:
+  - dimensionless
+  bare_number_means: dimensionless
+  tolerance:
+    rel: 0.0
+    abs: 1.0e-06
+verifiers:
+- id: solve-system
+  kind: sympy_solve
+  independence: Solves the two stated equations with sympy instead of the Cramer closed form, and the coefficients come from
+    x and y chosen first.
+  spec:
+    unknowns:
+    - x
+    - y
+    equations:
+    - a1 * x + b1 * y - c1
+    - a2 * x - bb2 * y - c2
+    checks:
+    - unknown: x
+      output: sol
+  tolerance:
+    rel: 1.0e-09
+- id: window
+  kind: bounds
+  independence: Range limits derived from the parameter ranges, independent of any formula for the value.
+  spec:
+    output: sol
+    lo: '-6'
+    hi: '9'
+hints:
+  l1: Which unknown would be easier to remove from the two equations?
+  l2: Scale the equations so one unknown has matching coefficients of opposite sign, then add them.
+  l3: 'Multiply the first equation by ${{bb2|int}}$ and the second by ${{b1|int}}$ so the $y$ terms match: ${{m1a|int}}x +
+    {{m1b|int}}y = {{m1c|int}}$ and ${{m2a|int}}x - {{m1b|int}}y = {{m2c|int}}$.'
+misconceptions:
+- tag: mc.reports-y
+  description: Gives the value of y instead of x.
+  wrong_answer_expr: yv
+  feedback_md: That is the other unknown. Check which letter the question asks for.
+- tag: mc.sign-slip
+  description: Ends with the correct size but the wrong sign.
+  wrong_answer_expr: -xv
+  feedback_md: The size is right but the sign is not. Recheck the step where you divide.
+- tag: mc.adds-without-scaling
+  description: Adds the equations before the y terms match, then ignores y.
+  wrong_answer_expr: (c1 + c2) / (a1 + a2)
+  feedback_md: The y terms do not cancel until their coefficients match. Scale first, then add.
+fuzz:
+  samples: 200
+  seed_base: 5000
+  max_rejection_rate: 0.7
+  min_distinct_param_sets: 50

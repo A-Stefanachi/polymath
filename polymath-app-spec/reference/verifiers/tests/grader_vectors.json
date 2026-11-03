@@ -1,0 +1,181 @@
+{
+ "description": "Shared grader vectors. Every implementation of exact_numeric and symbolic_equivalence (Python worker, TypeScript offline client) must reproduce these results. 'correct' is the expected grade.correct; 'invalid' marks inputs that must be reported as invalid_input (never scored wrong).",
+ "numeric": {
+  "spec": {
+   "kind": "numeric",
+   "unit": "V",
+   "tolerance": {
+    "rel": 0.01,
+    "abs": 0.001
+   },
+   "bare_number_means": "V"
+  },
+  "reference": 2.97,
+  "cases": [
+   {
+    "input": "2.97 V",
+    "correct": true
+   },
+   {
+    "input": "2.97",
+    "correct": true
+   },
+   {
+    "input": "2970 mV",
+    "correct": true
+   },
+   {
+    "input": "0.00297 kV",
+    "correct": true
+   },
+   {
+    "input": "2,97 V",
+    "correct": true
+   },
+   {
+    "input": "2.9701 V",
+    "correct": true
+   },
+   {
+    "input": "2.9 V",
+    "correct": false
+   },
+   {
+    "input": "3.3 V",
+    "correct": false
+   },
+   {
+    "input": "2.97 µV",
+    "correct": false
+   },
+   {
+    "input": "2.97 A",
+    "correct": false,
+    "invalid": true
+   },
+   {
+    "input": "",
+    "correct": false,
+    "invalid": true
+   },
+   {
+    "input": "two",
+    "correct": false,
+    "invalid": true
+   },
+   {
+    "input": "1,234.5 V",
+    "correct": false,
+    "invalid": true
+   }
+  ]
+ },
+ "complex": {
+  "spec": {
+   "kind": "complex",
+   "tolerance": {
+    "abs": 0.01
+   }
+  },
+  "reference": [
+   3.0,
+   -2.0
+  ],
+  "cases": [
+   {
+    "input": "3-2j",
+    "correct": true
+   },
+   {
+    "input": "3 - 2i",
+    "correct": true
+   },
+   {
+    "input": "3 -2j",
+    "correct": true
+   },
+   {
+    "input": "3+2j",
+    "correct": false
+   },
+   {
+    "input": "__import__('os')",
+    "correct": false,
+    "invalid": true
+   }
+  ]
+ },
+ "symbolic": {
+  "spec": {
+   "variables": [
+    "x"
+   ],
+   "sample_domain": {
+    "x": [
+     0.3,
+     2.5
+    ]
+   },
+   "forbid_functions": [
+    "diff",
+    "Derivative",
+    "integrate",
+    "Integral",
+    "limit"
+   ]
+  },
+  "reference": "3*x**2*sin(2*x) + 2*x**3*cos(2*x)",
+  "cases": [
+   {
+    "input": "3*x^2*sin(2*x) + 2*x^3*cos(2*x)",
+    "correct": true
+   },
+   {
+    "input": "x^2*(3*sin(2*x)+2*x*cos(2*x))",
+    "correct": true
+   },
+   {
+    "input": "3x^2 sin(2x) + 2x^3 cos(2x)",
+    "correct": true
+   },
+   {
+    "input": "3*x^2*sin(2*x) + x^3*cos(2*x)",
+    "correct": false
+   },
+   {
+    "input": "6*x*cos(2*x)",
+    "correct": false
+   },
+   {
+    "input": "diff(x^3*sin(2*x), x)",
+    "correct": false,
+    "invalid": true
+   },
+   {
+    "input": "y",
+    "correct": false,
+    "invalid": true
+   },
+   {
+    "input": "3*x^2*sin 2*x",
+    "correct": false,
+    "invalid": true
+   },
+   {
+    "input": "__import__('os').system('id')",
+    "correct": false,
+    "invalid": true
+   },
+   {
+    "input": "9**9**9",
+    "correct": false,
+    "invalid": true
+   },
+   {
+    "input": "x**100000",
+    "correct": false,
+    "invalid": true
+   }
+  ]
+ }
+}

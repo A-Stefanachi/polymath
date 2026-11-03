@@ -1,0 +1,5413 @@
+openapi: 3.1.0
+info:
+  title: Polymath learning app HTTP API
+  version: 1.0.0
+  summary: HTTP API served by Next.js route handlers under /api/v1.
+  description: |
+    Contract-bound API for the Polymath adaptive learning PWA (docs/00-contract.md). Names, enums and
+    identifiers follow the contract exactly. Narrative design: docs/03-architecture.md and docs/04-data-model.md.
+
+    **Authentication.** Supabase Auth (email magic link). The browser holds a session cookie; native or script
+    clients send `Authorization: Bearer <supabase access token>`. Every endpoint except `/health` requires
+    authentication. `user_id` is always derived from the verified session, never from the request body.
+
+    **Idempotency.** Every `POST` that creates or changes state accepts an `Idempotency-Key` header
+    (8-128 characters, a UUID v4 recommended). Replaying the same key with the same body within 48 hours returns
+    the original status and body with header `Idempotent-Replay: true`. The same key with a different body returns
+    `409` with code `idempotency_key_reuse`. `POST /attempts` and `POST /sync/push` additionally dedupe on
+    `client_attempt_id` inside the body.
+
+    **Errors.** All errors use `application/problem+json` (see `Error`). `code` is a stable machine-readable
+    string, `request_id` matches the `X-Request-Id` response header and the server logs.
+
+    **Rate limits.** Per user: 120 requests/minute overall; tutor endpoints 20/minute and a daily token budget;
+    uploads 30/hour; session previews (`POST /sessions/build` with `dry_run: true`) 10/minute. Exceeding returns `429` with
+    `Retry-After` seconds.
+
+    **Time and units.** Timestamps are RFC 3339 UTC. Durations are `*_s` seconds or `*_min` minutes. Scores are
+    floats in [0, 1]. FSRS ratings are integers 1-4.
+
+    **Hints, unaided and strict-unaided.** `unaided` is `true` iff `max_hint_level <= 1` and the solution was not
+    revealed (decision 00a B1); checkpoint tasks expose no hint UI at all. The stricter evaluation signal
+    (strict-unaided: `max_hint_level = 0` and no tutor panel opened) lives in the internal database view
+    `app_private.v_attempts_strict_unaided`. It is analysis-only and **has no endpoint**.
+
+    **Route names.** This document is authoritative for route names. Routes that docs/09-ux-and-flows.md proposed
+    under `/api/...` are mapped in docs/00c-route-rename-map.md.
+
+    **Claims policy.** Response copy fields (`feedback`, `message`) never contain the claims forbidden by contract
+    section 8.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+servers:
+  - url: https://{host}/api/v1
+    description: Deployed environments (staging and production hosts are set in the environment configuration)
+    variables:
+      host:
+        default: localhost:3000
+        description: Host name of the Next.js app
+security:
+  - bearerAuth: []
+  - cookieAuth: []
+tags:
+  - name: Profile
+  - name: Sessions
+  - name: Tasks and items
+  - name: Attempts
+  - name: Tutor
+  - name: Skills and graph
+  - name: Review and offline sync
+  - name: Plans
+  - name: Modules
+  - name: Notifications
+  - name: Projects
+  - name: Checkpoints
+  - name: Experiments
+  - name: Privacy
+  - name: Admin
+  - name: Meta
+paths:
+  /health:
+    get:
+      tags: [Meta]
+      operationId: getHealth
+      summary: Liveness and dependency check
+      description: Unauthenticated. Returns 200 when the app can reach the database; `worker` reports the last worker heartbeat age.
+      security: []
+      responses:
+        '200':
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+              example:
+                status: ok
+                version: 2026.11.0
+                db: ok
+                worker_heartbeat_age_s: 4
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /profile:
+    get:
+      tags: [Profile]
+      operationId: getProfile
+      summary: Get my profile
+      responses:
+        '200':
+          description: The caller's profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+              example:
+                id: 5f0f7f0e-2a0c-4d38-9a43-0c4b9a4f1a11
+                display_name: Andrea
+                timezone: Europe/Rome
+                weekly_minutes_target: 480
+                target_retention: 0.9
+                locale: en
+                reminder_time_local: '07:30'
+                bedtime_local: '23:00'
+                reminder_prefs:
+                  enabled: true
+                  micro_time_local: '07:30'
+                  focus_lead_min: 120
+                  quiet_hours:
+                    start: '21:00'
+                    end: '08:00'
+                  max_per_day: 1
+                  weekly_summary: false
+                consents:
+                  research:
+                    version: '2026-11'
+                    granted: true
+                    at: '2026-10-31T08:05:00Z'
+                onboarded_at: '2026-10-31T08:10:00Z'
+                cohort_key: founder
+                adult_attested: true
+                created_at: '2026-10-31T08:00:00Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      tags: [Profile]
+      operationId: updateProfile
+      summary: Update my profile
+      description: "Only the listed fields are writable. `adult_attested: true` must be sent once at onboarding (adults only in v1) and cannot be unset."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdate'
+            example:
+              timezone: Europe/Rome
+              weekly_minutes_target: 480
+              adult_attested: true
+              onboarded: true
+              bedtime_local: '23:00'
+              reminder_prefs:
+                enabled: true
+                micro_time_local: '07:30'
+                max_per_day: 1
+      responses:
+        '200':
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /sessions/build:
+    post:
+      tags: [Sessions]
+      operationId: buildSession
+      summary: Build a session
+      description: |
+        Runs the session builder (contract 7.2, 7.3, 7.6) and persists a `planned` session with ordered tasks whose
+        estimated total fits `available_minutes`. Micro sessions contain only `phone_suitable` tasks. Items are taken
+        from the pre-generated verified pool; if the pool is short the response is `503` with code `item_pool_empty`
+        and the learner is offered already cached tasks. At most one `planned` or `active` session exists per user;
+        a `planned` session older than 2 hours is abandoned automatically.
+        Mapping of `available_minutes` to a session type when `session_type` is omitted: 1-20 `micro`, 45-120 `focus`,
+        121 or more `lab` (up to 240). There is no session type for 21-44 minutes (decision 00a A1): such a window
+        returns one `micro` session of at most 20 minutes, and once it is completed a second `micro` session may be built
+        for the remainder (a separate `sessions` row). When `plan_slot_id` is given the session fulfils that weekly slot.
+        A diagnostic is a `focus` session whose tasks have `task_kind: diagnostic` (00a G16, F-02 of 00b).
+
+        **Preview (`dry_run: true`, decision G16).** The builder runs exactly as above but nothing is persisted:
+        no `sessions` or `session_tasks` row is written, no item is reserved or marked as served, no plan slot changes,
+        and the `Idempotency-Key` header is ignored (it is not stored, so it is not consumed and a later real build may
+        reuse it). The response is `200` with a `SessionPreview` (planned tasks without task or item ids). Because nothing is reserved,
+        a later real build can return different tasks if the learner's state, the pool or the clock changed; the preview is
+        a proposal, not a promise. Previews use their own rate-limit bucket (10 per minute per user) and the same errors
+        as a real build (`409 open_session_exists` when an open session exists, `503 item_pool_empty` when the pool is short).
+        A preview writes no row of any kind on the server.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BuildSessionRequest'
+            examples:
+              build:
+                summary: Build and persist a session
+                value:
+                  available_minutes: 15
+                  context: phone
+                  session_type: micro
+              preview:
+                summary: Preview only (nothing written)
+                value:
+                  available_minutes: 15
+                  context: phone
+                  dry_run: true
+      responses:
+        '200':
+          description: Preview (only when `dry_run` is true); nothing was written or reserved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionPreview'
+              example:
+                dry_run: true
+                session_type: micro
+                context: phone
+                available_minutes: 15
+                planned_min: 7
+                builder_version: v1
+                graph_version: 0.1.0
+                plan_slot_id: null
+                tasks:
+                  - position: 1
+                    task_kind: retrieval
+                    skill_key: elec.dc.voltage-divider
+                    project_step_key: null
+                    est_seconds: 90
+                    reason: due_review
+                    assessment_kind: null
+                  - position: 2
+                    task_kind: worked_example
+                    skill_key: elec.dc.ohms-law
+                    project_step_key: null
+                    est_seconds: 240
+                    reason: frontier
+                    assessment_kind: null
+        '201':
+          description: Session created
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+              example:
+                id: 7d1c3f52-8b0a-4b6b-8d1e-0d6d4b8a9c01
+                session_type: micro
+                context: phone
+                status: planned
+                available_minutes: 15
+                planned_min: 14
+                actual_min: null
+                started_at: null
+                ended_at: null
+                builder_version: v1
+                graph_version: 0.1.0
+                plan_slot_id: null
+                tasks:
+                  - id: 0c0a4a3e-5e2a-4a67-9c3e-2f6f1b8e0001
+                    position: 1
+                    task_kind: retrieval
+                    skill_key: elec.dc.voltage-divider
+                    item_id: 3f8d2b9a-0b8e-4f5c-8e11-7a4c0d9e1001
+                    status: pending
+                    est_seconds: 90
+                    reason: due_review
+                  - id: 0c0a4a3e-5e2a-4a67-9c3e-2f6f1b8e0002
+                    position: 2
+                    task_kind: worked_example
+                    skill_key: elec.dc.ohms-law
+                    item_id: 3f8d2b9a-0b8e-4f5c-8e11-7a4c0d9e1002
+                    status: pending
+                    est_seconds: 240
+                    reason: frontier
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: An active session already exists (`open_session_exists`) or idempotency conflict
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /sessions:
+    get:
+      tags: [Sessions]
+      operationId: listSessions
+      summary: List my recent sessions
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/SessionStatus'
+      responses:
+        '200':
+          description: Sessions, newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, next_cursor]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Session'
+                  next_cursor:
+                    type: [string, 'null']
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /sessions/{session_id}:
+    get:
+      tags: [Sessions]
+      operationId: getSession
+      summary: Get a session with its tasks
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: The session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /sessions/{session_id}/start:
+    post:
+      tags: [Sessions]
+      operationId: startSession
+      summary: Start a planned session
+      description: "Sets `status=active` and `started_at`. Idempotent: starting an active session returns it unchanged."
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Session now active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Session is already completed or abandoned (`session_not_startable`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /sessions/{session_id}/complete:
+    post:
+      tags: [Sessions]
+      operationId: completeSession
+      summary: Complete (or abandon) a session
+      description: |
+        Sets `ended_at`, computes `actual_min`, marks unfinished tasks `skipped`, commits the session's review units
+        (docs/06 section 3.3, decision 00a H15) and returns a summary. Completing twice returns the stored summary. With
+        `abandon: true` the session ends as `abandoned` and its review units commit the same way. A session left open
+        past the idle timeout is closed by the server as `abandoned`.
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteSessionRequest'
+            example:
+              abandon: false
+              perceived_difficulty: 3
+      responses:
+        '200':
+          description: Session summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionSummary'
+              example:
+                session_id: 7d1c3f52-8b0a-4b6b-8d1e-0d6d4b8a9c01
+                status: completed
+                actual_min: 13
+                tasks_done: 2
+                tasks_skipped: 0
+                attempts: 2
+                correct: 1
+                skills_touched: [elec.dc.voltage-divider, elec.dc.ohms-law]
+                next_due_at: '2026-11-02T07:30:00Z'
+                checkpoint_due: false
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tasks/{task_id}:
+    get:
+      tags: [Tasks and items]
+      operationId: getTask
+      summary: Get a session task with its learner-visible item
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Task and item (no answer key)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDetail'
+              example:
+                task:
+                  id: 0c0a4a3e-5e2a-4a67-9c3e-2f6f1b8e0001
+                  position: 1
+                  task_kind: retrieval
+                  skill_key: elec.dc.voltage-divider
+                  item_id: 3f8d2b9a-0b8e-4f5c-8e11-7a4c0d9e1001
+                  status: pending
+                  est_seconds: 90
+                  reason: due_review
+                item:
+                  id: 3f8d2b9a-0b8e-4f5c-8e11-7a4c0d9e1001
+                  template_key: tpl.elec.voltage-divider-vout
+                  skill_key: elec.dc.voltage-divider
+                  task_kind: retrieval
+                  grader_type: exact_numeric
+                  est_seconds: 90
+                  rendered:
+                    prompt_md: 'A divider uses R1 = 4.7 kOhm (top) and R2 = 10 kOhm (bottom) from a 5.0 V supply. What is Vout, in volts?'
+                    alt_text: 'Two resistors in series from 5 volts to ground; output taken between them.'
+                    response_schema:
+                      type: numeric
+                      unit: V
+                      accepts_units: [V, mV]
+                    hint_levels_available: [1, 2, 3, 4]
+                  difficulty_est: 0.2
+                  status: verified
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tasks/{task_id}/complete:
+    post:
+      tags: [Tasks and items]
+      operationId: completeTask
+      summary: Finish or skip a task that has no graded attempt
+      description: |
+        Owner only; another user's task is `404`. `outcome: done` applies to `worked_example` tasks, which are never graded
+        (docs/02 LS-008): it writes no attempt, no grade and no Elo, mastery or FSRS update, and moves `loop_step` as in
+        docs/06 section 7.4. Graded task kinds close through `POST /attempts`; `project_step` tasks close through
+        `POST /user-projects/{user_project_id}/steps/{step_key}/complete`.
+
+        `outcome: skipped` needs `skip_reason`. A skip is not an attempt (docs/06 section 10). `already_know` is accepted
+        only where docs/06 section 5.6 offers it and converts the skill to `loop_step = verify`. Tasks with a non-null
+        `assessment_kind` cannot be skipped. `self_explanation` and `skip_reason` are stored in
+        `sessions.plan.task_outcomes` under the task id, and are never graded.
+
+        The session must be `active`. Repeating the same outcome returns the stored task; a different outcome on a closed
+        task is `409 task_not_completable`.
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteTaskRequest'
+            example:
+              outcome: done
+              self_explanation: The divider output scales with R2 over the total, because the same current flows through both resistors.
+      responses:
+        '200':
+          description: Closed task and the skill's loop step
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCompletion'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`task_not_completable`, or `idempotency_key_reuse`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /items/{item_id}:
+    get:
+      tags: [Tasks and items]
+      operationId: getItem
+      summary: Get one learner-visible item
+      parameters:
+        - $ref: '#/components/parameters/ItemId'
+      responses:
+        '200':
+          description: The item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearnerItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /items/{item_id}/report:
+    post:
+      tags: [Tasks and items]
+      operationId: reportItem
+      summary: Report a wrong, ambiguous or unsolvable item
+      description: Creates an `item_reports` row (status `open`) and emits an `item_reported` event (decision 00a D5). Three distinct reporters (or one report from the admin) flag the item `needs_human_review` and stop serving it.
+      parameters:
+        - $ref: '#/components/parameters/ItemId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemReportRequest'
+            example:
+              reason: wrong_answer
+              note: 'The expected value looks like 3.4 V but I get 3.40 V with 4.7 kOhm swapped.'
+      responses:
+        '202':
+          description: Report recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [recorded]
+                properties:
+                  recorded:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /attempts:
+    post:
+      tags: [Attempts]
+      operationId: submitAttempt
+      summary: Submit an attempt
+      description: |
+        Records the attempt (idempotent on `client_attempt_id`) and grades it.
+        - `exact_numeric`, `symbolic_equivalence`, `multiple_choice`: graded inline; returns `200` with the grade (p95 under 2 s).
+        - `code_tests`, `spice_compare`, `drc_erc`, `rubric_llm`, `measurement_check`: returns `202` with
+          `grade_status: pending` and a `Location` header; poll `GET /attempts/{attempt_id}`. `rubric_llm` grades carry
+          `mastery_eligible: false` until the rubric is calibrated.
+        - `human_review`: `202`, stays pending until the founder reviews.
+        `unaided`, `hints_used` and `max_hint_level` are taken from server-side tutor records, not from the body;
+        `unaided` is true iff `max_hint_level <= 1` (00a B1). `assessment_kind` is copied from the session task.
+        Attempts whose `grade_status` is not `graded` (`invalid_input`, `pending_review`, `error`) are ignored by the
+        scheduler and never lower mastery (00a B4).
+        If the item was served from an offline pack set `offline: true` and include `client_grade`; the server
+        grade always wins.
+        After grading, the FSRS card, Elo and mastery state are updated in the same transaction as the grade.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitAttemptRequest'
+            examples:
+              numeric:
+                summary: Numeric answer with unit
+                value:
+                  client_attempt_id: 4c0a0f1e-6a52-4c4d-a7b0-2b4a7a2f9e01
+                  item_id: 3f8d2b9a-0b8e-4f5c-8e11-7a4c0d9e1001
+                  session_id: 7d1c3f52-8b0a-4b6b-8d1e-0d6d4b8a9c01
+                  session_task_id: 0c0a4a3e-5e2a-4a67-9c3e-2f6f1b8e0001
+                  started_at: '2026-11-01T07:31:00Z'
+                  submitted_at: '2026-11-01T07:31:42Z'
+                  response:
+                    kind: numeric
+                    value: 3.4
+                    unit: V
+                  confidence: 4
+              code:
+                summary: Code submission (graded asynchronously)
+                value:
+                  client_attempt_id: 4c0a0f1e-6a52-4c4d-a7b0-2b4a7a2f9e02
+                  item_id: 3f8d2b9a-0b8e-4f5c-8e11-7a4c0d9e1010
+                  started_at: '2026-11-01T08:00:00Z'
+                  submitted_at: '2026-11-01T08:12:10Z'
+                  response:
+                    kind: code
+                    language: c
+                    files:
+                      - path: debounce.c
+                        content: 'int debounce(int raw) { return raw; }'
+      responses:
+        '200':
+          description: Graded inline
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptResult'
+              example:
+                id: a1b2c3d4-0000-4000-8000-00000000a001
+                client_attempt_id: 4c0a0f1e-6a52-4c4d-a7b0-2b4a7a2f9e01
+                item_id: 3f8d2b9a-0b8e-4f5c-8e11-7a4c0d9e1001
+                grade_status: graded
+                grade:
+                  status: graded
+                  score: 1
+                  correct: true
+                  mastery_eligible: true
+                  graders:
+                    - type: exact_numeric
+                      score: 1
+                      detail:
+                        expected: 3.4
+                        tolerance_rel: 0.01
+                        unit_ok: true
+                  feedback: Correct. Vout = 5.0 x 10 / (4.7 + 10) = 3.40 V.
+                hints_used: 0
+                max_hint_level: 0
+                unaided: true
+                skill_update:
+                  skill_key: elec.dc.voltage-divider
+                  mastery_state: learning
+                  next_due: null
+                  rating: null
+                  tier_attained: null
+        '202':
+          description: Accepted, grading in progress
+          headers:
+            Location:
+              description: URL to poll
+              schema:
+                type: string
+            Retry-After:
+              description: Seconds to wait before polling
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptResult'
+              example:
+                id: a1b2c3d4-0000-4000-8000-00000000a002
+                client_attempt_id: 4c0a0f1e-6a52-4c4d-a7b0-2b4a7a2f9e02
+                item_id: 3f8d2b9a-0b8e-4f5c-8e11-7a4c0d9e1010
+                grade_status: pending
+                grade: null
+                hints_used: 0
+                max_hint_level: 0
+                unaided: true
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`idempotency_key_reuse`, or `item_not_servable` (item retired or not verified)'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Response exceeds 256 KB (`payload_too_large`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /attempts/{attempt_id}:
+    get:
+      tags: [Attempts]
+      operationId: getAttempt
+      summary: Get an attempt and poll for its grade
+      description: Poll every 1 s for the first 5 s, then every 3 s, for up to 90 s. `grade_status` is `pending`, `graded`, `invalid_input`, `pending_review` or `error`. Polling can stop at any value except `pending`; `pending_review` waits for a human. On `error` the attempt can be resubmitted with a new `client_attempt_id`; the failed attempt never changes learner state.
+      parameters:
+        - name: attempt_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Current state
+          headers:
+            Retry-After:
+              description: Present while pending
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tutor/messages:
+    post:
+      tags: [Tutor]
+      operationId: sendTutorMessage
+      summary: Send a message to the tutor about an item
+      description: |
+        Attempt-first policy (contract 7.9): the tutor refuses with `refused_reason: attempt_required` until the
+        learner has submitted at least one attempt on the item or `stated_attempt` is non-empty. The reference
+        solution is loaded server-side; replies pass a leak filter. Disabled (403 `tutor_disabled_in_checkpoint`)
+        for tasks inside a checkpoint session. Send `Accept: text/event-stream` for token streaming; the stream
+        ends with a final `event: done` containing the same JSON as the non-streaming response.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TutorMessageRequest'
+            example:
+              item_id: 3f8d2b9a-0b8e-4f5c-8e11-7a4c0d9e1001
+              text: I got 1.6 V and I am not sure why my answer is off.
+              stated_attempt: I used Vout = 5 x 4.7 / (4.7 + 10).
+      responses:
+        '200':
+          description: Tutor reply (also returned when the tutor refuses)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TutorReply'
+              example:
+                thread_id: 9a9a9a9a-0000-4000-8000-000000000001
+                message_id: 9a9a9a9a-0000-4000-8000-000000000002
+                role: assistant
+                hint_level: 1
+                content: Check which resistor the output voltage is measured across. Which one is it in the figure?
+                refused_reason: null
+                policy_flags:
+                  attempt_first_ok: true
+                  leak_filter: pass
+                  injection_suspected: false
+                unaided_after: true
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: '`tutor_disabled_in_checkpoint`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /tutor/messages/{message_id}/report:
+    post:
+      tags: [Tutor]
+      operationId: reportTutorMessage
+      summary: Report a tutor reply
+      description: Creates an `item_reports` row with `target_type = tutor_message` on the learner's own thread and emits an `item_reported` event (FR-056, decision 00a H16). It goes to admin triage and never withholds an item. Another learner's message returns 404.
+      parameters:
+        - name: message_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemReportRequest'
+      responses:
+        '202':
+          description: Report recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [recorded]
+                properties:
+                  recorded:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tutor/hints:
+    post:
+      tags: [Tutor]
+      operationId: requestHint
+      summary: Request the next hint on the ladder
+      description: |
+        Moves the hint ladder one step (1 nudge, 2 conceptual hint, 3 worked step, 4 reveal solution). Skipping levels
+        is not allowed: `requested_level` must equal `current_level + 1`, otherwise `409 hint_level_skipped`.
+        Level 4 ends credit for that attempt (score forced to 0, `unaided: false`) and requires `confirm_reveal: true`.
+        The same attempt-first rule as `/tutor/messages` applies.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HintRequest'
+            example:
+              item_id: 3f8d2b9a-0b8e-4f5c-8e11-7a4c0d9e1001
+              requested_level: 2
+              stated_attempt: I swapped R1 and R2.
+      responses:
+        '200':
+          description: Hint (or refusal)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TutorReply'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: '`tutor_disabled_in_checkpoint`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: '`hint_level_skipped` or `reveal_not_confirmed`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /tutor/threads/{thread_id}:
+    get:
+      tags: [Tutor]
+      operationId: getTutorThread
+      summary: Get a tutor thread with all messages
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Thread
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TutorThread'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /skills:
+    get:
+      tags: [Skills and graph]
+      operationId: listSkills
+      summary: List skills with my state
+      parameters:
+        - name: node
+          in: query
+          schema:
+            $ref: '#/components/schemas/NodeCode'
+        - name: module
+          in: query
+          schema:
+            type: string
+        - name: mastery_state
+          in: query
+          schema:
+            $ref: '#/components/schemas/MasteryState'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Skills
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, next_cursor]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Skill'
+                  next_cursor:
+                    type: [string, 'null']
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /skills/{skill_key}:
+    get:
+      tags: [Skills and graph]
+      operationId: getSkill
+      summary: Get one skill with prerequisites, dependants and my state
+      parameters:
+        - $ref: '#/components/parameters/SkillKey'
+      responses:
+        '200':
+          description: Skill detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkillDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /graph:
+    get:
+      tags: [Skills and graph]
+      operationId: getGraph
+      summary: Read the skill graph with my state overlay
+      description: "Returns nodes and edges for the requested node codes (default all MVP nodes). Stub skills (`status: stub`) show where other disciplines attach and are omitted unless `include_stubs=true`."
+      parameters:
+        - name: nodes
+          in: query
+          description: Comma-separated node codes
+          schema:
+            type: string
+            examples: ['math,elec,sw']
+        - name: include_stubs
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Graph
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Graph'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /frontier:
+    get:
+      tags: [Skills and graph]
+      operationId: getFrontier
+      summary: Skills available now (contract 7.1)
+      description: Returns skills whose `hard` prerequisites are `mastered` (regardless of current retrievability) or `reviewing` with retrievability of at least 0.8 (0.7 for skills already in progress), and whose `min_tier` conditions hold, plus the reason each is available. Skills currently in progress are listed separately.
+      responses:
+        '200':
+          description: Frontier
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Frontier'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /review-queue:
+    get:
+      tags: [Review and offline sync]
+      operationId: getReviewQueue
+      summary: Due and upcoming FSRS reviews
+      parameters:
+        - name: horizon_h
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 168
+            default: 24
+      responses:
+        '200':
+          description: Queue
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewQueue'
+              example:
+                now: '2026-11-02T07:30:00Z'
+                due_now: 6
+                due_within_horizon: 9
+                estimated_minutes: 12
+                items:
+                  - skill_key: elec.dc.voltage-divider
+                    due: '2026-11-02T07:00:00Z'
+                    retrievability: 0.87
+                    mastery_state: learning
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /progress:
+    get:
+      tags: [Skills and graph]
+      operationId: getProgress
+      summary: Aggregated progress and tier view
+      description: |
+        One read for the Progress screen (docs/09 S15), derived entirely from the caller's own rows (RLS applies; there is no
+        cross-user data). Sources: `skill_state` joined to `skills` (tier attained and mastery state per node),
+        `skill_state.due` (review load for the next 7 days in the learner's time zone), `sessions.actual_min` of the current
+        ISO week against `weekly_plans.target_minutes` (falling back to `profiles.weekly_minutes_target`), and
+        `user_projects`, `project_steps` and `project_evidence` (project status). Nothing is stored; the response is
+        computed on request and may be cached by the client for up to 60 seconds.
+
+        A node is `l1_working` only when at least 90% of its skills with `tier_target` L1 or below have `tier_attained`
+        L1 or higher **and** its L1 gate project has all required evidence `accepted` (contract section 7.13). Anything
+        less must be shown as the counts, never as a badge. Hour estimates are not part of this response.
+      responses:
+        '200':
+          description: Progress view
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Progress'
+              example:
+                generated_at: '2026-11-18T19:05:00Z'
+                timezone: Europe/Rome
+                week:
+                  start_date: '2026-11-16'
+                  end_date: '2026-11-22'
+                  minutes_done: 215
+                  minutes_target: 480
+                totals:
+                  skills: 138
+                  by_mastery_state: {unseen: 120, learning: 6, reviewing: 8, mastered: 3, decayed: 1}
+                nodes:
+                  - node: elec
+                    skills_total: 62
+                    by_mastery_state: {unseen: 52, learning: 3, reviewing: 5, mastered: 2, decayed: 0}
+                    tier_counts: {none: 52, L0: 7, L1: 3, L2: 0, L3: 0}
+                    l1_scope_skills: 40
+                    l1_scope_at_l1: 3
+                    l1_gate_project:
+                      project_key: prj.L1.led-blink-and-measure
+                      status: active
+                      steps_done: 2
+                      steps_total: 5
+                      evidence_accepted: 1
+                    l1_working: false
+                review_load:
+                  horizon_days: 7
+                  overdue_now: 2
+                  total_due: 19
+                  estimated_minutes: 24
+                  days:
+                    - {date: '2026-11-18', due: 3}
+                    - {date: '2026-11-19', due: 4}
+                    - {date: '2026-11-20', due: 2}
+                    - {date: '2026-11-21', due: 3}
+                    - {date: '2026-11-22', due: 1}
+                    - {date: '2026-11-23', due: 4}
+                    - {date: '2026-11-24', due: 2}
+                projects:
+                  - user_project_id: 2a2a2a2a-0000-4000-8000-000000000001
+                    project_key: prj.L1.led-blink-and-measure
+                    status: active
+                    steps_done: 2
+                    steps_total: 5
+                    evidence_pending_review: 1
+                    grants_pending: 1
+                    grants_applied: 1
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /modules:
+    get:
+      tags: [Modules]
+      operationId: listModules
+      summary: List modules
+      description: Modules in default learning order (`order_index`). Stub modules are omitted unless `include_stubs=true`.
+      parameters:
+        - name: node
+          in: query
+          schema:
+            $ref: '#/components/schemas/NodeCode'
+        - name: include_stubs
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Modules
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Module'
+              example:
+                items:
+                  - key: elec.dc
+                    node: elec
+                    module: dc
+                    title: DC circuits
+                    order_index: 3
+                    description: Voltage, current, resistance, dividers and loading.
+                    is_stub: false
+                    skill_count: 11
+                    skills_mastered: 2
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /modules/{module_key}:
+    get:
+      tags: [Modules]
+      operationId: getModule
+      summary: Get a module with its skills
+      parameters:
+        - $ref: '#/components/parameters/ModuleKey'
+      responses:
+        '200':
+          description: Module and its skills with my state
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Module'
+                  - type: object
+                    required: [skills]
+                    properties:
+                      skills:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Skill'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /plans:
+    get:
+      tags: [Plans]
+      operationId: getWeeklyPlan
+      summary: Get the weekly plan for a week
+      description: Defaults to the current week in the learner's time zone. `404` when no plan exists for that week (the UI then offers onboarding or `POST /plans`).
+      parameters:
+        - name: week_start
+          in: query
+          description: Local Monday of the week
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Plan with its slots
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeeklyPlan'
+              example:
+                id: 9a9a9a9a-0000-4000-8000-000000000001
+                week_start: '2026-11-02'
+                status: active
+                target_minutes: 480
+                planned_minutes: 460
+                slack_minutes: 20
+                paused_until: null
+                carry: {}
+                forecast:
+                  reviews_due: 14
+                  new_skills: 2
+                  is_estimate: true
+                slots:
+                  - id: 9b9b9b9b-0000-4000-8000-000000000001
+                    plan_id: 9a9a9a9a-0000-4000-8000-000000000001
+                    day: '2026-11-02'
+                    position: 1
+                    session_type: micro
+                    planned_min: 20
+                    context: phone
+                    status: planned
+                    start_time_local: null
+                    moved_from_day: null
+                    carried_min: 0
+                    note: null
+                    session_id: null
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Plans]
+      operationId: createWeeklyPlan
+      summary: Generate the weekly plan
+      description: |
+        Runs `weeklyPlanSlots(W)` (docs/06 section 7.8) for the week and stores the slots (contents are chosen when a session
+        starts). With `replace: true` an existing plan is superseded (used after the weekly target changes). `409 plan_exists`
+        without `replace`; `409 plan_not_editable` for a week that has passed.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePlanRequest'
+            example:
+              week_start: '2026-11-02'
+              weekly_minutes_target: 480
+      responses:
+        '201':
+          description: Plan created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeeklyPlan'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: '`plan_exists` or `plan_not_editable`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /plans/{plan_id}:
+    get:
+      tags: [Plans]
+      operationId: getWeeklyPlanById
+      summary: Get one weekly plan
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200':
+          description: Plan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeeklyPlan'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Plans]
+      operationId: updateWeeklyPlan
+      summary: Skip or pause a plan
+      description: '"Skip this week" sets `status: skipped`; "Pause plan until..." sets `status: paused` with `paused_until`. Reminders stop while paused.'
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePlanRequest'
+            example:
+              status: paused
+              paused_until: '2026-11-16'
+      responses:
+        '200':
+          description: Updated plan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeeklyPlan'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`plan_not_editable`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /plans/{plan_id}/slots:
+    post:
+      tags: [Plans]
+      operationId: addPlanSlot
+      summary: Add a short session to the week
+      description: '"Add a short session" in the UI: a `micro` slot (up to 7 micro slots per week). Also used for the extra micro slot the rebalance rule adds.'
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddSlotRequest'
+            example:
+              day: '2026-11-06'
+              session_type: micro
+              planned_min: 15
+              context: phone
+      responses:
+        '201':
+          description: Slot added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanSlot'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`plan_not_editable`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /plans/{plan_id}/slots/{slot_id}:
+    patch:
+      tags: [Plans]
+      operationId: movePlanSlot
+      summary: Move a slot to another day
+      description: 'Sets `day`, `status: moved` and `moved_from_day`. Two adjacent focus blocks are allowed (the UI warns); the server only rejects a day outside the plan''s week.'
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/SlotId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoveSlotRequest'
+            example:
+              day: '2026-11-08'
+      responses:
+        '200':
+          description: Updated slot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanSlot'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`plan_not_editable`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /plans/{plan_id}/calendar:
+    get:
+      tags: [Plans]
+      operationId: getPlanCalendar
+      summary: Download the week's slots as an iCalendar file
+      description: Generated from the stored slots. No external calendar API is called.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200':
+          description: iCalendar
+          content:
+            text/calendar:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /sync/pack:
+    get:
+      tags: [Review and offline sync]
+      operationId: getOfflinePack
+      summary: Download the offline pack
+      description: |
+        Returns up to 24 hours of due, phone-suitable micro tasks with verified items for offline use
+        (contract 7.10). Numeric and multiple-choice items include `local_check` so they can be graded provisionally on
+        the device; those answer keys are therefore visible to the device owner (accepted risk, doc 12 T-OFF-1).
+        Code, SPICE, rubric and checkpoint items are never included. `ETag` supports conditional requests.
+      parameters:
+        - name: hours
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 24
+            default: 24
+        - name: max_items
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 120
+            default: 60
+        - name: If-None-Match
+          in: header
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pack
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflinePack'
+        '304':
+          description: Unchanged
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /sync/push:
+    post:
+      tags: [Review and offline sync]
+      operationId: syncPush
+      summary: Upload offline attempts and events
+      description: |
+        Accepts up to 100 attempts and 500 events per call, in client order. Each attempt is deduplicated on
+        `client_attempt_id`. The server grades every attempt itself; `client_grade` is stored for audit. Per-attempt
+        outcomes are returned so the client can remove them from its queue; a failed element does not fail the batch.
+        Attempts older than 7 days or on items that were retired in the meantime are `rejected` with a reason and
+        do not affect the learner state.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncPushRequest'
+            example:
+              device_id: 6a6e0b0e-1c64-4b34-9e0a-0f2c0b6f7e01
+              attempts:
+                - client_attempt_id: 4c0a0f1e-6a52-4c4d-a7b0-2b4a7a2f9e11
+                  item_id: 3f8d2b9a-0b8e-4f5c-8e11-7a4c0d9e1001
+                  started_at: '2026-11-01T06:10:00Z'
+                  submitted_at: '2026-11-01T06:10:35Z'
+                  response:
+                    kind: numeric
+                    value: 3.4
+                    unit: V
+                  confidence: 3
+                  client_grade:
+                    score: 1
+                    correct: true
+              events:
+                - client_event_id: 2d4f2a40-1b00-4d6a-9a52-5b7d0a1a0001
+                  name: offline.session_completed
+                  at: '2026-11-01T06:15:00Z'
+                  props:
+                    tasks: 3
+      responses:
+        '200':
+          description: Per-element results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncPushResponse'
+              example:
+                attempts:
+                  - client_attempt_id: 4c0a0f1e-6a52-4c4d-a7b0-2b4a7a2f9e11
+                    attempt_id: a1b2c3d4-0000-4000-8000-00000000a003
+                    outcome: accepted
+                    grade_status: graded
+                    grade:
+                      status: graded
+                      score: 1
+                      correct: true
+                      graders:
+                        - type: exact_numeric
+                          score: 1
+                    client_grade_matched: true
+                events:
+                  - client_event_id: 2d4f2a40-1b00-4d6a-9a52-5b7d0a1a0001
+                    outcome: accepted
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          description: Batch too large
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /events:
+    post:
+      tags: [Review and offline sync]
+      operationId: postEvents
+      summary: Record client analytics events
+      description: Stores up to 100 events in the `events` table. Names must match `^[a-z0-9_.]{1,64}$`; `props` must not exceed 8 KB and must not contain free-text learner input.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [events]
+              properties:
+                events:
+                  type: array
+                  maxItems: 100
+                  items:
+                    $ref: '#/components/schemas/ClientEvent'
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accepted]
+                properties:
+                  accepted:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /push-subscriptions:
+    post:
+      tags: [Notifications]
+      operationId: createPushSubscription
+      summary: Register a Web Push subscription
+      description: Upsert on `(user, endpoint)`. Permission is requested only after the learner taps "Turn on reminders". Preferences live in `profiles.reminder_prefs`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushSubscriptionRequest'
+            example:
+              endpoint: https://push.example.test/send/abc123
+              keys:
+                p256dh: BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1XbjhazAkj7I99e8QcYP7DkM
+                auth: tBHItJI5svbpez7KI4CCXg
+      responses:
+        '201':
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushSubscription'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /push-subscriptions/{subscription_id}:
+    delete:
+      tags: [Notifications]
+      operationId: deletePushSubscription
+      summary: Remove a Web Push subscription
+      parameters:
+        - name: subscription_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '204':
+          description: Removed
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /projects:
+    get:
+      tags: [Projects]
+      operationId: listProjects
+      summary: List projects with gate status
+      responses:
+        '200':
+          description: Projects
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /projects/{project_key}:
+    get:
+      tags: [Projects]
+      operationId: getProject
+      summary: Get a project with its steps
+      parameters:
+        - $ref: '#/components/parameters/ProjectKey'
+      responses:
+        '200':
+          description: Project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /user-projects:
+    get:
+      tags: [Projects]
+      operationId: listUserProjects
+      summary: List my projects
+      responses:
+        '200':
+          description: My projects
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserProject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Projects]
+      operationId: startProject
+      summary: Start a project
+      description: Fails with `409 tier_gate_not_met` if the learner's `tier_attained` is below the project's `tier_gate` in the project's prerequisite skills, and with `409 project_already_open` if an active or paused instance exists. Generates the per-learner `variation` (component values etc.).
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [project_key]
+              properties:
+                project_key:
+                  $ref: '#/components/schemas/ProjectKey'
+            example:
+              project_key: prj.L1.led-blink-and-measure
+      responses:
+        '201':
+          description: Started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`tier_gate_not_met` or `project_already_open`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /user-projects/{user_project_id}:
+    get:
+      tags: [Projects]
+      operationId: getUserProject
+      summary: Get one of my projects
+      parameters:
+        - $ref: '#/components/parameters/UserProjectId'
+      responses:
+        '200':
+          description: Project instance with evidence summary per step
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Projects]
+      operationId: updateUserProject
+      summary: Pause, resume or abandon one of my projects
+      description: |
+        Owner only. Legal transitions: `active` to `paused`, `paused` to `active`, and `active` or `paused` to `abandoned`.
+        `completed` and `abandoned` are terminal, and `completed` is reached only through step completion. Setting the
+        current status returns the project unchanged. Any other transition is `409 project_status_invalid`. Bench state,
+        evidence and written project credit are kept.
+      parameters:
+        - $ref: '#/components/parameters/UserProjectId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserProjectRequest'
+            example:
+              status: paused
+      responses:
+        '200':
+          description: Updated project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProject'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`project_status_invalid`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /user-projects/{user_project_id}/steps/{step_key}/complete:
+    post:
+      tags: [Projects]
+      operationId: completeProjectStep
+      summary: Mark a project step done
+      description: |
+        Owner only, on an `active` project. The step must be `current_step_key`, and every required slot must hold a row at
+        `submitted` or better (docs/10 section 7.7); otherwise `409 step_not_completable`, with the reason in `detail`.
+        A step with an empty `evidence_required` has no slots to check. The call moves `current_step_key` to the next step
+        in `position` order.
+
+        Marking a step done verifies nothing. Project credit, `project_step_done` and project completion follow
+        docs/10 section 8.2 and fire only when every slot is satisfied, either in this transaction or later when
+        verification or review satisfies the last slot. Repeating the call on a step already passed returns the
+        project unchanged.
+      parameters:
+        - $ref: '#/components/parameters/UserProjectId'
+        - $ref: '#/components/parameters/StepKey'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Updated project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`step_not_completable`, or `idempotency_key_reuse`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /user-projects/{user_project_id}/steps/{step_key}/challenge:
+    post:
+      tags: [Projects]
+      operationId: createEvidenceChallenge
+      summary: Get a nonce to embed in the evidence
+      description: |
+        Issues (or returns) the nonce challenge of a step: a code `PM-XXXX-XXXX`, optional six digits and attempt-scope
+        parameters, valid 24 h by default (72 h for lab steps, up to 120 days when bound to an earlier challenge). Calling again while an unexpired challenge exists
+        returns the same challenge. `renew: true` expires it and issues `attempt_no + 1`. At most 5 challenges per step
+        per 24 hours (`429 rate_limited`). The challenge is valid only for this learner, project and step; it proves freshness, not identity.
+      parameters:
+        - $ref: '#/components/parameters/UserProjectId'
+        - $ref: '#/components/parameters/StepKey'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChallengeRequest'
+            example:
+              renew: false
+      responses:
+        '200':
+          description: Challenge
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Challenge'
+              example:
+                challenge_id: 7b0c6a9e-0000-4000-8000-000000000001
+                nonce: PM-7Q4K-2XD9
+                digits: '482915'
+                attempt_no: 1
+                params:
+                  period_ms: 800
+                issued_at: '2026-11-01T08:00:00Z'
+                expires_at: '2026-11-02T08:00:00Z'
+                status: open
+                bound_to: null
+                instructions: Print this string over UART at 115200 baud before the first sample line.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /user-projects/{user_project_id}/steps/{step_key}/challenge/verify:
+    post:
+      tags: [Projects]
+      operationId: verifyEvidenceChallenge
+      summary: Check a code against the step's challenge
+      description: |
+        Normalises the code (uppercase, spaces and hyphens removed, `PM` prefix optional) and compares it with the step's
+        latest challenge, or with the challenge it is bound to. Returns the reason code used by evidence verification:
+        `OK`, `NONCE_MISSING`, `NONCE_MISMATCH`, `NONCE_EXPIRED`. Does not consume the challenge; consumption happens when
+        evidence under it is accepted. Used by the capture sheet to pre-check a typed code before upload.
+      parameters:
+        - $ref: '#/components/parameters/UserProjectId'
+        - $ref: '#/components/parameters/StepKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChallengeVerifyRequest'
+            example:
+              code: pm 7q4k 2xd9
+      responses:
+        '200':
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeVerification'
+              example:
+                valid: true
+                reason: OK
+                challenge_id: 7b0c6a9e-0000-4000-8000-000000000001
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /user-projects/{user_project_id}/bench-state:
+    put:
+      tags: [Projects]
+      operationId: saveBenchState
+      summary: Autosave the bench state of a project
+      description: Replaces `user_projects.bench_state`. Called within 2 s of the last keystroke, at each substep, on app background and on "Pause bench"; queued offline and replayed.
+      parameters:
+        - $ref: '#/components/parameters/UserProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BenchState'
+            example:
+              version: 1
+              updated_at: '2026-11-02T18:41:07Z'
+              step_key: prj.L1.led-blink-and-measure#s03
+              substeps_done: [true, true, false]
+              power_state: unplugged
+              next_action: Capture the step response at the assigned frequency
+              hazards_pending: []
+      responses:
+        '200':
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProject'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /project-grants:
+    get:
+      tags: [Projects]
+      operationId: listProjectGrants
+      summary: List my project credit (read only)
+      description: |
+        Rows of the credit ledger written when all steps of a project are complete (docs/10 section 8.2). L0 credit is
+        `applied` at once; L1 credit stays `pending` until the skill is mastered and the checkpoint conditions hold. Credit
+        satisfies only the "applied" condition of the mastery rule and never raises a tier by itself; no project grants L2 or L3.
+        The UI wording is "Project built and evidence accepted", never "certified".
+      parameters:
+        - name: user_project_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: skill_key
+          in: query
+          schema:
+            $ref: '#/components/schemas/SkillKey'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/GrantStatus'
+      responses:
+        '200':
+          description: Grants
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProjectGrant'
+              example:
+                items:
+                  - id: 6c6c6c6c-0000-4000-8000-000000000001
+                    user_project_id: 2a2a2a2a-0000-4000-8000-000000000001
+                    project_key: prj.L1.led-blink-and-measure
+                    skill_key: elec.dc.voltage-divider
+                    tier: L1
+                    status: pending
+                    granted_at: '2026-11-20T18:00:00Z'
+                    applied_at: null
+                    assisted: false
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /user-projects/{user_project_id}/evidence/upload-url:
+    post:
+      tags: [Projects]
+      operationId: createEvidenceUploadUrl
+      summary: Get a signed upload URL for an evidence file
+      description: |
+        Validates the declared type and size (photo up to 15 MB, log/scope capture up to 5 MB, video up to 200 MB
+        and 120 s), reserves an `evidence_id`, and returns a signed URL valid 15 minutes for one `PUT`.
+        Real validation (magic bytes, decode, re-encode, EXIF removal) happens after upload in the worker.
+      parameters:
+        - $ref: '#/components/parameters/UserProjectId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadUrlRequest'
+            example:
+              step_key: prj.L1.led-blink-and-measure#s03
+              evidence_kind: photo
+              mime_type: image/jpeg
+              size_bytes: 2840113
+              sha256: 3b1f5e0c4d7a9b2e6f8a1c3d5e7f9a0b2c4d6e8f1a3b5c7d9e0f2a4b6c8d0e1f
+      responses:
+        '200':
+          description: Upload target
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadUrlResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '413':
+          description: Declared size over the limit for the kind
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /user-projects/{user_project_id}/evidence:
+    get:
+      tags: [Projects]
+      operationId: listEvidence
+      summary: List my evidence for a project
+      parameters:
+        - $ref: '#/components/parameters/UserProjectId'
+      responses:
+        '200':
+          description: Evidence
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Evidence'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Projects]
+      operationId: submitEvidence
+      summary: Finalise evidence and start verification
+      description: |
+        For file kinds call after the `PUT` to the signed URL succeeded; for `measurement`, `repo` and `note` supply
+        `content` and no file. Sets `evidence_status: submitted` and enqueues a `verify_evidence` job. Poll
+        `GET /evidence/{evidence_id}`.
+      parameters:
+        - $ref: '#/components/parameters/UserProjectId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitEvidenceRequest'
+            examples:
+              file:
+                value:
+                  evidence_id: e1e1e1e1-0000-4000-8000-000000000001
+                  step_key: prj.L1.led-blink-and-measure#s03
+                  evidence_kind: photo
+              measurement:
+                value:
+                  step_key: prj.L1.led-blink-and-measure#s04
+                  evidence_kind: measurement
+                  content:
+                    node: LED anode
+                    quantity: voltage
+                    value: 1.92
+                    unit: V
+                    instrument: handheld DMM
+                    nonce: PM-7Q4K-2XD9
+      responses:
+        '202':
+          description: Verification queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evidence'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`upload_missing` (no file found at the reserved path) or `evidence_already_submitted`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /evidence/{evidence_id}:
+    get:
+      tags: [Projects]
+      operationId: getEvidence
+      summary: Get one evidence record and its verification result
+      parameters:
+        - $ref: '#/components/parameters/EvidenceId'
+      responses:
+        '200':
+          description: Evidence
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evidence'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Projects]
+      operationId: deleteEvidence
+      summary: Delete one of my evidence records
+      description: |
+        Owner only, at any time and in any status (docs/12 section 6). Deletes the `project_evidence` row and its
+        storage object; `sweep_storage` removes any object left behind within 24 h. A `verify_evidence` job for a deleted
+        row ends without effect. If the row was the one satisfying a slot of an incomplete step, the slot opens again. A
+        step already passed stays passed, and project credit already written is kept.
+      parameters:
+        - $ref: '#/components/parameters/EvidenceId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /evidence/{evidence_id}/review:
+    post:
+      tags: [Projects, Admin]
+      operationId: reviewEvidence
+      summary: Human review of evidence (admin)
+      description: |
+        Admin only. Moves `needs_review` evidence to `accepted` or `rejected` and records `reviewed_by`. Accepting the last
+        required evidence of a step marks the step done and consumes the evidence's challenge. Status machine (00a C):
+        `submitted` to `auto_verified`, `needs_review` or `rejected`; `auto_verified` to `accepted`; `needs_review` to
+        `accepted` or `rejected`; `rejected` is terminal (the learner submits a new row).
+      parameters:
+        - $ref: '#/components/parameters/EvidenceId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewEvidenceRequest'
+            example:
+              decision: accepted
+              note: Nonce visible, LED current consistent with the 330 Ohm resistor.
+      responses:
+        '200':
+          description: Updated evidence
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evidence'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Evidence is not in `needs_review`
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /checkpoints:
+    get:
+      tags: [Checkpoints]
+      operationId: listCheckpoints
+      summary: List my checkpoints
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [due, in_progress, completed, expired]
+      responses:
+        '200':
+          description: Checkpoints
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Checkpoint'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /checkpoints/manual:
+    post:
+      tags: [Checkpoints]
+      operationId: createManualCheckpoint
+      summary: Ask for an unaided checkpoint now
+      description: "Creates a `due` checkpoint with `reason: manual` for a node or module. Scheduled checkpoints (module end, at least every 14 days) are created by the scheduler, not by this call. At most one open manual checkpoint per scope."
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scope_node]
+              additionalProperties: false
+              properties:
+                scope_node:
+                  $ref: '#/components/schemas/NodeCode'
+                scope_module:
+                  type: [string, 'null']
+                  description: Module slug (second key segment); null for a node-wide checkpoint
+            example:
+              scope_node: elec
+              scope_module: dc
+      responses:
+        '201':
+          description: Checkpoint created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Checkpoint'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: A manual checkpoint for that scope is already open (`checkpoint_not_startable`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /checkpoints/{checkpoint_id}/start:
+    post:
+      tags: [Checkpoints]
+      operationId: startCheckpoint
+      summary: Start an unaided checkpoint
+      description: Builds a session containing `checkpoint` tasks for the checkpoint scope, with the tutor disabled and no hints. Starting an `in_progress` checkpoint returns its existing session. Checkpoints are never available offline.
+      parameters:
+        - name: checkpoint_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201':
+          description: Checkpoint session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Checkpoint already completed or expired (`checkpoint_not_startable`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /experiments/assignments:
+    get:
+      tags: [Experiments]
+      operationId: getExperimentAssignments
+      summary: My experiment arms
+      description: |
+        Creates any missing sticky assignments for running experiments whose design assigns by `user` (hash allocation),
+        then returns every assignment of the caller, for all unit types. Assignment and logging only in v1; the arm of a unit
+        never changes after the first call. Unit-level (skill, module, confusable set) assignments are made with
+        `POST /experiments/{experiment_key}/assignments` or by the pairing job (external allocation).
+      parameters:
+        - name: experiment_key
+          in: query
+          schema:
+            type: string
+        - name: unit_type
+          in: query
+          schema:
+            $ref: '#/components/schemas/ExperimentUnitType'
+      responses:
+        '200':
+          description: Assignments
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExperimentAssignment'
+              example:
+                items:
+                  - experiment_key: exp.tutor-gating
+                    arm: treatment
+                    assigned_at: '2026-11-01T07:00:00Z'
+                    unit_type: user
+                    unit_key: 5f0f7f0e-2a0c-4d38-9a43-0c4b9a4f1a11
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /experiments/{experiment_key}/assignments:
+    post:
+      tags: [Experiments]
+      operationId: assignExperimentUnit
+      summary: Get or create the sticky arm of one unit
+      description: |
+        Unit-level assignment (decision 00a C): the unit is the caller (`user`), a skill, a module or a confusable set. The arm
+        is a deterministic hash of experiment, unit and caller, written once and never re-rolled, even after the experiment ends.
+        Designs that use external allocation (permuted blocks, matched skill pairs) are written by the server; for them this
+        call only returns an existing assignment (`409 experiment_external_allocation` otherwise). Refused with
+        `409 experiment_not_running` when the experiment has not started or has ended and the unit has no assignment yet.
+      parameters:
+        - name: experiment_key
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignUnitRequest'
+            example:
+              unit_type: skill
+              unit_key: elec.dc.voltage-divider
+      responses:
+        '200':
+          description: Assignment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentAssignment'
+              example:
+                experiment_key: exp.interleaving
+                arm: treatment
+                assigned_at: '2026-11-03T07:00:00Z'
+                unit_type: skill
+                unit_key: elec.dc.voltage-divider
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`experiment_not_running` or `experiment_external_allocation`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /me/export:
+    post:
+      tags: [Privacy]
+      operationId: requestExport
+      summary: Request a data export
+      description: Queues an `export_user_data` job. Only one export may be pending per user. The ZIP is available for 7 days.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '202':
+          description: Queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacyRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: '`export_pending`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /me/export/{request_id}:
+    get:
+      tags: [Privacy]
+      operationId: getExport
+      summary: Check an export and get the download link
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Request state; `download_url` present when completed and not expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacyRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /me:
+    delete:
+      tags: [Privacy]
+      operationId: deleteMyAccount
+      summary: Delete my account and data
+      description: |
+        Requires a login within the last 10 minutes (otherwise `401 reauth_required`) and `confirm` equal to the
+        literal text `delete my data`. Queues `delete_user_data`; the session is revoked immediately.
+        Deletion semantics: docs/04-data-model.md section 10.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteAccountRequest'
+            example:
+              confirm: delete my data
+      responses:
+        '202':
+          description: Deletion queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacyRequest'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/content/sync-status:
+    get:
+      tags: [Admin]
+      operationId: getContentSyncStatus
+      summary: Latest content:sync runs and drift
+      description: Admin only. Returns the last 20 runs and whether the deployed git SHA equals the last successful sync SHA.
+      responses:
+        '200':
+          description: Sync status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentSyncStatus'
+              example:
+                deployed_sha: 4f9c2a1b7e0d3c5a6b8d9e0f1a2b3c4d5e6f7a8b
+                last_success_sha: 4f9c2a1b7e0d3c5a6b8d9e0f1a2b3c4d5e6f7a8b
+                in_sync: true
+                runs:
+                  - id: 0b0b0b0b-0000-4000-8000-000000000001
+                    git_sha: 4f9c2a1b7e0d3c5a6b8d9e0f1a2b3c4d5e6f7a8b
+                    status: succeeded
+                    started_at: '2026-11-01T06:00:00Z'
+                    finished_at: '2026-11-01T06:00:09Z'
+                    stats:
+                      skills: {added: 2, changed: 1, retired: 0}
+                      edges: {added: 3, changed: 0, retired: 0}
+                      templates: {added: 4, changed: 2, retired: 0}
+                    errors: []
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/evidence:
+    get:
+      tags: [Admin]
+      operationId: listAdminEvidence
+      summary: List evidence for human review (admin)
+      description: Admin only. Review queue of FR-083, oldest first. Decide each row with `POST /evidence/{evidence_id}/review`.
+      parameters:
+        - name: status
+          in: query
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/EvidenceStatus'
+            default: needs_review
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Evidence rows
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, next_cursor]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminEvidence'
+                  next_cursor:
+                    type: [string, 'null']
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/review-queue:
+    get:
+      tags: [Admin]
+      operationId: getAdminReviewQueue
+      summary: List items and attempts waiting for a human (admin)
+      description: |
+        Admin only. Oldest first. `item` entries are items in `needs_human_review` with the rendered item, reference solution
+        and verification report (FR-124). `attempt` entries are attempts with `grade_status = pending_review`, with the
+        response, the grader detail and the template's checklist (docs/08 section 2.9). Not to be confused with the
+        learner route `GET /review-queue`.
+      parameters:
+        - name: kind
+          in: query
+          description: Limit the queue to one entry kind
+          schema:
+            type: string
+            enum: [item, attempt]
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Queue entries
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, next_cursor]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminReviewEntry'
+                  next_cursor:
+                    type: [string, 'null']
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/items/{item_id}/approve:
+    post:
+      tags: [Admin]
+      operationId: approveItem
+      summary: Approve an item held for human review
+      description: |
+        Admin only. The human step of the verification pipeline (FR-124): moves an item from `needs_human_review` to `verified`
+        and records the reviewer, time and note in `verification_report.human_review`. The item's template must already be
+        `verified`; this route never changes a template, and template review stays with the content pipeline. Any other
+        state is `409 item_not_approvable`. Approving an item already `verified` returns the current state.
+      parameters:
+        - $ref: '#/components/parameters/ItemId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveItemRequest'
+            example:
+              note: Solved by hand; verifier disagreement came from the rounding of the second step.
+      responses:
+        '200':
+          description: Approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApproveItemResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`item_not_approvable`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/items/{item_id}/retire:
+    post:
+      tags: [Admin]
+      operationId: retireItem
+      summary: Retire an item (and optionally its template)
+      description: |
+        Admin only. Sets `status=retired`, `retired_at`, `retired_reason`. Pending session tasks that reference the
+        item are replaced with a fresh variant. Attempts already recorded are kept and flagged `item_retired` in
+        analytics. With `retire_template: true` the template is retired too and all unserved pool items from it are retired.
+      parameters:
+        - $ref: '#/components/parameters/ItemId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetireItemRequest'
+            example:
+              reason: Expected value used R1 and R2 swapped; verifier agreed with the wrong recomputation.
+              retire_template: true
+      responses:
+        '200':
+          description: Retired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetireItemResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/attempts/{attempt_id}/review:
+    post:
+      tags: [Admin]
+      operationId: reviewAttempt
+      summary: Decide an attempt waiting for human review
+      description: |
+        Admin only. Decides an attempt in `grade_status = pending_review` (docs/08 section 2.9): writes the `human_review` grader
+        result with `reviewer`, `decision` and `checklist`, and sets `grade_status = graded` with `score`. Learner state is then
+        applied once through the `attempts.state_applied_at` compare-and-set (decision 00a H15). Any other status is
+        `409 attempt_not_reviewable`. The learner resubmits after `needs_rework` as a new attempt.
+      parameters:
+        - name: attempt_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewAttemptRequest'
+            example:
+              decision: accept
+              score: 1
+              checklist:
+                states_assumption: true
+                units_correct: true
+              comment: Reasoning holds and the assumption is stated.
+      responses:
+        '200':
+          description: Attempt with its final grade
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptResult'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`attempt_not_reviewable`'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/item-reports:
+    get:
+      tags: [Admin]
+      operationId: listItemReports
+      summary: List learner item reports (admin)
+      description: Admin only. Triage queue for `item_reports` (decision 00a D5). Newest first.
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ReportStatus'
+        - name: item_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Reports
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, next_cursor]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ItemReport'
+                  next_cursor:
+                    type: [string, 'null']
+              example:
+                items:
+                  - id: 4d4d4d4d-0000-4000-8000-000000000001
+                    item_id: 3f8d2b9a-0b8e-4f5c-8e11-7a4c0d9e1001
+                    template_key: tpl.elec.voltage-divider-vout
+                    reason: wrong_answer
+                    note: Expected value looks swapped.
+                    attempt_id: null
+                    status: open
+                    created_at: '2026-11-01T09:00:00Z'
+                    resolved_at: null
+                next_cursor: null
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/item-reports/{report_id}/resolve:
+    post:
+      tags: [Admin]
+      operationId: resolveItemReport
+      summary: Confirm or dismiss an item report (admin)
+      description: 'Admin only. Sets `status`, `resolved_by` and `resolved_at`. `retire_item: true` also retires the item as in `POST /admin/items/{item_id}/retire`.'
+      parameters:
+        - name: report_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveItemReportRequest'
+            example:
+              status: confirmed
+              retire_item: true
+      responses:
+        '200':
+          description: Updated report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemReport'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/analysis-exclusions:
+    get:
+      tags: [Admin, Experiments]
+      operationId: listAnalysisExclusions
+      summary: List analysis exclusions (admin)
+      description: Admin only. Reproducible exclusions applied by the analysis package (docs/11 section 11.4).
+      parameters:
+        - name: experiment_key
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Exclusions
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, next_cursor]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AnalysisExclusion'
+                  next_cursor:
+                    type: [string, 'null']
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Admin, Experiments]
+      operationId: createAnalysisExclusion
+      summary: Record an analysis exclusion (admin)
+      description: 'Admin only and append-only: rows are never edited or deleted; a mistaken exclusion is answered by a later row. `decided_by` is the caller.'
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAnalysisExclusionRequest'
+            example:
+              experiment_key: exp.beta-001
+              user_id: 5f0f7f0e-2a0c-4d38-9a43-0c4b9a4f1a11
+              reason: Baseline diagnostic at or above the ceiling threshold.
+      responses:
+        '201':
+          description: Recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisExclusion'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Supabase JWT
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sb-access-token
+      description: Supabase session cookie set by the Next.js auth callback (exact cookie name is generated by the Supabase SSR helper; treat as opaque).
+
+  headers:
+    IdempotentReplay:
+      description: '`true` when the response is a stored replay of an earlier request with the same Idempotency-Key.'
+      schema:
+        type: boolean
+
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: 8-128 character unique key (UUID v4 recommended). Strongly recommended on every POST; required by the PWA client.
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 128
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 25
+    Cursor:
+      name: cursor
+      in: query
+      description: Opaque cursor from `next_cursor`
+      schema:
+        type: string
+    SessionId:
+      name: session_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ItemId:
+      name: item_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    SkillKey:
+      name: skill_key
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/SkillKey'
+    ProjectKey:
+      name: project_key
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/ProjectKey'
+    UserProjectId:
+      name: user_project_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    StepKey:
+      name: step_key
+      in: path
+      required: true
+      description: URL-encode the `#` as `%23`.
+      schema:
+        $ref: '#/components/schemas/ProjectStepKey'
+    EvidenceId:
+      name: evidence_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ModuleKey:
+      name: module_key
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/ModuleKey'
+    PlanId:
+      name: plan_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    SlotId:
+      name: slot_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    ValidationError:
+      description: Request failed validation (`validation_failed`)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            type: https://errors.polymath.invalid/validation_failed
+            title: Request validation failed
+            status: 400
+            code: validation_failed
+            detail: One or more fields are invalid.
+            request_id: req_01J9ZK3X8Q
+            errors:
+              - field: available_minutes
+                message: must be between 1 and 240
+    Unauthorized:
+      description: Missing, expired or invalid credentials (`unauthenticated`, `reauth_required`)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Authenticated but not allowed (`forbidden`; admin endpoints for a non-admin)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource does not exist or is not visible to the caller (`not_found`). Other users' resources are indistinguishable from missing ones.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    RateLimited:
+      description: Too many requests or LLM budget exhausted (`rate_limited`, `llm_budget_exhausted`)
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ServiceUnavailable:
+      description: A dependency is down or overloaded (`worker_unavailable`, `item_pool_empty`, `llm_unavailable`); safe to retry with the same Idempotency-Key.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    # ---------- scalar and enum types (contract section 5) ----------
+    Tier:
+      type: string
+      enum: [L0, L1, L2, L3]
+    SessionType:
+      type: string
+      enum: [micro, focus, lab]
+      description: micro (up to 20 min), focus (45-120 min), lab (120-240 min)
+    Context:
+      type: string
+      enum: [phone, desktop, bench]
+    TaskKind:
+      type: string
+      enum: [retrieval, worked_example, faded_problem, problem, perceptual_drill, explain_back, debug_case, project_step, diagnostic, checkpoint]
+    GraderType:
+      type: string
+      enum: [exact_numeric, symbolic_equivalence, multiple_choice, code_tests, spice_compare, drc_erc, rubric_llm, measurement_check, human_review]
+    MasteryState:
+      type: string
+      enum: [unseen, learning, reviewing, mastered, decayed]
+    EdgeStrength:
+      type: string
+      enum: [hard, soft]
+    ContentStatus:
+      type: string
+      enum: [draft, verified, needs_human_review, retired]
+    EvidenceKind:
+      type: string
+      enum: [photo, video, log, scope_capture, measurement, repo, note]
+    EvidenceStatus:
+      type: string
+      enum: [submitted, auto_verified, needs_review, accepted, rejected]
+    HintLevel:
+      type: integer
+      enum: [0, 1, 2, 3, 4]
+      description: 0 none, 1 nudge, 2 conceptual hint, 3 worked step, 4 reveal solution (ends credit for that attempt)
+    ExperimentArm:
+      type: string
+      enum: [control, treatment]
+    NodeCode:
+      type: string
+      enum: [math, phys, sw, ml, elec, sig, ctl, mech, sens, net, matl, sys, sec, econ, prof, def, rf, robo, cv, pwr]
+    SessionStatus:
+      type: string
+      enum: [planned, active, completed, abandoned]
+    SessionTaskStatus:
+      type: string
+      enum: [pending, in_progress, done, skipped]
+    GradeStatus:
+      type: string
+      description: Mirrors `grade.status`; `pending` means no grade yet (queued).
+      enum: [pending, graded, invalid_input, pending_review, error]
+    SkillStatus:
+      type: string
+      enum: [stub, draft, verified, needs_human_review, retired]
+      description: "`stub` skills mark where other disciplines attach; they are never offered by the builder and no real skill depends on one."
+    PlanSlotStatus:
+      type: string
+      enum: [planned, done, missed, moved]
+    WeeklyPlanStatus:
+      type: string
+      enum: [active, skipped, paused, superseded]
+    ChallengeStatus:
+      type: string
+      enum: [open, consumed, expired]
+    GrantStatus:
+      type: string
+      enum: [pending, applied, suspended]
+    ReportStatus:
+      type: string
+      enum: [open, confirmed, dismissed]
+    UserProjectStatus:
+      type: string
+      enum: [active, paused, completed, abandoned]
+    SkillKey:
+      type: string
+      pattern: '^[a-z]+\.[a-z0-9-]+\.[a-z0-9-]+$'
+      examples: [elec.dc.voltage-divider]
+    ProjectKey:
+      type: string
+      pattern: '^prj\.L[0-9]\.[a-z0-9-]+$'
+      examples: [prj.L1.led-blink-and-measure]
+    ProjectStepKey:
+      type: string
+      pattern: '^prj\.L[0-9]\.[a-z0-9-]+#s[0-9]{2}$'
+      examples: ['prj.L1.led-blink-and-measure#s03']
+    TemplateKey:
+      type: string
+      pattern: '^tpl\.[a-z]+\.[a-z0-9-]+$'
+      examples: [tpl.elec.voltage-divider-vout]
+    Score:
+      type: number
+      minimum: 0
+      maximum: 1
+    Rating:
+      type: integer
+      minimum: 1
+      maximum: 4
+      description: FSRS rating 1 Again, 2 Hard, 3 Good, 4 Easy
+
+    # ---------- errors ----------
+    Error:
+      type: object
+      description: RFC 9457 problem details with a stable `code`.
+      required: [type, title, status, code, request_id]
+      properties:
+        type:
+          type: string
+          description: URI identifying the error type, `https://errors.polymath.invalid/{code}`
+        title:
+          type: string
+        status:
+          type: integer
+        code:
+          type: string
+          enum:
+            - validation_failed
+            - unauthenticated
+            - reauth_required
+            - forbidden
+            - not_found
+            - idempotency_key_reuse
+            - idempotency_in_progress
+            - open_session_exists
+            - session_not_startable
+            - item_not_servable
+            - item_pool_empty
+            - payload_too_large
+            - rate_limited
+            - llm_budget_exhausted
+            - llm_unavailable
+            - tutor_disabled_in_checkpoint
+            - hint_level_skipped
+            - reveal_not_confirmed
+            - tier_gate_not_met
+            - project_already_open
+            - upload_missing
+            - evidence_already_submitted
+            - checkpoint_not_startable
+            - task_not_completable
+            - step_not_completable
+            - project_status_invalid
+            - item_not_approvable
+            - attempt_not_reviewable
+            - plan_exists
+            - plan_not_editable
+            - experiment_not_running
+            - experiment_external_allocation
+            - export_pending
+            - worker_unavailable
+            - internal
+        detail:
+          type: string
+        request_id:
+          type: string
+        retry_after_s:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+      examples:
+        - type: https://errors.polymath.invalid/hint_level_skipped
+          title: Hint level skipped
+          status: 409
+          code: hint_level_skipped
+          detail: Current level is 0; request level 1 first.
+          request_id: req_01J9ZK3X8Q
+
+    Health:
+      type: object
+      required: [status, version, db]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+        version:
+          type: string
+        db:
+          type: string
+          enum: [ok, down]
+        worker_heartbeat_age_s:
+          type: [integer, 'null']
+
+    # ---------- profile ----------
+    Profile:
+      type: object
+      required: [id, display_name, timezone, weekly_minutes_target, target_retention, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+          maxLength: 80
+        timezone:
+          type: string
+          description: IANA time zone
+        weekly_minutes_target:
+          type: integer
+          minimum: 0
+          maximum: 5000
+        target_retention:
+          type: number
+          minimum: 0.7
+          maximum: 0.97
+        locale:
+          type: string
+        reminder_time_local:
+          type: [string, 'null']
+          pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+        bedtime_local:
+          type: [string, 'null']
+          pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+          description: Used only to default quiet hours. No sleep or health claims are made from it.
+        reminder_prefs:
+          $ref: '#/components/schemas/ReminderPrefs'
+        consents:
+          type: object
+          description: Consent records keyed by purpose (for example `research`).
+          additionalProperties:
+            $ref: '#/components/schemas/ConsentRecord'
+        onboarded_at:
+          type: [string, 'null']
+          format: date-time
+        cohort_key:
+          type: [string, 'null']
+        adult_attested:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+    ReminderPrefs:
+      type: object
+      description: Stored in `profiles.reminder_prefs` (no separate notification table, decision 00a C). Limits follow docs/09 section 9.
+      additionalProperties: false
+      properties:
+        enabled:
+          type: boolean
+        micro_time_local:
+          type: [string, 'null']
+          pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+        focus_lead_min:
+          type: integer
+          minimum: 0
+          maximum: 720
+        quiet_hours:
+          type: object
+          additionalProperties: false
+          required: [start, end]
+          properties:
+            start:
+              type: string
+              pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+            end:
+              type: string
+              pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+        max_per_day:
+          type: integer
+          minimum: 0
+          maximum: 2
+        checkpoint_reminders:
+          type: boolean
+        weekly_summary:
+          type: boolean
+        paused_until:
+          type: [string, 'null']
+          format: date-time
+    ConsentRecord:
+      type: object
+      required: [version, granted]
+      additionalProperties: false
+      properties:
+        version:
+          type: string
+        granted:
+          type: boolean
+        at:
+          type: string
+          format: date-time
+          description: Set by the server
+    ProfileUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        display_name:
+          type: string
+          maxLength: 80
+        timezone:
+          type: string
+        weekly_minutes_target:
+          type: integer
+          minimum: 0
+          maximum: 5000
+        target_retention:
+          type: number
+          minimum: 0.7
+          maximum: 0.97
+        locale:
+          type: string
+        reminder_time_local:
+          type: [string, 'null']
+          pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+        bedtime_local:
+          type: [string, 'null']
+          pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+        reminder_prefs:
+          $ref: '#/components/schemas/ReminderPrefs'
+        consents:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ConsentRecord'
+        adult_attested:
+          type: boolean
+          const: true
+        onboarded:
+          type: boolean
+          const: true
+          description: Sets `onboarded_at` to now (once).
+
+    # ---------- sessions ----------
+    BuildSessionRequest:
+      type: object
+      required: [available_minutes, context]
+      additionalProperties: false
+      properties:
+        available_minutes:
+          type: integer
+          minimum: 1
+          maximum: 240
+        context:
+          $ref: '#/components/schemas/Context'
+        session_type:
+          $ref: '#/components/schemas/SessionType'
+        skill_focus:
+          description: Optional skill the learner wants to work on (must be on the frontier or in progress)
+          $ref: '#/components/schemas/SkillKey'
+        plan_slot_id:
+          description: Weekly plan slot this session fulfils (marks the slot `done` when the session completes)
+          type: string
+          format: uuid
+        dry_run:
+          type: boolean
+          default: false
+          description: |
+            When true, return the planned tasks as a `SessionPreview` (HTTP 200) without creating a session, reserving
+            items or consuming the `Idempotency-Key`. Rate-limited separately (10 per minute per user).
+    SessionPreview:
+      type: object
+      description: Result of `POST /sessions/build` with `dry_run` set to true. Has no ids because no row exists.
+      required: [dry_run, session_type, context, planned_min, tasks]
+      properties:
+        dry_run:
+          type: boolean
+          const: true
+        session_type:
+          $ref: '#/components/schemas/SessionType'
+        context:
+          $ref: '#/components/schemas/Context'
+        available_minutes:
+          type: integer
+        planned_min:
+          type: integer
+        builder_version:
+          type: string
+        graph_version:
+          type: [string, 'null']
+        plan_slot_id:
+          type: [string, 'null']
+          format: uuid
+        tasks:
+          type: array
+          items:
+            type: object
+            required: [position, task_kind, est_seconds]
+            properties:
+              position:
+                type: integer
+                minimum: 1
+              task_kind:
+                $ref: '#/components/schemas/TaskKind'
+              skill_key:
+                type: [string, 'null']
+              project_step_key:
+                type: [string, 'null']
+              est_seconds:
+                type: integer
+              reason:
+                type: [string, 'null']
+                enum: [due_review, continue, frontier, interleave, checkpoint, project, null]
+              assessment_kind:
+                type: [string, 'null']
+                enum: [diagnostic, module_end, periodic, delayed, transfer, null]
+    SessionTask:
+      type: object
+      required: [id, position, task_kind, status, est_seconds]
+      properties:
+        id:
+          type: string
+          format: uuid
+        position:
+          type: integer
+          minimum: 1
+        task_kind:
+          $ref: '#/components/schemas/TaskKind'
+        skill_key:
+          type: [string, 'null']
+        project_step_key:
+          type: [string, 'null']
+        item_id:
+          type: [string, 'null']
+          format: uuid
+        status:
+          $ref: '#/components/schemas/SessionTaskStatus'
+        est_seconds:
+          type: integer
+        reason:
+          type: [string, 'null']
+          enum: [due_review, continue, frontier, interleave, checkpoint, project, null]
+        assessment_kind:
+          type: [string, 'null']
+          enum: [diagnostic, module_end, periodic, delayed, transfer, null]
+          description: Null for ordinary practice. Assessment-pool items are only served with a non-null kind.
+    Session:
+      type: object
+      required: [id, session_type, context, status, planned_min, tasks]
+      properties:
+        id:
+          type: string
+          format: uuid
+        session_type:
+          $ref: '#/components/schemas/SessionType'
+        context:
+          $ref: '#/components/schemas/Context'
+        status:
+          $ref: '#/components/schemas/SessionStatus'
+        available_minutes:
+          type: integer
+        planned_min:
+          type: integer
+        actual_min:
+          type: [integer, 'null']
+        started_at:
+          type: [string, 'null']
+          format: date-time
+        ended_at:
+          type: [string, 'null']
+          format: date-time
+        builder_version:
+          type: string
+        graph_version:
+          type: [string, 'null']
+          description: Skill-graph version used by the builder
+        plan_slot_id:
+          type: [string, 'null']
+          format: uuid
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/SessionTask'
+    CompleteSessionRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        abandon:
+          type: boolean
+          default: false
+        perceived_difficulty:
+          type: integer
+          minimum: 1
+          maximum: 5
+    SessionSummary:
+      type: object
+      required: [session_id, status, actual_min, tasks_done, tasks_skipped, attempts, correct]
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/SessionStatus'
+        actual_min:
+          type: integer
+        tasks_done:
+          type: integer
+        tasks_skipped:
+          type: integer
+        attempts:
+          type: integer
+        correct:
+          type: integer
+        skills_touched:
+          type: array
+          items:
+            $ref: '#/components/schemas/SkillKey'
+        next_due_at:
+          type: [string, 'null']
+          format: date-time
+        checkpoint_due:
+          type: boolean
+
+    # ---------- items and tasks ----------
+    LearnerItem:
+      type: object
+      description: Learner-visible projection of an item. Never contains answer keys, params or verification reports.
+      required: [id, template_key, skill_key, task_kind, grader_type, rendered, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        template_key:
+          $ref: '#/components/schemas/TemplateKey'
+        skill_key:
+          $ref: '#/components/schemas/SkillKey'
+        task_kind:
+          $ref: '#/components/schemas/TaskKind'
+        grader_type:
+          $ref: '#/components/schemas/GraderType'
+        est_seconds:
+          type: integer
+        rendered:
+          type: object
+          required: [prompt_md, response_schema]
+          properties:
+            prompt_md:
+              type: string
+              description: Markdown with KaTeX math
+            alt_text:
+              type: string
+              description: Text alternative for figures and math (WCAG 2.2 AA)
+            figures:
+              type: array
+              items:
+                type: object
+                required: [type, url]
+                properties:
+                  type:
+                    type: string
+                    enum: [svg, png, schematic, waveform]
+                  url:
+                    type: string
+                  alt:
+                    type: string
+            response_schema:
+              type: object
+              description: Describes the expected response shape (numeric with unit, choice list, code files, free text, netlist).
+              additionalProperties: true
+            hint_levels_available:
+              type: array
+              items:
+                $ref: '#/components/schemas/HintLevel'
+          additionalProperties: true
+        difficulty_est:
+          type: [number, 'null']
+        status:
+          $ref: '#/components/schemas/ContentStatus'
+    TaskDetail:
+      type: object
+      required: [task, item]
+      properties:
+        task:
+          $ref: '#/components/schemas/SessionTask'
+        item:
+          $ref: '#/components/schemas/LearnerItem'
+    CompleteTaskRequest:
+      type: object
+      required: [outcome]
+      additionalProperties: false
+      properties:
+        outcome:
+          type: string
+          enum: [done, skipped]
+        skip_reason:
+          type: string
+          enum: [already_know, not_now]
+          description: Required when `outcome` is `skipped`; not allowed otherwise
+        self_explanation:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          description: Reply to the `worked_example` prompt (FR-032). Stored, never graded.
+    TaskCompletion:
+      type: object
+      required: [task, loop_step]
+      properties:
+        task:
+          $ref: '#/components/schemas/SessionTask'
+        loop_step:
+          type: [string, 'null']
+          description: The skill's `skill_state.loop_step` after this call; null when the task has no skill
+    ItemReportRequest:
+      type: object
+      required: [reason]
+      additionalProperties: false
+      properties:
+        reason:
+          type: string
+          enum: [wrong_answer, ambiguous, unsolvable, offensive, other]
+        note:
+          type: string
+          maxLength: 2000
+        attempt_id:
+          type: string
+          format: uuid
+          description: The attempt that exposed the problem (optional)
+
+    # ---------- attempts ----------
+    AttemptResponse:
+      description: Discriminated by `kind`. Maximum serialised size 256 KB.
+      oneOf:
+        - type: object
+          required: [kind, value]
+          properties:
+            kind:
+              const: numeric
+            value:
+              type: number
+            unit:
+              type: string
+        - type: object
+          required: [kind, expression]
+          properties:
+            kind:
+              const: symbolic
+            expression:
+              type: string
+              maxLength: 2000
+        - type: object
+          required: [kind, choice_ids]
+          properties:
+            kind:
+              const: choice
+            choice_ids:
+              type: array
+              items:
+                type: string
+        - type: object
+          required: [kind, language, files]
+          properties:
+            kind:
+              const: code
+            language:
+              type: string
+              enum: [c, cpp, python]
+            files:
+              type: array
+              maxItems: 8
+              items:
+                type: object
+                required: [path, content]
+                properties:
+                  path:
+                    type: string
+                    pattern: '^[A-Za-z0-9_./-]{1,120}$'
+                  content:
+                    type: string
+                    maxLength: 65536
+        - type: object
+          required: [kind, netlist]
+          properties:
+            kind:
+              const: netlist
+            netlist:
+              type: string
+              maxLength: 32768
+        - type: object
+          required: [kind, text]
+          properties:
+            kind:
+              const: text
+            text:
+              type: string
+              maxLength: 8000
+        - type: object
+          required: [kind, values]
+          properties:
+            kind:
+              const: measurement
+            values:
+              type: object
+              additionalProperties:
+                type: number
+    SubmitAttemptRequest:
+      type: object
+      required: [client_attempt_id, item_id, started_at, submitted_at, response]
+      additionalProperties: false
+      properties:
+        client_attempt_id:
+          type: string
+          format: uuid
+        item_id:
+          type: string
+          format: uuid
+        session_id:
+          type: [string, 'null']
+          format: uuid
+        session_task_id:
+          type: [string, 'null']
+          format: uuid
+        started_at:
+          type: string
+          format: date-time
+        submitted_at:
+          type: string
+          format: date-time
+        response:
+          $ref: '#/components/schemas/AttemptResponse'
+        confidence:
+          type: [integer, 'null']
+          minimum: 1
+          maximum: 5
+        latency_ms:
+          type: [integer, 'null']
+          minimum: 0
+          description: Wall-clock time from display to submit
+        active_ms:
+          type: [integer, 'null']
+          minimum: 0
+          description: Time the learner was actively working (evaluation outcome measure)
+        offline:
+          type: boolean
+          default: false
+        client_grade:
+          $ref: '#/components/schemas/ClientGrade'
+    ClientGrade:
+      type: object
+      description: Provisional client-side grade for offline attempts. Stored for audit, never trusted.
+      required: [score, correct]
+      properties:
+        score:
+          $ref: '#/components/schemas/Score'
+        correct:
+          type: boolean
+    GraderResult:
+      type: object
+      required: [type, score]
+      properties:
+        type:
+          $ref: '#/components/schemas/GraderType'
+        score:
+          $ref: '#/components/schemas/Score'
+        detail:
+          type: object
+          additionalProperties: true
+    Grade:
+      type: object
+      description: |
+        Stored in `attempts.grade`; `status` mirrors `attempts.grade_status` (decision 00a D2). `score` and `correct` are
+        `null` unless `status` is `graded`. `invalid_input` (unparseable answer, compile or lint error) never counts as wrong.
+      required: [status, score, correct, graders]
+      properties:
+        status:
+          type: string
+          enum: [graded, invalid_input, pending_review, error]
+        score:
+          oneOf:
+            - $ref: '#/components/schemas/Score'
+            - type: 'null'
+        correct:
+          type: [boolean, 'null']
+          description: "`score >= 0.8` when graded (00a B3)"
+        graders:
+          type: array
+          description: Empty only when `status` is `error`
+          items:
+            $ref: '#/components/schemas/GraderResult'
+        feedback:
+          type: string
+          description: Learner-facing explanation; includes the worked solution only after grading
+        misconception_tags:
+          type: array
+          items:
+            type: string
+        mastery_eligible:
+          type: boolean
+          description: False when an uncalibrated `rubric_llm` grader contributed (00a B4); the scheduler then skips the attempt for the mastery rule
+        needs_human:
+          type: boolean
+        graded_at:
+          type: string
+          format: date-time
+        grader_build:
+          type: string
+    SkillUpdate:
+      type: object
+      properties:
+        skill_key:
+          $ref: '#/components/schemas/SkillKey'
+        mastery_state:
+          $ref: '#/components/schemas/MasteryState'
+        rating:
+          description: Null until the review unit commits (docs/06 section 3.3), so a session attempt returns null here.
+          oneOf:
+            - $ref: '#/components/schemas/Rating'
+            - type: 'null'
+        next_due:
+          type: [string, 'null']
+          format: date-time
+          description: Current card due time; it changes when the review unit commits.
+        tier_attained:
+          oneOf:
+            - $ref: '#/components/schemas/Tier'
+            - type: 'null'
+    AttemptResult:
+      type: object
+      required: [id, client_attempt_id, item_id, grade_status, grade, hints_used, max_hint_level, unaided]
+      properties:
+        id:
+          type: string
+          format: uuid
+        client_attempt_id:
+          type: string
+          format: uuid
+        item_id:
+          type: string
+          format: uuid
+        grade_status:
+          $ref: '#/components/schemas/GradeStatus'
+        grade:
+          oneOf:
+            - $ref: '#/components/schemas/Grade'
+            - type: 'null'
+        hints_used:
+          type: integer
+        max_hint_level:
+          $ref: '#/components/schemas/HintLevel'
+        unaided:
+          type: boolean
+          description: True iff `max_hint_level <= 1` and the solution was not revealed (00a B1). Not the strict-unaided evaluation signal.
+        error:
+          type: [string, 'null']
+          description: Present when `grade_status` is `error`
+        skill_update:
+          $ref: '#/components/schemas/SkillUpdate'
+
+    # ---------- tutor ----------
+    TutorMessageRequest:
+      type: object
+      required: [item_id, text]
+      additionalProperties: false
+      properties:
+        item_id:
+          type: string
+          format: uuid
+        thread_id:
+          type: [string, 'null']
+          format: uuid
+        text:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        stated_attempt:
+          type: string
+          maxLength: 2000
+          description: What the learner tried; satisfies the attempt-first rule if no attempt was submitted yet
+    HintRequest:
+      type: object
+      required: [item_id, requested_level]
+      additionalProperties: false
+      properties:
+        item_id:
+          type: string
+          format: uuid
+        requested_level:
+          type: integer
+          minimum: 1
+          maximum: 4
+        stated_attempt:
+          type: string
+          maxLength: 2000
+        confirm_reveal:
+          type: boolean
+          default: false
+    TutorReply:
+      type: object
+      required: [thread_id, message_id, role, hint_level, content]
+      properties:
+        thread_id:
+          type: string
+          format: uuid
+        message_id:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [assistant]
+        hint_level:
+          $ref: '#/components/schemas/HintLevel'
+        content:
+          type: string
+        refused_reason:
+          type: [string, 'null']
+          enum: [attempt_required, off_topic, injection_suspected, leak_blocked, budget, null]
+        policy_flags:
+          type: object
+          additionalProperties: true
+        unaided_after:
+          type: boolean
+          description: Whether the current attempt is still unaided after this reply
+    TutorThread:
+      type: object
+      required: [id, item_id, messages]
+      properties:
+        id:
+          type: string
+          format: uuid
+        item_id:
+          type: [string, 'null']
+          format: uuid
+        skill_key:
+          type: [string, 'null']
+        max_hint_level:
+          $ref: '#/components/schemas/HintLevel'
+        messages:
+          type: array
+          items:
+            type: object
+            required: [id, role, content, hint_level, created_at]
+            properties:
+              id:
+                type: string
+                format: uuid
+              role:
+                type: string
+                enum: [user, assistant, system]
+              content:
+                type: string
+              hint_level:
+                $ref: '#/components/schemas/HintLevel'
+              created_at:
+                type: string
+                format: date-time
+
+    # ---------- skills and graph ----------
+    SkillStateView:
+      type: object
+      required: [mastery_state]
+      properties:
+        mastery_state:
+          $ref: '#/components/schemas/MasteryState'
+        elo:
+          type: number
+        due:
+          type: [string, 'null']
+          format: date-time
+        retrievability:
+          type: [number, 'null']
+          minimum: 0
+          maximum: 1
+        reps:
+          type: integer
+        lapses:
+          type: integer
+        tier_attained:
+          oneOf:
+            - $ref: '#/components/schemas/Tier'
+            - type: 'null'
+    Skill:
+      type: object
+      required: [key, node, module, title, tier_target, est_minutes, status]
+      properties:
+        key:
+          $ref: '#/components/schemas/SkillKey'
+        node:
+          $ref: '#/components/schemas/NodeCode'
+        module:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        tier_target:
+          $ref: '#/components/schemas/Tier'
+        est_minutes:
+          type: integer
+          minimum: 0
+          description: 0 only for stubs
+        license:
+          type: string
+        source:
+          type: string
+        status:
+          $ref: '#/components/schemas/SkillStatus'
+        task_kinds:
+          type: array
+          description: Per-skill kinds; `diagnostic` and `checkpoint` are session-level and never listed (00a A2)
+          items:
+            $ref: '#/components/schemas/TaskKind'
+        grader_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraderType'
+        phone_suitable:
+          type: boolean
+        confusable_set:
+          type: [string, 'null']
+        state:
+          $ref: '#/components/schemas/SkillStateView'
+    Edge:
+      type: object
+      required: [from_skill_key, to_skill_key, strength, min_tier]
+      properties:
+        from_skill_key:
+          $ref: '#/components/schemas/SkillKey'
+        to_skill_key:
+          $ref: '#/components/schemas/SkillKey'
+        strength:
+          $ref: '#/components/schemas/EdgeStrength'
+        min_tier:
+          $ref: '#/components/schemas/Tier'
+    SkillDetail:
+      allOf:
+        - $ref: '#/components/schemas/Skill'
+        - type: object
+          properties:
+            prerequisites:
+              type: array
+              items:
+                $ref: '#/components/schemas/Edge'
+            dependants:
+              type: array
+              items:
+                $ref: '#/components/schemas/Edge'
+            available:
+              type: boolean
+            blocked_by:
+              type: array
+              items:
+                $ref: '#/components/schemas/SkillKey'
+    Graph:
+      type: object
+      required: [nodes, edges]
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Skill'
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/Edge'
+    Frontier:
+      type: object
+      required: [available, in_progress]
+      properties:
+        available:
+          type: array
+          items:
+            type: object
+            required: [skill_key, reason]
+            properties:
+              skill_key:
+                $ref: '#/components/schemas/SkillKey'
+              reason:
+                type: string
+                description: Human-readable explanation, for example "all 2 hard prerequisites mastered"
+        in_progress:
+          type: array
+          items:
+            $ref: '#/components/schemas/SkillKey'
+
+    # ---------- review and offline ----------
+    ReviewQueue:
+      type: object
+      required: [now, due_now, due_within_horizon, items]
+      properties:
+        now:
+          type: string
+          format: date-time
+        due_now:
+          type: integer
+        due_within_horizon:
+          type: integer
+        estimated_minutes:
+          type: integer
+        items:
+          type: array
+          items:
+            type: object
+            required: [skill_key, due, mastery_state]
+            properties:
+              skill_key:
+                $ref: '#/components/schemas/SkillKey'
+              due:
+                type: string
+                format: date-time
+              retrievability:
+                type: [number, 'null']
+              mastery_state:
+                $ref: '#/components/schemas/MasteryState'
+    Progress:
+      type: object
+      required: [generated_at, timezone, week, totals, nodes, review_load, projects]
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+        timezone:
+          type: string
+          description: IANA zone of the learner; week and day boundaries use it
+        week:
+          type: object
+          required: [start_date, end_date, minutes_done, minutes_target]
+          properties:
+            start_date:
+              type: string
+              format: date
+            end_date:
+              type: string
+              format: date
+            minutes_done:
+              type: integer
+              minimum: 0
+              description: Sum of `sessions.actual_min` of completed sessions in the week
+            minutes_target:
+              type: integer
+              minimum: 0
+        totals:
+          type: object
+          required: [skills, by_mastery_state]
+          properties:
+            skills:
+              type: integer
+              description: Non-stub, non-retired skills
+            by_mastery_state:
+              $ref: '#/components/schemas/MasteryCounts'
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/NodeProgress'
+        review_load:
+          type: object
+          required: [horizon_days, overdue_now, total_due, estimated_minutes, days]
+          properties:
+            horizon_days:
+              type: integer
+              const: 7
+            overdue_now:
+              type: integer
+              minimum: 0
+            total_due:
+              type: integer
+              minimum: 0
+              description: Reviews due from now to the end of day 7 (includes `overdue_now`)
+            estimated_minutes:
+              type: integer
+              minimum: 0
+            days:
+              type: array
+              items:
+                type: object
+                required: [date, due]
+                properties:
+                  date:
+                    type: string
+                    format: date
+                  due:
+                    type: integer
+                    minimum: 0
+        projects:
+          type: array
+          items:
+            type: object
+            required: [user_project_id, project_key, status, steps_done, steps_total]
+            properties:
+              user_project_id:
+                type: string
+                format: uuid
+              project_key:
+                $ref: '#/components/schemas/ProjectKey'
+              status:
+                $ref: '#/components/schemas/UserProjectStatus'
+              steps_done:
+                type: integer
+              steps_total:
+                type: integer
+              evidence_pending_review:
+                type: integer
+              grants_pending:
+                type: integer
+              grants_applied:
+                type: integer
+    MasteryCounts:
+      type: object
+      required: [unseen, learning, reviewing, mastered, decayed]
+      properties:
+        unseen:
+          type: integer
+          minimum: 0
+        learning:
+          type: integer
+          minimum: 0
+        reviewing:
+          type: integer
+          minimum: 0
+        mastered:
+          type: integer
+          minimum: 0
+        decayed:
+          type: integer
+          minimum: 0
+    NodeProgress:
+      type: object
+      required: [node, skills_total, by_mastery_state, tier_counts, l1_scope_skills, l1_scope_at_l1, l1_working]
+      properties:
+        node:
+          $ref: '#/components/schemas/NodeCode'
+        skills_total:
+          type: integer
+        by_mastery_state:
+          $ref: '#/components/schemas/MasteryCounts'
+        tier_counts:
+          type: object
+          description: Skills by `tier_attained`, where `none` counts null
+          required: [none, L0, L1, L2, L3]
+          properties:
+            none: {type: integer, minimum: 0}
+            L0: {type: integer, minimum: 0}
+            L1: {type: integer, minimum: 0}
+            L2: {type: integer, minimum: 0}
+            L3: {type: integer, minimum: 0}
+        l1_scope_skills:
+          type: integer
+          description: Skills of the node with `tier_target` L1 or below
+        l1_scope_at_l1:
+          type: integer
+          description: Of those, skills with `tier_attained` L1 or higher
+        l1_gate_project:
+          type: [object, 'null']
+          description: The node's L1 gate project, or null when the learner has not started it
+          properties:
+            project_key:
+              $ref: '#/components/schemas/ProjectKey'
+            status:
+              $ref: '#/components/schemas/UserProjectStatus'
+            steps_done:
+              type: integer
+            steps_total:
+              type: integer
+            evidence_accepted:
+              type: integer
+        l1_working:
+          type: boolean
+          description: True only when `l1_scope_at_l1 / l1_scope_skills >= 0.9` and the L1 gate project has all required evidence accepted. Display aid; show counts otherwise.
+    LocalCheck:
+      description: Everything the device needs to grade a numeric or multiple-choice item provisionally.
+      oneOf:
+        - type: object
+          required: [type, expected, tolerance_rel]
+          properties:
+            type:
+              const: exact_numeric
+            expected:
+              type: number
+            tolerance_rel:
+              type: number
+              minimum: 0
+            tolerance_abs:
+              type: number
+              minimum: 0
+            unit:
+              type: string
+            accepted_units:
+              type: array
+              items:
+                type: string
+        - type: object
+          required: [type, correct_choice_ids]
+          properties:
+            type:
+              const: multiple_choice
+            correct_choice_ids:
+              type: array
+              items:
+                type: string
+    OfflineItem:
+      type: object
+      required: [task, item, local_check]
+      properties:
+        task:
+          $ref: '#/components/schemas/SessionTask'
+        item:
+          $ref: '#/components/schemas/LearnerItem'
+        local_check:
+          $ref: '#/components/schemas/LocalCheck'
+    OfflinePack:
+      type: object
+      required: [generated_at, expires_at, items]
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        etag:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OfflineItem'
+    SyncAttempt:
+      type: object
+      required: [client_attempt_id, item_id, started_at, submitted_at, response]
+      properties:
+        client_attempt_id:
+          type: string
+          format: uuid
+        item_id:
+          type: string
+          format: uuid
+        session_task_id:
+          type: [string, 'null']
+          format: uuid
+        started_at:
+          type: string
+          format: date-time
+        submitted_at:
+          type: string
+          format: date-time
+        response:
+          $ref: '#/components/schemas/AttemptResponse'
+        confidence:
+          type: [integer, 'null']
+          minimum: 1
+          maximum: 5
+        client_grade:
+          $ref: '#/components/schemas/ClientGrade'
+    ClientEvent:
+      type: object
+      description: 'Event names follow the normative catalogue in docs/11 (decision 00a D6). `graph_version` and `session_id` are stamped by the server, not sent by the client.'
+      required: [client_event_id, name, at]
+      additionalProperties: false
+      properties:
+        client_event_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          pattern: '^[a-z0-9_.]{1,64}$'
+        at:
+          type: string
+          format: date-time
+        props:
+          type: object
+          additionalProperties: true
+    SyncPushRequest:
+      type: object
+      required: [device_id]
+      additionalProperties: false
+      properties:
+        device_id:
+          type: string
+          format: uuid
+        attempts:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/SyncAttempt'
+        events:
+          type: array
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/ClientEvent'
+    SyncPushResponse:
+      type: object
+      required: [attempts, events]
+      properties:
+        attempts:
+          type: array
+          items:
+            type: object
+            required: [client_attempt_id, outcome]
+            properties:
+              client_attempt_id:
+                type: string
+                format: uuid
+              attempt_id:
+                type: [string, 'null']
+                format: uuid
+              outcome:
+                type: string
+                enum: [accepted, duplicate, rejected]
+              reason:
+                type: [string, 'null']
+                enum: [too_old, item_retired, item_unknown, invalid_response, null]
+              grade_status:
+                $ref: '#/components/schemas/GradeStatus'
+              grade:
+                oneOf:
+                  - $ref: '#/components/schemas/Grade'
+                  - type: 'null'
+              client_grade_matched:
+                type: boolean
+        events:
+          type: array
+          items:
+            type: object
+            required: [client_event_id, outcome]
+            properties:
+              client_event_id:
+                type: string
+                format: uuid
+              outcome:
+                type: string
+                enum: [accepted, duplicate, rejected]
+
+    # ---------- projects ----------
+    ProjectStep:
+      type: object
+      required: [key, position, title, est_min, session_type, evidence_required]
+      properties:
+        key:
+          $ref: '#/components/schemas/ProjectStepKey'
+        position:
+          type: integer
+        title:
+          type: string
+        est_min:
+          type: integer
+        session_type:
+          $ref: '#/components/schemas/SessionType'
+        skill_keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/SkillKey'
+        evidence_required:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidenceKind'
+    Project:
+      type: object
+      required: [key, title, ladder_level, tier_gate, est_hours, status]
+      properties:
+        key:
+          $ref: '#/components/schemas/ProjectKey'
+        title:
+          type: string
+        description:
+          type: string
+        ladder_level:
+          type: integer
+          minimum: 0
+          maximum: 9
+        tier_gate:
+          $ref: '#/components/schemas/Tier'
+        est_hours:
+          type: number
+        status:
+          $ref: '#/components/schemas/ContentStatus'
+        gate_met:
+          type: boolean
+        bom:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    ProjectDetail:
+      allOf:
+        - $ref: '#/components/schemas/Project'
+        - type: object
+          required: [steps]
+          properties:
+            learning_goals:
+              type: array
+              items:
+                type: string
+            prerequisite_skill_keys:
+              type: array
+              items:
+                $ref: '#/components/schemas/SkillKey'
+            grants_tier:
+              type: array
+              description: Project credit offered on completion (L0 immediate, L1 pending until the skill is mastered; never L2 or L3, 00a B5)
+              items:
+                type: object
+                required: [skill_key, tier]
+                properties:
+                  skill_key:
+                    $ref: '#/components/schemas/SkillKey'
+                  tier:
+                    type: string
+                    enum: [L0, L1]
+            time_split_min:
+              type: object
+              additionalProperties:
+                type: integer
+            tools:
+              type: array
+              items:
+                type: string
+            safety_notes:
+              type: array
+              items:
+                type: string
+            failure_modes:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+            steps:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProjectStep'
+    UserProject:
+      type: object
+      required: [id, project_key, status, started_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_key:
+          $ref: '#/components/schemas/ProjectKey'
+        status:
+          $ref: '#/components/schemas/UserProjectStatus'
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: [string, 'null']
+          format: date-time
+        current_step_key:
+          type: [string, 'null']
+        variation:
+          type: object
+          additionalProperties: true
+        bench_state:
+          $ref: '#/components/schemas/BenchState'
+        steps:
+          type: array
+          items:
+            type: object
+            required: [step_key, done]
+            properties:
+              step_key:
+                $ref: '#/components/schemas/ProjectStepKey'
+              done:
+                type: boolean
+              evidence_status:
+                oneOf:
+                  - $ref: '#/components/schemas/EvidenceStatus'
+                  - type: 'null'
+    BenchState:
+      type: object
+      description: Structured pause/resume state of a bench step (docs/10 section 5.7). Autosaved; no expiry.
+      additionalProperties: false
+      properties:
+        version:
+          type: integer
+          const: 1
+        updated_at:
+          type: string
+          format: date-time
+        step_key:
+          $ref: '#/components/schemas/ProjectStepKey'
+        substeps_done:
+          type: array
+          items:
+            type: boolean
+        power_state:
+          type: string
+          enum: [unplugged, usb, battery, adapter]
+        layout_note:
+          type: string
+          maxLength: 2000
+        layout_photo_evidence_id:
+          type: [string, 'null']
+          format: uuid
+        parts_in_use:
+          type: array
+          items:
+            type: string
+        measurements_pending:
+          type: object
+          additionalProperties:
+            type: number
+        firmware:
+          type: object
+          additionalProperties: true
+        next_action:
+          type: string
+          maxLength: 140
+        open_hypotheses:
+          type: array
+          items:
+            type: string
+        hazards_pending:
+          type: array
+          items:
+            type: string
+        challenge_id:
+          type: [string, 'null']
+          format: uuid
+    Challenge:
+      type: object
+      description: A nonce challenge (docs/10 section 7.4). A freshness token, not an identity proof.
+      required: [nonce, expires_at]
+      properties:
+        challenge_id:
+          type: string
+          format: uuid
+        nonce:
+          type: string
+          description: Code `PM-XXXX-XXXX` from a 30-symbol alphabet (no 0, O, 1, I, L, U)
+          pattern: '^PM-[2-9A-HJKMNPQ-TV-Z]{4}-[2-9A-HJKMNPQ-TV-Z]{4}$'
+        digits:
+          type: [string, 'null']
+          pattern: '^[0-9]{6}$'
+          description: Six digits for blink-code and button-script channels
+        attempt_no:
+          type: integer
+          minimum: 1
+        params:
+          type: object
+          description: Attempt-scope parameters the capture must reflect (for example a PWM frequency)
+          additionalProperties: true
+        issued_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/ChallengeStatus'
+        bound_to:
+          type: [string, 'null']
+          format: uuid
+          description: Earlier challenge whose code this one reuses (long-running steps)
+        instructions:
+          type: string
+    ChallengeRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        renew:
+          type: boolean
+          default: false
+          description: Expire the open challenge and issue a new one with `attempt_no + 1`
+    ChallengeVerifyRequest:
+      type: object
+      required: [code]
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          maxLength: 40
+          description: Code as read from the evidence, any case, with or without `PM-` and separators
+    ChallengeVerification:
+      type: object
+      required: [valid, reason]
+      properties:
+        valid:
+          type: boolean
+        reason:
+          type: string
+          enum: [OK, NONCE_MISSING, NONCE_MISMATCH, NONCE_EXPIRED]
+        challenge_id:
+          type: [string, 'null']
+          format: uuid
+    ProjectGrant:
+      type: object
+      description: Project credit ledger row (docs/10 section 8.2, 00a B5). Credit counts only toward the "applied" condition of the mastery rule.
+      required: [id, user_project_id, project_key, skill_key, tier, status, granted_at, assisted]
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_project_id:
+          type: string
+          format: uuid
+        project_key:
+          $ref: '#/components/schemas/ProjectKey'
+        skill_key:
+          $ref: '#/components/schemas/SkillKey'
+        tier:
+          type: string
+          enum: [L0, L1]
+        status:
+          $ref: '#/components/schemas/GrantStatus'
+        granted_at:
+          type: string
+          format: date-time
+        applied_at:
+          type: [string, 'null']
+          format: date-time
+        assisted:
+          type: boolean
+    UploadUrlRequest:
+      type: object
+      required: [step_key, evidence_kind, mime_type, size_bytes]
+      additionalProperties: false
+      properties:
+        step_key:
+          $ref: '#/components/schemas/ProjectStepKey'
+        evidence_kind:
+          type: string
+          enum: [photo, video, log, scope_capture]
+        mime_type:
+          type: string
+          enum: [image/jpeg, image/png, image/webp, video/mp4, video/webm, video/quicktime, text/plain, text/csv, application/json, application/octet-stream]
+        size_bytes:
+          type: integer
+          minimum: 1
+          maximum: 209715200
+        sha256:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+    UploadUrlResponse:
+      type: object
+      required: [evidence_id, upload_url, method, expires_at, storage_path]
+      properties:
+        evidence_id:
+          type: string
+          format: uuid
+        upload_url:
+          type: string
+        method:
+          type: string
+          const: PUT
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        expires_at:
+          type: string
+          format: date-time
+        storage_path:
+          type: string
+          description: '`{user_id}/{user_project_id}/{evidence_id}/{filename}`'
+    SubmitEvidenceRequest:
+      type: object
+      required: [step_key, evidence_kind]
+      additionalProperties: false
+      properties:
+        evidence_id:
+          type: string
+          format: uuid
+          description: Required for file kinds (from the upload-url call)
+        step_key:
+          $ref: '#/components/schemas/ProjectStepKey'
+        evidence_kind:
+          $ref: '#/components/schemas/EvidenceKind'
+        content:
+          type: object
+          description: "For `measurement`, `repo` (`{\"url\": ...}`) and `note` (`{\"text\": ...}`)"
+          additionalProperties: true
+    Evidence:
+      type: object
+      required: [id, user_project_id, step_key, evidence_kind, evidence_status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_project_id:
+          type: string
+          format: uuid
+        step_key:
+          $ref: '#/components/schemas/ProjectStepKey'
+        evidence_kind:
+          $ref: '#/components/schemas/EvidenceKind'
+        evidence_status:
+          $ref: '#/components/schemas/EvidenceStatus'
+        verification:
+          type: object
+          description: Checks run and their results, shown to the learner; assurance 1-4
+          additionalProperties: true
+          examples:
+            - assurance: 1
+              checks:
+                - name: nonce_in_log
+                  pass: true
+                - name: sample_rate_within_tolerance
+                  pass: true
+        challenge_id:
+          type: [string, 'null']
+          format: uuid
+        review_note:
+          type: [string, 'null']
+        signed_url:
+          type: [string, 'null']
+          description: Short-lived (5 min) read URL for the learner's own file
+        created_at:
+          type: string
+          format: date-time
+    UpdateUserProjectRequest:
+      type: object
+      required: [status]
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum: [active, paused, abandoned]
+    AdminEvidence:
+      allOf:
+        - $ref: '#/components/schemas/Evidence'
+        - type: object
+          required: [user_id, project_key]
+          properties:
+            user_id:
+              type: string
+              format: uuid
+            project_key:
+              $ref: '#/components/schemas/ProjectKey'
+    ReviewEvidenceRequest:
+      type: object
+      required: [decision]
+      additionalProperties: false
+      properties:
+        decision:
+          type: string
+          enum: [accepted, rejected]
+        note:
+          type: string
+          maxLength: 2000
+
+    # ---------- checkpoints, experiments ----------
+    Checkpoint:
+      type: object
+      required: [id, scope_node, reason, status, due_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        scope_node:
+          $ref: '#/components/schemas/NodeCode'
+        scope_module:
+          type: [string, 'null']
+        reason:
+          type: string
+          enum: [module_end, every_14_days, manual]
+        status:
+          type: string
+          enum: [due, in_progress, completed, expired]
+        due_at:
+          type: string
+          format: date-time
+        score:
+          oneOf:
+            - $ref: '#/components/schemas/Score'
+            - type: 'null'
+        session_id:
+          type: [string, 'null']
+          format: uuid
+    ExperimentAssignment:
+      type: object
+      description: Sticky assignment of one unit. `rng_seed` and `block_index` are allocation internals and are never returned.
+      required: [experiment_key, arm, assigned_at, unit_type, unit_key]
+      properties:
+        experiment_key:
+          type: string
+        arm:
+          $ref: '#/components/schemas/ExperimentArm'
+        assigned_at:
+          type: string
+          format: date-time
+        unit_type:
+          $ref: '#/components/schemas/ExperimentUnitType'
+        unit_key:
+          type: string
+          description: The user id for `user`, otherwise a skill key, module key or confusable-set name
+    ExperimentUnitType:
+      type: string
+      enum: [user, skill, module, confusable_set]
+    AssignUnitRequest:
+      type: object
+      required: [unit_type]
+      additionalProperties: false
+      properties:
+        unit_type:
+          $ref: '#/components/schemas/ExperimentUnitType'
+        unit_key:
+          type: string
+          description: Required unless `unit_type` is `user` (then it must be omitted or equal to the caller)
+
+    # ---------- modules and plans ----------
+    ModuleKey:
+      type: string
+      pattern: '^[a-z]+\.[a-z0-9-]+$'
+      examples: [elec.dc]
+    Module:
+      type: object
+      required: [key, node, module, title, order_index]
+      properties:
+        key:
+          $ref: '#/components/schemas/ModuleKey'
+        node:
+          $ref: '#/components/schemas/NodeCode'
+        module:
+          type: string
+        title:
+          type: string
+        order_index:
+          type: integer
+          minimum: 0
+        description:
+          type: string
+        is_stub:
+          type: boolean
+        skill_count:
+          type: integer
+        skills_mastered:
+          type: integer
+    PlanSlot:
+      type: object
+      required: [id, plan_id, day, position, session_type, planned_min, context, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        plan_id:
+          type: string
+          format: uuid
+        day:
+          type: string
+          format: date
+        position:
+          type: integer
+          minimum: 1
+        session_type:
+          $ref: '#/components/schemas/SessionType'
+        planned_min:
+          type: integer
+          minimum: 1
+        context:
+          $ref: '#/components/schemas/Context'
+        status:
+          $ref: '#/components/schemas/PlanSlotStatus'
+        start_time_local:
+          type: [string, 'null']
+          pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+        moved_from_day:
+          type: [string, 'null']
+          format: date
+        carried_min:
+          type: integer
+          minimum: 0
+        note:
+          type: [string, 'null']
+          maxLength: 500
+        session_id:
+          type: [string, 'null']
+          format: uuid
+          description: Session started from this slot, if any (`sessions.plan_slot_id`)
+    WeeklyPlan:
+      type: object
+      required: [id, week_start, status, target_minutes, planned_minutes, slots]
+      properties:
+        id:
+          type: string
+          format: uuid
+        week_start:
+          type: string
+          format: date
+          description: Local Monday
+        status:
+          $ref: '#/components/schemas/WeeklyPlanStatus'
+        target_minutes:
+          type: integer
+          minimum: 0
+        planned_minutes:
+          type: integer
+          minimum: 0
+          description: Sum of the minutes of slots that are not `missed`
+        slack_minutes:
+          type: integer
+        paused_until:
+          type: [string, 'null']
+          format: date
+        carry:
+          type: object
+          additionalProperties: true
+        forecast:
+          type: object
+          description: Estimate from the current learner state, always labelled as an estimate in the UI
+          properties:
+            reviews_due:
+              type: integer
+              minimum: 0
+            new_skills:
+              type: integer
+              minimum: 0
+            is_estimate:
+              type: boolean
+              const: true
+        slots:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanSlot'
+    CreatePlanRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        week_start:
+          type: string
+          format: date
+          description: Local Monday; default the current week
+        weekly_minutes_target:
+          type: integer
+          minimum: 0
+          maximum: 5000
+          description: Default `profiles.weekly_minutes_target`
+        replace:
+          type: boolean
+          default: false
+    UpdatePlanRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum: [active, skipped, paused]
+        paused_until:
+          type: [string, 'null']
+          format: date
+    AddSlotRequest:
+      type: object
+      required: [day, planned_min, context]
+      additionalProperties: false
+      properties:
+        day:
+          type: string
+          format: date
+        session_type:
+          $ref: '#/components/schemas/SessionType'
+        planned_min:
+          type: integer
+          minimum: 1
+          maximum: 240
+        context:
+          $ref: '#/components/schemas/Context'
+        start_time_local:
+          type: [string, 'null']
+          pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+    MoveSlotRequest:
+      type: object
+      required: [day]
+      additionalProperties: false
+      properties:
+        day:
+          type: string
+          format: date
+        start_time_local:
+          type: [string, 'null']
+          pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+
+    # ---------- notifications ----------
+    PushSubscriptionRequest:
+      type: object
+      required: [endpoint, keys]
+      additionalProperties: false
+      properties:
+        endpoint:
+          type: string
+          format: uri
+        keys:
+          type: object
+          required: [p256dh, auth]
+          additionalProperties: false
+          properties:
+            p256dh:
+              type: string
+            auth:
+              type: string
+        user_agent:
+          type: string
+          maxLength: 300
+    PushSubscription:
+      type: object
+      required: [id, endpoint, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        endpoint:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    # ---------- privacy ----------
+    PrivacyRequest:
+      type: object
+      required: [id, kind, status, requested_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum: [export, delete]
+        status:
+          type: string
+          enum: [requested, processing, completed, failed]
+        requested_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: [string, 'null']
+          format: date-time
+        download_url:
+          type: [string, 'null']
+          description: Signed URL, present only for completed exports until `export_expires_at`
+        export_expires_at:
+          type: [string, 'null']
+          format: date-time
+      examples:
+        - id: 5e5e5e5e-0000-4000-8000-000000000001
+          kind: export
+          status: requested
+          requested_at: '2026-11-01T09:00:00Z'
+          completed_at: null
+          download_url: null
+          export_expires_at: null
+    DeleteAccountRequest:
+      type: object
+      required: [confirm]
+      additionalProperties: false
+      properties:
+        confirm:
+          type: string
+          const: delete my data
+
+    # ---------- admin ----------
+    ContentSyncStatus:
+      type: object
+      required: [deployed_sha, in_sync, runs]
+      properties:
+        deployed_sha:
+          type: string
+        last_success_sha:
+          type: [string, 'null']
+        in_sync:
+          type: boolean
+        runs:
+          type: array
+          items:
+            type: object
+            required: [id, git_sha, status, started_at]
+            properties:
+              id:
+                type: string
+                format: uuid
+              git_sha:
+                type: string
+              status:
+                type: string
+                enum: [running, succeeded, failed]
+              started_at:
+                type: string
+                format: date-time
+              finished_at:
+                type: [string, 'null']
+                format: date-time
+              stats:
+                type: object
+                additionalProperties: true
+              errors:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+    ApproveItemRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        note:
+          type: string
+          maxLength: 2000
+    ApproveItemResponse:
+      type: object
+      required: [item_id, status]
+      properties:
+        item_id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/ContentStatus'
+    ReviewAttemptRequest:
+      type: object
+      required: [decision, score]
+      additionalProperties: false
+      properties:
+        decision:
+          type: string
+          enum: [accept, needs_rework, reject]
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+        checklist:
+          type: object
+          description: Result per item of the template's `answer.checklist`
+          additionalProperties:
+            type: boolean
+        comment:
+          type: string
+          maxLength: 2000
+    AdminReviewEntry:
+      type: object
+      required: [kind, id, skill_key, queued_at]
+      description: Item fields are set for `kind = item`, attempt fields for `kind = attempt`.
+      properties:
+        kind:
+          type: string
+          enum: [item, attempt]
+        id:
+          type: string
+          format: uuid
+          description: The item id or the attempt id
+        skill_key:
+          $ref: '#/components/schemas/SkillKey'
+        queued_at:
+          type: string
+          format: date-time
+        template_key:
+          $ref: '#/components/schemas/TemplateKey'
+        template_status:
+          $ref: '#/components/schemas/ContentStatus'
+        rendered:
+          type: object
+          additionalProperties: true
+        solution:
+          type: [object, 'null']
+          additionalProperties: true
+          description: Reference solution, admin only
+        verification_report:
+          type: object
+          additionalProperties: true
+        item_id:
+          type: [string, 'null']
+          format: uuid
+          description: The attempted item, for `kind = attempt`
+        response:
+          type: object
+          additionalProperties: true
+        grade:
+          oneOf:
+            - $ref: '#/components/schemas/Grade'
+            - type: 'null'
+        checklist:
+          type: array
+          items:
+            type: string
+          description: The template's `answer.checklist`
+    RetireItemRequest:
+      type: object
+      required: [reason]
+      additionalProperties: false
+      properties:
+        reason:
+          type: string
+          minLength: 5
+          maxLength: 1000
+        retire_template:
+          type: boolean
+          default: false
+    RetireItemResponse:
+      type: object
+      required: [item_id, status, replaced_tasks]
+      properties:
+        item_id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/ContentStatus'
+        template_retired:
+          type: boolean
+        replaced_tasks:
+          type: integer
+        pool_items_retired:
+          type: integer
+    ItemReport:
+      type: object
+      required: [id, item_id, target_type, reason, status, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        item_id:
+          type: [string, 'null']
+          format: uuid
+        target_type:
+          type: string
+          enum: [item, tutor_message]
+        tutor_message_id:
+          type: [string, 'null']
+          format: uuid
+        template_key:
+          $ref: '#/components/schemas/TemplateKey'
+        reason:
+          type: string
+          enum: [wrong_answer, ambiguous, unsolvable, offensive, other]
+        note:
+          type: [string, 'null']
+        attempt_id:
+          type: [string, 'null']
+          format: uuid
+        status:
+          $ref: '#/components/schemas/ReportStatus'
+        created_at:
+          type: string
+          format: date-time
+        resolved_at:
+          type: [string, 'null']
+          format: date-time
+    ResolveItemReportRequest:
+      type: object
+      required: [status]
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum: [confirmed, dismissed]
+        retire_item:
+          type: boolean
+          default: false
+    AnalysisExclusion:
+      type: object
+      required: [id, reason, decided_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        experiment_key:
+          type: [string, 'null']
+          description: Null applies to every analysis
+        user_id:
+          type: [string, 'null']
+          format: uuid
+        unit_key:
+          type: [string, 'null']
+          description: Skill key, module key, item id, attempt id or another unit identifier
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 1000
+        decided_by:
+          type: [string, 'null']
+          format: uuid
+        decided_at:
+          type: string
+          format: date-time
+    CreateAnalysisExclusionRequest:
+      type: object
+      required: [reason]
+      additionalProperties: false
+      anyOf:
+        - required: [user_id]
+        - required: [unit_key]
+      properties:
+        experiment_key:
+          type: string
+        user_id:
+          type: string
+          format: uuid
+        unit_key:
+          type: string
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 1000

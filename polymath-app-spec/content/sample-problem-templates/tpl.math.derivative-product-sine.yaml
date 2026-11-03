@@ -1,0 +1,73 @@
+# Sample 3: symbolic_equivalence (derivative of a product).
+schema_version: 1
+key: tpl.math.derivative-product-sine
+version: 1
+authoring_status: ready
+skill_key: math.calc.derivative-rules
+task_kind: problem
+grader_type: symbolic_equivalence
+difficulty_prior: 0.5
+title: Differentiate a power times a sine
+license: original
+source: original
+provenance:
+  authors: [founder]
+  created: "2026-10-31"
+  llm_assistance: { used: false }
+delivery: { contexts: [desktop, phone], est_seconds: 120, phone_suitable: true, offline_gradable: false }
+parameters:
+  - { name: a, type: int, min: -5, max: 5, nonzero: true }
+  - { name: n, type: int, min: 2, max: 4 }
+  - { name: b, type: choice, values: [2, 3, 4, -2, -3] }
+constraints:
+  - { id: coefficient-not-unit, expr: "abs(a) != 1 or b != 2", reason: "Avoid the bare x^n sin(2x) form where every coefficient is trivially 1 or 2." }
+render:
+  stem_md: |
+    Differentiate with respect to $x$:
+
+    $$f(x) = {{a|paren}}\,x^{ {{n|int}} }\,\sin\!\big({{b|paren}}\,x\big)$$
+
+    Give $f'(x)$ in any equivalent form. Use `*` for multiplication, `^` or `**` for powers, and `sin`, `cos`.
+  answer_prompt: "Type f'(x). Example format: 3*x^2*sin(2*x) + x^3*cos(2*x)"
+  alt_text: "Find the derivative of f of x equals {{a|int}} times x to the power {{n|int}} times sine of ({{b|int}} times x)."
+  figure: { kind: none }
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      ref: "a*n*x**(n-1)*sin(b*x) + a*b*x**n*cos(b*x)"
+  steps:
+    - { id: s1, text_md: "Product rule: $(uv)' = u'v + uv'$ with $u = {{a|paren}}x^{ {{n|int}} }$ and $v = \\sin({{b|paren}}x)$." }
+    - { id: s2, text_md: "$u' = {{an|int}}\\,x^{ {{nm1|int}} }$ and, by the chain rule, $v' = {{b|paren}}\\cos({{b|paren}}x)$." }
+    - { id: s3, text_md: "Combine: $f'(x) = {{an|int}}x^{ {{nm1|int}} }\\sin({{b|paren}}x) + {{ab|int}}x^{ {{n|int}} }\\cos({{b|paren}}x)$." }
+derived:
+  - { name: an, expr: "a*n" }
+  - { name: nm1, expr: "n - 1" }
+  - { name: ab, expr: "a*b" }
+answer:
+  variables: [x]
+  reference: ref
+  sample_domain: { x: [0.3, 2.5] }
+  forbid_functions: [diff, Derivative, integrate, Integral, limit]
+  form: any
+  numeric_rel_tol: 1.0e-9
+verifiers:
+  - id: sympy-diff
+    kind: sympy_exact
+    independence: "Differentiates the stem function with SymPy's symbolic differentiator instead of using the hand-derived product-rule formula."
+    spec:
+      checks:
+        - { output: ref, expr: "diff(a*x**n*sin(b*x), x)", variable: x }
+  - id: finite-difference
+    kind: sympy_diff_vs_numeric
+    independence: "Approximates the derivative of the stem function numerically with mpmath at sample points and compares it with the reference expression."
+    spec: { function: "a*x**n*sin(b*x)", variable: x, reference_output: ref, points: [0.4, 0.9, 1.3, 1.9, 2.4] }
+    tolerance: { rel: 1.0e-7 }
+hints:
+  l1: "The function is a product of two factors that both depend on x. Which differentiation rule handles products?"
+  l2: "Product rule: (u v)' = u' v + u v'. The sine factor also needs the chain rule because its argument is not just x."
+  l3: "Take u = {{a|paren}}*x^{{n}} and v = sin({{b|paren}}*x). Find u' and v' separately before combining."
+misconceptions:
+  - { tag: mc.product-rule-as-product-of-derivatives, description: "Differentiates each factor and multiplies the results.", wrong_answer_expr: "(a*n*x**(n-1))*(b*cos(b*x))", feedback_md: "The derivative of a product is not the product of the derivatives. Use u'v + uv'." }
+  - { tag: mc.chain-rule-missing-inner-derivative, description: "Forgets the factor b from the inner function.", wrong_answer_expr: "a*n*x**(n-1)*sin(b*x) + a*x**n*cos(b*x)", feedback_md: "The derivative of sin(bx) is b cos(bx): do not forget the inner derivative." }
+fuzz: { samples: 200, seed_base: 3000, max_rejection_rate: 0.5 }

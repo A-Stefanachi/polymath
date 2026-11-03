@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data model — Polymath documentation</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="data">
+  <a class="skip" href="#main">Skip to content</a>
+  <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+    <div class="main-wrap">
+      <main id="main" class="content">
+        <p class="kicker">Persistence</p>
+        <h1>Data model overview</h1>
+        <p class="spec-ref">
+          <a href="../docs/04-data-model.md">docs/04-data-model.md</a>,
+          <a href="../schemas/schema.sql">schemas/schema.sql</a>
+        </p>
+
+        <div class="summary">
+          <h2>Summary</h2>
+          <ul>
+            <li>All learner-owned rows are scoped by <code>user_id</code> and protected with row-level security.</li>
+            <li>Stable string keys identify curriculum objects; UUIDs identify runtime rows.</li>
+            <li><code>attempts</code>, <code>review_log</code>, and <code>skill_state</code> record the learning history.</li>
+            <li>The <code>jobs</code> table implements asynchronous grading; <code>events</code> supports analytics without third-party trackers.</li>
+          </ul>
+        </div>
+
+        <h2>Table groups</h2>
+        <div class="grid-2">
+          <article class="card">
+            <h3>Identity and preferences</h3>
+            <p><code>profiles</code>, consents, reminder preferences, weekly minute targets.</p>
+          </article>
+          <article class="card">
+            <h3>Curriculum</h3>
+            <p><code>modules</code>, <code>skills</code>, <code>skill_edges</code>, <code>item_templates</code>, <code>items</code>.</p>
+          </article>
+          <article class="card">
+            <h3>Learning loop</h3>
+            <p><code>sessions</code>, <code>session_tasks</code>, <code>attempts</code>, <code>skill_state</code>, <code>review_log</code>.</p>
+          </article>
+          <article class="card">
+            <h3>Projects</h3>
+            <p><code>projects</code>, <code>project_steps</code>, <code>user_projects</code>, <code>project_evidence</code>, <code>project_grants</code>.</p>
+          </article>
+          <article class="card">
+            <h3>Tutor and experiments</h3>
+            <p><code>tutor_threads</code>, <code>tutor_messages</code>, experiment assignment tables (doc 11).</p>
+          </article>
+          <article class="card">
+            <h3>Operations</h3>
+            <p><code>jobs</code>, <code>events</code>, push subscriptions, privacy requests, item reports.</p>
+          </article>
+        </div>
+
+        <h2>Notable JSON fields</h2>
+        <dl class="compact">
+          <dt><code>attempts.grade</code></dt><dd>Status, score, correctness flag, grader list.</dd>
+          <dt><code>items.rendered</code></dt><dd>Presentation payload including mathematical alternative text.</dd>
+          <dt><code>items.verification_report</code></dt><dd>Required when item status is verified.</dd>
+          <dt><code>project_evidence.verification</code></dt><dd>Automated check results and review metadata.</dd>
+        </dl>
+
+        <div class="callout tip">
+          Service-role database access is restricted to <code>apps/web/src/server/privileged/</code> and enforced by repository lint rules.
+        </div>
+      </main>
+      <footer class="page-footer">Row-level security tests are included in the lean continuous integration set.</footer>
+    </div>
+  </div>
+  <script src="assets/nav.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

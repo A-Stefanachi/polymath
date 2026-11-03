@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hardware &amp; tools — Polymath documentation</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="hardware">
+  <a class="skip" href="#main">Skip to content</a>
+  <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+    <div class="main-wrap">
+      <main id="main" class="content">
+        <p class="kicker">Bench &amp; field</p>
+        <h1>Hardware and tools to buy</h1>
+        <p class="spec-ref">
+          <a href="../docs/17-hardware-tools-and-bom.md">docs/17-hardware-tools-and-bom.md</a>,
+          <a href="../docs/10-build-projects-and-verification-spec.md">doc 10 §5</a> (L0–L5 USD detail),
+          <a href="../content/hardware-phases.yaml">hardware-phases.yaml</a>
+        </p>
+
+        <div class="summary">
+          <h2>Summary</h2>
+          <ul>
+            <li>All figures below are <strong>EUR, Germany retail incl. 19% MwSt</strong> [P], unverified planning estimates (Nov 2026).</li>
+            <li>Buy in <strong>phases</strong> aligned with the project ladder—avoid a full quad kit before the sensor foundation unless you accept idle stock.</li>
+            <li><strong>Phase A (L0–L5):</strong> about <strong>480–650 €</strong> for a first serious bench (DMM, scope, soldering, L0–L3 parts); up to <strong>~665 €</strong> for the full foundation catalog.</li>
+            <li><strong>Phases B–F (spine):</strong> roughly <strong>+800–1,900 €</strong> add-on over years (power bench, quad + radio, printer, companion computer).</li>
+            <li>Typical shops: Reichelt, Conrad, BerryBase, Amazon.de; PCBs from EU-friendly fabs.</li>
+          </ul>
+        </div>
+
+        <h2>Phase A — Foundation (start here)</h2>
+        <table class="compact-table">
+          <thead><tr><th>Category</th><th>Examples</th><th>Central € [P]</th></tr></thead>
+          <tbody>
+            <tr><td>Instruments</td><td>Multimeter; 50 MHz scope; USB LA; 3.3 V USB–UART</td><td>~35 + ~280 + ~20 + ~12</td></tr>
+            <tr><td>MCU</td><td>Raspberry Pi Pico 2; breadboard; jumpers</td><td>~10–28</td></tr>
+            <tr><td>Parts</td><td>Resistors, caps, LEDs, transistors, BME280</td><td>~100–170</td></tr>
+            <tr><td>Tools</td><td>Soldering station, fume fan, cutters, tweezers</td><td>~150–250</td></tr>
+            <tr><td>L5</td><td>Calipers; KiCad; 2-layer PCB fab</td><td>~50–80</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Later phases (capability spine)</h2>
+        <p>
+          Ladder levels and syllabus modules:
+          <a href="syllabi.html">pillar syllabi</a>,
+          <a href="spine.html">capability spine</a>.
+        </p>
+        <table class="compact-table path-table">
+          <thead><tr><th>Phase</th><th>Ladder</th><th>Pillar</th><th>Add-on central € [P]</th></tr></thead>
+          <tbody>
+            <tr><td>B — power bench</td><td>L6</td><td><a href="syllabi.html#T1">T1 Power</a></td><td>170–400</td></tr>
+            <tr><td>C — IMU logger</td><td>L7</td><td><a href="syllabi.html#T2">T2 Control</a></td><td>30–180</td></tr>
+            <tr><td>D — quad kit</td><td>L8, L12</td><td><a href="syllabi.html#T4">T4 UAV</a></td><td>400–850</td></tr>
+            <tr><td>E — CAD / print</td><td>L9</td><td><a href="syllabi.html#T3">T3 Mechanical</a></td><td>55–750</td></tr>
+            <tr><td>F — PDB, edge, field</td><td>L10–L13</td><td><a href="syllabi.html#T3">T3</a> / <a href="syllabi.html#T5">T5</a> / <a href="syllabi.html#T4">T4</a></td><td>115–450</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Multi-year total (deduped):</strong> about <strong>1,700–2,500 €</strong> central for mid-range instruments plus one quad path [P].</p>
+
+        <div class="callout tip">
+          Line items, LiPo safety gates, and buying order are in
+          <a href="../docs/17-hardware-tools-and-bom.md">doc 17</a>. Doc 10 §5.1 lists the same foundation basket in USD.
+        </div>
+      </main>
+    </div>
+  </div>
+  <script src="assets/nav.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

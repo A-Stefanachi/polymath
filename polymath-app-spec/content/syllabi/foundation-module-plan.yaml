@@ -1,0 +1,171 @@
+version: '1.0'
+status: planning
+track: foundation
+modules:
+- key: math.alg
+  hard_task: "From an unseen formula P = V\u00b2R/(R+r)\u00b2, isolate r, check units, and estimate within 10% without a calculator."
+  outcomes:
+  - Rearrange formulas and solve linear equations used in circuit analysis.
+  - Convert units and use SI prefixes without calculator errors.
+  - Apply order of operations on expressions with fractions and negatives.
+  evidence: 'Math modules: L1 via unaided checkpoints and constructed-response mastery (doc 05 §3); no bench project step.'
+  projects: none (exempt)
+  checkpoint: Module-end unaided checkpoint when D4 ships; lean slice uses retrieval only.
+  confusables: none
+  templates_p: 'Lean: 8 skills in slice → ~8–10 templates (BL-0065). Full module: ~13 skills → ~26 templates at 2/skill.'
+- key: sw.tools
+  hard_task: "Given a repo with a broken shell script and deleted work, use log, diff and restore to recover the work and name the commit that broke the script, with no notes."
+  outcomes:
+  - Use shell, Git, and make to build and flash a minimal C project.
+  - Read build errors and recover without losing work.
+  evidence: Project steps on L0, L1, L5 reference terminal, Git, build-make.
+  projects: prj.L0.blink-led, prj.L1.divider-rc, prj.L5.kicad (tooling steps)
+  checkpoint: Module checkpoint includes Git/make workflow items.
+  confusables: none
+  templates_p: ~10 templates (MC + short command recognition); code grading deferred to D3.
+- key: elec.dc
+  hard_task: "From given voltage readings of an unknown black-box source under two loads, derive its Thevenin model and predict a third load within tolerance."
+  outcomes:
+  - Analyze series, parallel, divider, and network circuits numerically and symbolically.
+  - Apply KVL/KCL, Thevenin/Norton, and loading effects at L1 depth.
+  evidence: L0–L2 project steps; multimeter reconciliation with Ohm's law.
+  projects: L0 blink (divider calc), L1 divider/RC, L2 switch/regulator prerequisites
+  checkpoint: Constructed-response numeric/symbolic items.
+  confusables: dc-network-methods (Kirchhoff vs nodal vs Thevenin/Norton)
+  templates_p: 'Lean: 8 skills in slice → ~10 templates (BL-0066). Full: ~11 skills.'
+- key: math.prob
+  hard_task: "From a table of 50 given readings, report value and uncertainty, separate systematic from random error, and say what 100 times more samples cannot fix."
+  outcomes:
+  - Propagate measurement uncertainty on sums, products, and ratios.
+  - Use mean and standard deviation to summarise repeat measurements and predict the effect of averaging.
+  evidence: Exempt math module; feeds elec.meas.measure-vs-simulate and firmware filtering.
+  projects: L3 sensor path (indirect)
+  checkpoint: Unaided items on uncertainty rules.
+  confusables: none
+  templates_p: ~14 templates when module is authored.
+- key: elec.meas
+  hard_task: "From a seeded fault circuit and a misleading capture, identify the measurement artefacts and re-measure correctly."
+  outcomes:
+  - Use DMM and scope safely; read schematics and datasheets.
+  - Compare bench measurements to SPICE within stated tolerance.
+  evidence: Heavy project coverage L0–L5; lab-safety-esd root skill.
+  projects: All foundation ladder projects touch measurement skills
+  checkpoint: Measurement_check items when D3 ships; numeric compare in lean.
+  confusables: none
+  templates_p: ~18 templates including SPICE-compare (post-D3).
+- key: elec.dig
+  hard_task: "From a written spec, design a 3-bit FSM, checked by exhaustive next-state equivalence."
+  outcomes:
+  - Design combinational logic from spec; understand latches, FSMs, and logic levels.
+  - Relate gate truth tables to firmware bit operations.
+  evidence: L3–L5 project steps for logic and debug.
+  projects: L3 I2C/UART, L4 FSM device
+  checkpoint: MC + symbolic logic items.
+  confusables: none
+  templates_p: ~18 templates.
+- key: sw.c
+  hard_task: "Write a tested bit-field pack and unpack module with no warnings under -Wall -Wextra, passing hidden edge cases and UBSan."
+  outcomes:
+  - 'Write structured C: types, control flow, functions, arrays, strings.'
+  - Read and modify small embedded programs.
+  evidence: L0, L3, L4, L5 code paths.
+  projects: Blink, I2C sensor, FSM capstone
+  checkpoint: code_tests when D3 enabled; MC read-code in lean.
+  confusables: none
+  templates_p: ~20 templates.
+- key: sw.mem
+  hard_task: "Given a short C program that corrupts its stack, draw its frames, predict which write overruns which variable, and fix it unaided."
+  outcomes:
+  - Explain stack vs heap, pointers, and memory-mapped I/O at working depth.
+  - Use volatile correctly for device registers.
+  evidence: L4 ISR/shared-data path.
+  projects: L4 state machine + UART
+  checkpoint: debug_case and code_tests.
+  confusables: value-vs-address
+  templates_p: ~8 templates.
+- key: math.trig
+  hard_task: "From a plotted waveform with marked samples, read amplitude, frequency and phase, and predict the next zero crossing."
+  outcomes:
+  - Use sin/cos/tan on right triangles and basic wave parameters.
+  evidence: Math exempt; supports RC and AC intuition.
+  projects: none
+  checkpoint: Unaided numeric/symbolic.
+  confusables: none
+  templates_p: ~12 templates.
+- key: math.cplx
+  hard_task: "Derive the magnitude and phase of 1/(1 + jx) by hand, then use a phasor to predict the output sinusoid at a value of x you were not given in advance."
+  outcomes:
+  - Convert rectangular ↔ polar; multiply/divide complex numbers for impedance.
+  evidence: Math exempt.
+  projects: none
+  checkpoint: Symbolic equivalence.
+  confusables: complex-forms
+  templates_p: ~8 templates.
+- key: math.calc
+  hard_task: "Solve dy/dt = (u - y)/T for constant u and nonzero y(0), then take one Euler step and show it has the form y += a(u - y)."
+  outcomes:
+  - Interpret derivatives and integrals for RC exponentials and sensitivity.
+  - Apply product/chain rules needed for filter analysis.
+  evidence: Math exempt; L1 RC project references exp decay.
+  projects: L1 RC step response
+  checkpoint: Constructed response.
+  confusables: calculus-operations
+  templates_p: ~16 templates.
+- key: elec.rc
+  hard_task: "Identify R and C in a sealed filter from step and sweep measurements alone, with uncertainty."
+  outcomes:
+  - Predict RC time constants, step response, and simple filter behaviour.
+  - Run and compare SPICE netlists for RC circuits.
+  evidence: L1–L2 projects; filter-bench skill.
+  projects: L1 divider/RC, L2 switch
+  checkpoint: SPICE + numeric (D3).
+  confusables: rc-filter-type
+  templates_p: ~20 templates.
+- key: elec.semi
+  hard_task: "Choose and justify a 3.3 V-driven load switch from real datasheets for a 1 A inductive load, including dissipation, then predict bench Vds."
+  outcomes:
+  - Size LED current, use BJT/MOSFET switches, and linear regulators safely.
+  - Diagnose simple semiconductor failures on the bench.
+  evidence: L0, L2 projects; battery-safety gates.
+  projects: L0 blink, L2 transistor/regulator
+  checkpoint: Numeric + measurement.
+  confusables: transistor-switches, regulator-types
+  templates_p: ~16 templates.
+- key: sw.fsm
+  hard_task: "Add one new state to an unfamiliar FSM from a spec change, preserving hidden timing tests."
+  outcomes:
+  - Implement table-driven and event-driven state machines in C.
+  - Test FSM timing and non-blocking behaviour.
+  evidence: L3–L4 projects.
+  projects: L4 capstone FSM
+  checkpoint: code_tests + debug_case.
+  confusables: fsm-styles
+  templates_p: ~8 templates.
+- key: elec.opamp
+  hard_task: "Design a single-supply stage mapping a sensor's real range onto 0\u20133 V, choose a real part, and name from its datasheet which limit is hit first."
+  outcomes:
+  - Configure inverting/non-inverting amps, comparators, and summing stages for sensors.
+  evidence: Exempt v1 from module project gate (00a E2); checkpoints only.
+  projects: none in v1
+  checkpoint: Primary L1 evidence path for this module.
+  confusables: opamp-configurations
+  templates_p: ~12 templates.
+- key: sw.fw
+  hard_task: "With a fresh sensor datasheet and no walkthrough, bring up a driver, report an unplugged bus as a failed transfer without hanging, log at a fixed rate with measured jitter, and justify the rate against aliasing."
+  outcomes:
+  - Drive GPIO, timers, ADC, I2C, UART; ISRs, debounce, filters, calibration.
+  - Integrate sensor read → filter → log on a real MCU.
+  evidence: All projects L0–L5; capstone sensor path.
+  projects: Full ladder
+  checkpoint: code_tests, measurement, debug.
+  confusables: serial-protocols (I2C vs UART)
+  templates_p: ~28 templates.
+- key: math.vec
+  hard_task: "Fit gain and offset to noisy calibration data in code, using the normal equations as given, and report the residuals."
+  outcomes:
+  - Solve linear systems in matrix form and use the dot product for angles and projections.
+  evidence: Math exempt; stub promotion for physics/control.
+  projects: none
+  checkpoint: Numeric/symbolic.
+  confusables: none
+  templates_p: ~14 templates.

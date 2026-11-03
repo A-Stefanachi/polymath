@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://polymath.example/schemas/skill-node.schema.json",
+  "title": "Polymath skill graph file",
+  "description": "Schema for one skill entry ($defs/skill) and for the whole graph file (root). Cross-entry rules (uniqueness, acyclicity, reachability, key/node/module agreement) are enforced by reference/validate_graph.py, not by this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "graph_version", "as_of", "scope", "modules", "skills"],
+  "properties": {
+    "schema_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "graph_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "as_of": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "scope": { "type": "string", "enum": ["mvp-vertical-slice", "full"] },
+    "modules": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/module" }
+    },
+    "module_order_exceptions": {
+      "type": "array",
+      "description": "Explicit whitelist for edges whose prerequisite lives in a later module than the dependent skill (validator rule 13). Every entry needs a reason.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "to", "reason"],
+        "properties": {
+          "from": { "type": "string", "pattern": "^[a-z]+\\.[a-z0-9-]+\\.[a-z0-9-]+$" },
+          "to": { "type": "string", "pattern": "^[a-z]+\\.[a-z0-9-]+\\.[a-z0-9-]+$" },
+          "reason": { "type": "string", "minLength": 30 }
+        }
+      }
+    },
+    "skills": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/skill" }
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "string",
+      "enum": ["math", "phys", "sw", "ml", "elec", "sig", "ctl", "mech", "sens", "net", "matl", "sys", "sec", "econ", "prof", "def", "rf", "robo", "cv", "pwr"]
+    },
+    "tier": { "type": "string", "enum": ["L0", "L1", "L2", "L3"] },
+    "task_kind": {
+      "type": "string",
+      "enum": ["retrieval", "worked_example", "faded_problem", "problem", "perceptual_drill", "explain_back", "debug_case", "project_step", "diagnostic", "checkpoint"]
+    },
+    "grader_type": {
+      "type": "string",
+      "enum": ["exact_numeric", "symbolic_equivalence", "multiple_choice", "code_tests", "spice_compare", "drc_erc", "rubric_llm", "measurement_check", "human_review"]
+    },
+    "module": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "node", "module", "order", "title"],
+      "properties": {
+        "key": { "type": "string", "pattern": "^[a-z]+\\.[a-z0-9-]+$" },
+        "node": { "$ref": "#/$defs/node" },
+        "module": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "order": { "type": "integer", "minimum": 1, "description": "Order in which a new learner first meets the module." },
+        "title": { "type": "string", "minLength": 3, "maxLength": 80 }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["skill", "strength", "min_tier"],
+      "properties": {
+        "skill": { "type": "string", "pattern": "^[a-z]+\\.[a-z0-9-]+\\.[a-z0-9-]+$" },
+        "strength": { "type": "string", "enum": ["hard", "soft"] },
+        "min_tier": { "$ref": "#/$defs/tier" }
+      }
+    },
+    "skill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "title", "description", "node", "module", "status", "tier_target", "est_minutes", "prerequisites", "task_kinds", "grader_types", "phone_suitable", "license", "source"],
+      "properties": {
+        "key": { "type": "string", "pattern": "^[a-z]+\\.[a-z0-9-]+\\.[a-z0-9-]+$", "maxLength": 80 },
+        "title": { "type": "string", "minLength": 3, "maxLength": 60 },
+        "description": { "type": "string", "minLength": 20, "maxLength": 220, "description": "One sentence, original wording, ending with a full stop." },
+        "node": { "$ref": "#/$defs/node" },
+        "module": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "status": { "type": "string", "enum": ["draft", "verified", "needs_human_review", "retired", "stub"] },
+        "tier_target": { "$ref": "#/$defs/tier" },
+        "est_minutes": { "type": "integer", "minimum": 0, "maximum": 60 },
+        "prerequisites": { "type": "array", "items": { "$ref": "#/$defs/edge" }, "uniqueItems": true },
+        "task_kinds": { "type": "array", "items": { "$ref": "#/$defs/task_kind" }, "uniqueItems": true },
+        "grader_types": { "type": "array", "items": { "$ref": "#/$defs/grader_type" }, "uniqueItems": true },
+        "phone_suitable": { "type": "boolean" },
+        "confusable_set": { "type": "string", "pattern": "^[a-z0-9-]+$", "maxLength": 40, "description": "Optional tag. Skills sharing a tag in one module are interleaved (contract 7.2 (d), doc 02 LS-011); the validator requires all members to be in one module. No tag means no interleaving." },
+        "license": { "type": "string", "enum": ["original"] },
+        "source": { "type": "string", "minLength": 10, "maxLength": 200 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "stub" } }, "required": ["status"] },
+          "then": {
+            "properties": {
+              "est_minutes": { "const": 0 },
+              "task_kinds": { "maxItems": 0 },
+              "grader_types": { "maxItems": 0 },
+              "phone_suitable": { "const": false }
+            }
+          },
+          "else": {
+            "properties": {
+              "est_minutes": { "minimum": 5, "maximum": 60 },
+              "task_kinds": { "minItems": 1 },
+              "grader_types": { "minItems": 1 }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,93 @@
+# Sample 7: perceptual_drill. Identify a single fault from two meter readings. Time-boxed, phone friendly.
+schema_version: 1
+key: tpl.elec.divider-fault-drill
+version: 1
+authoring_status: ready
+skill_key: elec.meas.multimeter
+task_kind: perceptual_drill
+grader_type: multiple_choice
+difficulty_prior: 0.4
+title: Which fault explains these readings
+license: original
+source: original
+provenance:
+  authors: [founder]
+  created: "2026-10-31"
+  llm_assistance: { used: false }
+delivery: { contexts: [phone, desktop, bench], est_seconds: 30, phone_suitable: true, offline_gradable: true }
+parameters:
+  - { name: vs, type: choice, unit: V, values: [5, 9, 12] }
+  - { name: r1, type: e_series, series: E12, decade_min: 3, decade_max: 4, unit: ohm }
+  - { name: r2, type: e_series, series: E12, decade_min: 3, decade_max: 4, unit: ohm }
+  - { name: fault, type: choice, values: [ok, r1_open, r2_open, r1_short, r2_short] }
+constraints:
+  - { id: not-equal, expr: "r1 != r2", reason: "Equal resistors make the healthy midpoint exactly half the supply, which is guessable." }
+  - { id: ratio-window, expr: "r2 / (r1 + r2) >= 0.15 and r2 / (r1 + r2) <= 0.85", reason: "A healthy midpoint must be clearly different from both 0 V and the supply." }
+render:
+  stem_md: |
+    A divider has a {{vs|eng}} supply, **R1 = {{r1|eng}}** (top) and **R2 = {{r2|eng}}** (bottom) as built.
+    One part has failed. A meter reads the midpoint voltage to ground and the current drawn from the supply.
+
+    Which single fault explains the readings?
+  alt_text: "A divider with supply {{vs|eng}}, R1 {{r1|eng}} on top and R2 {{r2|eng}} below. Midpoint voltage reads {{vmid|eng:V}} and supply current reads {{i|eng:A}}. Pick the single fault that explains this."
+  figure: { kind: table }
+  reading_table:
+    - { label: "Midpoint voltage", value_expr: vmid, format: "eng:V" }
+    - { label: "Supply current", value_expr: i, format: "eng:A" }
+  time_limit_s: 30
+solution:
+  generator:
+    method: fault_table
+    tables:
+      readings:
+        ok: { vmid: "vs * r2 / (r1 + r2)", i: "vs / (r1 + r2)" }
+        r1_open: { vmid: "0", i: "0" }
+        r2_open: { vmid: "vs", i: "0" }
+        r1_short: { vmid: "vs", i: "vs / r2" }
+        r2_short: { vmid: "0", i: "vs / r1" }
+  steps:
+    - { id: s1, text_md: "Healthy values would be $V_{mid} = {{vok|tex:V}}$ and $I = {{iok|tex:A}}$." }
+    - { id: s2, text_md: "Zero current means a series element is open. Current higher than healthy means a resistor is shorted. The midpoint voltage tells you which one." }
+derived:
+  - { name: vok, expr: "vs * r2 / (r1 + r2)", unit: V }
+  - { name: iok, expr: "vs / (r1 + r2)", unit: A }
+answer:
+  n_shown: 5
+  shuffle: false
+  options:
+    - { id: ok, text_md: "No fault", correct_when: "fault == 'ok'", misconception_tag: mc.fault-assumes-no-fault, feedback_md: "Compare with the healthy values: at least one reading differs." }
+    - { id: r1_open, text_md: "R1 open", correct_when: "fault == 'r1_open'", misconception_tag: mc.fault-predicts-open, feedback_md: "An open in series stops all current, but the midpoint level depends on which resistor opened." }
+    - { id: r2_open, text_md: "R2 open", correct_when: "fault == 'r2_open'", misconception_tag: mc.fault-predicts-open, feedback_md: "An open R2 leaves the midpoint pulled up to the supply through R1 with no current flowing." }
+    - { id: r1_short, text_md: "R1 shorted", correct_when: "fault == 'r1_short'", misconception_tag: mc.fault-predicts-short, feedback_md: "A shorted R1 puts the full supply on the midpoint and current is set by R2 alone." }
+    - { id: r2_short, text_md: "R2 shorted", correct_when: "fault == 'r2_short'", misconception_tag: mc.fault-predicts-short, feedback_md: "A shorted R2 pulls the midpoint to 0 V and current is set by R1 alone." }
+verifiers:
+  - id: nodal-readings
+    kind: fault_uniqueness
+    independence: "Recomputes every fault's readings by numeric nodal analysis with an open modelled as 1e12 ohm and a short as 1e-3 ohm, instead of the hand-written table, then requires each pair of faults to differ in at least one reading."
+    spec:
+      circuit: series_divider
+      open_ohm: 1.0e+12
+      short_ohm: 1.0e-3
+      min_separation_rel: 0.1
+      abs_floor: { vmid: 0.05, i: 1.0e-5 }
+    tolerance: { rel: 1.0e-3, abs: 1.0e-6 }
+  - id: one-correct
+    kind: distinct_options
+    independence: "Evaluates every correct_when expression and requires exactly one to be true."
+    spec: { correct_output: fault }
+  - id: dimension
+    kind: pint_dimension
+    independence: "Dimensional analysis with pint: voltage readings in volts, current readings in amperes."
+    spec:
+      checks:
+        - { expr: "vs * r2 / (r1 + r2)", result_unit: V }
+        - { expr: "vs / r2", result_unit: A }
+hints:
+  l1: "First write down what a healthy divider would read. Which reading differs from it?"
+  l2: "Zero current means the loop is broken in series. Higher current than normal means a resistor has stopped resisting."
+  l3: "A healthy circuit would read {{vok|eng:V}} and {{iok|eng:A}}. Use the current to separate open from shorted, then the midpoint voltage to pick the resistor."
+misconceptions:
+  - { tag: mc.fault-assumes-no-fault, description: "Believes the circuit is healthy despite a reading that differs from the expected value." }
+  - { tag: mc.fault-predicts-open, description: "Chooses an open fault when the readings are not those of an open." }
+  - { tag: mc.fault-predicts-short, description: "Chooses a short fault when the readings are not those of a short." }
+fuzz: { samples: 200, seed_base: 7000, max_rejection_rate: 0.9 }

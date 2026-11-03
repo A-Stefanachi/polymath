@@ -1,0 +1,126 @@
+schema_version: 1
+key: tpl.elec.schematic-gnd
+concept_static: true
+version: 2
+authoring_status: ready
+skill_key: elec.meas.schematic-reading
+task_kind: retrieval
+grader_type: multiple_choice
+difficulty_prior: 0.3
+title: Meaning of the ground symbol
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-01'
+  llm_assistance:
+    used: true
+    roles:
+    - draft_template
+    - explanation
+    - distractors
+    - hints
+    - misconception_tags
+    model: claude-opus-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts:
+  - phone
+  - desktop
+  est_seconds: 45
+  phone_suitable: true
+  offline_gradable: true
+parameters: []
+constraints: []
+render:
+  stem_md: 'What does the ground symbol mean on a circuit schematic?
+
+    '
+  alt_text: A question asking what the ground symbol means on a schematic, with four written options.
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      ans: '1'
+      w0: '2'
+      w1: '3'
+      w2: '4'
+      w3: '5'
+  steps:
+  - id: s1
+    text_md: The ground symbol names a node, so every ground symbol on the sheet is the same net.
+  - id: s2
+    text_md: Voltages on the schematic are measured relative to that net, which is taken as 0 V.
+  explanation_md: Ground on a schematic is a reference chosen for the circuit. It need not connect to mains earth, and current
+    can flow through it.
+answer:
+  n_shown: 4
+  shuffle: true
+  options:
+  - id: correct
+    correct: true
+    value_expr: ans
+    text_md: 'The circuit''s common reference node: voltages are measured from it and it counts as 0 V'
+  - id: mains-earth
+    correct: false
+    value_expr: w0
+    text_md: A direct connection to mains earth in every circuit
+    misconception_tag: mc.gnd-mains-earth
+    feedback_md: A battery circuit has ground too. The symbol marks the circuit's reference node, whether or not it reaches
+      earth.
+  - id: no-current
+    correct: false
+    value_expr: w1
+    text_md: A point where no current can flow
+    misconception_tag: mc.gnd-no-current
+    feedback_md: Return current flows through ground. Being the 0 V reference says nothing about the current there.
+  - id: separate-nets
+    correct: false
+    value_expr: w2
+    text_md: A separate connection at each symbol, not joined to the others
+    misconception_tag: mc.gnd-separate-nets
+    feedback_md: The symbols are drawn apart to keep the sheet tidy, but they all name one net.
+  - id: most-negative
+    correct: false
+    value_expr: w3
+    text_md: The most negative voltage that exists in the circuit
+    misconception_tag: mc.gnd-most-negative
+    feedback_md: With a split supply some nodes sit below ground, so it need not be the lowest voltage.
+verifiers:
+- id: options-distinct
+  kind: distinct_options
+  independence: 'Structural check only: exactly one option is keyed correct and the option labels are distinct. It cannot
+    judge the key, so this item needs G3 sign-off (00a H2).'
+  spec:
+    correct_output: ans
+  tolerance:
+    rel: 0.01
+- id: window
+  kind: bounds
+  independence: Confirms the keyed option label is the one marked correct; a structural check that says nothing about the
+    content.
+  spec:
+    output: ans
+    lo: '0.5'
+    hi: '1.5'
+    strict: false
+hints:
+  l1: Think about what a voltage is measured from. What does a voltage reading need besides the point you probe?
+  l2: A voltage is a difference between two nodes, so a schematic picks one node as the common reference.
+  l3: First consider a battery circuit with no mains connection. It still has this symbol, so the symbol cannot depend on
+    mains.
+misconceptions:
+- tag: mc.gnd-mains-earth
+  description: Assumes every ground is mains earth.
+- tag: mc.gnd-no-current
+  description: Thinks ground carries no current.
+- tag: mc.gnd-separate-nets
+  description: Treats each ground symbol as its own net.
+- tag: mc.gnd-most-negative
+  description: Equates ground with the lowest voltage.
+fuzz:
+  samples: 200
+  seed_base: 7000
+  max_rejection_rate: 0.9
+  min_distinct_param_sets: 1

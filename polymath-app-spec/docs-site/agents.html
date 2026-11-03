@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent workflow — Polymath documentation</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="agents">
+  <a class="skip" href="#main">Skip to content</a>
+  <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+    <div class="main-wrap">
+      <main id="main" class="content">
+        <p class="kicker">Implementation process</p>
+        <h1>Agent workflow</h1>
+        <p class="spec-ref">
+          <a href="../CLAUDE.md">CLAUDE.md</a>,
+          <a href="../docs/13-roadmap-and-backlog.md">docs/13-roadmap-and-backlog.md</a> §8,
+          <a href="../backlog/backlog.yaml">backlog/backlog.yaml</a>,
+          <a href="../docs/lean-build-gate.md">lean-build-gate.md</a>,
+          <a href="../docs/factory-wave-manifest.md">factory-wave-manifest.md</a>
+        </p>
+
+        <div class="summary">
+          <h2>Summary</h2>
+          <ul>
+            <li>Implementation agents consume Markdown specifications and YAML backlog entries.</li>
+            <li>Work proceeds one backlog task at a time with the attachment set defined in doc 13.</li>
+            <li>Each task includes a failing acceptance test, implementation, gate execution, and logged output.</li>
+            <li>The founder reviews diffs against the checklist in doc 13 §8.5 before merge.</li>
+          </ul>
+        </div>
+
+        <h2>Required attachments by task category</h2>
+        <table class="path-table">
+          <thead><tr><th>Category</th><th>Additional specification</th></tr></thead>
+          <tbody>
+            <tr><td>Scheduler</td><td>Doc 06, <code>scheduler_reference.py</code>, test vectors</td></tr>
+            <tr><td>Graders</td><td>Doc 08 §1–4, <code>reference/verifiers/</code></td></tr>
+            <tr><td>Tutor</td><td>Doc 08 §5–10, tutor prompt, doc 12 §4</td></tr>
+            <tr><td>Schema / RLS</td><td>Doc 04, <code>schema.sql</code>, <code>db_tests.py</code></td></tr>
+            <tr><td>UI screen</td><td>Doc 09 screen definition, referenced OpenAPI operations</td></tr>
+          </tbody>
+        </table>
+
+        <p>Always include <code>CLAUDE.md</code>, <code>docs/00-contract.md</code>, <code>docs/00a-change-decisions.md</code>, and the YAML block for the active task.</p>
+
+        <h2>Reference oracles</h2>
+        <ul>
+          <li><code>reference/scheduler_test_vectors.json</code></li>
+          <li><code>reference/verifiers/tests/grader_vectors.json</code></li>
+          <li>Python modules under <code>reference/verifiers/</code> for templates, SPICE, and code execution</li>
+        </ul>
+
+        <h2>Founder review checklist (overview)</h2>
+        <ol class="flow-steps">
+          <li>Contract identifiers and enum spellings preserved.</li>
+          <li>No privileged database client imports outside approved modules.</li>
+          <li>Claims lint, RLS suite, and task-specific gates pass.</li>
+          <li class="end">Acceptance tests demonstrate specified behaviour, not incidental compilation.</li>
+        </ol>
+
+        <h2>Dark factory / lean gate (until BL-0181)</h2>
+        <ul>
+          <li><strong>Gate:</strong> only <code>lean: true</code> tasks — <a href="../docs/lean-build-gate.md">lean-build-gate.md</a> (<code>meta.factory_gate</code> in backlog)</li>
+          <li><strong>Wave order:</strong> <a href="../docs/factory-wave-manifest.md">factory-wave-manifest.md</a> (start BL-0065 templates when BL-0052 merges, before BL-0060)</li>
+          <li><strong>Content PRs:</strong> <a href="../docs/content-authoring-runbook.md">content-authoring-runbook.md</a></li>
+          <li><strong>Go/no-go record:</strong> <a href="../docs/CHANGELOG.md">docs/CHANGELOG.md</a> before any D1–D9 work</li>
+        </ul>
+
+        <div class="callout tip">
+          Do not edit reference test vectors to green tests. One BL task per PR with acceptance output pasted.
+        </div>
+      </main>
+      <footer class="page-footer">Full procedure: doc 13 §8.</footer>
+    </div>
+  </div>
+  <script src="assets/nav.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

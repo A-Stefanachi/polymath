@@ -1,0 +1,222 @@
+schema_version: 1
+key: tpl.elec.nodal-unknown
+version: 2
+authoring_status: ready
+skill_key: elec.dc.nodal-analysis
+task_kind: problem
+grader_type: exact_numeric
+difficulty_prior: 0.3
+title: Solve one node voltage
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-01'
+  llm_assistance:
+    used: true
+    roles:
+    - draft_template
+    - explanation
+    - distractors
+    - hints
+    - misconception_tags
+    model: claude-opus-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts:
+  - phone
+  - desktop
+  est_seconds: 150
+  phone_suitable: true
+  offline_gradable: true
+parameters:
+- name: v1
+  type: choice
+  unit: V
+  values: &id001
+  - 3.3
+  - 5
+  - 9
+  - 12
+  - 24
+  description: First source
+- name: v2
+  type: choice
+  unit: V
+  values: *id001
+  description: Second source
+- name: r1
+  type: e_series
+  series: E12
+  decade_min: 2
+  decade_max: 4
+  unit: ohm
+  description: Resistor from V1 to node A
+- name: r2
+  type: e_series
+  series: E12
+  decade_min: 2
+  decade_max: 4
+  unit: ohm
+  description: Resistor from V2 to node A
+- name: r3
+  type: e_series
+  series: E12
+  decade_min: 2
+  decade_max: 4
+  unit: ohm
+  description: Resistor from node A to ground
+derived:
+- name: isrc
+  expr: v1 / r1 + v2 / r2
+  unit: A
+- name: gsum
+  expr: 1 / r1 + 1 / r2 + 1 / r3
+  unit: S
+- name: w_nor3
+  expr: (v1 / r1 + v2 / r2) / (1 / r1 + 1 / r2)
+  unit: V
+- name: w_sign
+  expr: (v1 / r1 - v2 / r2) / gsum
+  unit: V
+- name: w_avg
+  expr: (v1 + v2) / 2
+  unit: V
+- name: w_loop
+  expr: (v1 + v2) * r3 / (r1 + r2 + r3)
+  unit: V
+constraints:
+- id: different-sources
+  expr: v1 != v2
+  reason: Equal sources reduce the circuit to one divider, which is not nodal analysis.
+- id: different-resistors
+  expr: r1 != r2 and r1 != r3 and r2 != r3
+  reason: Equal resistors make wrong formulas coincide.
+- id: real-power
+  expr: max((v1 - isrc / gsum) ** 2 / r1, (v2 - isrc / gsum) ** 2 / r2, (isrc / gsum) ** 2 / r3) <= 1
+  reason: Each resistor dissipates at most 1 W, so real parts could be used.
+- id: wrong-answers-separate
+  expr: min(abs(w_nor3 - isrc / gsum), abs(w_sign - isrc / gsum), abs(w_avg - isrc / gsum), abs(w_loop - isrc / gsum)) >=
+    0.05 * isrc / gsum
+  reason: Each listed mistake must fall outside the tolerance so it can be tagged.
+render:
+  stem_md: 'Node A connects to three resistors:
+
+
+    - $R_1 = {{r1|tex}}$ goes to a source $V_1 = {{v1|tex}}$ (the other source terminal is at ground).
+
+    - $R_2 = {{r2|tex}}$ goes to a source $V_2 = {{v2|tex}}$ (the other source terminal is at ground).
+
+    - $R_3 = {{r3|tex}}$ goes to ground.
+
+
+    Use nodal analysis to find $V_A$, the voltage at node A relative to ground.
+
+    '
+  answer_prompt: Enter the voltage with a unit, for example 4.2 V.
+  alt_text: Node A joins R1 of {{r1|eng}} from a {{v1|eng}} source, R2 of {{r2|eng}} from a {{v2|eng}} source, and R3 of {{r3|eng}}
+    to ground. Find the voltage at A.
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      va: isrc / gsum
+  steps:
+  - id: s1
+    text_md: 'Write KCL at A with currents leaving: $\frac{V_A - V_1}{R_1} + \frac{V_A - V_2}{R_2} + \frac{V_A}{R_3} = 0$.'
+  - id: s2
+    text_md: 'Collect terms: $V_A\left(\frac{1}{R_1}+\frac{1}{R_2}+\frac{1}{R_3}\right) = \frac{V_1}{R_1}+\frac{V_2}{R_2}$,
+      that is $V_A \times {{gsum|tex:S}} = {{isrc|tex:A}}$.'
+  - id: s3
+    text_md: 'Divide: $V_A = {{va|tex:V}}$.'
+  explanation_md: Nodal analysis writes one KCL equation at each unknown node, with each branch current expressed through
+    the node voltages.
+answer:
+  kind: numeric
+  value: va
+  unit: V
+  accept_units:
+  - V
+  - mV
+  bare_number_means: V
+  tolerance:
+    rel: 0.01
+    abs: 0.001
+verifiers:
+- id: kcl-at-a
+  kind: sympy_solve
+  independence: Solves the KCL equation at node A exactly, instead of evaluating the generator's conductance ratio in floating
+    point.
+  spec:
+    unknowns:
+    - vx
+    equations:
+    - (v1 - vx) / r1 + (v2 - vx) / r2 - vx / r3
+    checks:
+    - unknown: vx
+      output: va
+  tolerance:
+    rel: 1.0e-09
+- id: mesh-currents
+  kind: sympy_solve
+  independence: 'A different method: solves KVL around two loops for the source currents, then reads V_A across R3.'
+  spec:
+    unknowns:
+    - ia
+    - ib
+    - vo
+    equations:
+    - v1 - ia * r1 - (ia + ib) * r3
+    - v2 - ib * r2 - (ia + ib) * r3
+    - vo - (ia + ib) * r3
+    checks:
+    - unknown: vo
+      output: va
+  tolerance:
+    rel: 1.0e-09
+- id: dimension
+  kind: pint_dimension
+  independence: Dimensional analysis with pint on the parameter units; it does not check magnitude.
+  spec:
+    checks:
+    - expr: v1 * r2 * r3 / (r1 * r2 + r1 * r3 + r2 * r3)
+      result_unit: V
+- id: window
+  kind: bounds
+  independence: 'Physical limits: with only positive sources and a resistor to ground, the node lies between ground and the
+    larger source.'
+  spec:
+    output: va
+    lo: '0'
+    hi: max(v1, v2)
+    strict: true
+hints:
+  l1: How many nodes have an unknown voltage here? Name that voltage before writing anything else.
+  l2: Write one KCL equation at the unknown node, with each branch current written as a voltage difference divided by its
+    resistance.
+  l3: With currents leaving A, KCL reads (VA - {{v1|eng}})/{{r1|eng}} + (VA - {{v2|eng}})/{{r2|eng}} + VA/{{r3|eng}} = 0.
+    Now collect the VA terms.
+misconceptions:
+- tag: mc.nodal-forgets-branch
+  description: Leaves the R3 branch out of the KCL equation.
+  wrong_answer_expr: w_nor3
+  feedback_md: R3 also carries current away from A, so it needs its own term in the equation.
+- tag: mc.nodal-sign-error
+  description: Gives the two source currents opposite signs.
+  wrong_answer_expr: w_sign
+  feedback_md: Both sources push current towards A through their resistors, so check the sign of each term.
+- tag: mc.nodal-averages-sources
+  description: Averages the two source voltages.
+  wrong_answer_expr: w_avg
+  feedback_md: 'The node voltage is not a plain average: each source is weighted by its resistor, and R3 pulls the node towards
+    ground.'
+- tag: mc.nodal-single-loop
+  description: Treats the sources and all resistors as one series loop.
+  wrong_answer_expr: w_loop
+  feedback_md: 'There is no single series loop: the three branches meet at A, so the currents differ. Write KCL at A.'
+fuzz:
+  samples: 200
+  seed_base: 6600
+  max_rejection_rate: 0.9
+  min_distinct_param_sets: 50

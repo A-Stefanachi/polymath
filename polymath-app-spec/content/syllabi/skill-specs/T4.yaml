@@ -1,0 +1,1206 @@
+# Skill specifications for pillar T4 (track key robo). Researched 2 Nov 2026.
+# Legal content is literacy, not legal advice. Items marked UNCERTAIN were not confirmed in a primary source.
+# PX4 parameter names follow the docs "main" branch on that date and can change between releases.
+# [P] marks a proposed value, not a sourced one.
+# Human-review research pass 3 Nov 2026: [project convention: ...] marks a value the project sets on purpose, with its reason; it has no external source.
+
+- key: robo.uav.ops-eu
+  description: >-
+    Classify a planned civil drone flight into Open A1, A2 or A3, Specific or not permitted, and name the operator and remote pilot duties that follow.
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, faded_problem, problem, explain_back]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: true
+  objective: >-
+    Decide category and subcategory from vehicle status, mass and site geometry, and list registration, training and identification duties.
+  core_ideas:
+    - >-
+      Open category limits: below 25 kg, at most 120 m above ground, and a vehicle that has a class label, is privately built, or is an unlabelled drone placed on the market before 1 January 2024 (EASA states the cut-off as 31 December 2023 in its table).
+    - >-
+      Subcategory rules: A1 for C0, C1, and privately built or pre-2024 unlabelled drones under 250 g (privately built also below 19 m/s), with no flight over assemblies. A2 for C2: no overflight of uninvolved people, and 30 m from them, or 5 m with low-speed mode active. A3 for C2, C3, C4, and privately built or pre-2024 unlabelled drones under 25 kg: no uninvolved person may be endangered within the range flown, and the flight stays at least 150 m from residential, commercial, industrial or recreational areas (UAS.OPEN.040).
+    - >-
+      The operator registers, not the drone. One registration covers all of the operator's drones, and the number is displayed on each drone and loaded into the remote identification system where fitted. It applies at 250 g or more, or above 80 J transferable on impact, or with a sensor able to capture personal data unless the drone is a toy under Directive 2009/48/EC (Article 14(5)).
+    - >-
+      Competence: C1 in A1, and everything flown in A3, needs the manual plus A1/A3 online training and theory exam; C0 and the under-250 g A1 cases need only the manual; C2 in A2 adds declared practical self-training and a further exam. Minimum age is generally 16, and a State may lower it to 12.
+    - >-
+      Remote identification, read in Regulation 2019/947 (consolidated 1 May 2025): UAS.OPEN.020(5)(d) and UAS.OPEN.040(4)(c) and (d) require active direct remote identification for C1, C2 and C3, while UAS.OPEN.040(4)(a) sets no such condition for a privately built drone in A3. UAS.OPEN.060(1)(d) has the pilot check it only if applicable, and Article 15(1)(d) lets a State limit a geographical zone to drones with it. So no EU operating rule requires a module on a privately built A3 drone unless a zone does. This is a reading of the text, and no LBA or dipul page states it, so confirm with the LBA. Specific category is different: every aircraft needs it (UAS.SPEC.050(1)(l)).
+  misconceptions:
+    - >-
+      A drone under 25 kg is automatically in the Open category. It also needs a qualifying product status.
+    - >-
+      A geofence makes a site legal. It is a vehicle function; the site rules still apply.
+    - >-
+      Passing the A1/A3 exam covers every drone. It does not change the vehicle status or the subcategory distances.
+  worked_example: >-
+    A 1.8 kg quad built from separately chosen parts, unlabelled, built in 2026, flown over an empty field. Status: privately built, so Open is reachable. Mass 1.8 kg is under 25 kg, so subcategory A3. Duties: operator registration, number on the drone, A1/A3 certificate, 120 m ceiling, 150 m from residential, commercial, industrial or recreational areas, and no uninvolved person endangered within the range flown. Answer: Open A3, provided the field meets both distance conditions. Remote identification: no EU condition on this status in A3, so check the zone rules and confirm the reading with the LBA.
+  unaided_check: >-
+    Given a 3 kg unlabelled multirotor placed on the market in March 2025 as one ready-to-assemble kit, state its Open category status and give two lawful alternatives. Expected: not Open, since it is not privately built, not labelled and not pre-2024; alternatives are a class-marked or genuinely self-specified vehicle, or an authorised Specific operation. Not legal advice.
+  sources:
+    - https://www.easa.europa.eu/en/domains/drones-air-mobility/operating-drone/open-category-low-risk-civil-drones
+    - https://www.easa.europa.eu/en/the-agency/faqs/drones-uas
+
+- key: robo.uav.ops-airspace
+  description: >-
+    Read a German drone map and a NOTAM for a planned site, convert times and heights, and decide whether the flight may go ahead or needs clearance.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [multiple_choice, exact_numeric]
+  phone_suitable: true
+  objective: >-
+    Check restrictions before each flight using dipul and NOTAM data, with UTC and height datum handled correctly.
+  core_ideas:
+    - >-
+      Flights inside a control zone need clearance from the competent air traffic control unit. Airport, aerodrome and control zones are all geographical zones on the dipul Map Tool, and ATZ, RMZ and TMZ also need explicit clearance.
+    - >-
+      Activity times of permanent restricted areas are in the AIP and those of temporary ones in the NfL, and changes to either are published by NOTAM. Sources for NOTAMs are the online Airspace Use Plan, the DFS AIS portal briefing, or AIS-C by phone. The map alone is not enough, since DFS advises checking before every flight.
+    - >-
+      NOTAM times are UTC. Germany is UTC+1 in winter and UTC+2 in summer, so a wrong offset can move a window by a whole hour.
+    - >-
+      Height datums differ. The Open ceiling is 120 m above ground, while NOTAM limits are often in feet above mean sea level. Convert with 1 ft = 0.3048 m and add ground elevation first.
+    - >-
+      NOTAM layout (ICAO format): Q) coded line, A) FIR or aerodrome, B) start and C) end as ten-digit UTC groups YYMMDDHHMM, D) optional schedule, E) plain text, F) lower and G) upper limit for airspace notices (FAA Order JO 7930.2U, paragraphs 8-1-2 and 3-3-2; the ICAO PANS-AIM text itself is sold, not free). Every practice NOTAM in this skill is made up and is not a real notice [project convention: a practice notice must never be mistaken for a real one].
+  misconceptions:
+    - >-
+      A green map today means clear tomorrow. Zones and temporary areas change.
+    - >-
+      120 m above ground equals 120 m above sea level.
+    - >-
+      Control zones only matter near large airports. Smaller regional airports have them too.
+  worked_example: >-
+    Practice NOTAM, made up for this exercise: B) 2611091000 C) 2611091400, F) SFC G) 1500FT AMSL. Site elevation 120 m, planned height 120 m above ground. On 9 November Germany is UTC+1, so the window is 11:00 to 15:00 local. Vehicle top is 120 + 120 = 240 m AMSL, and 240 / 0.3048 = 787 ft, below 1500 ft. Answer: inside the area, so do not fly in that window without the required clearance.
+  unaided_check: >-
+    Same area but dated 14 July, with G) 700FT AMSL, site elevation 100 m and planned height 100 m. Give the local window and decide. Expected: 12:00 to 16:00 local (UTC+2); top is 200 m = 656 ft AMSL, under 700 ft, so the flight is inside the area, by a margin of 44 ft, and is not flown in the window.
+  sources:
+    - https://dfs.de/homepage/en/drone-flight/faq-for-drone-flights/
+    - https://www.easa.europa.eu/en/domains/drones-air-mobility/operating-drone/open-category-low-risk-civil-drones
+    - https://www.faa.gov/documentLibrary/media/Order/7930.2U_Basic_w_Chg_1_and_Chg_2_dtd_9_30_26_Final.pdf
+
+- key: robo.uav.ops-privacy
+  description: >-
+    Decide whether onboard camera or location data falls under data protection rules, and choose lawful steps for flight, storage and sharing.
+  est_minutes: 20
+  task_kinds: [retrieval, worked_example, explain_back]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: true
+  objective: >-
+    Recognise when footage and logs are personal data and apply minimisation, notice and consent before flying.
+  core_ideas:
+    - >-
+      Identifiable people in footage are personal data. GDPR Article 2(2)(c) excludes only purely personal or household activity, and the EDPB reads that exclusion narrowly for video.
+    - >-
+      In Ryneš (C-212/13, 2014) a home camera that also covered a public footpath left the household exception. That case was under the older Directive and concerned a fixed camera; applying it to drones is an inference, though a widely made one.
+    - >-
+      Registration is tied to privacy: a drone under 250 g still needs operator registration if it carries a sensor able to detect personal data, unless it is a toy.
+    - >-
+      LuftVO section 21h(3) no. 7 restricts flight over residential property: consent, or a light non-recording drone, or at least 100 m with four cumulative conditions including privacy measures and no flight from 22:00 to 06:00.
+    - >-
+      Telemetry can be personal data too. Logs with pilot position, operator ID and home location link to a person, so apply retention limits and strip them before sharing; GDPR Article 4(1) names location data as an identifier. The German DSK video guidance (17 July 2020, section 5.7) says a camera drone that captures people in public space is usually within the GDPR, and that its notice duties can hardly be met from a drone.
+  misconceptions:
+    - >-
+      Footage is private because it is only for me. Capturing others in public can end the household exemption.
+    - >-
+      Privacy means cameras only. Location logs can identify the pilot.
+    - >-
+      Being allowed to fly at a site means being allowed to publish what was filmed.
+  worked_example: >-
+    You test a quad on a club field with a camera, and a public path crosses the frame. Procedure: (1) point the camera away or reduce the field of view so the path is out of frame; (2) if people still appear, treat the data as personal; (3) delete or blur before sharing; (4) strip pilot position and home point from any log you publish; (5) keep a short retention period. Answer: minimised capture and no publication of identifiable people. Ask a data protection authority if the use goes beyond this.
+  unaided_check: >-
+    A friend asks you to publish a flight log plus video on a public forum. List at least four data items to remove or check, and say why. Pass: covers visible people, number plates or house details, pilot or home GPS position, and operator ID, each with a data protection reason.
+  sources:
+    - https://www.edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-32019-processing-personal-data-through-video_en
+    - https://eulawanalysis.blogspot.com/2014/12/bringing-data-protection-home-cjeu.html
+    - https://datenschutzkonferenz-online.de/media/oh/20200903_oh_v%C3%BC_dsk.pdf
+    - https://publications.europa.eu/resource/celex/32016R0679.ENG
+
+- key: robo.uav.ops-legal-route
+  description: >-
+    Choose a defensible legal route for your own vehicle before buying parts, separating privately built, class-marked, kit and pre-2024 cases.
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, faded_problem, problem, project_step]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: >-
+    Produce a written route note for the L8 vehicle, including what the LBA must confirm.
+  core_ideas:
+    - >-
+      Regulation 2019/945 defines privately built as assembled or made for the builder's own use, and excludes parts placed on the market by a manufacturer as a single ready-to-assemble kit.
+    - >-
+      Project decision H9: the default L8 route is self-specified parts, privately built, flown under A3, or a class-marked product. A single kit is not privately built, and the founder confirms the reading with the LBA before buying.
+    - >-
+      Privately built gives A1 only under 250 g and below 19 m/s, otherwise A3 under 25 kg. A3 means 150 m from residential, commercial, industrial or recreational areas, with no uninvolved person endangered in the range flown, so site availability is the real constraint.
+    - >-
+      Modifying a class-marked drone outside the manufacturer's instructions does not turn it into a privately built drone (AESA reading of the rules), so the class status may simply be lost.
+    - >-
+      EASA GM1 Article 2(16) counts assembly from parts or sub-assemblies sold separately as privately built, and a ready-to-assemble kit as not. UNCERTAIN: no source settles a parts list copied from one vendor's bundle, so it awaits the LBA's written answer. Until then the L8 rule is: every part bought as a separately listed article to your own written specification, with no kit, combo or bundle article [project convention: the reading furthest from the kit exclusion is the safe one]. The modelling-club route (Article 16 authorisations) was not checked for Germany. Remote identification: UAS.OPEN.040(4)(a) sets no condition for a privately built A3 drone, though a geographical zone may under Article 15(1)(d). That reading still needs LBA confirmation, and the vehicle needs it if the route ever moves to Specific.
+  misconceptions:
+    - >-
+      Screwing a kit together makes it privately built.
+    - >-
+      Privately built is an easier category. It usually means the strictest A3 distances.
+    - >-
+      Adding a sticker or a remote ID module gives a class mark.
+  worked_example: >-
+    Compare two options. Option A: frame, motors, ESCs and flight controller bought separately from different sellers to your own specification, 1.8 kg. Result: privately built, A3, both A3 distance conditions, needs a suitable site. Option B: a 1.2 kg unlabelled ready-to-assemble kit first sold in 2025. Result: not privately built, no label, not pre-2024, so not Open. Answer: pick A, or a class-marked product, and record the LBA question in writing before ordering.
+  unaided_check: >-
+    Write a one-page route note for your own planned vehicle with status, subcategory, site constraint, paperwork, and the exact questions for the LBA. Pass: an outside reviewer finds no contradiction with EASA wording, and the note says it is not legal advice and is awaiting LBA confirmation.
+  sources:
+    - https://www.easa.europa.eu/en/domains/drones-air-mobility/operating-drone/open-category-low-risk-civil-drones
+    - https://www.seguridadaerea.gob.es/en/ambitos/drones/requisitos-de-uas-drones/diseno-y-produccion-de-uas-drones
+    - https://www.easa.europa.eu/en/document-library/easy-access-rules/online-publications/easy-access-rules-unmanned-aircraft-systems?erules-id=ERULES-1963177438-19497
+
+- key: robo.uav.ops-germany
+  description: >-
+    Apply German duties to a real site, covering liability insurance, LBA registration, section 21h geographical zones and any consent needed.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, project_step]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: >-
+    Produce a site sheet giving zones, distances, consents and paperwork for one flight in Germany.
+  core_ideas:
+    - >-
+      Insurance is mandatory: under LuftVG section 43(2) the keeper must hold liability cover, and drones count as aircraft (section 1(2)). LuftVZO section 106(2) requires the insurer's confirmation to be carried when flying, and not carrying it is an administrative offence under LuftVZO section 108(1) no. 5(e) with LuftVG section 58(1) no. 10, fined up to 50,000 euro (section 58(3)). Existing household cover may or may not apply, so ask the insurer in writing.
+    - >-
+      LuftVG section 37 caps liability at 750,000 units of account for aircraft under 500 kg, and at 600,000 euro per person injured or killed. Section 49b makes the unit the IMF Special Drawing Right, converted at the date of payment, so no fixed euro figure exists.
+    - >-
+      Registration under LuftVG section 66a(1) and (3): operators resident in Germany register with the LBA for drones of 250 g or more, or lighter ones with a personal-data sensor unless they are toys. Each person gets one e-ID, marked on all their drones.
+    - >-
+      LuftVO section 21h(3) distances: aerodromes 1.5 km from the boundary unless the aerodrome supervision office, flight operations or operator consents (no. 1); airports 1,000 m, plus 1,000 m either side of the runway centreline extended by 5 km, with no consent route in Open (no. 2); 100 m from industrial plants, prisons, energy sites, authorities and hospitals. Control zones need ATC clearance.
+    - >-
+      Federal roads, waterways and railways: 100 m, unless one alternative applies, such as height kept below lateral distance with that distance always above 10 m. Section 21i lets the state aviation authority grant exceptions. The online text shows no as-of date, so re-check it and the map before each flight.
+  misconceptions:
+    - >-
+      Insurance is optional or merely common in Germany. It is a legal duty.
+    - >-
+      Household liability cover always includes drones.
+    - >-
+      The dipul map shows everything. Mobile deployment sites and some times cannot be shown permanently.
+  worked_example: >-
+    Site: a field 60 m from a federal road and 1.2 km from a gliding aerodrome. Road rule: keep height below lateral distance, so below 60 m at this spot, and never closer than 10 m. Aerodrome: 1.2 km is inside 1.5 km, so you need consent from the aerodrome supervision office, flight operations or aerodrome operator, or a Specific route. A3 still needs 150 m from residential, commercial, industrial or recreational areas and no uninvolved person endangered in the range flown, and passing traffic may count. Answer: no flight yet; first get the aerodrome consent and pass both A3 checks.
+  unaided_check: >-
+    Given three sites and two vehicles from the task sheet, fill a table of category, zones, consents and paperwork, or write not permitted. Pass: every cell agrees with section 21h and the EASA rules, and an outside reviewer signs it. Not legal advice.
+  sources:
+    - https://www.gesetze-im-internet.de/luftvo_2015/__21h.html
+    - https://www.dipul.bund.de/homepage/en/information/general/minimum-age-and-mandatory-insurance
+    - https://www.gesetze-im-internet.de/luftvzo/__106.html
+    - https://www.gesetze-im-internet.de/luftvzo/__108.html
+    - https://www.gesetze-im-internet.de/luftvg/__58.html
+
+- key: robo.uav.ops-specific-sora
+  description: >-
+    Recognise when a flight leaves the Open category, name the four Specific routes, and outline what a SORA assessment produces.
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, explain_back]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Identify Specific category triggers and describe SORA in order, at literacy depth only.
+  core_ideas:
+    - >-
+      Triggers named by EASA include BVLOS, over 25 kg, above 120 m, and urban flight with a drone over 4 kg or without a class label.
+    - >-
+      Four routes: declaration under a standard scenario, authorisation after a PDRA, authorisation after SORA, or a light UAS operator certificate. An Operations Manual is required on every route, and remote identification is required for all Specific drones.
+    - >-
+      SORA is an acceptable means of compliance to Article 11 of Regulation 2019/947, used when no STS or PDRA covers the flight. Ground risk and air risk give a SAIL from I to VI; a higher SAIL demands higher robustness on the operational safety objectives.
+    - >-
+      Version status: ED Decision 2025/018/R, signed in Cologne on 15 September 2025, adds SORA 2.5 as Amendment 3 and enters into force the day after publication; SORA 2.0 material stays in force. The Norwegian CAA gives publication as 29 September 2025, and the Swiss FOCA gives entry into force as 30 September, which fits; the decision itself states no date. A corrigendum of 12 December 2025 renames the 2019/947 part Amendment 4, so cite it as AMC and GM to 2019/947, Issue 1, Amendment 4 (the annex PDF still says Amendment 3).
+    - >-
+      OSO count: JARUS SORA 2.5 Table 14 lists 17 OSOs, numbered with gaps, while the EASA page still says 24, so that page reflects version 2.0. The EU annex to ED Decision 2025/018/R has the same 17 in its Table 14 (page 44 of 204): OSO #01 to #09, #13, #16 to #20, #23 and #24. Germany: the LBA requires SORA 2.5 for first applications received from 1 January 2026, and asks for 2.0 authorisations to be changed before 31 December 2027. Standard scenarios need class C5 or C6 marks, per the appendix to Regulation 2019/947.
+  misconceptions:
+    - >-
+      Specific is only for companies. Privately built drones can be used if the authorisation includes them.
+    - >-
+      A completed SORA is permission to fly. The authority issues the authorisation.
+    - >-
+      Each flight needs its own authorisation. An authorisation can cover operations, though geographical zones may add requirements.
+  worked_example: >-
+    A privately built 1.8 kg quad must fly 80 m from houses. Step 1: A3 needs 150 m from residential areas, so Open fails. Step 2: an STS needs a C5 or C6 marked aircraft, so a privately built vehicle does not qualify. Step 3: look for a PDRA that fits. Step 4: otherwise do a SORA, write an Operations Manual and apply to the competent authority, which is the state aviation authority or the LBA where the state has transferred the task. Answer: Specific route; for this project, move the site instead, since SORA is out of scope for L8.
+  unaided_check: >-
+    Put these in order and explain each in one line: intrinsic ground risk, mitigations, air risk, SAIL, OSO robustness, application. Pass: correct order, and states that a higher SAIL raises required robustness and that the authority decides. Rubric review, not mastery-eligible until calibrated.
+  sources:
+    - https://www.easa.europa.eu/en/domains/drones-air-mobility/operating-drone/specific-category-civil-drones/specific-operations-risk-assessment-sora
+    - https://www.easa.europa.eu/sites/default/files/dfu/ed_decision_2025-018-r_0.pdf
+    - https://www.easa.europa.eu/en/downloads/142514/en
+    - https://www.easa.europa.eu/en/downloads/142969/en
+    - http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Main-Body-Release-JAR_doc_25.pdf
+    - https://www.lba.de/DE/Drohnen/Betriebsgenehmigungen/Erstantrag/Erstantrag_node.html
+    - https://dipul.de/homepage/en/applications-administrative-services/applications-in-the-specific-category/
+
+- key: robo.uav.weight-cg-budget
+  description: >-
+    Build a weight and centre-of-gravity table for a multirotor and move the battery to bring the CG onto the thrust centre.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, faded_problem, problem, project_step]
+  grader_types: [exact_numeric, human_review]
+  phone_suitable: false
+  objective: >-
+    Compute total mass and CG from a parts table, and quantify what a CG offset costs.
+  core_ideas:
+    - >-
+      CG position is x_cg = sum(m_i x_i) / sum(m_i), with one axis per table column, measured from the geometric centre of the motors.
+    - >-
+      A longitudinal offset d shifts hover load: with motors at plus and minus l, front to rear thrust ratio is (l + d) / (l - d). This uses control margin all the time, not only in manoeuvres.
+    - >-
+      To shift the CG by D, a mass m_b must move by D times m_total / m_b. A heavy battery is the best trim mass.
+    - >-
+      Weigh real parts, because wires, tape and connectors commonly exceed datasheet estimates. Recheck after any change to battery or camera.
+    - >-
+      PX4 needs motor positions relative to the CG, which may differ from where the autopilot sits, so the budget feeds the actuator geometry.
+  misconceptions:
+    - >-
+      Weight budget matters only for endurance.
+    - >-
+      Autopilot location defines the CG.
+    - >-
+      A controller that compensates an offset means the offset is free.
+  worked_example: >-
+    Items, mass and x from centre: frame with motors and props 1050 g at 0; battery 520 g at +25 mm; flight controller and GNSS mast 110 g at -60 mm; camera 120 g at +110 mm. Total 1800 g. x_cg = (0 + 13000 - 6600 + 13200) / 1800 = 10.89 mm forward. With motors at plus and minus 150 mm, the ratio is 160.89 / 139.11 = 1.157. To zero it, move the battery 10.89 x 1800 / 520 = 37.69 mm aft, to x = -12.69 mm.
+  unaided_check: >-
+    Add a 75 g sensor at -90 mm to the table above, with the battery at its corrected position. Find the new total and the new CG. Expected: 1875 g and x_cg = -75 x 90 / 1875 = -3.60 mm, so 3.60 mm aft.
+  sources:
+    - https://docs.px4.io/main/en/config/actuators.html
+
+- key: robo.uav.thrust-margin
+  description: >-
+    Compute thrust-to-weight ratio and hover throttle from bench data, including how a thrust curve and battery sag change the result.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: >-
+    Predict hover thrust fraction and hover signal, and judge whether the margin is enough for control.
+  core_ideas:
+    - >-
+      T/W = sum of maximum motor thrust divided by mg. Hover thrust fraction is its inverse, so T/W 2 means 50% of maximum thrust.
+    - >-
+      Margin is control authority first and climb rate second. Near saturation, attitude correction competes with thrust, so low margin can lose control in wind or manoeuvres.
+    - >-
+      Signal differs from thrust. PX4 models rel_thrust = f s^2 + (1 - f) s, with f = THR_MDL_FAC. Solve the quadratic for s; a typical f is 0.3 to 0.5, and f = 1 is pure quadratic.
+    - >-
+      Maximum thrust falls as voltage falls, roughly with V^2 as an approximation for a fixed prop. So hover throttle rises through the flight, and a fresh-pack bench figure overstates the margin.
+    - >-
+      Use the review target of predicting hover power, throttle and endurance within 10%, then confirm by log. That is a pre-registered prediction under H11.
+  misconceptions:
+    - >-
+      Thrust margin only sets climb rate.
+    - >-
+      Hover throttle does not depend on battery state.
+    - >-
+      More throttle always gives more control. Near full output, control authority shrinks.
+  worked_example: >-
+    Mass 1.8 kg, so W = 1.8 x 9.81 = 17.66 N. Four motors give 8.0 N each at 16.8 V, so 32.0 N and T/W = 1.81. Hover fraction is 55.2%. With f = 0.3, 0.3 s^2 + 0.7 s = 0.5518 gives s = 0.622. At 14.4 V, thrust scales by (14.4 / 16.8)^2, so maximum is 23.51 N, T/W = 1.33 and hover fraction is 75.1%. Answer: acceptable when fresh, thin at low voltage.
+  unaided_check: >-
+    Same vehicle with f = 0.5 at 16.8 V. Give the hover signal, and the excess acceleration available at full thrust. Expected: s = 0.663 and (32.0 - 17.66) / 1.8 = 7.97 m/s^2.
+  sources:
+    - https://docs.px4.io/main/en/config_mc/pid_tuning_guide_multicopter
+
+- key: robo.uav.propulsion-match
+  description: >-
+    Check a motor, propeller, ESC and battery set for compatibility using KV, voltage, current margins and tip speed from datasheets.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [multiple_choice, exact_numeric]
+  phone_suitable: true
+  objective: >-
+    Fill a compatibility matrix and reject any combination that breaks a limit.
+  core_ideas:
+    - >-
+      No-load speed is about KV times voltage. Loaded speed is lower, so measured RPM from ESC telemetry is the better input once available.
+    - >-
+      Current margin is a ratio to measured maximum motor current, not to a hopeful catalogue figure. Battery limit is capacity in Ah times C rating, compared with the summed motor current.
+    - >-
+      Tip speed is pi D n. Compressibility losses grow as tip Mach rises, so a matrix should show it even for small props.
+    - >-
+      Check mechanical items too: shaft and hub fit, bolt pattern, prop clearance, and voltage rating of ESC and capacitors. For PX4, set the motor pole count in DSHOT_MOT_POLn so RPM is correct; the default is 14.
+    - >-
+      The 1.2 minimum ratio used here is a planning margin [project convention: 20% headroom over measured peak current leaves room for heat, gusts and part spread; no standard fixes it]. Test by thrust stand and by temperature after a short hover.
+  misconceptions:
+    - >-
+      Higher KV always means more thrust. Prop load and current decide it.
+    - >-
+      A 30 A ESC limits a motor to 30 A safely in any airflow.
+    - >-
+      Battery C rating is a guaranteed continuous figure.
+  worked_example: >-
+    920 KV motor on 4S (14.8 V nominal), 10 inch prop (0.254 m), 22 A measured peak, 30 A ESC, 5.0 Ah 25C pack. No-load speed is 920 x 14.8 = 13616 rpm, or 226.9 rev/s. Tip speed is pi x 0.254 x 226.9 = 181.1 m/s, Mach 0.53 at 343 m/s. ESC ratio is 30 / 22 = 1.36. Pack limit is 5.0 x 25 = 125 A against 4 x 22 = 88 A, a ratio of 1.42. Answer: compatible on these checks.
+  unaided_check: >-
+    Replace the pack with 3.0 Ah 30C and raise motor peak to 26 A with the same ESC. Decide. Expected: pack limit 90 A against 104 A, ratio 0.87, reject; ESC ratio 1.15 is also below the 1.2 project margin.
+  sources:
+    - https://docs.px4.io/main/en/peripherals/dshot.html
+
+- key: robo.uav.momentum-theory
+  description: >-
+    Use thrust and power coefficients with momentum theory to estimate hover speed, ideal power, figure of merit and endurance from bench data.
+  est_minutes: 50
+  task_kinds: [retrieval, worked_example, faded_problem, problem, explain_back]
+  grader_types: [exact_numeric, multiple_choice, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Predict hover power and endurance from coefficients, and interpret the figure of merit.
+  core_ideas:
+    - >-
+      Propeller form: T = C_T rho n^2 D^4, P = C_P rho n^3 D^5, Q = P / (2 pi n), so C_Q = C_P / (2 pi), with n in rev/s. Rotorcraft form uses T = C_T rho A (omega R)^2, so check which convention a table uses before reusing coefficients.
+    - >-
+      Hover momentum theory gives induced velocity v_h = sqrt(T / (2 rho A)) and ideal power P_i = T v_h = T^1.5 / sqrt(2 rho A). Doubling the disk area cuts ideal power by a factor of sqrt(2) at the same thrust.
+    - >-
+      Figure of merit FM = P_i / P_shaft, below 1 because of profile drag and non-uniform inflow. Good full-scale rotors reach about 0.75, and small props are usually lower.
+    - >-
+      Electrical power P_elec = sum(P_shaft) / (eta_motor eta_esc). Endurance is usable energy over P_elec, with usable energy a chosen fraction of pack energy and sag taken into account.
+    - >-
+      Momentum theory assumes uniform flow and fails in vortex ring state, so it is a hover model and not a descent model.
+  misconceptions:
+    - >-
+      Grams per watt separates motor and prop losses. It lumps them; torque and RPM are needed to split them.
+    - >-
+      FM of a small prop should match a helicopter rotor.
+    - >-
+      All C_T figures are interchangeable.
+  worked_example: >-
+    Mass 1.6 kg, four 0.254 m props, rho 1.225, C_T 0.11, C_P 0.045. T = 3.924 N each. n = sqrt(T / (C_T rho D^4)) = 83.64 rev/s, or 5019 rpm. P = C_P rho n^3 D^5 = 34.10 W per rotor. A = 0.05067 m^2, v_h = 5.62 m/s, P_i = 22.06 W, FM = 0.647. With motor 0.85 and ESC 0.95, P_elec = 4 x 34.10 / 0.8075 = 168.9 W. A 74 Wh pack at 80% usable gives 59.2 Wh, so 21.0 min.
+  unaided_check: >-
+    Same data but with 0.305 m props, same FM. Find the new v_h and shaft power per rotor. Expected: A = 0.07306 m^2, v_h = 4.68 m/s, P_i = 18.37 W, P_shaft = 18.37 / 0.647 = 28.40 W; accept within 0.5%.
+  sources:
+    - https://arxiv.org/pdf/1601.00733
+
+- key: robo.uav.mixer-allocation
+  description: >-
+    Convert thrust and torque demands into motor thrusts for an X quad, spot saturation, and estimate yaw authority from geometry.
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, faded_problem, problem, explain_back]
+  grader_types: [exact_numeric, multiple_choice, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Build and invert the allocation matrix and explain what is lost when a motor saturates.
+  core_ideas:
+    - >-
+      In the FRD body frame with upward rotor thrust, tau_x = -sum(y_i T_i), tau_y = sum(x_i T_i), and tau_z = sum(k_i T_i), where k_i is PX4's CA_ROTORn_KM, positive for a CCW rotor.
+    - >-
+      PX4 X layout: rotor 0 front-right, rotor 1 rear-left, both default positive KM (CCW); rotor 2 front-left and rotor 3 rear-right with negative KM (CW). The KM sign rule comes from a PX4 parameter reference search snippet, and the FRD torque signs are derived here, so verify both on your own frame.
+    - >-
+      Yaw is a reaction effect with k about 0.05 m, whereas roll uses arm length, so the yaw to roll ratio is roughly k / l. Yaw is the weakest axis on a typical quad.
+    - >-
+      Motors cannot go below zero or above 100%. In PX4, with Airmode off, the torque command is cut at low-side saturation; with Airmode on, thrust is raised. High-side saturation cuts thrust either way.
+    - >-
+      Control allocation is done by the control_allocator module from CA_ geometry parameters. Wrong geometry gives wrong signs with no warning.
+  misconceptions:
+    - >-
+      Yaw authority equals roll authority.
+    - >-
+      A saturated motor only limits climb.
+    - >-
+      Airmode cannot change altitude. Total thrust can rise, so the vehicle may climb at zero throttle when oscillating.
+  worked_example: >-
+    Arm offsets 0.15 m, k = 0.05 m. Demand T = 16 N, tau_x = 0.6, tau_y = 0, tau_z = 0.1 N m. Inverse gains: T/4 plus or minus 1.667 tau_x, 1.667 tau_y, 5 tau_z. Rotor 0: 4 - 1 + 0.5 = 3.5 N. Rotor 1: 4 + 1 + 0.5 = 5.5 N. Rotor 2: 4 + 1 - 0.5 = 4.5 N. Rotor 3: 4 - 1 - 0.5 = 2.5 N. Check: sum is 16 N.
+  unaided_check: >-
+    Each motor spans 0.5 to 8 N. At T = 16 N find maximum pure yaw and maximum pure roll torque; then explain why T = 28 N with tau_z = 0.8 N m fails. Expected: 0.70 N m and 2.10 N m; demand needs 11, 11, 3, 3 N, which exceeds 8 N.
+  sources:
+    - https://docs.px4.io/main/en/config_mc/pid_tuning_guide_multicopter
+    - https://docs.px4.io/main/en/dev_airframes/adding_a_new_frame
+
+- key: robo.uav.rotor-limits
+  description: >-
+    Estimate rotor drag tilt, ground effect gain and vortex ring risk, and set safe descent and low-height limits for a multirotor.
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, problem, explain_back]
+  grader_types: [multiple_choice, exact_numeric, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Compute a descent-rate limit from induced velocity and explain how drag and ground proximity change hover.
+  core_ideas:
+    - >-
+      Vortex ring state begins as descent rate approaches a fraction of hover induced velocity, commonly quoted at about half v_h. Flow becomes unsteady, vibration rises, and momentum theory stops applying. Wind tunnel tests on small single and paired rotors found thrust loss from about 0.5 v_h, with the worst loss and vibration near 1.2 to 1.3 v_h, and paired rotors behaved like single ones (Veismann 2022, Caltech PhD thesis, chapters 4 and 5). So half v_h marks the start of the danger band, not its peak.
+    - >-
+      Steady forward flight needs tilt theta with tan(theta) = D / (m g), and thrust m g / cos(theta). Drag therefore uses thrust margin at speed.
+    - >-
+      Ground effect, hover: the Cheeseman and Bennett (1955) form is T / T_inf = 1 / (1 - (R / 4z)^2). Bench tests matched it for single small rotors, but a full multirotor gained more thrust than it predicts (Sanchez-Cuevas, Heredia and Ollero 2017, sections 2.1 and 2.2), so treat it as a low estimate for the whole vehicle.
+    - >-
+      PX4 defaults give a sensible check: MPC_Z_VEL_MAX_DN is 1 m/s and MPC_LAND_SPEED is 0.7 m/s, both far under half v_h on typical quads.
+    - >-
+      Recovery from a fast vertical descent is to add forward speed into clean air rather than only more thrust, a helicopter practice given here as judgement [J].
+  misconceptions:
+    - >-
+      More throttle cures a sinking, shaking vehicle in its own wake.
+    - >-
+      Rotor drag is negligible on small drones.
+    - >-
+      Ground effect always makes landing easier. Near the ground, flow is uneven and the vehicle can bounce or drift.
+  worked_example: >-
+    Mass 2.0 kg, four 0.254 m rotors, rho 1.225. T = 4.905 N, A = 0.05067 m^2, v_h = 6.29 m/s, half is 3.14 m/s. The PX4 default of 1 m/s gives a factor of 3.1. With 6 N drag at cruise, tan(theta) = 6 / 19.62, so theta = 17.0 degrees and thrust is 20.52 N, 4.6% above weight. Ground effect at z = R gives 1.067, and at z = 2R gives 1.016.
+  unaided_check: >-
+    A 3.0 kg quad with 0.20 m rotors is planned to descend at 4 m/s. Is that acceptable? Expected: A = 0.03142 m^2, T = 7.36 N, v_h = 9.78 m/s, half is 4.89 m/s, so 4 m/s is 0.41 v_h and too close to onset; reduce it to a limit such as 2 m/s and justify the choice.
+  sources:
+    - https://arxiv.org/pdf/1601.00733
+    - https://docs.px4.io/main/en/flight_modes_mc/position
+    - https://thesis.caltech.edu/14485/
+    - https://orbilu.uni.lu/bitstream/10993/47153/1/1823056.pdf
+
+- key: robo.uav.motor-direction
+  description: >-
+    Assign motor positions, spin directions and props for an X quad, and diagnose seeded order and direction faults from test evidence.
+  est_minutes: 20
+  task_kinds: [worked_example, retrieval, perceptual_drill, debug_case, project_step]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: >-
+    Match each motor to its position, direction and prop, and name the fix for each fault.
+  core_ideas:
+    - >-
+      PX4 quad X defaults: motors 1 and 2 (front-right, rear-left) spin CCW; motors 3 and 4 (front-left, rear-right) spin CW. Diagonal pairs share a direction so that yaw torques cancel. Check the airframe reference for your exact frame.
+    - >-
+      Reverse a DShot motor with Set Spin Direction in QGC; its current direction cannot be read back, so try both. For other ESCs, swap any two of the three motor wires.
+    - >-
+      Prop handedness must match rotation. The correct direction with the wrong-hand prop gives weak or downward airflow.
+    - >-
+      Output order matters separately from direction. A motor test must show that each output drives the expected physical motor.
+    - >-
+      Props-off proves mapping and direction only. It does not prove thrust or control sign.
+  misconceptions:
+    - >-
+      Props-off proves direction and control sign.
+    - >-
+      All CW props are interchangeable with any motor pair.
+    - >-
+      Two swapped motors will simply fly with worse tuning. It can flip at takeoff.
+  worked_example: >-
+    Fault: motor test slider 1 spins the rear-left motor, and slider 2 spins the front-right. Both are CCW, so spin checks pass, but outputs are crossed. Pitch or roll correction would go to the wrong corner. Fix: reassign the outputs in Actuator Configuration, then repeat the test. Answer: swapped mapping, not direction.
+  unaided_check: >-
+    A log shows the vehicle yawing right at takeoff with motors 3 and 4 commanded much higher than 1 and 2, though attitude holds. Name the two most likely causes and the check. Expected: one or both CW-pair motors or props producing less thrust, or a wrong-hand prop; check props and spin direction, then repeat the motor test with props off.
+  sources:
+    - https://docs.px4.io/main/en/config/actuators.html
+    - https://docs.px4.io/main/en/dev_airframes/adding_a_new_frame
+
+- key: robo.uav.esc-calibration-quad
+  description: >-
+    Decide whether an ESC needs calibration, and if it is PWM or OneShot, run and verify the procedure safely with props removed.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, project_step]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: >-
+    Choose the right path for the ESC protocol and verify PWM endpoints when calibration applies.
+  core_ideas:
+    - >-
+      DShot and CAN ESCs need no calibration, because the command is digital. This skill is a PWM-only note, so the default H7 and DShot build skips it.
+    - >-
+      Safety: props off first, always. An ESC already powered or lacking the sequence may run a motor at full speed.
+    - >-
+      Order in PX4: map motors, unplug the battery, keep the flight controller on USB, press Calibrate in QGC, power the ESCs when prompted, then listen for the beeps.
+    - >-
+      PX4 has no feedback, so calibration can report success after failing. Verify by motor test. Default PWM values: disarmed 1000 us, minimum 1100 us, maximum 1900 us.
+    - >-
+      A high-current step falls under H11, so use an outside reviewer or a pre-registered prediction with a fixed pass tolerance.
+  misconceptions:
+    - >-
+      Every ESC needs calibration.
+    - >-
+      Success on screen proves calibration.
+    - >-
+      Calibrating DShot throttle is a normal setup step.
+  worked_example: >-
+    A motor spins while disarmed at 1000 us on a PWM ESC. Procedure: remove props; repeat calibration and listen for the stage beeps; if it still spins, the ESC is not calibrated, or cannot be, so lower the disarmed value to 950 us, then 900 us, until it stops. Then raise minimum in small steps to a reliable slow spin. Answer: motor stopped when disarmed, recorded in the build log.
+  unaided_check: >-
+    For each of DShot600, OneShot125, DroneCAN and PWM 400 Hz, say whether calibration is needed and name the first safety action if it is. Expected: DShot no; OneShot yes; DroneCAN no; PWM yes; first action is to remove props.
+  sources:
+    - https://docs.px4.io/main/en/advanced_config/esc_calibration.html
+    - https://docs.px4.io/main/en/peripherals/dshot.html
+
+- key: robo.uav.ground-test-props-off
+  description: >-
+    Run a written props-off ground test that proves motor mapping, spin direction and safe disarm behaviour, and record what it cannot prove.
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, project_step, debug_case]
+  grader_types: [human_review, measurement_check]
+  phone_suitable: false
+  objective: >-
+    Complete the test with evidence, and state its limits before any props go on.
+  core_ideas:
+    - >-
+      Remove props before output assignment or any actuator test. Nothing moves until a slider is moved; enable the sliders deliberately.
+    - >-
+      Pass items: each output drives the expected motor, motors stay still at the disarmed value, barely spin at minimum, and turn the correct way at a moderate slider value.
+    - >-
+      Add checks from the review: ESC telemetry and RPM reading sensibly, and motor and ESC temperature after a short run. Use bench power limits that fit the safety brief.
+    - >-
+      A control-sign check is separate: props off, restrained, tilt the frame and confirm that outputs rise on the low side. This practice is judgement [J], not taken from the PX4 page.
+    - >-
+      Any restrained or tethered props-on test needs its own hazard assessment. Grade it by human_review; do not use rubric_llm on this item, per review recommendation 5.
+  misconceptions:
+    - >-
+      A pass means the vehicle is ready to fly.
+    - >-
+      Removing props removes every hazard. Batteries, wiring and hot parts remain.
+    - >-
+      One pass stays valid after an ESC or firmware change.
+  worked_example: >-
+    Run: confirm props off and photograph it; battery on with a current-limited supply or a checked pack; open Actuators; enable the sliders; move slider 1 to a low value and mark the motor; note direction with a paper tab; repeat for 2, 3 and 4; set all to zero; disable sliders; battery off. Result table: output, motor position, direction, pass. Answer: four rows pass, with the note that thrust and control sign remain unproven.
+  unaided_check: >-
+    Given a seeded record where outputs 3 and 4 are swapped, and motor 2 is reversed, find both faults and give the fix and the retest. Pass: both found, the fix is output reassignment and a direction change, and the whole table is repeated.
+  sources:
+    - https://docs.px4.io/main/en/config/actuators.html
+
+- key: robo.uav.fc-config
+  description: >-
+    Configure PX4 on an H7 flight controller from a clean state, tune in order, and justify every changed parameter in version control.
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, debug_case, problem, project_step]
+  grader_types: [human_review, multiple_choice]
+  phone_suitable: false
+  objective: >-
+    Rebuild a safe configuration from scratch and pass a seeded-misconfiguration audit.
+  core_ideas:
+    - >-
+      Decision H10: default stack is PX4 on an H7 flight controller, and Betaflight is a confusable only. BDShot needs DMA-capable timers such as those on STM32H7 FMU outputs.
+    - >-
+      Workflow: firmware, airframe, sensors, radio, actuators, power, failsafes, then tuning. Autotune suits most users; manual order is rate, then attitude, then velocity and position.
+    - >-
+      Filters cost phase. IMU_GYRO_CUTOFF delay is about 8 ms at 30 Hz, 3.8 ms at 60 Hz and 1.9 ms at 120 Hz; these roughly match sqrt(2) / (2 pi fc). Added lag is 360 f tau degrees.
+    - >-
+      Vibration is fixed in hardware first. PX4 warns against filter-tuning a high-vibration vehicle, and soft mounts add latency. This is the T2 and T3 thread: rotor harmonics, frame mode, IMU, filter delay, phase margin.
+    - >-
+      Keep exported parameters in git with one reason per change. A config done once does not stay valid after firmware or hardware changes.
+  misconceptions:
+    - >-
+      Notches fix vibration at the source.
+    - >-
+      A higher filter cutoff is always better. It reduces delay but passes more noise to motors.
+    - >-
+      Betaflight tuning numbers carry over to PX4.
+  worked_example: >-
+    A rate loop crosses over near 20 Hz. Moving IMU_GYRO_CUTOFF from 30 Hz to 60 Hz changes delay from 8 ms to 3.8 ms. Phase lag at 20 Hz drops from 360 x 20 x 0.008 = 57.6 degrees to 27.4 degrees, a gain of 30.2 degrees. Then check the actuator FFT, because more noise reaches the motors. Answer: raise it only if motor noise stays acceptable.
+  unaided_check: >-
+    Audit a seeded parameter diff with three faults, such as a wrong rotor KM sign, disabled low-battery action and a raised gyro cutoff with no log evidence. Pass: all three found, each with a reason, and a corrected diff accepted by an outside reviewer.
+  sources:
+    - https://docs.px4.io/main/en/config_mc/filter_tuning.html
+    - https://docs.px4.io/main/en/config_mc/pid_tuning_guide_multicopter_basic.html
+
+- key: robo.uav.sensor-orientation
+  description: >-
+    Set flight controller and compass orientation, apply a rotation to sensor readings, and diagnose mounting and magnetic interference faults.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, debug_case]
+  grader_types: [multiple_choice, exact_numeric]
+  phone_suitable: true
+  objective: >-
+    Choose the right rotation, predict body-frame readings, and interpret compass warnings.
+  core_ideas:
+    - >-
+      Default mounting is top-side up with the arrow forward. Offsets are rotations about forward, right and down axes held fixed (extrinsic). Names look like ROTATION_YAW_90.
+    - >-
+      Set the rotation before calibration. External compass orientation is autodetected through SENS_MAG_AUTOROT for standard rotations; for custom angles, set CAL_MAGx_ROLL, PITCH and YAW.
+    - >-
+      Level Horizon Calibration corrects small misalignment only, not a wrong orientation.
+    - >-
+      Compass errors come from currents, motors and metal. Signs are circling in hover (toilet bowling) and the preflight error Compass Sensors Inconsistent. Mount the compass away from power wires, and calibrate away from metal.
+    - >-
+      ArduPilot gives useful concept thresholds for current-linked interference: under 30% acceptable, 31 to 60% grey, above 60% change the hardware. These are ArduPilot's CompassMot figures, not PX4 limits.
+  misconceptions:
+    - >-
+      Autodetect means orientation need never be checked.
+    - >-
+      Level calibration fixes a 90 degree mount.
+    - >-
+      A good compass on the bench stays good at full current.
+  worked_example: >-
+    A board is mounted with its arrow pointing to the vehicle's right, so use ROTATION_YAW_90. Then v_body = Rz(90) v_sensor, which sends sensor (x, y, z) to (-y, x, z). A gyro reading of (10, 0, 0) deg/s becomes (0, 10, 0), a nose-up pitch rate in FRD. With the setting left at none, the controller would read it as roll and correct the wrong axis.
+  unaided_check: >-
+    A board is mounted with ROTATION_YAW_180. Sensor gyro reads (3, -4, 2) deg/s. Give the body-frame vector and describe the symptom if the rotation is not set. Expected: (-3, 4, 2) deg/s; roll and pitch feedback have the wrong sign, so corrections diverge and arming checks or a rapid flip may result.
+  sources:
+    - https://docs.px4.io/main/en/config/flight_controller_orientation.html
+    - https://ardupilot.org/copter/docs/common-compass-setup-advanced.html
+
+- key: robo.uav.failsafe-basics
+  description: >-
+    Predict PX4 failsafe behaviour from parameters, including severity order, RTL path and geofence stopping margin, and set safe values.
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, faded_problem, problem, debug_case]
+  grader_types: [multiple_choice, exact_numeric, human_review]
+  phone_suitable: true
+  objective: >-
+    State which action wins for a given fault set and compute fence margin.
+  core_ideas:
+    - >-
+      Severity order from least to most: none, warning, Hold, Return, Land, Disarm, Terminate. When several failsafes fire, the more severe action is taken.
+    - >-
+      Most failsafes wait in Hold for COM_FAIL_ACT_T seconds first, giving the pilot time to take over.
+    - >-
+      Main settings: NAV_RCL_ACT, NAV_DLL_ACT with COM_DL_LOSS_T, COM_LOW_BAT_ACT with BAT_LOW_THR, BAT_CRIT_THR and BAT_EMERGEN_THR, and GF_ACTION with GF_MAX_HOR_DIST and GF_MAX_VER_DIST.
+    - >-
+      A geofence action fires only after the breach. A multicopter's margin is at least v^2 / (2a), using MPC_XY_VEL_MAX and MPC_ACC_HOR_MAX, plus allowance for wind and delay.
+    - >-
+      Default Return climbs to at least RTL_RETURN_ALT (default 60 m), flies to the nearest of home or rally point, and starts its descent at RTL_DESCEND_ALT (30 m). Flight termination is a safety function only, and it should be understood rather than casually selected.
+  misconceptions:
+    - >-
+      A geofence stops at the line.
+    - >-
+      All failsafes behave alike.
+    - >-
+      A passed failsafe stays passed after changes.
+  worked_example: >-
+    RC loss is set to Return and link loss to Land, and both happen. Land is more severe, so the vehicle lands. Separately, with v = 5 m/s and a = 3 m/s^2, stopping distance is 25 / 6 = 4.17 m. The action comes after the breach, so the fence sits at least 4.17 m inside the boundary, before wind, delay and position error.
+  unaided_check: >-
+    GF_ACTION is Return, low battery is Return, and link loss is Disarm, with the link lost during a fence breach. Say what happens and whether the link-loss setting is sensible. Expected: Disarm wins as the most severe, stopping the motors in flight; change link loss to Return or Land.
+  sources:
+    - https://docs.px4.io/main/en/config/safety.html
+    - https://docs.px4.io/main/en/flight_modes/return.html
+
+- key: robo.uav.test-cards
+  description: >-
+    Write flight test cards with objective, build-up, predictions, abort criteria and stop rules, using computed margins for your own mission.
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, faded_problem, project_step, explain_back]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: >-
+    Produce a card an outside reviewer can execute and audit.
+  core_ideas:
+    - >-
+      A checklist confirms a state; a test card defines a test. A card holds objective, preconditions, predicted result, procedure, abort criteria and a stop rule.
+    - >-
+      Build up from SITL, to bench, to ground, to low hover, to the mission, changing one thing at a time. PX4's MC_04 card is a useful model: objective, preflight settings, then flight items.
+    - >-
+      Abort criteria are observable and pre-set, such as leaving a defined box or reaching a voltage. Stop rules say when the day ends, for example after any unexplained event.
+    - >-
+      H11: an acknowledgement proves reading, not competence. The maiden and L12 need an outside reviewer, or a pre-registered prediction with a fixed pass tolerance.
+    - >-
+      Plan for manual takeover: PX4 advises bringing an experienced person, keeping the vehicle in sight, and setting an emergency switch.
+  misconceptions:
+    - >-
+      A test card is a longer checklist.
+    - >-
+      Several changes in one flight save time.
+    - >-
+      A stop rule is failure. It protects the next decision.
+  worked_example: >-
+    Reserve check for a Return test at 400 m from home, 40 m height, 60 m return altitude, 5 m/s cruise, 3 m/s climb, 1 m/s descent, 11.4 A. Time is 20/3 + 400/5 + 60/1 = 146.7 s. Charge is 11.4 x 146.7 / 3600 = 0.464 Ah, 9.3% of a 5.0 Ah pack. Card: trigger only with more than 30% left [project convention: about three times the 9.3% the return needs, leaving a landing reserve]; abort if voltage or capacity falls under the card limit, or if the vehicle leaves the box. Stop rule: land and stop after any unpredicted mode change.
+  unaided_check: >-
+    Write a card for link-loss testing on your own vehicle with computed fence margin, predicted action and time, abort criteria and stop rules. Pass: an outside reviewer can run it without asking questions, and the predicted timeout matches the set COM_DL_LOSS_T.
+  sources:
+    - https://docs.px4.io/main/en/test_cards/mc_04_failsafe_testing.html
+    - https://docs.px4.io/main/en/flying/first_flight_guidelines.html
+
+- key: robo.uav.hazard-analysis
+  description: >-
+    List hazards for a planned flight test, estimate severity and likelihood, and choose controls that reduce risk before the test runs.
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, faded_problem, project_step, explain_back]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: >-
+    Produce a hazard table for one new test, with owners and residual risk.
+  core_ideas:
+    - >-
+      Each row has hazard, cause, effect, severity, likelihood, control and residual risk. Redo it for each new test, not once per project.
+    - >-
+      Prefer controls in order: remove the hazard, reduce energy, separate people, add procedure. Written reminders are weakest.
+    - >-
+      Energy gives a first severity estimate: E = 0.5 m v^2, and free-fall speed is at most sqrt(2 g h). Rotor cuts and lithium fires need their own rows.
+    - >-
+      Site controls come from PX4 first-flight guidance: an open area, people outside about 100 m, a known landing plan, and the vehicle kept in sight. Legal distances may be stricter.
+    - >-
+      The severity and likelihood scales are set by the project [project convention: no rule fixes a scale for Open-category test flights, so one fixed written scale keeps ratings comparable between tests]. Under H11, a solo author's sign-off is self-review, so use an outside reviewer on hazardous steps.
+  misconceptions:
+    - >-
+      Software failsafes remove the need for separation.
+    - >-
+      A low likelihood makes a high-severity hazard acceptable.
+    - >-
+      Hazard analysis is paperwork done after the build.
+  worked_example: >-
+    Hazard: 2.0 kg vehicle falls from 30 m. Speed is up to sqrt(2 x 9.81 x 30) = 24.3 m/s, ignoring drag, so energy is up to 588.6 J. At 15 m/s cruise, energy is 225 J. Controls: fly away from people, cap height for the test, keep the A3 conditions: no uninvolved person in the range flown, and 150 m from residential and similar areas. Residual: damage to the vehicle only, if separation holds.
+  unaided_check: >-
+    Write six rows for your first automatic mission test, including a battery row and a loss-of-position row. Pass: each row has a real control, none relies only on the pilot being careful, and an outside reviewer accepts the residual risks.
+  sources:
+    - https://docs.px4.io/main/en/flying/first_flight_guidelines.html
+
+- key: robo.uav.manual-recovery
+  description: >-
+    Recover a simulated vehicle by hand after an automatic mode fails, switching to a lower mode and landing inside a set box.
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, perceptual_drill, problem, project_step]
+  grader_types: [measurement_check, human_review]
+  phone_suitable: false
+  objective: >-
+    Log simulator hours and pass a timed manual-recovery check before the maiden.
+  core_ideas:
+    - >-
+      Failsafes do not replace a pilot. The review adds this skill because recovery depends on manual flying, and PX4 advises an emergency switch.
+    - >-
+      Know each mode's needs. Position needs a valid global position; Altitude needs only attitude and a height source, and drifts with wind; Stabilized levels but does not hold position.
+    - >-
+      PX4 suggests that if Position will not settle, land in Altitude or go to Stabilized. Practise that exact switch until it is automatic.
+    - >-
+      If you truly cannot regain control, PX4 advises crashing in an empty area as soon as possible. Practise the decision to use the emergency switch.
+    - >-
+      Gate limits: 10 logged simulator hours, a recovery switch within 2 s of the cue, and a landing inside a 5 m box [project convention: no rule sets these for Open A3, so they are chosen strict for a first maiden]. GNSS loss is injected only in SITL.
+  misconceptions:
+    - >-
+      Autonomous flying means no piloting skill is needed.
+    - >-
+      Simulator success proves real recovery.
+    - >-
+      Altitude mode holds position.
+  worked_example: >-
+    Drill in SITL: arm, climb to 20 m in Position, fly 30 m out in a light simulated wind. A helper runs failure gps off in the SITL shell. Cue: estimator warning. You switch to Altitude within 2 s, hold against drift with the sticks, return and land in the box. The log shows mode change 1.4 s after injection and touchdown 3.2 m from centre. Answer: pass on both gate limits.
+  unaided_check: >-
+    Perform three recovery runs in a row with unseen timing, with the log as evidence. Pass: all three meet the set limits, and an outside person, or a pre-registered limit under H11, confirms them. Pre-maiden gate.
+  sources:
+    - https://docs.px4.io/main/en/flight_modes_mc/altitude
+    - https://docs.px4.io/main/en/flying/first_flight_guidelines.html
+
+- key: robo.uav.test
+  description: >-
+    Design an integration test matrix covering propulsion, sensors, failsafes and mission slices, with regression rules for a golden configuration.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, project_step, explain_back]
+  grader_types: [multiple_choice, human_review, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Write a matrix showing what is tested where, and what reruns after a change.
+  core_ideas:
+    - >-
+      Columns are environment: SITL, bench, ground, flight. Rows are functions. Each cell holds a test ID, a prediction, and pass evidence.
+    - >-
+      Run the full failsafe set in SITL, then fly a short approved subset. This replaces the old idea of flying every failsafe.
+    - >-
+      Define a golden configuration: firmware hash, parameter file and hardware list. Any change triggers a defined regression subset.
+    - >-
+      Failsafes interact through the severity rule, so single-fault tests are not enough. Add pairs in SITL using the PX4 failsafe state machine simulator.
+    - >-
+      A matrix entry that cannot fail is not a test. Every cell needs a pre-set pass criterion.
+  misconceptions:
+    - >-
+      A passed test stays passed.
+    - >-
+      SITL proves real behaviour.
+    - >-
+      More rows always mean better coverage.
+  worked_example: >-
+    Six failsafes tested in three flight phases (takeoff, cruise, Return) gives 6 x 3 = 18 SITL cells. Flight subset: RC loss, link loss and battery, as in MC_04, so 3 cells and 21 in total. Rule: a firmware change reruns all 21; a change to NAV_DLL_ACT reruns the 3 link-loss SITL cells and 1 flight cell, so 4.
+  unaided_check: >-
+    Given a change list (new ESC firmware, moved compass, changed RTL_RETURN_ALT), pick the regression subset for each and justify it. Pass: compass change triggers sensor and Position rows, ESC firmware triggers propulsion rows, RTL change triggers Return rows, and each has a reason.
+  sources:
+    - https://docs.px4.io/main/en/config/safety.html
+    - https://docs.px4.io/main/en/test_cards/mc_04_failsafe_testing.html
+
+- key: robo.uav.mission-geofence
+  description: >-
+    Plan and fly a legal waypoint mission with a computed geofence and RTL, first in SITL, then verify the behaviour from logs.
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, project_step, problem]
+  grader_types: [human_review, measurement_check]
+  phone_suitable: false
+  objective: >-
+    Size a fence from a margin budget and show from the log that the mission stayed inside it.
+  core_ideas:
+    - >-
+      Missions are planned in QGC and uploaded. PX4 runs feasibility checks at upload and before start, including geofence conflicts; a failed check blocks the mission.
+    - >-
+      Fence radius = legal or site boundary minus margin. The margin adds stopping distance, reaction delay, tracking error and position error. Add these linearly unless you can defend independence.
+    - >-
+      For strict limits, PX4 suggests GF_ACTION Hold plus margin. Return can move across the area, so check its path and height too.
+    - >-
+      NAV_ACC_RAD sets the waypoint acceptance circle, so a mission line near a fence needs that radius in the budget.
+    - >-
+      A fence does not make a site legal. The flight stays under the A3 and section 21h limits, in visual line of sight, and L12 needs H11 review.
+  misconceptions:
+    - >-
+      Fence equals the legal boundary.
+    - >-
+      Return is always the safest action.
+    - >-
+      A mission that passed in SITL is ready to fly.
+  worked_example: >-
+    Site boundary radius 120 m from home. v = 5 m/s, a = 3 m/s^2. Stopping distance 4.17 m; 1 s reaction delay gives 5.00 m; tracking and wind allowance 3.00 m; GNSS 95% radius 2.45 m. Total 14.62 m, rounded up to 15 m. Set GF_MAX_HOR_DIST = 105 m. Keep waypoints inside 105 m less NAV_ACC_RAD.
+  unaided_check: >-
+    Repeat with v = 8 m/s, a = 3 m/s^2, 1 s delay, 3 m tracking, 2.45 m GNSS and a 150 m boundary. Expected: 10.67 + 8 + 3 + 2.45 = 24.12 m, rounded up to 25 m, fence 125 m. Then the flight log must show maximum distance below the fence, as a measurement check.
+  sources:
+    - https://docs.px4.io/main/en/config/safety.html
+    - https://docs.px4.io/main/en/flying/missions.html
+
+- key: robo.uav.preflight
+  description: >-
+    Write and use a preflight procedure for maiden and mission flights that covers legal, vehicle, software and site go or no-go items.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, faded_problem, project_step]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: >-
+    Produce a go or no-go list with limits that a second person can execute.
+  core_ideas:
+    - >-
+      Order by when a fault is cheapest to find: at home the day before, at the site before power, after power before arming, and just after takeoff.
+    - >-
+      Legal items: dipul map and NOTAM checked today, insurance certificate at hand, e-ID on the vehicle, A1/A3 proof, consents on file. LuftVO section 21i keeps the SERA.2010(b) preflight duty.
+    - >-
+      PX4 blocks arming on failed checks. QGC's Arming Check Report is the only way to see the precise reasons, so read it rather than guessing from LEDs.
+    - >-
+      Items need limits, not ticks: a voltage, a satellite figure, a wind limit. Vague items such as check battery cannot fail.
+    - >-
+      Use human_review here rather than rubric_llm (review recommendation 5). For the maiden and L12, an outside reviewer or a pre-registered prediction is required under H11.
+  misconceptions:
+    - >-
+      Ready to Fly in green covers the whole preflight.
+    - >-
+      An experienced pilot can skip the list.
+    - >-
+      An acknowledgement proves competence.
+  worked_example: >-
+    Battery item for a 4S pack: go at 16.6 V or above at rest, which is 4.15 V per cell, with cell spread under 0.03 V [project convention: 4.15 V is a nearly full LiPo cell (full is 4.20 V), and a 0.03 V spread flags a weak cell early]. Reading 16.62 V, spread 0.02 V: go. Next, check the props by hand, then the Arming Check Report: amber Not Ready with Compass Sensors Inconsistent. Result: no-go until it clears; do not override it; move away from metal and recheck.
+  unaided_check: >-
+    Convert a vague list of ten items into measurable go or no-go items for your L8 vehicle. Pass: each has a limit or a yes or no fact, the legal items are included, and a reviewer can run it without asking questions.
+  sources:
+    - https://docs.px4.io/main/en/flying/pre_flight_checks.html
+    - https://www.dipul.bund.de/homepage/en/information/general/minimum-age-and-mandatory-insurance
+
+- key: robo.uav.sitl-first
+  description: >-
+    Run PX4 software-in-the-loop to rehearse a mission and each failsafe, then record what the simulation does not prove.
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, project_step, debug_case]
+  grader_types: [measurement_check, human_review]
+  phone_suitable: false
+  objective: >-
+    Start SITL, fly a mission, trigger failsafes and read the log.
+  core_ideas:
+    - >-
+      SITL runs PX4 on a computer with a simulator; HITL runs firmware on real hardware with simulated sensors and blocked motor outputs. Start with make px4_sitl gz_x500.
+    - >-
+      QGC listens on UDP 14550 and offboard APIs use UDP 14540. Lockstep ties PX4 to simulator time, so the run can go slower or faster than real time.
+    - >-
+      Simulated battery defaults stop at 50%, so low-battery failsafes need SIM_BAT_MIN_PCT set below your thresholds; SIM_BAT_DRAIN sets the drain speed.
+    - >-
+      SITL parameters reset on make clean, so keep them in a script, not in memory.
+    - >-
+      SITL tests logic, not real vibration, wind, ESC behaviour or sensors. Each pass is a precondition for flight, not evidence of it.
+  misconceptions:
+    - >-
+      SITL proves real behaviour.
+    - >-
+      No crash in SITL means the tuning is right.
+    - >-
+      Low-battery failsafe is broken in SITL. Usually the simulated charge never reaches the threshold.
+  worked_example: >-
+    Fault: BAT_CRIT_THR = 0.20 and the failsafe never fires. Reason: simulated charge bottoms out at 50% by default. Fix: set SIM_BAT_MIN_PCT below BAT_EMERGEN_THR, for example 5 with BAT_EMERGEN_THR at 0.15, shorten SIM_BAT_DRAIN if needed, and set COM_LOW_BAT_ACT to its Return then Land option, because a value of 0 only warns. Rerun: warn, then Return, then Land appear in the log in that order.
+  unaided_check: >-
+    Rehearse your mission in SITL with RC loss, link loss and low battery, and submit the three logs. Pass: each log shows the predicted mode change, and a written list names at least three things SITL cannot show.
+  sources:
+    - https://docs.px4.io/main/en/simulation/
+    - https://docs.px4.io/main/en/simulation/failsafes
+
+- key: robo.uav.fault-injection
+  description: >-
+    Inject sensor and system faults in PX4 SITL, predict the response, and choose a small reviewed subset for later real flight.
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, project_step, debug_case]
+  grader_types: [measurement_check, human_review]
+  phone_suitable: false
+  objective: >-
+    Run planned faults in SITL and compare the logged response with a written prediction.
+  core_ideas:
+    - >-
+      Enable with SYS_FAILURE_EN; injection is off by default. Syntax: failure <component> <type> [-i instance]. Clear with type ok.
+    - >-
+      Support varies. GPS implements off, stuck and wrong; gyro, accel, mag and baro implement off and stuck; PX4 may accept a mode a simulator ignores, so verify the effect in the log.
+    - >-
+      Boundary: GNSS loss here means SITL or a stack-level sensor disable only. No radiated signals of any kind, and this skill uses off and stuck only.
+    - >-
+      Motor faults need CA_FAILURE_MODE. With off, the failure is detected and the allocator compensates, recovering at most one motor; with wrong it goes undetected.
+    - >-
+      Every failsafe runs in SITL; only a short approved subset is flown, with a test card and H11 review. Failure parameters must be off again for normal flight.
+  misconceptions:
+    - >-
+      An accepted command proves the fault took effect.
+    - >-
+      Every failsafe must be proven in flight.
+    - >-
+      A quad can survive any single motor loss with stock settings.
+  worked_example: >-
+    Prediction: at 30 m in Mission, gps off leads to loss of position, then PX4 attempts Return, falls back to Land, and uses Descend if no position estimate remains (the COM_POS_FS_ACT default). Run: set SYS_FAILURE_EN, reboot SITL, fly, enter failure gps off. Log: estimator loses global position, and the mode changes. Then failure gps ok. Compare time from injection to mode change with the prediction and note any difference.
+  unaided_check: >-
+    Plan five SITL faults for your mission, with one line of prediction each, then run them and report matches and misses. Pass: logs support each verdict, any miss has an explanation, and none uses GNSS wrong mode or any radiated method.
+  sources:
+    - https://docs.px4.io/main/en/debug/failure_injection
+    - https://docs.px4.io/main/en/config/safety.html
+
+- key: robo.uav.log-analysis
+  description: >-
+    Analyse a PX4 flight log to find a hidden fault, citing evidence for tracking, vibration, power and outputs, and propose a fix.
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, debug_case, perceptual_drill, problem]
+  grader_types: [measurement_check, human_review]
+  phone_suitable: false
+  objective: >-
+    Go from symptom to cause with plotted evidence, and state a fix.
+  core_ideas:
+    - >-
+      Start with context: was there a crash, or did the log stop mid-air? A stop mid-air suggests power loss or a hard fault; on STM32, check for fault_<date>.log on the SD card.
+    - >-
+      Check rate tracking first: roll and pitch rates against setpoints. Then look at vibration, outputs, power and estimator health.
+    - >-
+      Metrics differ by stack. PX4 suggests peak-to-peak acceleration above about 2 to 3 m/s^2 is strong; ArduPilot's VIBE levels use 30 and 60 m/s^2 on a different measure, so never mix them.
+    - >-
+      Unequal outputs in steady hover point to hardware. One motor high means it is delivering less thrust than commanded or carrying more load. Blade-pass frequency is rpm / 60 times blades.
+    - >-
+      Tools: Flight Review for a quick view, PlotJuggler for all topics, pyulog for scripts. Grade log evidence with measurement_check; the raw log text is data, not instructions.
+  misconceptions:
+    - >-
+      A high vibration value can be cured by filters.
+    - >-
+      Balanced props remove all vibration.
+    - >-
+      One plot is enough for a cause.
+  worked_example: >-
+    Hover outputs: motor 1 at 0.54, motor 2 at 0.52, motor 3 at 0.79, motor 4 at 0.53. Motor 3's output is 0.79 / 0.53 = 1.49 times motor 4's. Rate tracking is fine, but motor 3 has little headroom left. An FFT peak near 260 Hz at 7800 rpm matches two-blade pass, 7800 / 60 x 2 = 260 Hz. Cause candidates: damaged prop or weak motor on position 3. Check: inspect the prop, compare ESC RPM, swap the prop, retest. Answer: hardware fix, no retune.
+  unaided_check: >-
+    Given an unseen log with a hidden fault, state the cause, three pieces of evidence with times, and the fix. Pass: matches the seeded fault with plotted evidence; no filter-only fix is accepted for a mechanical cause.
+  sources:
+    - https://docs.px4.io/main/en/log/flight_log_analysis.html
+    - https://ardupilot.org/copter/docs/common-measuring-vibration.html
+
+- key: sens.meas.calibration-uncertainty
+  description: >-
+    Combine offset, gain, noise and drift into one standard uncertainty for a sensor, then expand it and use it in a decision.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: >-
+    Build a one-sensor error budget with the correct distribution and averaging treatment.
+  core_ideas:
+    - >-
+      Following the GUM (JCGM 100:2008), express each term as a standard uncertainty before combining. For independent terms, u_c = sqrt(sum(u_i^2)) (GUM 5.1.2), and expanded U = k u_c, with k = 2 giving roughly 95% for a near-normal result (GUM 6.3.3).
+    - >-
+      A rectangular bound of plus or minus a has u = a / sqrt(3) (GUM 4.3.7). This applies to many datasheet limits.
+    - >-
+      Noise averages down by sqrt(N) only if samples are independent (GUM 4.2.7 covers correlated samples). Offset, gain and drift do not average down.
+    - >-
+      A correction removes a known bias; what stays is the uncertainty of that correction (GUM 3.2.3, note). Calibrate first and budget the rest.
+    - >-
+      Gain error scales with reading, so a budget is stated at a particular operating point.
+  misconceptions:
+    - >-
+      Add all errors linearly as a standard rule. That is a worst-case bound, not a combined uncertainty.
+    - >-
+      More samples remove all error.
+    - >-
+      A datasheet limit is a standard deviation.
+  worked_example: >-
+    Current sensor at 20 A: gain limit 0.5% (0.1 A), offset limit 0.2 A, drift limit 0.1 A, noise 0.15 A rms averaged over 16 samples. u values are 0.1 / sqrt(3) = 0.0577, 0.2 / sqrt(3) = 0.1155, 0.1 / sqrt(3) = 0.0577, and 0.15 / 4 = 0.0375 A. u_c = 0.146 A. With k = 2, U = 0.293 A, or 1.5% of the reading.
+  unaided_check: >-
+    Same sensor at 5 A with 64 samples. Find u_c and U. Expected: gain limit 0.025 A gives 0.0144; noise gives 0.01875; with the same offset and drift, u_c = 0.1313 A and U = 0.2625 A.
+  sources:
+    - https://www.bipm.org/en/committees/jc/jcgm/publications
+    - https://www.bipm.org/documents/20126/2071204/JCGM_100_2008_E.pdf
+
+- key: sens.meas.gps-error-literacy
+  description: >-
+    Interpret GNSS error figures from PX4 logs, convert them into a horizontal margin, and explain why the result is not a hard bound.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem, explain_back]
+  grader_types: [exact_numeric, multiple_choice, rubric_llm]
+  phone_suitable: true
+  objective: >-
+    Turn a reported accuracy into a mission margin with a stated confidence.
+  core_ideas:
+    - >-
+      PX4 waits for GNSS quality before accepting it: on main, GNSS_REQ_EPH 3 m, vertical 5 m, 6 satellites, speed error 0.5 m/s, PDOP 2.5, held for GNSS_REQ_TIME 10 s. A good M8-class receiver shows about 0.8 m horizontal and 1.5 m vertical.
+    - >-
+      For equal independent Gaussian axes with sigma per axis, radial error is Rayleigh: 50% radius is 1.177 sigma, and 95% radius is 2.448 sigma.
+    - >-
+      Reported EPH is an estimate, not a bound, and receivers define it differently. This skill takes EPH as sigma per axis and states that assumption [project convention: against the other common readings, radial RMS (95% radius 1.73 EPH) or a 50% circle (2.08 EPH), sigma per axis gives the largest 95% radius, 2.45 EPH, so it is the safe choice].
+    - >-
+      GNSS error is correlated in time, so averaging over seconds does not shrink it like white noise. Multipath near buildings makes it worse, so hold a margin for a bad case.
+    - >-
+      Feed the margin into the geofence budget. For GNSS-loss practice use SITL or a stack-level disable only.
+  misconceptions:
+    - >-
+      GPS error is white noise.
+    - >-
+      An EPH number is a hard bound.
+    - >-
+      A high satellite count guarantees accuracy.
+  worked_example: >-
+    A log shows EPH 1.0 m. Assume sigma = 1.0 m per axis. 50% radius is 1.18 m and 95% radius is 2.45 m. Use 2.45 m as the GNSS line in the fence budget. The budget notes that this assumes a near-Gaussian error, and that it is not a limit.
+  unaided_check: >-
+    EPH rises to 2.0 m near trees. Give the 95% radius under the same assumption and say whether a margin of 3 m remains valid. Expected: 4.90 m, so no; enlarge the margin or move away from the trees, and state that the number is not a guarantee.
+  sources:
+    - https://docs.px4.io/main/en/advanced_config/tuning_the_ecl_ekf.html
+
+- key: net.proto.ip-and-sockets
+  description: >-
+    Explain packets, addresses and ports, open a simple UDP link to a ground station, and compute telemetry bandwidth with overheads.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem, debug_case]
+  grader_types: [multiple_choice, exact_numeric, code_tests]
+  phone_suitable: false
+  objective: >-
+    Choose UDP or TCP for a task, and write a socket client that survives packet loss.
+  core_ideas:
+    - >-
+      An IP address names a host and a port names a service. PX4 SITL uses UDP 14550 for ground stations and 14540 for offboard APIs.
+    - >-
+      UDP has an 8-byte header and no delivery or ordering guarantee (RFC 768). IPv4 adds at least 20 bytes. TCP adds at least 20 bytes and retransmits, which can deliver stale state late on a lossy link.
+    - >-
+      For live telemetry, a new value beats a late old one, so UDP suits it. Use sequence numbers to count loss. Commands and files need acknowledgement at a higher layer; MAVLink's seq byte supports loss detection.
+    - >-
+      MAVLink 2 overhead is 12 bytes unsigned and 25 bytes signed.
+    - >-
+      A UDP socket that binds to a port receives from any source, so never trust it as authenticated. Use a private network, or signing.
+  misconceptions:
+    - >-
+      TCP is always better because it is reliable.
+    - >-
+      UDP loss is an error to be fixed. It is expected, and it should be handled.
+    - >-
+      An open port is safe on a home network by default.
+  worked_example: >-
+    ATTITUDE message, 28-byte payload at 10 Hz over UDP and IPv4. MAVLink frame 28 + 12 = 40 B. Packet 40 + 8 + 20 = 68 B. Rate 68 x 10 = 680 B/s = 5.44 kbit/s. Signed: 28 + 25 = 53 B, so 81 B and 810 B/s.
+  unaided_check: >-
+    Write a small client that reads UDP packets from a local port, counts gaps in a sequence number and prints the loss rate; hidden tests replay a capture with 3 of 100 packets missing. Pass: reports 3%, handles reordered packets without crashing, and never blocks forever.
+  sources:
+    - https://www.rfc-editor.org/rfc/rfc768
+    - https://mavlink.io/en/guide/serialization.html
+
+- key: rf.basics.link-budget
+  description: >-
+    Compute a radio link budget in decibels, including free-space loss and Fresnel clearance, and compare predicted margin with logged RSSI.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [exact_numeric, multiple_choice, measurement_check]
+  phone_suitable: true
+  objective: >-
+    Predict received power and margin for a telemetry link and check it on the ground.
+  core_ideas:
+    - >-
+      Received power = transmit e.i.r.p. - path loss + receive gain - cable loss. Margin = received power - receiver sensitivity. Work in dBm and dB.
+    - >-
+      Free-space loss: L = 20 log10(4 pi d / lambda), or 32.4 + 20 log10(f in MHz) + 20 log10(d in km) (ITU-R P.525-5, 11/2024, equations 5 and 6; the constant is 32.44 with more digits). The numbers here use the first form.
+    - >-
+      e.i.r.p. = e.r.p. + 2.15 dB. Every doubling of distance costs 6.02 dB.
+    - >-
+      First Fresnel radius at mid-path is about 17.32 sqrt(d1 d2 / (f (d1 + d2))) m, with d in km and f in GHz. Ground and bodies in that zone cause loss even with visual sight.
+    - >-
+      Link budget does not equal real range. Fade margin, polarisation, antenna nulls and interference all reduce it, so verify with logged RSSI on the ground. VLOS limits still apply.
+  misconceptions:
+    - >-
+      Link budget equals real range.
+    - >-
+      Visual line of sight means a clear Fresnel zone.
+    - >-
+      Higher antenna gain is free. It narrows the pattern, and legal limits count e.r.p.
+  worked_example: >-
+    869.5 MHz, 27 dBm e.r.p. (500 mW), so 29.15 dBm e.i.r.p.; d = 1 km; receive antenna 2.15 dBi; cable 1 dB; sensitivity -110 dBm. Path loss is 91.23 dB. Received power = 29.15 - 91.23 + 2.15 - 1 = -60.93 dBm. Margin 49.07 dB. Fresnel radius at 500 m is 9.29 m. Theoretical range with 15 dB fade margin is 50.5 km, which free space overstates; the flight stays within VLOS.
+  unaided_check: >-
+    Same link at 433.5 MHz and 10 dBm e.r.p., sensitivity -117 dBm, antennas and cable unchanged, d = 2 km. Find path loss, received power and margin. Expected: 85.19 dB at 1 km plus 6.02 gives 91.21 dB, received -77.91 dBm, margin 39.09 dB; accept within 0.1 dB.
+  sources:
+    - https://www.itu.int/rec/R-REC-P.525/en
+    - https://www.itu.int/dms_pubrec/itu-r/rec/p/R-REC-P.525-5-202411-I!!PDF-E.pdf
+
+- key: net.proto.telemetry-contract
+  description: >-
+    Define and version a telemetry message contract so that older consumers keep working, and test each change with schema checks.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem, debug_case, explain_back]
+  grader_types: [multiple_choice, code_tests, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Classify a schema change as compatible or breaking, and write a test that proves it.
+  core_ideas:
+    - >-
+      A contract states field names, types, units, frame, rate, and meaning of missing values. Units belong in the contract, not in someone's memory.
+    - >-
+      MAVLink 2 allows extension fields without breaking binary compatibility, and CRC_EXTRA excludes them. Changing a base field changes CRC_EXTRA, so a mismatch fails the checksum, which is the intended signal.
+    - >-
+      Trailing zero bytes are stripped in MAVLink 2, so a receiver must zero-fill a short payload. Absent and zero then look the same, so design defaults with care.
+    - >-
+      Unknown incompatibility flags force a drop; unknown compatibility flags can be ignored. Message IDs are 24 bits, so 16,777,216 values.
+    - >-
+      Version the schema, not only the code. Logs with operator or location data are personal data, and that needs a retention note in the contract.
+  misconceptions:
+    - >-
+      A renamed field is harmless because bytes are unchanged. It breaks every named consumer.
+    - >-
+      A unit change is compatible if the type stays the same.
+    - >-
+      A version number alone gives compatibility.
+  worked_example: >-
+    Schema v1 has alt_mm as int32. Proposal A adds an extension field wind_mps, which is compatible, so v1.1. Proposal B changes alt_mm to metres in a float while keeping the name. Same-name meaning changes, and type changes too, so it is breaking and needs v2 with a new field name. Test: replay a v1 reader against v1.1 data and require equal values for old fields.
+  unaided_check: >-
+    Given four schema diffs, classify each and write a contract test for one. Pass: all four are right, and the test fails on the breaking change while passing on the compatible one.
+  sources:
+    - https://mavlink.io/en/guide/mavlink_2.html
+    - https://mavlink.io/en/guide/serialization.html
+
+- key: net.proto.companion-bridge
+  description: >-
+    Connect a companion computer to PX4 over serial or Ethernet, budget the link rate, and confirm from logs that messages flow.
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, project_step, debug_case]
+  grader_types: [human_review, measurement_check]
+  phone_suitable: false
+  objective: >-
+    Configure the bridge and prove its data rate and health with a log.
+  core_ideas:
+    - >-
+      Companion and flight controller connect over fast serial or Ethernet, and speak MAVLink or uXRCE-DDS. PX4 recommends Ethernet where the board supports it.
+    - >-
+      On TELEM2 defaults: MAV_1_CONFIG TELEM 2, MAV_1_MODE Onboard, MAV_1_RATE 0 meaning half maximum, SER_TEL2_BAUD 921600. The PX4 page text and parameter list disagree on the instance number, so check your own firmware.
+    - >-
+      Serial throughput at 8N1 is baud / 10 bytes per second. Route ground and cloud traffic through MAVLink Router.
+    - >-
+      MAVLink signing appends 13 bytes. Keep the 32-byte key out of parameters and logs, set it over a secure link, and redact it from all telemetry.
+    - >-
+      The bridge must not weaken safety: the companion cannot replace RC failsafe logic. Test a companion crash and confirm PX4 keeps flying safely, in SITL first. Scope is telemetry; no target tracking.
+  misconceptions:
+    - >-
+      Baud rate equals data rate.
+    - >-
+      Companion loss does not matter because PX4 flies itself. Offboard loss needs its own tested action.
+    - >-
+      A serial link needs no ground or level check.
+  worked_example: >-
+    921600 baud at 8N1 gives 92,160 B/s. With MAV_1_RATE 0, the budget is 46,080 B/s. Streams: 40 B at 100 Hz (4,000 B/s) plus 60 B at 50 Hz (3,000 B/s) total 7,000 B/s, which is 15.2% of budget. Answer: fits, with room for more streams.
+  unaided_check: >-
+    Set up the bridge on your board, log 10 minutes, and report the message rate against the plan and the loss count from sequence numbers. Pass: within 5% of plan and loss under 0.1% [project convention: a wired serial or Ethernet link should lose almost nothing, so these limits catch a real fault], with no secret key anywhere in the logs.
+  sources:
+    - https://docs.px4.io/main/en/companion_computer/
+    - https://docs.px4.io/main/en/peripherals/mavlink_peripherals.html
+
+- key: rf.basics.eu-bands
+  description: >-
+    Choose a legal EU telemetry radio setup by checking band, e.r.p., duty cycle and antenna, and reject radios sold for other regions.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem, project_step]
+  grader_types: [multiple_choice, exact_numeric, human_review]
+  phone_suitable: false
+  objective: >-
+    Check a candidate radio against ERC/REC 70-03 limits and compute conducted power and duty.
+  core_ideas:
+    - >-
+      ERC/REC 70-03 (amended 9 October 2026) Annex 1 non-specific devices: 433.05 to 434.79 MHz, 10 mW e.r.p. at up to 10% duty; 869.4 to 869.65 MHz, 500 mW e.r.p. at up to 10% duty or LBT plus AFA; 2400 to 2483.5 MHz, 10 mW e.i.r.p.
+    - >-
+      Annex 3 wideband data at 2400 to 2483.5 MHz allows 100 mW e.i.r.p. with a spectrum-sharing mechanism, and for non-FHSS a density limit of 10 mW/MHz.
+    - >-
+      915 MHz is the wrong default in the EU: US radios do not fit these rows. ArduPilot's own regional table is community-kept, says compliance is yours, and its 433 MHz power units are unclear, so check primary text.
+    - >-
+      Limits are on radiated power, so antenna gain counts. Conducted power = e.r.p. limit - gain in dBd + cable loss, and gain in dBd = dBi - 2.15.
+    - >-
+      A CEPT recommendation is not German law; the German text is BNetzA Vfg. 91/2025, whose rows 44b, 54, 57a and 57c carry the same limits. Duty cycle is measured over a continuous hour unless an annex says otherwise (70-03 Appendix 5). 70-03 applies on board aircraft unless other rules exclude it, and does not address aviation safety, so ask the aviation authority too. Decision 2006/771/EC (consolidated 23 January 2025) has the same rows and, like Vfg. 91/2025, no aircraft exclusion, and CEPT's paper on non-professional UAS (FM(23)034 Annex 32) lists 433 MHz and 863 to 870 MHz as usable. The test standard, ETSI EN 300 220-2, is covered by the radio's CE declaration. Cellular links on a drone fall under ECC/DEC/(22)07 and the network operator's terms, not SRD rules [project convention: no cellular telemetry in this course, since no German implementation source was found].
+  misconceptions:
+    - >-
+      A radio legal in the US is legal in the EU.
+    - >-
+      A high-power 433 MHz module is fine if the duty cycle is low.
+    - >-
+      Duty cycle only counts when flying.
+  worked_example: >-
+    A 433 MHz radio with a 5 dBi antenna: 5 dBi = 2.85 dBd. Limit 10 dBm e.r.p., so conducted is at most 10 - 2.85 = 7.15 dBm, ignoring cable. A 100 mW (20 dBm) module is 12.85 dB over. At 869.5 MHz, duty: air rate 64 kbit/s, telemetry 800 B/s = 6.4 kbit/s = 10.0%, at the limit, and that is before framing; 1000 B/s gives 12.5%, which fails. 10% of an hour is 360 s.
+  unaided_check: >-
+    Select a radio, antenna, and rate for L12 from a list, including one 915 MHz unit. Show band, e.r.p. and duty calculation, and list what must be confirmed in BNetzA text. Pass: 915 MHz rejected, numbers correct, CE and national check noted, and an outside reviewer agrees.
+  sources:
+    - https://docdb.cept.org/download/5013
+    - https://www.bundesnetzagentur.de/DE/Fachthemen/Telekommunikation/Frequenzen/Allgemeinzuteilungen/_DL/vfg91_2025.pdf
+    - https://ardupilot.org/copter/docs/common-telemetry-radio-regional-regulations.html
+    - http://publications.europa.eu/resource/cellar/8aba10b8-f90f-11ef-b7db-01aa75ed71a1.0008.03/DOC_1
+    - https://efis.cept.org/documents/79124
+    - https://docdb.cept.org/document/28575

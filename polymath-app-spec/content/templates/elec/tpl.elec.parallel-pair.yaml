@@ -1,0 +1,164 @@
+schema_version: 1
+key: tpl.elec.parallel-pair
+version: 2
+authoring_status: ready
+skill_key: elec.dc.series-parallel
+task_kind: problem
+grader_type: exact_numeric
+difficulty_prior: 0.3
+title: Two resistors in parallel
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-01'
+  llm_assistance:
+    used: true
+    roles:
+    - draft_template
+    - explanation
+    - distractors
+    - hints
+    - misconception_tags
+    model: claude-opus-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts:
+  - phone
+  - desktop
+  est_seconds: 90
+  phone_suitable: true
+  offline_gradable: true
+parameters:
+- name: r1
+  type: e_series
+  series: E12
+  decade_min: 2
+  decade_max: 4
+  unit: ohm
+  description: First resistor
+- name: r2
+  type: e_series
+  series: E12
+  decade_min: 2
+  decade_max: 4
+  unit: ohm
+  description: Second resistor
+derived:
+- name: rprod
+  expr: r1 * r2
+  unit: ohm
+- name: rsum
+  expr: r1 + r2
+  unit: ohm
+constraints:
+- id: different
+  expr: r1 != r2
+  reason: Equal resistors reduce to half of one value, which needs no calculation.
+- id: comparable
+  expr: max(r1, r2) / min(r1, r2) <= 15
+  reason: Prevents one resistor from dominating so the answer is simply the smaller one.
+render:
+  stem_md: 'Resistors $R_1 = {{r1|tex}}$ and $R_2 = {{r2|tex}}$ are connected in parallel.
+
+
+    What is their equivalent resistance?
+
+    '
+  answer_prompt: Enter the resistance with a unit, for example 330 ohm or 1.2 kohm.
+  alt_text: R1 of {{r1|eng}} and R2 of {{r2|eng}} in parallel. Find the equivalent resistance.
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      rp: rprod / rsum
+  steps:
+  - id: s1
+    text_md: 'Add the conductances: $\frac{1}{R_{eq}} = \frac{1}{R_1} + \frac{1}{R_2}$, which rearranges to $R_{eq} = \frac{R_1
+      R_2}{R_1 + R_2}$.'
+  - id: s2
+    text_md: 'Substitute: the sum is ${{rsum|tex:ohm}}$, so $R_{eq} = {{rp|tex:ohm}}$.'
+  explanation_md: A parallel pair gives the current a second path, so the result is always smaller than the smaller resistor.
+answer:
+  kind: numeric
+  value: rp
+  unit: ohm
+  accept_units:
+  - ohm
+  - kohm
+  bare_number_means: ohm
+  tolerance:
+    rel: 0.01
+    abs: 0.01
+verifiers:
+- id: reciprocal-rule
+  kind: sympy_solve
+  independence: Solves the reciprocal rule exactly for the equivalent resistance instead of using the generator's product-over-sum
+    form.
+  spec:
+    unknowns:
+    - rx
+    equations:
+    - 1 / rx - 1 / r1 - 1 / r2
+    checks:
+    - unknown: rx
+      output: rp
+  tolerance:
+    rel: 1.0e-09
+- id: test-voltage
+  kind: sympy_solve
+  independence: Applies a 1 V test source, sums the two branch currents by KCL, and takes the ratio of voltage to total current.
+  spec:
+    unknowns:
+    - itot
+    - rt
+    equations:
+    - itot - 1 / r1 - 1 / r2
+    - rt * itot - 1
+    checks:
+    - unknown: rt
+      output: rp
+  tolerance:
+    rel: 1.0e-09
+- id: dimension
+  kind: pint_dimension
+  independence: Dimensional analysis with pint on the parameter units; it does not check magnitude.
+  spec:
+    checks:
+    - expr: r1 * r2 / (r1 + r2)
+      result_unit: ohm
+- id: window
+  kind: bounds
+  independence: 'Physical limit: a second parallel path always lowers the resistance below the smaller resistor.'
+  spec:
+    output: rp
+    lo: '0'
+    hi: min(r1, r2)
+    strict: true
+hints:
+  l1: If you add a second path for the current, does the total resistance go up or down?
+  l2: 'In parallel, conductances add: the reciprocal of the total is the sum of the reciprocals.'
+  l3: 'First add the two resistors for the denominator of product over sum: R1 + R2 = {{rsum|eng:ohm}}. Then form the product.'
+misconceptions:
+- tag: mc.parallel-as-series
+  description: Adds the resistors as if they were in series.
+  wrong_answer_expr: r1 + r2
+  feedback_md: That is the series total. A parallel result must be smaller than either resistor.
+- tag: mc.parallel-as-average
+  description: Takes the mean of the two resistors.
+  wrong_answer_expr: (r1 + r2) / 2
+  feedback_md: A parallel pair is smaller than either resistor, so the average cannot be right.
+- tag: mc.parallel-forgets-invert
+  description: Adds the reciprocals but does not invert the sum.
+  wrong_answer_expr: 1 / r1 + 1 / r2
+  feedback_md: That sum is the conductance. Take its reciprocal to get the resistance.
+- tag: mc.parallel-product-only
+  description: Multiplies the resistors but does not divide by the sum.
+  wrong_answer_expr: r1 * r2
+  feedback_md: 'Product over sum needs both parts: divide the product by the sum.'
+fuzz:
+  samples: 200
+  seed_base: 6800
+  max_rejection_rate: 0.9
+  min_distinct_param_sets: 50

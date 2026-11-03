@@ -1,0 +1,312 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://polymath.example/schemas/project.schema.json",
+  "title": "Polymath project ladder file",
+  "description": "Schema for content/project-ladder.yaml: a file holding one or more guided build projects and their steps. Names follow docs/00-contract.md. Loaded into the projects and project_steps tables by content:sync; evidence_required[].kind values map to project_steps.evidence_required (evidence_kind[]); everything else in a step maps to instructions and verification_spec.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "as_of", "price_status", "projects"],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "as_of": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "price_status": {
+      "type": "string",
+      "const": "unverified_estimates",
+      "description": "All approx_cost_usd values in the file are unverified planning estimates, not quotes."
+    },
+    "notes": { "type": "string" },
+    "projects": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/project" }
+    }
+  },
+  "$defs": {
+    "skill_key": {
+      "type": "string",
+      "pattern": "^[a-z]+\\.[a-z0-9-]+\\.[a-z0-9-]+$"
+    },
+    "project_key": {
+      "type": "string",
+      "pattern": "^prj\\.L[0-9]\\.[a-z0-9-]+$"
+    },
+    "step_key": {
+      "type": "string",
+      "pattern": "^prj\\.L[0-9]\\.[a-z0-9-]+#s[0-9]{2}$"
+    },
+    "tier": { "type": "string", "enum": ["L0", "L1", "L2", "L3"] },
+    "session_type": { "type": "string", "enum": ["micro", "focus", "lab"] },
+    "context": { "type": "string", "enum": ["phone", "desktop", "bench"] },
+    "evidence_kind": {
+      "type": "string",
+      "enum": ["photo", "video", "log", "scope_capture", "measurement", "repo", "note"]
+    },
+    "grader_type": {
+      "type": "string",
+      "enum": [
+        "exact_numeric", "symbolic_equivalence", "multiple_choice", "code_tests", "spice_compare",
+        "drc_erc", "rubric_llm", "measurement_check", "human_review"
+      ]
+    },
+    "assurance": {
+      "type": "string",
+      "enum": ["A1", "A2", "A3", "A4", "A5"],
+      "description": "A1 instrumented capture or log carrying the nonce; A2 hardware-in-the-loop challenge-response; A3 time-stamped video with nonce in frame; A4 photo; A5 self-reported values or text with no physical artifact. A1-A4 follow the research ladder [P]; A5 is added by this spec."
+    },
+    "nonce_channel": {
+      "type": "string",
+      "enum": [
+        "none", "serial_log_header", "uart_channel_in_capture", "display_text", "led_blink_code",
+        "pwm_frequency", "button_script", "paper_in_frame", "silkscreen_text", "ack_phrase", "file_header"
+      ]
+    },
+    "check_id": {
+      "type": "string",
+      "enum": [
+        "note.fields_present", "note.ack_token", "note.rubric",
+        "measurement.within_tolerance", "measurement.ohm_consistency", "measurement.table_complete",
+        "log.nonce_present", "log.regex_lines", "log.csv_schema", "log.timing_jitter",
+        "log.recompute_stats", "log.value_plausibility", "log.fsm_trace_match", "log.filter_recompute",
+        "waveform.period_freq", "waveform.rc_tau", "waveform.amplitude", "waveform.spike_peak",
+        "waveform.bounce_edges", "waveform.isr_timing",
+        "spice.netlist_runs", "spice.compare_transient",
+        "logic.i2c_decode", "logic.uart_decode_nonce",
+        "video.blink_decode", "photo.basic_checks", "photo.nonce_ocr",
+        "firmware.build", "firmware.host_tests", "firmware.isr_lint", "fsm.table_lint",
+        "kicad.version_match", "kicad.erc", "kicad.drc", "kicad.netlist_lint", "kicad.gerber_set",
+        "kicad.gerber_reproduce", "kicad.dfm_profile", "kicad.silk_nonce",
+        "human.review_queue"
+      ]
+    },
+    "bom_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["category", "part", "qty", "approx_cost_usd", "price_status", "alternatives"],
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": [
+            "mcu", "prototyping", "passives", "semiconductors", "modules-sensors", "power",
+            "instruments", "hand-tools", "soldering", "safety", "consumables", "pcb-fab", "connectors-mechanical"
+          ]
+        },
+        "part": { "type": "string", "minLength": 3, "description": "Example part or part family, not an endorsement of one seller." },
+        "qty": { "type": "integer", "minimum": 1 },
+        "approx_cost_usd": { "type": "number", "minimum": 0, "description": "Approximate total for qty, USD, new items only. Unverified estimate." },
+        "price_status": { "type": "string", "const": "unverified_estimate" },
+        "alternatives": { "type": "array", "items": { "type": "string", "minLength": 3 } },
+        "optional": { "type": "boolean" },
+        "note": { "type": "string" }
+      }
+    },
+    "measurement_expectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "expected", "tolerance", "how"],
+      "properties": {
+        "name": { "type": "string" },
+        "expected": { "type": "string", "description": "Formula or typical value." },
+        "tolerance": { "type": "string" },
+        "unit": { "type": "string" },
+        "how": { "type": "string" }
+      }
+    },
+    "failure_mode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symptom", "likely_causes", "first_check"],
+      "properties": {
+        "symptom": { "type": "string" },
+        "likely_causes": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "first_check": { "type": "string" }
+      }
+    },
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "unit"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "unit": { "type": "string", "description": "SI unit symbol, '1' for dimensionless, 'text' for free text." },
+        "description": { "type": "string" }
+      }
+    },
+    "evidence_requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "label", "description", "min_assurance", "nonce_channel"],
+      "properties": {
+        "kind": { "$ref": "#/$defs/evidence_kind" },
+        "label": { "type": "string", "minLength": 3 },
+        "description": { "type": "string", "minLength": 10 },
+        "required": { "type": "boolean", "default": true },
+        "alt_kinds": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidence_kind" },
+          "description": "Kinds accepted instead of kind (for example an ADC log instead of a scope capture). Accepting an alternative never raises assurance above its own level."
+        },
+        "min_assurance": { "$ref": "#/$defs/assurance" },
+        "nonce_channel": { "$ref": "#/$defs/nonce_channel" },
+        "secondary_nonce_channel": { "$ref": "#/$defs/nonce_channel", "description": "A second code that must also be visible (for example a fresh receipt code beside a bound silkscreen code)." },
+        "formats": { "type": "array", "items": { "type": "string" }, "description": "Accepted file extensions without dot, lowercase." },
+        "fields": { "type": "array", "items": { "$ref": "#/$defs/field" }, "description": "Structured values for measurement and note evidence." }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "min_assurance": { "enum": ["A1", "A2", "A3"] } }, "required": ["min_assurance"] },
+          "then": { "properties": { "nonce_channel": { "not": { "const": "none" } } } }
+        }
+      ]
+    },
+    "automated_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "grader_type", "description", "on_fail"],
+      "properties": {
+        "id": { "$ref": "#/$defs/check_id" },
+        "grader_type": { "$ref": "#/$defs/grader_type" },
+        "description": { "type": "string", "minLength": 10 },
+        "params": { "type": "object" },
+        "on_fail": {
+          "type": "string",
+          "enum": ["reject", "needs_review", "advise"],
+          "description": "reject: deterministic hard failure, evidence goes straight to rejected with a reason. needs_review: route to the founder review queue. advise: record the result, show feedback, do not change status."
+        }
+      }
+    },
+    "param_variation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "scope", "unit", "choices"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "scope": {
+          "type": "string",
+          "enum": ["project", "attempt"],
+          "description": "project: drawn once when the project starts and stored in user_projects.variation (a design parameter). attempt: drawn fresh with every evidence challenge and stored in evidence_challenges.params."
+        },
+        "unit": { "type": "string" },
+        "description": { "type": "string" },
+        "choices": { "type": "array", "minItems": 2, "items": { "type": ["number", "string"] } }
+      }
+    },
+    "substep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "est_min"],
+      "properties": {
+        "title": { "type": "string", "minLength": 3 },
+        "est_min": { "type": "integer", "minimum": 3, "maximum": 60 },
+        "passive": { "type": "boolean", "description": "True when the learner mostly waits (a logging run); passive substeps may exceed 30 minutes." },
+        "buffer": { "type": "boolean", "description": "True for slack time reserved for rework or a restart; buffer substeps may exceed 30 minutes." }
+      },
+      "if": { "properties": { "est_min": { "exclusiveMinimum": 30 } }, "required": ["est_min"] },
+      "then": { "anyOf": [ { "required": ["passive"], "properties": { "passive": { "const": true } } }, { "required": ["buffer"], "properties": { "buffer": { "const": true } } } ] }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key", "position", "title", "instruction", "est_min", "session_type", "context",
+        "skill_keys", "evidence_required", "automated_checks", "pass_criteria"
+      ],
+      "properties": {
+        "key": { "$ref": "#/$defs/step_key" },
+        "position": { "type": "integer", "minimum": 1 },
+        "title": { "type": "string", "minLength": 3 },
+        "instruction": { "type": "string", "minLength": 80 },
+        "est_min": { "type": "integer", "minimum": 5, "maximum": 240 },
+        "session_type": { "$ref": "#/$defs/session_type" },
+        "context": { "$ref": "#/$defs/context" },
+        "skill_keys": { "type": "array", "items": { "$ref": "#/$defs/skill_key" }, "uniqueItems": true },
+        "guided_variant": {
+          "type": "boolean",
+          "default": false,
+          "description": "True for a step of the week-1 guided variant (doc 10 section 3.2). It is exempt from the strict position order and from the pre-brief skill gate: it unlocks once the project's safety-brief step is done, uses ready-made firmware and parts, and gives L0 credit only (00a B5). Allowed only in ladder level 0 projects and only with safety_gate true."
+        },
+        "safety_gate": { "type": "boolean", "description": "True when the step cannot start until the learner has acknowledged the safety brief for this project." },
+        "nonce_ttl_h": { "type": "integer", "minimum": 1, "maximum": 168, "default": 24, "description": "Hours a freshly issued challenge for this step stays valid. Default 24 (docs 03 and 09)." },
+        "reuses_challenge_from": { "$ref": "#/$defs/step_key", "description": "Step whose challenge code is reused (bound) instead of issuing a new one; the earlier step must be in the same project." },
+        "lead_time_days": { "type": "integer", "minimum": 1, "maximum": 90, "description": "Calendar wait that this step starts (shipping, fabrication). Not counted in est_min." },
+        "substeps": { "type": "array", "items": { "$ref": "#/$defs/substep" }, "description": "Savepoints inside a focus or lab step; the learner can stop after any substep and resume from the stored bench state." },
+        "param_variation": { "type": "array", "items": { "$ref": "#/$defs/param_variation" } },
+        "expected_measurements": { "type": "array", "items": { "$ref": "#/$defs/measurement_expectation" } },
+        "evidence_required": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidence_requirement" } },
+        "automated_checks": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/automated_check" } },
+        "review": {
+          "type": "string",
+          "enum": ["auto_accept", "sampled", "founder_review"],
+          "default": "sampled",
+          "description": "auto_accept: auto_verified becomes accepted without a human. sampled: auto_verified is promoted to accepted unless the sampling policy selects it for review. founder_review: always routed to needs_review."
+        },
+        "pass_criteria": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 10 } }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "session_type": { "const": "micro" } }, "required": ["session_type"] },
+          "then": { "properties": { "est_min": { "maximum": 20 }, "context": { "enum": ["phone", "desktop"] } } }
+        },
+        {
+          "if": { "properties": { "session_type": { "const": "focus" } }, "required": ["session_type"] },
+          "then": { "properties": { "est_min": { "minimum": 45, "maximum": 120 } } }
+        },
+        {
+          "if": { "properties": { "session_type": { "const": "lab" } }, "required": ["session_type"] },
+          "then": { "properties": { "est_min": { "minimum": 120, "maximum": 240 } } }
+        }
+      ]
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key", "title", "ladder_level", "tier_gate", "est_hours", "status", "license", "source", "summary", "learning_goals",
+        "prerequisite_skill_keys", "grants_tier", "time_split_min", "bom", "tools", "safety_notes",
+        "expected_measurements", "failure_modes", "steps"
+      ],
+      "properties": {
+        "key": { "$ref": "#/$defs/project_key" },
+        "title": { "type": "string", "minLength": 3 },
+        "ladder_level": { "type": "integer", "minimum": 0, "maximum": 9 },
+        "tier_gate": {
+          "$ref": "#/$defs/tier",
+          "description": "The tier this project is a gate project for (doc 06 section 4.6): L0 for the ladder-level-0 literacy project, L1 for projects whose accepted evidence is required for a module to count as L1 working. It is not a prerequisite tier; prerequisites are prerequisite_skill_keys under the frontier rule (docs/10 section 2.2)."
+        },
+        "est_hours": { "type": "number", "exclusiveMinimum": 0, "maximum": 60 },
+        "status": { "type": "string", "enum": ["draft", "verified", "needs_human_review", "retired"] },
+        "license": { "type": "string", "const": "original" },
+        "source": { "type": "string", "minLength": 10 },
+        "summary": { "type": "string", "minLength": 40 },
+        "learning_goals": { "type": "array", "minItems": 3, "items": { "type": "string", "minLength": 10 } },
+        "prerequisite_skill_keys": { "type": "array", "items": { "$ref": "#/$defs/skill_key" }, "uniqueItems": true },
+        "grants_tier": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["skill_key", "tier"],
+            "properties": { "skill_key": { "$ref": "#/$defs/skill_key" }, "tier": { "$ref": "#/$defs/tier" } }
+          },
+          "description": "tier_attained candidates granted when every required step is accepted; applied under the checkpoint rule in docs/10 section 7."
+        },
+        "time_split_min": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["micro", "focus", "lab"],
+          "properties": {
+            "micro": { "type": "integer", "minimum": 0 },
+            "focus": { "type": "integer", "minimum": 0 },
+            "lab": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "bom": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/bom_item" } },
+        "tools": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+        "safety_notes": { "type": "array", "minItems": 3, "items": { "type": "string", "minLength": 20 } },
+        "expected_measurements": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/measurement_expectation" } },
+        "failure_modes": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/failure_mode" } },
+        "steps": { "type": "array", "minItems": 5, "items": { "$ref": "#/$defs/step" } }
+      }
+    }
+  }
+}

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Learner model — Polymath documentation</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="learning">
+  <a class="skip" href="#main">Skip to content</a>
+  <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+    <div class="main-wrap">
+      <main id="main" class="content">
+        <p class="kicker">Scheduler &amp; learning science</p>
+        <h1>Learner model and scheduling</h1>
+        <p class="spec-ref">
+          <a href="../docs/02-learning-science-spec.md">docs/02-learning-science-spec.md</a>,
+          <a href="../docs/06-learner-model-and-scheduler-spec.md">docs/06-learner-model-and-scheduler-spec.md</a> (canonical for FSRS and mastery)
+        </p>
+
+        <div class="summary">
+          <h2>Summary</h2>
+          <ul>
+            <li>Each skill maintains an independent <strong>FSRS</strong> schedule for spaced retrieval.</li>
+            <li>The <strong>frontier</strong> selects new material that satisfies prerequisite and tier constraints.</li>
+            <li>The <strong>session builder</strong> assembles tasks to fit the learner’s chosen duration and device context.</li>
+            <li><strong>Mastery</strong> requires verified attempts, template diversity, temporal spread, and applied rules where applicable.</li>
+          </ul>
+        </div>
+
+        <h2>Session types</h2>
+        <div class="grid-3">
+          <article class="card"><h3>Micro</h3><p>Up to 20 minutes; optimized for phone context and retrieval density.</p></article>
+          <article class="card"><h3>Focus</h3><p>45–120 minutes; desktop-oriented problem sets and assessments.</p></article>
+          <article class="card"><h3>Lab</h3><p>120–240 minutes; bench context and project steps.</p></article>
+        </div>
+        <p class="note">Windows of 21–44 minutes are scheduled as a single micro session (optionally chained). Project steps must not use that duration band.</p>
+
+        <h2>Instructional sequence per skill</h2>
+        <ol class="flow-steps">
+          <li>Worked example — full reference solution presented once.</li>
+          <li>Faded problems — progressive reduction of scaffolding.</li>
+          <li>Same-day retrieval — novel verified variant without hints.</li>
+          <li>FSRS reviews — additional seeds over weeks.</li>
+          <li>Checkpoints (deferred in lean slice) — strict-unaided assessment.</li>
+          <li class="end">Project steps — predict, build, measure, submit evidence.</li>
+        </ol>
+
+        <h2>Mastery definition (overview)</h2>
+        <p>
+          The scheduler promotes a skill to <code>mastered</code> when contract and doc 06 conditions are met:
+          verified attempts across distinct templates, minimum calendar span where required, FSRS ratings,
+          and for applied skills the <code>needs_applied</code> bench gap rule.
+          Skills may transition to <code>decayed</code> when estimated retrievability falls below threshold without erasing tier attainment.
+        </p>
+
+        <h2>Evidence basis</h2>
+        <div class="grid-2">
+          <article class="card good">
+            <h3>Supported mechanisms [R/V]</h3>
+            <ul>
+              <li>Retrieval practice</li>
+              <li>Spaced scheduling</li>
+              <li>Faded worked examples</li>
+              <li>Attempt-first tutoring</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Product hypotheses [P]</h3>
+            <ul>
+              <li>Integrated skill graph with hardware projects</li>
+              <li>SPICE and unit-test execution grading at scale</li>
+              <li>Cross-domain interleaving policy</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="callout warn">
+          <strong>Tutor dependence (SM-04):</strong> monitor the gap between aided practice and strict-unaided checkpoints; policy tightens when the gap exceeds defined thresholds.
+        </div>
+      </main>
+      <footer class="page-footer">Reference implementation: <code>reference/scheduler_reference.py</code>, <code>reference/scheduler_test_vectors.json</code>.</footer>
+    </div>
+  </div>
+  <script src="assets/nav.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

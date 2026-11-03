@@ -1,0 +1,130 @@
+# 00a — Ratified decisions on contract change requests
+
+Status: **binding**. This file resolves every CONTRACT CHANGE REQUEST (CCR/CR) filed by documents 01–12. Where a document disagrees with a decision here, **this file wins** and the document must be edited to match. IDs (FR-, US-, LS-, PRM-, EXP-, T-PRJ-, ADR-, etc.) must NOT be renumbered during reconciliation.
+
+## A. Sessions and time
+
+| ID | Decision |
+|---|---|
+| A1 | Session types stay `micro` (5–20 min), `focus` (45–120 min), `lab` (120–240 min). There is **no session type for 21–44 minutes**. A window of 21–44 minutes is served as **one micro session, optionally chained to a second micro session** (the second counts as a separate `sessions` row). Project steps must not be authored in the 21–44 minute range. (Resolves arch CCR-7, UX-1, projects CR-2.) |
+| A2 | A diagnostic is stored as a `focus` session whose tasks have `task_kind = 'diagnostic'`. `diagnostic` and `checkpoint` are **session-level task kinds**: they are not listed per skill in `skills.task_kinds`. (Resolves UX-2, 05 #5.) |
+| A3 | Project `L5` (first KiCad board) is **fully specified in this package but is the last item built (milestone M5)**. The MVP ladder for early milestones is L0–L4. (Resolves projects CR-1.) |
+
+## B. Hints, unaided, mastery, tiers
+
+| ID | Decision |
+|---|---|
+| B1 | `attempts.unaided` = TRUE iff `max_hint_level <= 1` AND the solution was not revealed (level 4). Checkpoints expose no hint UI at all. For evaluation, **strict-unaided** (`max_hint_level = 0` and no tutor panel opened) is derived in a view `v_attempts_strict_unaided`; document 11 must use that term for its outcome measures. (Resolves 11 CCR-02, 06 CCR-6, 07 CCR-03.) |
+| B2 | `hint_level` is a `smallint` domain restricted to 0–4, not a Postgres enum. (Arch CCR-1.) |
+| B3 | Document 06 is canonical for the mastery rule, `reviewing`/`decayed` definitions, frontier rules, priority rules, tier-attainment rules and FSRS usage. The contract's §7 is updated to match 06's CCR-1…CCR-4 (correct means `score >= 0.8`; the last two graded unaided attempts are not failures; at least one qualifying attempt is constructed-response when such a template exists; at least one is applied for skills at L1 or above; `mastered` satisfies a prerequisite regardless of retrievability; `reviewing` needs R ≥ 0.8, or 0.7 for in-progress skills; an overdue checkpoint is reserved first; due reviews are capped at 70% of the budget unless the backlog flag is set; one review row per skill per session). |
+| B4 | Attempts whose `grade.status` is not `graded` (`invalid_input`, `pending_review`, `error`) are ignored by the scheduler. `rubric_llm` grades are not mastery-eligible until the rubric is calibrated: templates carry `mastery_eligible` (default true; false for uncalibrated `rubric_llm`). (07 CCR-01, CCR-05.) |
+| B5 | Project credit: completing a verified project step gives L0 credit immediately and **pending** L1+ credit; pending credit becomes real only after the step's evidence is `accepted`, and counts only toward the "applied" condition of the mastery rule and the module-level L1 condition. No project grants L2 or L3. (Projects CR-10, 05 #4.) |
+| B6 | Diagnostic placement gives provisional credit only and never sets `mastered`. `skill_state.source` ∈ (`learned`, `placement`); a placement card in `reviewing` gets a 14-day grace on the frontier test; inferred skills are re-checked by cheap `verify` retrievals ranked with due reviews. (05 CCR-2, 06 CCR-3.) |
+| B7 | FSRS: pin the model to **FSRS-6** behind one adapter file; store `skill_state.fsrs_model` (text, default `'fsrs-6'`) and `skill_state.fsrs_extra` (jsonb). Re-verify the `ts-fsrs` licence and API at build time. (06 CCR-5.) |
+
+## C. Schema additions (apply to `schemas/schema.sql`, `04-data-model.md`, `api.openapi.yaml`)
+
+New or changed columns and tables, accepted:
+
+- `profiles`: `consents jsonb`, `bedtime_local time`, `reminder_prefs jsonb`, `onboarded_at timestamptz`.
+- New table `modules` (`key`, `node`, `title`, `order_index`, `description`); `skills.module` references it.
+- `skills`: `task_kinds task_kind[]`, `grader_types grader_type[]`, `phone_suitable boolean`, `confusable_set text`; add `stub` to the skill status enum (value set: `stub`, `draft`, `verified`, `needs_human_review`, `retired`).
+- `skill_state`: `fsrs_model`, `fsrs_extra`, `source`, plus the extra columns listed in 06 §2.
+- `review_log`, `attempts`, `sessions`, `item_templates`: the extra columns listed in 06 §2; `attempts.assessment_kind text`, `attempts.active_ms integer`; `session_tasks.assessment_kind text`; `item_templates.pool` (`practice`, `assessment`, `transfer`, default `practice`), `item_templates.interleave boolean`, `item_templates.reference_time_s integer`, `item_templates.mastery_eligible boolean default true`; one `item_templates` row per `(key, version)`.
+- `sessions.graph_version text` and `events.graph_version text`.
+- `experiments`: `design jsonb`, `status`, `ended_at`, `preregistration_ref`; `experiment_assignments`: `unit_type`, `unit_key`, `assigned_at`, `block_index`, `rng_seed`, unique on `(experiment_key, user_id, unit_type, unit_key)`; new table `analysis_exclusions` (`id`, `experiment_key`, `user_id`, `unit_key`, `reason`, `decided_by`, `decided_at`).
+- New tables `weekly_plans` and `plan_slots` (per documents 06 and 09). **Rejected:** a separate `notification_prefs` table; use `profiles.reminder_prefs`.
+- Projects: `projects.spec jsonb`; `user_projects.bench_state jsonb`; new tables `evidence_challenges` (nonce challenges) and `project_grants` (credit ledger); `project_evidence.evidence_status` may go `submitted → rejected` and `auto_verified → accepted`; add `video/quicktime` to allowed evidence upload types.
+- Tables proposed by the architecture document are accepted: `checkpoints`, `cohorts`, `admin_users`, `item_secrets`, `idempotency_keys`, `content_sync_runs`, `llm_calls`, `push_subscriptions`, `privacy_requests`, `item_reports`; plus `app_private.rate_limits`. Denormalised `user_id` on `session_tasks`, `tutor_messages`, `project_evidence`. `project_steps.evidence_required` is `evidence_kind[]`. `jobs.status` and `jobs.kind` follow document 03.
+- Security: answer keys, hidden tests and `items.params`/`verification_report`/`item_templates.body` are not readable by learner roles (arch CCR-2); offline packs may carry numeric and multiple-choice answer keys, and offline attempts count toward mastery only after server verification (arch CCR-8).
+
+## D. Enum and rule clarifications
+
+| ID | Decision |
+|---|---|
+| D1 | `grader_type` stays unchanged (no `structural_check`). Structural checks on **project evidence** (file formats, build success, log parsing) are evidence-verification checks stored in `project_evidence.verification`, not item graders. (Projects CR-6.) |
+| D2 | `attempts.grade` gains `status` (`graded`, `invalid_input`, `pending_review`, `error`); `score` and `correct` are null unless `status = graded`. The database column `attempts.grade_status` mirrors it. Policy-flag keys follow 08 §8.2. (07 CCR-01, CCR-02.) |
+| D3 | `difficulty_prior` is a float in (0,1) (0 trivial, 1 very hard); Elo conversion `1500 + 400*log10(d/(1-d))`, owned by 06. (07 CCR-09/10.) |
+| D4 | Item template files may only declare `authoring_status` of `draft`, `ready` or `retired`; only the pipeline sets database `status = verified`. (07 CCR-11.) |
+| D5 | Learner error reports are `item_reports` rows (the table above), plus an `events` row. (07 CCR-08 superseded by the accepted table.) |
+| D6 | Document 11's event catalogue is the **normative list of event names**; other documents reference it. (11 CCR-05.) |
+| D7 | Document 11's control arm is an **active control** (static syllabus order, blocked practice, fixed review schedule, no tutor chat). (11 CCR-08.) |
+
+## E. Content changes
+
+| ID | Decision |
+|---|---|
+| E1 | Add two skills to `content/mvp-skill-graph.yaml`: a battery-safety skill (`elec.semi.battery-safety`) and a soldering and bench-safety skill (`elec.meas.soldering-safety` or the closest existing module), wired as prerequisites of the project steps that need them (projects CR-9). Re-run the graph validator. |
+| E2 | Module `elec.opamp` is **exempt** from the "every module has a project step" rule in v1 (applied evidence comes from checkpoints); document 05 states the exemption and the validator allows it. (Projects CR-12.) |
+| E3 | MVP planning-hour estimates stay explicitly unvalidated: the graph's 64 core hours are a first-pass minutes total, the planning multiplier is 2.5×, and the L1-per-node estimate of 150–300 h stands. Documents must not promise L1 across all three slice nodes inside a short window. |
+
+## F. Document index (to be added to the contract)
+
+00 contract · 00a decisions · 00b consistency report · 01 PRD · 02 learning-science spec · 03 architecture · 04 data model · 05 skill graph and curriculum · 06 learner model and scheduler · 07 content pipeline and verification · 08 grading and tutor · 09 UX and flows · 10 build projects and verification · 11 evaluation and experiment plan · 12 security, privacy, compliance · 13 roadmap and backlog · 14 risk register · README · CLAUDE.md.
+
+---
+
+## G. Post-review decisions (31 Oct 2026, review pass)
+
+Binding. They resolve the proposed contract changes (PCC) and findings in `00f-design-review.md`, the corrections in `00e-verification-log.md`, and the findings in `00b-consistency-report.md` §7. IDs are not renumbered.
+
+### G-I. Learning engine (owner of the edits: engine pass)
+
+| ID | Decision |
+|---|---|
+| G1 (PCC-1, F-02) | During the 14-day placement grace, a `reviewing` skill with `source = 'placement'` satisfies edge `min_tier` requirements up to L1 for the **frontier test only**. It never sets `mastered`; `tier_attained` stays at most L0 for display and credit; the grace ends early if a `verify` retrieval fails. |
+| G2 (PCC-2, F-01) | Applied-gap rule: a `reviewing` skill whose only unmet mastery condition is the applied attempt is treated as in progress by the packer, carries a `needs_applied` flag and gets priority for an applied task. Ratify the behaviour already in `scheduler_reference.py`. |
+| G3 (PCC-3, F-03) | `mastery_min_span_days` defaults to **2** (calendar days between the first and last qualifying attempt), and mastery needs at least **2 distinct verified templates** when the skill has two or more. |
+| G4 (PCC-4, F-08) | A lab slot with no eligible project step is served as a `focus` session of practice tasks (the `plan_slots` row stays type `lab`; the `sessions` row is `focus`). |
+| G5 (F-04) | Default `desired_retention` is **0.85 for a learner's first 8 weeks**, then 0.90 only if the calibration monitor shows observed minus predicted retention within 0.07; otherwise stay at 0.85. Latency rows of the rating map are ignored until a template has at least 20 observations. |
+| G6 (F-15) | Tutor over-reliance trigger: if strict-unaided checkpoint accuracy trails aided accuracy by more than 0.15 over the last two checkpoints (at least 10 attempts), the tutor switches to post-attempt-only for the affected node. Thresholds are [P]. |
+| G7 (F-11) | Diagnostic: constructed-response items only (no multiple choice), about 2.5 minutes per item, at most **two sittings of 25 minutes each**; 05 and 06 must agree on the algorithm. |
+| G8 (F-07) | The **planning rate is 5–7 new skills per week** (not 20); documents quote this and the graph's `est_minutes` and the builder's per-task time estimates must be reconciled (re-time slow skills). |
+| G9 (F-06, F-13) | Apply the graph content corrections listed in 00f §8: fix backward module dependencies, add the missing skills (function pointers, memory-mapped registers and `volatile`, UART framing, summing amplifier), correct over-strong prerequisites, add at least 8 `confusable_set` tags, and extend validator rule 13 to all edges. |
+
+### G-II. Platform facts (from 00e)
+
+| ID | Decision |
+|---|---|
+| G10 | OpenStax is treated as **CC BY-NC-SA: link out only**, no reuse in the product. PhET reuse only for sims published before 29 Mar 2026 (check the About dialog). |
+| G11 | `ts-fsrs` is pinned exactly to 6.x (MIT, Node 24 or later per npm metadata); never float to a new major. **Amended by H3:** it defaults to FSRS-7, and the adapter selects FSRS-6 explicitly. |
+| G12 | LLM prices and model IDs are read from `pricing.json` and the provider's current documentation; documents quote them only as dated examples. |
+| G13 | `kicad-cli pcb drc --format json --exit-code-violations` exits 5 on violations; `sch erc` exit behaviour is undocumented, so parse the JSON report. Record the installed ngspice version. |
+| G14 | WCAG 2.2 criteria 2.5.8 and 3.3.8 apply to the UX; Supabase Free caps uploads at 50 MB, so video evidence needs the paid tier. |
+
+### G-III. Interfaces and process
+
+| ID | Decision |
+|---|---|
+| G15 (F-05) | Add job kind `nightly_maintenance` (calibration, decay evaluation, tutor audit) to `jobs.kind`, doc 03's scheduled calls and the schema CHECK. |
+| G16 (F-02/F-03 of 00b) | Add `GET /progress` (aggregated progress and tier view) and a `dry_run` flag on `POST /sessions/build` (session preview) to the OpenAPI file. |
+| G17 (R1 finding 2) | The lean slice's admin-only evidence log (BL-0179) is a **time-limited exception** to CLAUDE.md §10 for founder-only use: it must not be exposed to other users, and the full validation path (magic-byte checks in the worker) is required before any beta learner has an account. |
+| G18 | Documents 00d (lean slice), 00e (verification log) and 00f (design review) join the document index. The recommended path is: Phase −1 (no-build habit test), then the lean slice, then the deferred groups D1–D9. |
+
+## H. Review decisions (2 Nov 2026)
+
+These come from the repository review of 2 November 2026. H1, H2 and H4 are proposed by that review and stand unless the founder overrides them.
+
+| ID | Decision |
+|---|---|
+| H1 | **One template serves every loop stage.** `worked_example` shows all `solution.steps` of a seeded item. `faded_problem` hides the last step and asks for the answer. `retrieval` shows a fresh seed with no steps. Task kind is therefore a property of the served task, not of the template file, and a template needs at least 2 steps to serve the fading stage. Delivery on phone follows `delivery.phone_suitable`, which supersedes the `problem` exclusion of doc 06 section 7.3 for these stages. |
+| H2 | **`concept_static: true`** marks a definition or rule item with one fixed question. Fuzz cannot check its key, so G3 sign-off is mandatory. Every computable item is parameterised instead. A skill that only states rules, such as `elec.meas.lab-safety-esd`, may be all `concept_static`, and its mastery uses no constructed-response condition. Multiple-choice items need `n_shown` of at least 4 to be mastery-eligible. |
+| H3 | **Correction to G11:** `ts-fsrs` 6.0.0 defaults to FSRS-7 for `DefaultScheduler` (CHANGELOG 6.0.0). The contract still wants FSRS-6, so the adapter passes `version: 'FSRS-6'` explicitly and a contract test asserts the model name, the 21-weight set and whole-day intervals against an outside oracle (py-fsrs). |
+| H4 | **`provenance.review` is written only by `reference/g3_review.py`** after a hand-solve with 0 disagreements, and the matching `content/REVIEW-LOG.md` row is a condition of `verified`. A skipped verifier fails G2. |
+| H6 | **High-discharge packs after v1.** S9(c) keeps protected packs for v1. Spine projects from L6 may use commercial hobby packs, which have no BMS, only under `content/safety/prj.L6.bldc-esc-bench.md`. S10 still applies. Charging uses one pack per channel, not a parallel board. |
+| H7 | **Track order.** T3 modules come before T4. The L9 build comes after L8, because it fits the L8 stack. |
+| H8 | **Six first-walk swaps.** `math.prob.conditional-bayes`, `math.prob.normal-distribution`, `math.vec.rotation-matrices`, `sw.mem.dynamic-memory-bugs`, `sw.tools.git-branching` and `elec.dig.mux-decoder-adder` become stubs. In their place: `sw.mem.machine-model`, `sw.fw.gdb-swd`, `sw.fw.sampling-rate`, `sw.fw.pwm`, `elec.rc.decoupling-return` and `math.vec.least-squares`. The first walk stays at 142 skills, and the lean slice is unchanged. `sw.fw.gpio-output` depends on `sw.c.functions`, not `sw.c.bitwise-ops`. |
+| H9 | **L8 legal route.** The key `prj.L8.kit-quad-maiden` stays, but the default route is self-specified parts, privately built, flown under A3, or a class-marked product. A single ready-to-assemble kit is not privately built (EASA). The founder confirms the reading with the LBA before buying. |
+| H10 | **Default flight stack: PX4 on an H7 flight controller.** Betaflight is a confusable only. Reviewed and overridable; check licences before shipping a product. |
+| H11 | **No self-certification on hazardous steps.** High-current steps, the maiden and L12 need an outside reviewer, or a pre-registered prediction with a fixed pass tolerance. An acknowledgement proves reading, not competence. |
+| H12 | **T1 to T6 skills are authored and unreviewed.** All 238 are `needs_human_review`, with specs in `content/syllabi/skill-specs/`. The founder asked for this, which overrides the promotion policy's bulk-promotion caution. None is `verified`, and none is served without verified templates. L6 to L13 project gates stay out of `validate_projects.py` until those projects are specified. |
+| H13 | **Curated prerequisites and order.** T1 to T6 edges come from `content/syllabi/skill-specs/edges-*.yaml`, with new module order in graph 0.8.0. T1 skills may not depend on T2, so the FOC lab's current loop relies on an evaluation board's prebuilt loop. |
+| H14 | **Nine bridge skills.** Three stubs from H8 return as `needs_human_review`, with six new skills: cross product, Jacobians, partial fractions, feedback basics, neural network basics and TLS basics. They are taught in T2 and T5, so the first walk stays at 142. |
+| H15 | **Attempt state and review timing.** `attempts.state_applied_at` (timestamptz) is set by compare-and-set in the state transaction and guards Elo and mastery. Reconcile selects `grade_status = 'graded' and state_applied_at is null`, because most attempts in a review unit have no `review_log` row. The review unit commits at session close, or at an idle timeout for abandoned sessions (06 section 3.3); nothing writes FSRS or `review_log` at submit for a session attempt, and `skill_update.rating` is null until the commit. |
+| H16 | **Tutor replies can be reported.** FR-056 covers items and tutor messages, so `item_reports` gains `target_type` (an item or a tutor reply) and `tutor_message_id`, and `item_id` becomes nullable. `POST /tutor/messages/{message_id}/report` files a report on the learner's own thread. A tutor report goes to admin triage and never withholds an item, because a bad reply does not show the item is wrong. |
+| H17 | **FR-113 is a command-line export, not a route.** The founder runs it from `tools/` through the privileged path, so no learner-facing or browser surface exists for pseudonymised research data. |
+| H18 | **Spec-driven additions to the lean slice.** 00d's no-new-schema rule binds lean tasks, not the specification. A table, column, enum, event or route may be added only through a 00a decision, before the lean task that needs it starts. |
+| H5 | **Sampling parameters are not sent to Claude.** Sonnet 5.5 returns 400 on `temperature`, `top_p` or `top_k`. `LlmClient` carries `effort` per tier, and rubric repeatability is measured, not assumed. |
+| H19 | **Review for a solo founder (T6 legal and threat-model skills).** The founder cannot be the independent reviewer of their own legal or security work. (a) Before any T6 template in `prof.law`, `def.export`, `prof.eu` or `prof.data` is `verified`, a lawyer admitted in Germany with export-control and EU product-law practice checks its expected answers in one paid batch, against a written question list; the founder still runs G3, and the REVIEW-LOG row names the reviewer, date and scope. (b) A `human_review` grade on the founder's own submission (classification memo, hold note, compliance programme, applicability map, reporting drill) comes from that lawyer, or from the rubric written and hashed before the attempt (pre-registered, as in H11) with the lawyer sampling at least one submission per module; the founder never grades their own attempt, and an ungraded attempt does not count. (c) For `sec.hw.threat-modelling`, `sec.hw.own-device-model` and `prof.integrator.*`, the reviewer is a security or test engineer who did not build the device, paid or peer, once per device revision; their biggest finding and its disposition are recorded. (d) IHK advice, BAFA Merkblätter and BAFA events answer questions; they are recorded as information, not as a review or a pass. No mastery rule changes. |
+| H20 | **Research pass on the 247 `needs_human_review` skills (3 Nov 2026).** At the founder's request, agents researched every OPEN-CHECKS flag and the founder items in the four AI reviews against primary sources. They wrote one report per pillar, `content/syllabi/skill-specs/reviews/human-review-T*-2026-11-03.md`. OPEN-CHECKS fell from 151 flags to 11 (1 LBA answer, 2 vendor PDFs that only download, 8 paid standards or a bench check), after `build_open_checks.py` stopped matching ordinary words. Decisions taken: (a) project values with no outside source say `[project convention: reason]` and are set conservatively; (b) design checks use specified minimum properties, so 6061-T6 extrusions use Sut 262 MPa and Sy 240 MPa; (c) the beam and tap-test lab checks calibrate the clamp and measure the installed stiffness instead of widening the band; (d) seven UAV `est_minutes` are raised (T4 report, E3); (e) the L6 and L7 safety briefs are now `2026-11-03-1`; (f) until the LBA answers, L8 parts are bought as separately listed articles, never as a kit, combo or bundle. This is research, not the founder's checklist: no skill is `verified`. Doc 05 requires the section 10 checklist, including a stopwatch run, and a verified item template, and no T1 to T6 template exists yet. |
+

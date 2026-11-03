@@ -1,0 +1,144 @@
+schema_version: 1
+key: tpl.math.linear-intercept
+version: 2
+authoring_status: ready
+skill_key: math.alg.linear-functions
+task_kind: problem
+grader_type: multiple_choice
+difficulty_prior: 0.35
+title: y-intercept from slope and a point
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-01'
+  llm_assistance:
+    used: true
+    roles:
+    - draft_template
+    - hints
+    - misconception_tags
+    - distractors
+    model: claude-opus-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts:
+  - phone
+  - desktop
+  est_seconds: 60
+  phone_suitable: true
+  offline_gradable: true
+parameters:
+- name: m
+  type: int
+  min: -4
+  max: 5
+  description: Slope
+  nonzero: true
+- name: c
+  type: int
+  min: -9
+  max: 9
+  description: y-intercept, chosen first
+  nonzero: true
+- name: x0
+  type: int
+  min: -5
+  max: 6
+  description: x of the given point
+  nonzero: true
+derived:
+- name: y0
+  expr: m * x0 + c
+- name: mx
+  expr: m * x0
+constraints: []
+render:
+  stem_md: A straight line has slope ${{m|int}}$ and passes through $({{x0|int}}, {{y0|int}})$. What is its $y$-intercept?
+  answer_prompt: Choose the y-intercept.
+  alt_text: A straight line has slope {{m|int}} and passes through the point {{x0|int}}, {{y0|int}}. What is its y-intercept?
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      ans: y0 - m * x0
+  steps:
+  - id: s1
+    text_md: 'Put the point into $y = mx + c$: ${{y0|int}} = {{m|paren}} \times {{x0|paren}} + c$.'
+  - id: s2
+    text_md: 'Multiply and solve: $c = {{y0|int}} - {{mx|paren}} = {{ans|int}}$.'
+answer:
+  n_shown: 4
+  shuffle: true
+  min_separation_rel: 0.01
+  options:
+  - id: correct
+    correct: true
+    value_expr: ans
+    text_md: ${{value|int}}$
+  - id: slope
+    correct: false
+    value_expr: m
+    text_md: ${{value|int}}$
+    misconception_tag: mc.slope-as-intercept
+    feedback_md: That is the slope. The intercept is where the line crosses the y-axis.
+  - id: point
+    correct: false
+    value_expr: y0
+    text_md: ${{value|int}}$
+    misconception_tag: mc.point-as-intercept
+    feedback_md: That is the y value at the given point, which is not on the y-axis because its x is not zero.
+  - id: flip
+    correct: false
+    value_expr: y0 + m * x0
+    text_md: ${{value|int}}$
+    misconception_tag: mc.intercept-sign
+    feedback_md: This adds the product instead of subtracting it. Check the sign when you move that term across.
+verifiers:
+- id: inverse-solve
+  kind: sympy_solve
+  independence: Solves the defining line equation at the given point for the intercept instead of evaluating the rearranged
+    difference.
+  spec:
+    unknowns:
+    - k
+    equations:
+    - y0 - (m * x0 + k)
+    checks:
+    - unknown: k
+      output: ans
+  tolerance:
+    rel: 1.0e-09
+- id: options-distinct
+  kind: distinct_options
+  independence: Evaluates every option, checks they are pairwise separated and that the keyed option equals the output the
+    solve confirmed; it checks the options, it does not recompute the answer.
+  spec:
+    correct_output: ans
+  tolerance:
+    rel: 0.01
+- id: window
+  kind: bounds
+  independence: Walking from the point back to the y-axis changes y by exactly the size of m times x0, so the intercept cannot
+    lie outside this range.
+  spec:
+    output: ans
+    lo: y0 - abs(m * x0)
+    hi: y0 + abs(m * x0)
+hints:
+  l1: Where on a line is the y-intercept, and what is x there?
+  l2: A point on the line must satisfy the equation of the line, so substitute it and solve for the unknown constant.
+  l3: 'Put the point into $y = mx + c$: ${{y0|int}} = {{m|paren}} \times {{x0|paren}} + c$.'
+misconceptions:
+- tag: mc.slope-as-intercept
+  description: Confuses the slope with the intercept.
+- tag: mc.point-as-intercept
+  description: Takes the y value of the given point as the intercept.
+- tag: mc.intercept-sign
+  description: Adds the term instead of subtracting it when isolating the intercept.
+fuzz:
+  samples: 200
+  seed_base: 5000
+  max_rejection_rate: 0.7
+  min_distinct_param_sets: 50

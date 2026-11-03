@@ -1,0 +1,7229 @@
+{
+ "count": 166,
+ "generated_by": "reference/scheduler_reference.py generate",
+ "params_version": "06-spec-1.0",
+ "reference_date": "2026-10-31",
+ "vectors": [
+  {
+   "expected": 0.5,
+   "fn": "expected_score",
+   "id": "elo-expected-equal",
+   "input": {
+    "d": 1500,
+    "theta": 1500
+   },
+   "note": "equal ratings give 0.5"
+  },
+  {
+   "expected": 0.0909,
+   "fn": "expected_score",
+   "id": "elo-expected-400",
+   "input": {
+    "d": 1900,
+    "theta": 1500
+   },
+   "note": "400 points easier-to-harder gives 1/11"
+  },
+  {
+   "expected": 0.625,
+   "fn": "expected_score",
+   "id": "elo-expected-guess",
+   "input": {
+    "d": 1500,
+    "guess": 0.25,
+    "theta": 1500
+   },
+   "note": "4-option MC floor"
+  },
+  {
+   "expected": 48.0,
+   "fn": "k_factor",
+   "id": "elo-k-0",
+   "input": {
+    "n": 0
+   },
+   "note": "K starts at 48"
+  },
+  {
+   "expected": 24.0,
+   "fn": "k_factor",
+   "id": "elo-k-10",
+   "input": {
+    "n": 10
+   },
+   "note": "K halves at n=10"
+  },
+  {
+   "expected": 16.0,
+   "fn": "k_factor",
+   "id": "elo-k-floor",
+   "input": {
+    "n": 100
+   },
+   "note": "K floors at 16"
+  },
+  {
+   "expected": {
+    "d": 1481.7661,
+    "expected": 0.2403,
+    "n_item": 1,
+    "n_skill": 1,
+    "theta": 1336.4679,
+    "weight": 1.0
+   },
+   "fn": "update_elo",
+   "id": "elo-correct-unaided",
+   "input": {
+    "att": {
+     "confidence": 3,
+     "expected_ms": 60000,
+     "latency_ms": 40000,
+     "max_hint_level": 0,
+     "score": 1.0,
+     "task_kind": "problem",
+     "unaided": true
+    },
+    "d": 1500,
+    "n_item": 0,
+    "n_skill": 0,
+    "theta": 1300
+   },
+   "note": "first unaided correct on a hard-ish item"
+  },
+  {
+   "expected": {
+    "d": 1506.0,
+    "expected": 0.5,
+    "n_item": 21,
+    "n_skill": 11,
+    "theta": 1488.0,
+    "weight": 1.0
+   },
+   "fn": "update_elo",
+   "id": "elo-wrong-unaided",
+   "input": {
+    "att": {
+     "confidence": 3,
+     "expected_ms": 60000,
+     "latency_ms": 40000,
+     "max_hint_level": 0,
+     "score": 0.0,
+     "task_kind": "problem",
+     "unaided": true
+    },
+    "d": 1500,
+    "n_item": 20,
+    "n_skill": 10,
+    "theta": 1500
+   },
+   "note": "unaided failure"
+  },
+  {
+   "expected": {
+    "d": 1450.0,
+    "expected": 0.4285,
+    "n_item": 5,
+    "n_skill": 6,
+    "theta": 1404.5717,
+    "weight": 0.25
+   },
+   "fn": "update_elo",
+   "id": "elo-hint3",
+   "input": {
+    "att": {
+     "confidence": 3,
+     "expected_ms": 60000,
+     "latency_ms": 40000,
+     "max_hint_level": 3,
+     "score": 1.0,
+     "task_kind": "problem",
+     "unaided": false
+    },
+    "d": 1450,
+    "n_item": 5,
+    "n_skill": 5,
+    "theta": 1400
+   },
+   "note": "hint 3: weight .25, item not updated"
+  },
+  {
+   "expected": {
+    "d": 1450.0,
+    "expected": 0.4285,
+    "n_item": 5,
+    "n_skill": 6,
+    "theta": 1393.1434,
+    "weight": 0.5
+   },
+   "fn": "update_elo",
+   "id": "elo-reveal",
+   "input": {
+    "att": {
+     "confidence": 3,
+     "expected_ms": 60000,
+     "latency_ms": 40000,
+     "max_hint_level": 4,
+     "score": 1.0,
+     "task_kind": "problem",
+     "unaided": false
+    },
+    "d": 1450,
+    "n_item": 5,
+    "n_skill": 5,
+    "theta": 1400
+   },
+   "note": "reveal forces score 0"
+  },
+  {
+   "expected": {
+    "d": 1400.0,
+    "expected": 0.3599,
+    "n_item": 0,
+    "n_skill": 1,
+    "theta": 1315.3616,
+    "weight": 0.5
+   },
+   "fn": "update_elo",
+   "id": "elo-faded",
+   "input": {
+    "att": {
+     "confidence": 3,
+     "expected_ms": 60000,
+     "latency_ms": 40000,
+     "max_hint_level": 0,
+     "score": 1.0,
+     "task_kind": "faded_problem",
+     "unaided": true
+    },
+    "d": 1400,
+    "n_item": 0,
+    "n_skill": 0,
+    "theta": 1300
+   },
+   "note": "faded problem halves weight, no item update"
+  },
+  {
+   "expected": {
+    "d": 1500.0,
+    "expected": 0.5,
+    "n_item": 20,
+    "n_skill": 11,
+    "theta": 1494.0,
+    "weight": 0.5
+   },
+   "fn": "update_elo",
+   "id": "elo-rapid-guess",
+   "input": {
+    "att": {
+     "confidence": 3,
+     "expected_ms": 60000,
+     "latency_ms": 900,
+     "max_hint_level": 0,
+     "score": 0.0,
+     "task_kind": "problem",
+     "unaided": true
+    },
+    "d": 1500,
+    "n_item": 20,
+    "n_skill": 10,
+    "theta": 1500
+   },
+   "note": "rapid wrong guess: half weight, item not updated"
+  },
+  {
+   "expected": {
+    "d": 1506.0,
+    "expected": 0.5,
+    "n_item": 21,
+    "n_skill": 11,
+    "theta": 1485.0,
+    "weight": 1.25
+   },
+   "fn": "update_elo",
+   "id": "elo-hiconf-wrong",
+   "input": {
+    "att": {
+     "confidence": 5,
+     "expected_ms": 60000,
+     "latency_ms": 40000,
+     "max_hint_level": 0,
+     "score": 0.0,
+     "task_kind": "problem",
+     "unaided": true
+    },
+    "d": 1500,
+    "n_item": 20,
+    "n_skill": 10,
+    "theta": 1500
+   },
+   "note": "high confidence wrong: weight 1.25"
+  },
+  {
+   "expected": {
+    "d": 1500.0,
+    "expected": 0.5,
+    "n_item": 3,
+    "n_skill": 3,
+    "theta": 1500.0,
+    "weight": 0.0
+   },
+   "fn": "update_elo",
+   "id": "elo-worked-example",
+   "input": {
+    "att": {
+     "confidence": 3,
+     "expected_ms": 60000,
+     "latency_ms": 40000,
+     "max_hint_level": 0,
+     "score": 1.0,
+     "task_kind": "worked_example",
+     "unaided": true
+    },
+    "d": 1500,
+    "n_item": 3,
+    "n_skill": 3,
+    "theta": 1500
+   },
+   "note": "worked example never updates"
+  },
+  {
+   "expected": 1881.697,
+   "fn": "diagnostic_init",
+   "id": "elo-diag-correct",
+   "input": {
+    "d": 1500,
+    "score": 1.0
+   },
+   "note": "clipped p=0.9"
+  },
+  {
+   "expected": 1500.0,
+   "fn": "diagnostic_init",
+   "id": "elo-diag-half",
+   "input": {
+    "d": 1500,
+    "score": 0.5
+   },
+   "note": "p=0.5 -> d"
+  },
+  {
+   "expected": 1118.303,
+   "fn": "diagnostic_init",
+   "id": "elo-diag-wrong",
+   "input": {
+    "d": 1500,
+    "score": 0.0
+   },
+   "note": "clipped p=0.1"
+  },
+  {
+   "expected": 1300.0,
+   "fn": "cold_start_theta",
+   "id": "elo-cold-none",
+   "input": {
+    "prereq_thetas": []
+   },
+   "note": "default 1300"
+  },
+  {
+   "expected": 1500.0,
+   "fn": "cold_start_theta",
+   "id": "elo-cold-prereqs",
+   "input": {
+    "prereq_thetas": [
+     1500,
+     1600
+    ]
+   },
+   "note": "mean - 50"
+  },
+  {
+   "expected": 1259.176,
+   "fn": "target_item_difficulty",
+   "id": "elo-target-diff",
+   "input": {
+    "theta": 1500
+   },
+   "note": "difficulty giving 0.8 expected"
+  },
+  {
+   "expected": {
+    "flags": [],
+    "rating": 3
+   },
+   "fn": "map_rating",
+   "id": "rate-good",
+   "input": {
+    "att": {
+     "confidence": 3,
+     "expected_ms": 30000,
+     "grader_type": "exact_numeric",
+     "latency_ms": 20000,
+     "max_hint_level": 0,
+     "score": 1.0,
+     "task_kind": "retrieval",
+     "template_n_obs": 25
+    },
+    "reps": 3
+   },
+   "note": "correct, normal speed -> Good"
+  },
+  {
+   "expected": {
+    "flags": [],
+    "rating": 4
+   },
+   "fn": "map_rating",
+   "id": "rate-easy",
+   "input": {
+    "att": {
+     "confidence": 5,
+     "expected_ms": 30000,
+     "grader_type": "exact_numeric",
+     "latency_ms": 10000,
+     "max_hint_level": 0,
+     "score": 1.0,
+     "task_kind": "retrieval",
+     "template_n_obs": 25
+    },
+    "reps": 3
+   },
+   "note": "fast, confident, no hints -> Easy"
+  },
+  {
+   "expected": {
+    "flags": [],
+    "rating": 3
+   },
+   "fn": "map_rating",
+   "id": "rate-easy-first-rep",
+   "input": {
+    "att": {
+     "confidence": 5,
+     "expected_ms": 30000,
+     "grader_type": "exact_numeric",
+     "latency_ms": 10000,
+     "max_hint_level": 0,
+     "score": 1.0,
+     "task_kind": "retrieval",
+     "template_n_obs": 25
+    },
+    "reps": 0
+   },
+   "note": "Easy blocked on first reps"
+  },
+  {
+   "expected": {
+    "flags": [],
+    "rating": 3
+   },
+   "fn": "map_rating",
+   "id": "rate-easy-mc",
+   "input": {
+    "att": {
+     "confidence": 5,
+     "expected_ms": 30000,
+     "grader_type": "multiple_choice",
+     "latency_ms": 10000,
+     "max_hint_level": 0,
+     "score": 1.0,
+     "task_kind": "retrieval",
+     "template_n_obs": 25
+    },
+    "reps": 3
+   },
+   "note": "MC can never be Easy"
+  },
+  {
+   "expected": {
+    "flags": [
+     "slow"
+    ],
+    "rating": 2
+   },
+   "fn": "map_rating",
+   "id": "rate-slow",
+   "input": {
+    "att": {
+     "confidence": 3,
+     "expected_ms": 30000,
+     "grader_type": "exact_numeric",
+     "latency_ms": 70000,
+     "max_hint_level": 0,
+     "score": 1.0,
+     "task_kind": "retrieval",
+     "template_n_obs": 25
+    },
+    "reps": 3
+   },
+   "note": "correct but >2x expected -> Hard"
+  },
+  {
+   "expected": {
+    "flags": [],
+    "rating": 2
+   },
+   "fn": "map_rating",
+   "id": "rate-hint2",
+   "input": {
+    "att": {
+     "confidence": 3,
+     "expected_ms": 30000,
+     "grader_type": "exact_numeric",
+     "latency_ms": 20000,
+     "max_hint_level": 2,
+     "score": 1.0,
+     "task_kind": "retrieval",
+     "template_n_obs": 25
+    },
+    "reps": 3
+   },
+   "note": "hint level 2 -> Hard"
+  },
+  {
+   "expected": {
+    "flags": [],
+    "rating": 3
+   },
+   "fn": "map_rating",
+   "id": "rate-hint1",
+   "input": {
+    "att": {
+     "confidence": 3,
+     "expected_ms": 30000,
+     "grader_type": "exact_numeric",
+     "latency_ms": 20000,
+     "max_hint_level": 1,
+     "score": 1.0,
+     "task_kind": "retrieval",
+     "template_n_obs": 25
+    },
+    "reps": 3
+   },
+   "note": "hint level 1 still Good"
+  },
+  {
+   "expected": {
+    "flags": [],
+    "rating": 2
+   },
+   "fn": "map_rating",
+   "id": "rate-partial",
+   "input": {
+    "att": {
+     "confidence": 3,
+     "expected_ms": 30000,
+     "grader_type": "exact_numeric",
+     "latency_ms": 20000,
+     "max_hint_level": 0,
+     "score": 0.6,
+     "task_kind": "retrieval",
+     "template_n_obs": 25
+    },
+    "reps": 3
+   },
+   "note": "partial credit -> Hard"
+  },
+  {
+   "expected": {
+    "flags": [
+     "high_confidence_error"
+    ],
+    "rating": 1
+   },
+   "fn": "map_rating",
+   "id": "rate-wrong-hiconf",
+   "input": {
+    "att": {
+     "confidence": 5,
+     "expected_ms": 30000,
+     "grader_type": "exact_numeric",
+     "latency_ms": 20000,
+     "max_hint_level": 0,
+     "score": 0.0,
+     "task_kind": "retrieval",
+     "template_n_obs": 25
+    },
+    "reps": 3
+   },
+   "note": "Again + high_confidence_error flag"
+  },
+  {
+   "expected": {
+    "flags": [],
+    "rating": 1
+   },
+   "fn": "map_rating",
+   "id": "rate-reveal",
+   "input": {
+    "att": {
+     "confidence": 3,
+     "expected_ms": 30000,
+     "grader_type": "exact_numeric",
+     "latency_ms": 20000,
+     "max_hint_level": 4,
+     "score": 1.0,
+     "task_kind": "retrieval",
+     "template_n_obs": 25
+    },
+    "reps": 3
+   },
+   "note": "reveal -> Again"
+  },
+  {
+   "expected": {
+    "flags": [
+     "not_review_eligible"
+    ],
+    "rating": null
+   },
+   "fn": "map_rating",
+   "id": "rate-faded",
+   "input": {
+    "att": {
+     "confidence": 3,
+     "expected_ms": 30000,
+     "grader_type": "exact_numeric",
+     "latency_ms": 20000,
+     "max_hint_level": 0,
+     "score": 1.0,
+     "task_kind": "faded_problem",
+     "template_n_obs": 25
+    },
+    "reps": 0
+   },
+   "note": "faded problems create no review"
+  },
+  {
+   "expected": {
+    "flags": [],
+    "rating": 3
+   },
+   "fn": "map_rating",
+   "id": "rate-slow-ignored-n5",
+   "input": {
+    "att": {
+     "confidence": 3,
+     "expected_ms": 30000,
+     "grader_type": "exact_numeric",
+     "latency_ms": 70000,
+     "max_hint_level": 0,
+     "score": 1.0,
+     "task_kind": "retrieval",
+     "template_n_obs": 5
+    },
+    "reps": 3
+   },
+   "note": "00a G5: a template with 5 observations: the slow-latency row is ignored, so the correct answer stays Good"
+  },
+  {
+   "expected": {
+    "flags": [],
+    "rating": 3
+   },
+   "fn": "map_rating",
+   "id": "rate-slow-ignored-n19",
+   "input": {
+    "att": {
+     "confidence": 3,
+     "expected_ms": 30000,
+     "grader_type": "exact_numeric",
+     "latency_ms": 70000,
+     "max_hint_level": 0,
+     "score": 1.0,
+     "task_kind": "retrieval",
+     "template_n_obs": 19
+    },
+    "reps": 3
+   },
+   "note": "00a G5: 19 observations is still below the threshold of 20"
+  },
+  {
+   "expected": {
+    "flags": [
+     "slow"
+    ],
+    "rating": 2
+   },
+   "fn": "map_rating",
+   "id": "rate-slow-n20",
+   "input": {
+    "att": {
+     "confidence": 3,
+     "expected_ms": 30000,
+     "grader_type": "exact_numeric",
+     "latency_ms": 70000,
+     "max_hint_level": 0,
+     "score": 1.0,
+     "task_kind": "retrieval",
+     "template_n_obs": 20
+    },
+    "reps": 3
+   },
+   "note": "00a G5: exactly 20 observations: latency rows apply again, slow -> Hard"
+  },
+  {
+   "expected": {
+    "flags": [],
+    "rating": 3
+   },
+   "fn": "map_rating",
+   "id": "rate-easy-ignored-n5",
+   "input": {
+    "att": {
+     "confidence": 5,
+     "expected_ms": 30000,
+     "grader_type": "exact_numeric",
+     "latency_ms": 10000,
+     "max_hint_level": 0,
+     "score": 1.0,
+     "task_kind": "retrieval",
+     "template_n_obs": 5
+    },
+    "reps": 3
+   },
+   "note": "00a G5: Easy needs the latency row, so it is impossible below 20 observations"
+  },
+  {
+   "expected": {
+    "flags": [],
+    "rating": 3
+   },
+   "fn": "map_rating",
+   "id": "rate-easy-no-obs-field",
+   "input": {
+    "att": {
+     "confidence": 5,
+     "expected_ms": 30000,
+     "grader_type": "exact_numeric",
+     "latency_ms": 10000,
+     "max_hint_level": 0,
+     "score": 1.0,
+     "task_kind": "retrieval"
+    },
+    "reps": 3
+   },
+   "note": "00a G5: missing template_n_obs counts as 0"
+  },
+  {
+   "expected": {
+    "flags": [],
+    "rating": 2
+   },
+   "fn": "map_rating",
+   "id": "rate-hint-rows-unaffected-n0",
+   "input": {
+    "att": {
+     "confidence": 3,
+     "expected_ms": 30000,
+     "grader_type": "exact_numeric",
+     "latency_ms": 70000,
+     "max_hint_level": 2,
+     "score": 1.0,
+     "task_kind": "retrieval",
+     "template_n_obs": 0
+    },
+    "reps": 3
+   },
+   "note": "00a G5: only the latency rows are gated; hint level 2 still maps to Hard"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": true,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 3,
+    "met": true,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-met",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "tier": "L1"
+   },
+   "note": "3 correct, 3 days, 3 variants"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": false,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 1,
+    "met": false,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-one-day",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T10:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T11:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "tier": "L1"
+   },
+   "note": "same day: fails days"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": true,
+     "last_two_not_failed": true,
+     "variants": false
+    },
+    "days": 3,
+    "met": false,
+    "qualifying": 3,
+    "variants": 1
+   },
+   "fn": "mastery_rule",
+   "id": "mast-one-variant",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "tier": "L1"
+   },
+   "note": "same item: fails variants"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": false,
+     "days": true,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 2,
+    "met": false,
+    "qualifying": 2,
+    "variants": 2
+   },
+   "fn": "mastery_rule",
+   "id": "mast-hint2",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 2,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": false
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "tier": "L1"
+   },
+   "note": "hint 2 attempt does not qualify"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": true,
+     "last_two_not_failed": false,
+     "variants": true
+    },
+    "days": 3,
+    "met": false,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-last-fail",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i4",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 0.2,
+      "submitted_at": "2026-10-28T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "tier": "L1"
+   },
+   "note": "recent unaided failure blocks"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": false,
+     "count": true,
+     "days": true,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 3,
+    "met": false,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-mc-only",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "multiple_choice",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "multiple_choice",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "multiple_choice",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "tier": "L1"
+   },
+   "note": "MC only fails constructed-response check"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": true,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 3,
+    "met": true,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-mc-only-no-alt",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "multiple_choice",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "multiple_choice",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "multiple_choice",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "has_non_mc": false,
+    "tier": "L1"
+   },
+   "note": "no non-MC template exists: allowed"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": true,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 2,
+    "met": true,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-day-boundary-tz",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T23:30:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T00:10:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "params": {
+     "mastery_min_span_days": 0
+    },
+    "tier": "L1",
+    "tz_offset_min": 0
+   },
+   "note": "UTC days: 24 and 25 (span condition switched off so that the test is about the day boundary only; changed in v1.2, see mast-span-default-blocks)"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": true,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 2,
+    "met": true,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-span-gaming",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T23:50:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T00:10:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "params": {
+     "mastery_min_span_days": 0
+    },
+    "tier": "L1"
+   },
+   "note": "contract v1.1 rule (span condition off): two calendar days 20 minutes apart pass (the loophole of design review F-03); changed in v1.2: this vector now passes params mastery_min_span_days = 0"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": false,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 2,
+    "met": false,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-span-2d-blocks",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T23:50:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T00:10:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "params": {
+     "mastery_min_span_days": 2
+    },
+    "tier": "L1"
+   },
+   "note": "proposed span parameter set to 2 days: the same attempts fail the days check"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": true,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 3,
+    "met": true,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-span-2d-ok",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "params": {
+     "mastery_min_span_days": 2
+    },
+    "tier": "L1"
+   },
+   "note": "proposed span parameter: attempts on day 24, 25, 27 pass"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": false,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 2,
+    "met": false,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-span-default-blocks",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T23:50:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T00:10:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "tier": "L1"
+   },
+   "note": "00a G3: with the default span of 2 calendar days, qualifying attempts on day 24 and day 25 only fail the days check, even 20 minutes apart"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": true,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 3,
+    "met": true,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-span-exactly-2",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-26T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "tier": "L1"
+   },
+   "note": "00a G3: first and last qualifying attempt exactly 2 calendar days apart pass"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": false,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 2,
+    "met": false,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-span-1-day-short",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T08:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T21:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "tier": "L1"
+   },
+   "note": "00a G3: three attempts on two consecutive days fail the span (1 calendar day)"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": false,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 2,
+    "met": false,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-span-local-days",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T23:30:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T12:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-26T00:10:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "tier": "L1",
+    "tz_offset_min": 120
+   },
+   "note": "00a G3: the span is counted in the learner's local days: UTC days 24 to 26 are local days 25 to 26, span 1, fails"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": true,
+     "last_two_not_failed": true,
+     "variants": false
+    },
+    "days": 3,
+    "met": false,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-tpl-single-blocks",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "template_key": "t1",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "template_key": "t1",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "template_key": "t1",
+      "unaided": true
+     }
+    ],
+    "n_verified_templates": 2,
+    "tier": "L1"
+   },
+   "note": "00a G3: the skill has 2 verified templates but every qualifying attempt used the same one: variants check fails"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": true,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 3,
+    "met": true,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-tpl-two-ok",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "template_key": "t1",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "template_key": "t1",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "template_key": "t2",
+      "unaided": true
+     }
+    ],
+    "n_verified_templates": 2,
+    "tier": "L1"
+   },
+   "note": "00a G3: two distinct templates among the qualifying attempts pass"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": true,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 3,
+    "met": true,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-tpl-only-one-exists",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "template_key": "t1",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "template_key": "t1",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "template_key": "t1",
+      "unaided": true
+     }
+    ],
+    "n_verified_templates": 1,
+    "tier": "L1"
+   },
+   "note": "00a G3: the diversity condition applies only when the skill has 2 or more verified templates"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": true,
+     "last_two_not_failed": true,
+     "variants": false
+    },
+    "days": 3,
+    "met": false,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-tpl-missing-key",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "n_verified_templates": 2,
+    "tier": "L1"
+   },
+   "note": "00a G3: attempts without a template_key cannot show diversity when 2 templates exist (callers must send the key)"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": true,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 3,
+    "met": true,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-tpl-param-off",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "template_key": "t1",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "template_key": "t1",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "template_key": "t1",
+      "unaided": true
+     }
+    ],
+    "n_verified_templates": 2,
+    "params": {
+     "mastery_min_templates": 0
+    },
+    "tier": "L1"
+   },
+   "note": "00a G3: the template condition can be switched off with mastery_min_templates = 0"
+  },
+  {
+   "expected": "reviewing",
+   "fn": "mastery_state",
+   "id": "state-reviewing-single-template",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "template_key": "t1",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "template_key": "t1",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "template_key": "t1",
+      "unaided": true
+     }
+    ],
+    "ever_mastered": false,
+    "last_rating": 3,
+    "n_verified_templates": 2,
+    "retrievability": 0.9,
+    "tier": "L1"
+   },
+   "note": "00a G3: rule not met because of template diversity, but 2 qualifying attempts on 2 days: reviewing"
+  },
+  {
+   "expected": "L1",
+   "fn": "tier_attained",
+   "id": "tier-single-template-stays-below",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "template_key": "t1",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "template_key": "t1",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "template_key": "t1",
+      "unaided": true
+     }
+    ],
+    "checkpoint_ok": false,
+    "span_days": 3,
+    "tier_target": "L1"
+   },
+   "note": "tier_attained without the template count (default 0) is unchanged"
+  },
+  {
+   "expected": true,
+   "fn": "needs_applied",
+   "id": "needs-applied-yes",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     }
+    ],
+    "mastery_state": "reviewing",
+    "tier": "L1"
+   },
+   "note": "00a G2: reviewing, three correct retrievals on three days, no applied attempt: the applied condition is the only gap"
+  },
+  {
+   "expected": false,
+   "fn": "needs_applied",
+   "id": "needs-applied-count-also-short",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     }
+    ],
+    "mastery_state": "reviewing",
+    "tier": "L1"
+   },
+   "note": "two attempts only: count is also unmet, so not flagged yet"
+  },
+  {
+   "expected": false,
+   "fn": "needs_applied",
+   "id": "needs-applied-span-also-short",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T15:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     }
+    ],
+    "mastery_state": "reviewing",
+    "tier": "L1"
+   },
+   "note": "span also unmet: not flagged"
+  },
+  {
+   "expected": false,
+   "fn": "needs_applied",
+   "id": "needs-applied-mastered",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "mastery_state": "mastered",
+    "tier": "L1"
+   },
+   "note": "only reviewing skills are flagged"
+  },
+  {
+   "expected": false,
+   "fn": "needs_applied",
+   "id": "needs-applied-project-credit",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     }
+    ],
+    "mastery_state": "reviewing",
+    "project_credit_applied": true,
+    "tier": "L1"
+   },
+   "note": "accepted project credit satisfies the applied condition: nothing missing, not flagged"
+  },
+  {
+   "expected": false,
+   "fn": "needs_applied",
+   "id": "needs-applied-l0-skill",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     }
+    ],
+    "mastery_state": "reviewing",
+    "tier": "L0"
+   },
+   "note": "an L0 target never needs an applied attempt"
+  },
+  {
+   "expected": false,
+   "fn": "needs_applied",
+   "id": "needs-applied-no-applied-template",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     }
+    ],
+    "has_applied": false,
+    "mastery_state": "reviewing",
+    "tier": "L1"
+   },
+   "note": "no applied template exists: condition waived, not flagged"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": false,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 1,
+    "met": false,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-day-boundary-tz2",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T23:30:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T00:10:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "tier": "L1",
+    "tz_offset_min": 120
+   },
+   "note": "UTC+2: all three fall on local day 25"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": false,
+     "constructed_response": false,
+     "count": false,
+     "days": false,
+     "last_two_not_failed": true,
+     "variants": false
+    },
+    "days": 0,
+    "met": false,
+    "qualifying": 0,
+    "variants": 0
+   },
+   "fn": "mastery_rule",
+   "id": "mast-l0-items-for-l1",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L0",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L0",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L0",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "tier": "L1"
+   },
+   "note": "L0 items do not qualify for an L1 skill"
+  },
+  {
+   "expected": "unseen",
+   "fn": "mastery_state",
+   "id": "state-unseen",
+   "input": {
+    "attempts": [],
+    "ever_mastered": false,
+    "last_rating": null,
+    "retrievability": null,
+    "tier": "L1"
+   },
+   "note": "no attempts"
+  },
+  {
+   "expected": "learning",
+   "fn": "mastery_state",
+   "id": "state-learning",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "ever_mastered": false,
+    "last_rating": 3,
+    "retrievability": 0.95,
+    "tier": "L1"
+   },
+   "note": "one qualifying attempt"
+  },
+  {
+   "expected": "reviewing",
+   "fn": "mastery_state",
+   "id": "state-reviewing",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "ever_mastered": false,
+    "last_rating": 3,
+    "retrievability": 0.9,
+    "tier": "L1"
+   },
+   "note": "2 qualifying on 2 days"
+  },
+  {
+   "expected": "mastered",
+   "fn": "mastery_state",
+   "id": "state-mastered",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "ever_mastered": false,
+    "last_rating": 3,
+    "retrievability": 0.9,
+    "tier": "L1"
+   },
+   "note": "rule met"
+  },
+  {
+   "expected": "decayed",
+   "fn": "mastery_state",
+   "id": "state-decayed-r",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "ever_mastered": true,
+    "last_rating": 3,
+    "retrievability": 0.6,
+    "tier": "L1"
+   },
+   "note": "R below 0.70"
+  },
+  {
+   "expected": "decayed",
+   "fn": "mastery_state",
+   "id": "state-decayed-lapse",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "ever_mastered": true,
+    "last_rating": 1,
+    "retrievability": 0.85,
+    "tier": "L1"
+   },
+   "note": "lapse -> decayed"
+  },
+  {
+   "expected": "mastered",
+   "fn": "mastery_state",
+   "id": "state-remastered",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "ever_mastered": true,
+    "last_rating": 3,
+    "post_decay_attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i9",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-30T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "retrievability": 0.6,
+    "tier": "L1"
+   },
+   "note": "one fresh unaided success restores mastery"
+  },
+  {
+   "expected": "decayed",
+   "fn": "mastery_state",
+   "id": "state-remastered-2lapse",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "ever_mastered": true,
+    "last_rating": 3,
+    "post_decay_attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i9",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-30T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "recent_lapses_60d": 2,
+    "retrievability": 0.6,
+    "tier": "L1"
+   },
+   "note": "two recent lapses need 2 successes on 2 days"
+  },
+  {
+   "expected": "L1",
+   "fn": "tier_attained",
+   "id": "tier-l1",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "checkpoint_ok": false,
+    "span_days": 3,
+    "tier_target": "L1"
+   },
+   "note": "L1 attained"
+  },
+  {
+   "expected": "L1",
+   "fn": "tier_attained",
+   "id": "tier-l2-needs-checkpoint",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "a",
+      "item_tier": "L2",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-01T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "b",
+      "item_tier": "L2",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-08T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "c",
+      "item_tier": "L2",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-20T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "checkpoint_ok": false,
+    "span_days": 19,
+    "tier_target": "L1"
+   },
+   "note": "L2 without checkpoint stays L1"
+  },
+  {
+   "expected": "L2",
+   "fn": "tier_attained",
+   "id": "tier-l2",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "a",
+      "item_tier": "L2",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-01T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "b",
+      "item_tier": "L2",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-08T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "c",
+      "item_tier": "L2",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-20T09:00:00Z",
+      "task_kind": "checkpoint",
+      "unaided": true
+     }
+    ],
+    "checkpoint_ok": true,
+    "span_days": 19,
+    "tier_target": "L1"
+   },
+   "note": "L2 attained"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": true,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 3,
+    "met": true,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-project-credit",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     }
+    ],
+    "project_credit_applied": true,
+    "tier": "L1"
+   },
+   "note": "applied condition satisfied by accepted project credit"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": false,
+     "constructed_response": true,
+     "count": true,
+     "days": true,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 3,
+    "met": false,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-no-project-credit",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     }
+    ],
+    "tier": "L1"
+   },
+   "note": "same attempts without project credit fail the applied condition"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": false,
+     "days": false,
+     "last_two_not_failed": true,
+     "variants": false
+    },
+    "days": 1,
+    "met": false,
+    "qualifying": 1,
+    "variants": 1
+   },
+   "fn": "mastery_rule",
+   "id": "mast-project-credit-only",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     }
+    ],
+    "project_credit_applied": true,
+    "tier": "L1"
+   },
+   "note": "project credit does not replace conditions 1-3"
+  },
+  {
+   "expected": "L1",
+   "fn": "tier_attained",
+   "id": "tier-project-no-l2",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "a",
+      "item_tier": "L2",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-01T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "b",
+      "item_tier": "L2",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-08T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "c",
+      "item_tier": "L2",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-20T09:00:00Z",
+      "task_kind": "retrieval",
+      "unaided": true
+     }
+    ],
+    "checkpoint_ok": false,
+    "project_credit_applied": true,
+    "span_days": 19,
+    "tier_target": "L1"
+   },
+   "note": "project credit never yields L2"
+  },
+  {
+   "expected": {
+    "available": [
+     "math.alg.exponents-logs",
+     "math.alg.linear-equations",
+     "sw.c.variables"
+    ],
+    "frontier": [
+     "math.alg.exponents-logs",
+     "math.alg.linear-equations",
+     "sw.c.variables"
+    ]
+   },
+   "fn": "compute_frontier",
+   "id": "frontier-empty",
+   "input": {
+    "states": {}
+   },
+   "note": "new learner: roots only"
+  },
+  {
+   "expected": {
+    "available": [
+     "elec.dc.ohms-law",
+     "elec.dc.series-parallel",
+     "math.alg.exponents-logs",
+     "math.alg.linear-equations",
+     "sw.c.variables"
+    ],
+    "frontier": [
+     "elec.dc.series-parallel",
+     "sw.c.variables"
+    ]
+   },
+   "fn": "compute_frontier",
+   "id": "frontier-mixed",
+   "input": {
+    "states": {
+     "elec.dc.ohms-law": {
+      "mastery_state": "reviewing",
+      "retrievability": 0.85,
+      "tier_attained": "L0"
+     },
+     "math.alg.exponents-logs": {
+      "mastery_state": "reviewing",
+      "retrievability": 0.7,
+      "tier_attained": "L0"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "sw.c.variables": {
+      "mastery_state": "learning"
+     }
+    }
+   },
+   "note": "reviewing at R<.8 does not satisfy; learning hysteresis"
+  },
+  {
+   "expected": {
+    "available": [
+     "elec.dc.kirchhoff-laws",
+     "elec.dc.ohms-law",
+     "elec.dc.series-parallel",
+     "elec.dc.voltage-divider",
+     "math.alg.exponents-logs",
+     "math.alg.linear-equations",
+     "sw.c.variables"
+    ],
+    "frontier": [
+     "elec.dc.kirchhoff-laws",
+     "math.alg.exponents-logs",
+     "sw.c.variables"
+    ]
+   },
+   "fn": "compute_frontier",
+   "id": "frontier-min-tier",
+   "input": {
+    "states": {
+     "elec.dc.ohms-law": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.voltage-divider": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L0"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "math.calc.exponential-decay": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "divider tier L0 < min_tier L1 blocks rc-time-constant"
+  },
+  {
+   "expected": {
+    "available": [
+     "elec.dc.kirchhoff-laws",
+     "elec.dc.ohms-law",
+     "elec.dc.series-parallel",
+     "elec.dc.voltage-divider",
+     "elec.rc.rc-time-constant",
+     "math.alg.exponents-logs",
+     "math.alg.linear-equations",
+     "sw.c.variables"
+    ],
+    "frontier": [
+     "elec.dc.kirchhoff-laws",
+     "elec.rc.rc-time-constant",
+     "math.alg.exponents-logs",
+     "sw.c.variables"
+    ]
+   },
+   "fn": "compute_frontier",
+   "id": "frontier-min-tier-ok",
+   "input": {
+    "states": {
+     "elec.dc.ohms-law": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.voltage-divider": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "math.calc.exponential-decay": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "with L1 divider, rc-time-constant is in the frontier"
+  },
+  {
+   "expected": {
+    "available": [
+     "elec.dc.kirchhoff-laws",
+     "elec.dc.ohms-law",
+     "elec.dc.series-parallel",
+     "elec.dc.voltage-divider",
+     "elec.rc.rc-time-constant",
+     "math.alg.exponents-logs",
+     "math.alg.linear-equations",
+     "sw.c.variables"
+    ],
+    "frontier": [
+     "elec.dc.kirchhoff-laws",
+     "elec.rc.rc-time-constant",
+     "math.alg.exponents-logs",
+     "sw.c.variables"
+    ]
+   },
+   "fn": "compute_frontier",
+   "id": "frontier-placement-grace",
+   "input": {
+    "states": {
+     "elec.dc.ohms-law": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.voltage-divider": {
+      "mastery_state": "reviewing",
+      "placement_age_days": 10,
+      "retrievability": 0.4,
+      "source": "placement",
+      "tier_attained": "L1"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "math.calc.exponential-decay": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "placement card in reviewing (R 0.4) satisfies the frontier test inside the 14-day grace"
+  },
+  {
+   "expected": {
+    "available": [
+     "elec.dc.kirchhoff-laws",
+     "elec.dc.ohms-law",
+     "elec.dc.series-parallel",
+     "elec.dc.voltage-divider",
+     "math.alg.exponents-logs",
+     "math.alg.linear-equations",
+     "sw.c.variables"
+    ],
+    "frontier": [
+     "elec.dc.kirchhoff-laws",
+     "math.alg.exponents-logs",
+     "sw.c.variables"
+    ]
+   },
+   "fn": "compute_frontier",
+   "id": "frontier-placement-expired",
+   "input": {
+    "states": {
+     "elec.dc.ohms-law": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.voltage-divider": {
+      "mastery_state": "reviewing",
+      "placement_age_days": 15,
+      "retrievability": 0.4,
+      "source": "placement",
+      "tier_attained": "L1"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "math.calc.exponential-decay": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "after 14 days the normal retrievability test applies again"
+  },
+  {
+   "expected": {
+    "available": [
+     "elec.dc.kirchhoff-laws",
+     "elec.dc.ohms-law",
+     "elec.dc.series-parallel",
+     "elec.dc.voltage-divider",
+     "math.alg.exponents-logs",
+     "math.alg.linear-equations",
+     "sw.c.variables"
+    ],
+    "frontier": [
+     "elec.dc.kirchhoff-laws",
+     "math.alg.exponents-logs",
+     "sw.c.variables"
+    ]
+   },
+   "fn": "compute_frontier",
+   "id": "frontier-placement-verified",
+   "input": {
+    "states": {
+     "elec.dc.ohms-law": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.voltage-divider": {
+      "mastery_state": "reviewing",
+      "placement_age_days": 10,
+      "retrievability": 0.4,
+      "source": "placement",
+      "tier_attained": "L1",
+      "verified_after_placement": true
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "math.calc.exponential-decay": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "after the first verification review the grace no longer applies"
+  },
+  {
+   "expected": {
+    "available": [
+     "elec.dc.kirchhoff-laws",
+     "elec.dc.ohms-law",
+     "elec.dc.series-parallel",
+     "elec.dc.voltage-divider",
+     "elec.rc.rc-time-constant",
+     "math.alg.exponents-logs",
+     "math.alg.linear-equations",
+     "sw.c.variables"
+    ],
+    "frontier": [
+     "elec.dc.kirchhoff-laws",
+     "elec.rc.rc-time-constant",
+     "math.alg.exponents-logs",
+     "sw.c.variables"
+    ]
+   },
+   "fn": "compute_frontier",
+   "id": "frontier-placement-l0-grace",
+   "input": {
+    "states": {
+     "elec.dc.ohms-law": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.voltage-divider": {
+      "mastery_state": "reviewing",
+      "placement_age_days": 10,
+      "retrievability": 0.4,
+      "source": "placement",
+      "tier_attained": "L0"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "math.calc.exponential-decay": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "00a G1: placement card in reviewing, tier_attained L0, R 0.4, day 10: counts as L1 for the L1 edge, so rc-time-constant opens"
+  },
+  {
+   "expected": {
+    "available": [
+     "elec.dc.kirchhoff-laws",
+     "elec.dc.ohms-law",
+     "elec.dc.series-parallel",
+     "elec.dc.voltage-divider",
+     "elec.rc.rc-time-constant",
+     "math.alg.exponents-logs",
+     "math.alg.linear-equations",
+     "sw.c.variables"
+    ],
+    "frontier": [
+     "elec.dc.kirchhoff-laws",
+     "elec.rc.rc-time-constant",
+     "math.alg.exponents-logs",
+     "sw.c.variables"
+    ]
+   },
+   "fn": "compute_frontier",
+   "id": "frontier-placement-l0-grace-day14",
+   "input": {
+    "states": {
+     "elec.dc.ohms-law": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.voltage-divider": {
+      "mastery_state": "reviewing",
+      "placement_age_days": 14,
+      "retrievability": 0.4,
+      "source": "placement",
+      "tier_attained": "L0"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "math.calc.exponential-decay": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "00a G1: the grace includes day 14"
+  },
+  {
+   "expected": {
+    "available": [
+     "elec.dc.kirchhoff-laws",
+     "elec.dc.ohms-law",
+     "elec.dc.series-parallel",
+     "elec.dc.voltage-divider",
+     "math.alg.exponents-logs",
+     "math.alg.linear-equations",
+     "sw.c.variables"
+    ],
+    "frontier": [
+     "elec.dc.kirchhoff-laws",
+     "math.alg.exponents-logs",
+     "sw.c.variables"
+    ]
+   },
+   "fn": "compute_frontier",
+   "id": "frontier-placement-l0-expired",
+   "input": {
+    "states": {
+     "elec.dc.ohms-law": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.voltage-divider": {
+      "mastery_state": "reviewing",
+      "placement_age_days": 15,
+      "retrievability": 0.4,
+      "source": "placement",
+      "tier_attained": "L0"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "math.calc.exponential-decay": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "00a G1: after day 14 the normal tests apply again (R 0.4 and tier L0 both fail)"
+  },
+  {
+   "expected": {
+    "available": [
+     "elec.dc.kirchhoff-laws",
+     "elec.dc.ohms-law",
+     "elec.dc.series-parallel",
+     "elec.dc.voltage-divider",
+     "math.alg.exponents-logs",
+     "math.alg.linear-equations",
+     "sw.c.variables"
+    ],
+    "frontier": [
+     "elec.dc.kirchhoff-laws",
+     "math.alg.exponents-logs",
+     "sw.c.variables"
+    ]
+   },
+   "fn": "compute_frontier",
+   "id": "frontier-placement-l0-verify-failed",
+   "input": {
+    "states": {
+     "elec.dc.ohms-law": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.voltage-divider": {
+      "mastery_state": "reviewing",
+      "placement_age_days": 5,
+      "placement_verify_failed": true,
+      "retrievability": 0.4,
+      "source": "placement",
+      "tier_attained": "L0"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "math.calc.exponential-decay": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "00a G1: the grace ends early when a verify retrieval fails"
+  },
+  {
+   "expected": {
+    "available": [
+     "elec.dc.kirchhoff-laws",
+     "elec.dc.ohms-law",
+     "elec.dc.series-parallel",
+     "elec.dc.voltage-divider",
+     "math.alg.exponents-logs",
+     "math.alg.linear-equations",
+     "sw.c.variables"
+    ],
+    "frontier": [
+     "elec.dc.kirchhoff-laws",
+     "math.alg.exponents-logs",
+     "sw.c.variables"
+    ]
+   },
+   "fn": "compute_frontier",
+   "id": "frontier-placement-l0-verified",
+   "input": {
+    "states": {
+     "elec.dc.ohms-law": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.voltage-divider": {
+      "mastery_state": "reviewing",
+      "placement_age_days": 5,
+      "retrievability": 0.4,
+      "source": "placement",
+      "tier_attained": "L0",
+      "verified_after_placement": true
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "math.calc.exponential-decay": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "00a G1: after a successful verification the grace is replaced by the normal tests (tier L0 fails the L1 edge)"
+  },
+  {
+   "expected": {
+    "available": [
+     "elec.dc.kirchhoff-laws",
+     "elec.dc.ohms-law",
+     "elec.dc.series-parallel",
+     "elec.dc.voltage-divider",
+     "math.alg.exponents-logs",
+     "math.alg.linear-equations",
+     "sw.c.variables"
+    ],
+    "frontier": [
+     "elec.dc.kirchhoff-laws",
+     "math.alg.exponents-logs",
+     "sw.c.variables"
+    ]
+   },
+   "fn": "compute_frontier",
+   "id": "frontier-learned-l0-blocked",
+   "input": {
+    "states": {
+     "elec.dc.ohms-law": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.voltage-divider": {
+      "mastery_state": "reviewing",
+      "placement_age_days": 5,
+      "retrievability": 0.95,
+      "source": "learned",
+      "tier_attained": "L0"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "math.calc.exponential-decay": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "control: a learned (not placed) reviewing card at tier L0 does not satisfy an L1 edge, whatever its R"
+  },
+  {
+   "expected": true,
+   "fn": "prereq_satisfied",
+   "id": "prereq-placement-edge-l1",
+   "input": {
+    "edge": {
+     "min_tier": "L1",
+     "strength": "hard"
+    },
+    "state": {
+     "mastery_state": "reviewing",
+     "placement_age_days": 5,
+     "retrievability": 0.4,
+     "source": "placement",
+     "tier_attained": "L0"
+    }
+   },
+   "note": "00a G1: grace card passes an L1 edge"
+  },
+  {
+   "expected": false,
+   "fn": "prereq_satisfied",
+   "id": "prereq-placement-edge-l2",
+   "input": {
+    "edge": {
+     "min_tier": "L2",
+     "strength": "hard"
+    },
+    "state": {
+     "mastery_state": "reviewing",
+     "placement_age_days": 5,
+     "retrievability": 0.4,
+     "source": "placement",
+     "tier_attained": "L0"
+    }
+   },
+   "note": "00a G1: the grace goes up to L1 only, an L2 edge still fails"
+  },
+  {
+   "expected": true,
+   "fn": "prereq_satisfied",
+   "id": "prereq-placement-edge-null",
+   "input": {
+    "edge": {
+     "min_tier": null,
+     "strength": "hard"
+    },
+    "state": {
+     "mastery_state": "reviewing",
+     "placement_age_days": 5,
+     "retrievability": 0.4,
+     "source": "placement",
+     "tier_attained": "L0"
+    }
+   },
+   "note": "no tier requirement: grace card passes"
+  },
+  {
+   "expected": true,
+   "fn": "prereq_satisfied",
+   "id": "prereq-placement-high-r-l1",
+   "input": {
+    "edge": {
+     "min_tier": "L1",
+     "strength": "hard"
+    },
+    "state": {
+     "mastery_state": "reviewing",
+     "placement_age_days": 5,
+     "retrievability": 0.95,
+     "source": "placement",
+     "tier_attained": "L0"
+    }
+   },
+   "note": "00a G1: the tier relaxation also applies when R is already high"
+  },
+  {
+   "expected": false,
+   "fn": "prereq_satisfied",
+   "id": "prereq-placement-learning-state",
+   "input": {
+    "edge": {
+     "min_tier": null,
+     "strength": "hard"
+    },
+    "state": {
+     "mastery_state": "learning",
+     "placement_age_days": 5,
+     "retrievability": 0.4,
+     "source": "placement",
+     "tier_attained": "L0"
+    }
+   },
+   "note": "an inferred skill still in `learning` (not yet verified) satisfies no edge"
+  },
+  {
+   "expected": false,
+   "fn": "prereq_satisfied",
+   "id": "prereq-placement-mastered-needs-tier",
+   "input": {
+    "edge": {
+     "min_tier": "L1",
+     "strength": "hard"
+    },
+    "state": {
+     "mastery_state": "mastered",
+     "placement_age_days": 5,
+     "retrievability": 0.9,
+     "source": "learned",
+     "tier_attained": "L0"
+    }
+   },
+   "note": "a mastered skill with tier L0 does not pass an L1 edge"
+  },
+  {
+   "expected": {
+    "available": [
+     "math.alg.exponents-logs",
+     "math.alg.linear-equations",
+     "sw.c.variables"
+    ],
+    "frontier": [
+     "math.alg.exponents-logs",
+     "sw.c.variables"
+    ]
+   },
+   "fn": "compute_frontier",
+   "id": "frontier-decayed-prereq",
+   "input": {
+    "states": {
+     "math.alg.linear-equations": {
+      "mastery_state": "decayed",
+      "retrievability": 0.5,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "decayed prerequisite blocks dependents"
+  },
+  {
+   "expected": {
+    "elec.dc.ohms-law": 0.3333,
+    "elec.dc.series-parallel": 0.3333,
+    "elec.dc.voltage-divider": 0.5,
+    "math.alg.linear-equations": 0.25,
+    "sw.c.control-flow": 0.3333,
+    "sw.c.variables": 0.25,
+    "sw.fw.adc-reading": 1.0,
+    "sw.fw.gpio": 0.5
+   },
+   "fn": "project_pull",
+   "id": "pull-gpio",
+   "input": {
+    "step_skill_keys": [
+     "sw.fw.adc-reading"
+    ]
+   },
+   "note": "ancestors of the capstone step get pull 1/(1+distance)"
+  },
+  {
+   "expected": [
+    {
+     "key": "sw.c.control-flow",
+     "score": 1.0832,
+     "unlocks": 1,
+     "unmet_soft": 0.0
+    },
+    {
+     "key": "math.alg.exponents-logs",
+     "score": 0.0833,
+     "unlocks": 1,
+     "unmet_soft": 0.0
+    },
+    {
+     "key": "elec.dc.kirchhoff-laws",
+     "score": -0.6125,
+     "unlocks": 0,
+     "unmet_soft": 0.0
+    }
+   ],
+   "fn": "frontier_scores",
+   "id": "frontier-scores",
+   "input": {
+    "node_minutes": {
+     "elec": 300,
+     "math": 40,
+     "sw": 60
+    },
+    "project_pull": {
+     "elec.dc.ohms-law": 0.3333,
+     "elec.dc.series-parallel": 0.3333,
+     "elec.dc.voltage-divider": 0.5,
+     "math.alg.linear-equations": 0.25,
+     "sw.c.control-flow": 0.3333,
+     "sw.c.variables": 0.25,
+     "sw.fw.adc-reading": 1.0,
+     "sw.fw.gpio": 0.5
+    },
+    "states": {
+     "elec.dc.ohms-law": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.voltage-divider": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "sw.c.variables": {
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "ranking with project pull and node balance"
+  },
+  {
+   "expected": {
+    "stage": 0
+   },
+   "fn": "interleave_stage",
+   "id": "inter-single",
+   "input": {
+    "current": 0,
+    "eligible": 1,
+    "sets": []
+   },
+   "note": "one fluent skill: blocked"
+  },
+  {
+   "expected": {
+    "stage": 1
+   },
+   "fn": "interleave_stage",
+   "id": "inter-pairs",
+   "input": {
+    "current": 0,
+    "eligible": 2,
+    "sets": []
+   },
+   "note": "two fluent skills: pairs"
+  },
+  {
+   "expected": {
+    "stage": 2
+   },
+   "fn": "interleave_stage",
+   "id": "inter-to-triples",
+   "input": {
+    "current": 1,
+    "eligible": 3,
+    "sets": [
+     0.7,
+     0.65
+    ]
+   },
+   "note": "two sets >=0.6 and 3 eligible: stage 2"
+  },
+  {
+   "expected": {
+    "stage": 1
+   },
+   "fn": "interleave_stage",
+   "id": "inter-regress",
+   "input": {
+    "current": 2,
+    "eligible": 3,
+    "sets": [
+     0.7,
+     0.3
+    ]
+   },
+   "note": "last set <0.4: regress one stage"
+  },
+  {
+   "expected": {
+    "available_minutes": 20.0,
+    "fill": 0.55,
+    "fits": true,
+    "tasks": [
+     {
+      "est_min": 1.5,
+      "position": 1,
+      "reason": "due_review",
+      "skill_key": "math.alg.exponents-logs",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 2,
+      "reason": "due_review",
+      "skill_key": "sw.c.variables",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 3,
+      "reason": "due_review",
+      "skill_key": "elec.dc.ohms-law",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 5.0,
+      "position": 4,
+      "reason": "continue",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 1.5,
+      "position": 5,
+      "reason": "same_day_retrieval",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 11.0
+   },
+   "fn": "pack_session",
+   "id": "pack-micro-phone",
+   "input": {
+    "available_minutes": 20,
+    "context": "phone",
+    "node_minutes": {},
+    "project_pull": {
+     "elec.dc.ohms-law": 0.3333,
+     "elec.dc.series-parallel": 0.3333,
+     "elec.dc.voltage-divider": 0.5,
+     "math.alg.linear-equations": 0.25,
+     "sw.c.control-flow": 0.3333,
+     "sw.c.variables": 0.25,
+     "sw.fw.adc-reading": 1.0,
+     "sw.fw.gpio": 0.5
+    },
+    "session_type": "micro",
+    "states": {
+     "elec.dc.ohms-law": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.82,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "loop_step": "faded_problem",
+      "mastery_state": "learning",
+      "retrievability": 0.9,
+      "tier_attained": "L0"
+     },
+     "math.alg.exponents-logs": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.7,
+      "tier_attained": "L1"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.95,
+      "tier_attained": "L1"
+     },
+     "sw.c.variables": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.75,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "20 min phone micro"
+  },
+  {
+   "expected": {
+    "available_minutes": 5.0,
+    "fill": 0.6,
+    "fits": true,
+    "tasks": [
+     {
+      "est_min": 1.5,
+      "position": 1,
+      "reason": "due_review",
+      "skill_key": "math.alg.exponents-logs",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 2,
+      "reason": "due_review",
+      "skill_key": "sw.c.variables",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 3.0
+   },
+   "fn": "pack_session",
+   "id": "pack-micro-5",
+   "input": {
+    "available_minutes": 5,
+    "context": "phone",
+    "node_minutes": {},
+    "session_type": "micro",
+    "states": {
+     "elec.dc.ohms-law": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.82,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "loop_step": "faded_problem",
+      "mastery_state": "learning",
+      "retrievability": 0.9,
+      "tier_attained": "L0"
+     },
+     "math.alg.exponents-logs": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.7,
+      "tier_attained": "L1"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.95,
+      "tier_attained": "L1"
+     },
+     "sw.c.variables": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.75,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "5 min: reviews only, no new skill"
+  },
+  {
+   "expected": {
+    "available_minutes": 90.0,
+    "fill": 0.689,
+    "fits": true,
+    "tasks": [
+     {
+      "est_min": 1.5,
+      "position": 1,
+      "reason": "due_review",
+      "skill_key": "math.alg.exponents-logs",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 2,
+      "reason": "due_review",
+      "skill_key": "sw.c.variables",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 3,
+      "reason": "due_review",
+      "skill_key": "elec.dc.ohms-law",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 5.0,
+      "position": 4,
+      "reason": "continue",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 4.0,
+      "position": 5,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "worked_example"
+     },
+     {
+      "est_min": 5.0,
+      "position": 6,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 5.0,
+      "position": 7,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 4.0,
+      "position": 8,
+      "reason": "new_frontier",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "worked_example"
+     },
+     {
+      "est_min": 5.0,
+      "position": 9,
+      "reason": "new_frontier",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 5.0,
+      "position": 10,
+      "reason": "new_frontier",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 11,
+      "reason": "practice",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 12,
+      "reason": "practice",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 1.5,
+      "position": 13,
+      "reason": "same_day_retrieval",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 14,
+      "reason": "same_day_retrieval",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 15,
+      "reason": "same_day_retrieval",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 62.0
+   },
+   "fn": "pack_session",
+   "id": "pack-focus-desktop",
+   "input": {
+    "available_minutes": 90,
+    "context": "desktop",
+    "node_minutes": {},
+    "project_pull": {
+     "elec.dc.ohms-law": 0.3333,
+     "elec.dc.series-parallel": 0.3333,
+     "elec.dc.voltage-divider": 0.5,
+     "math.alg.linear-equations": 0.25,
+     "sw.c.control-flow": 0.3333,
+     "sw.c.variables": 0.25,
+     "sw.fw.adc-reading": 1.0,
+     "sw.fw.gpio": 0.5
+    },
+    "session_type": "focus",
+    "states": {
+     "elec.dc.ohms-law": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.82,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "loop_step": "faded_problem",
+      "mastery_state": "learning",
+      "retrievability": 0.9,
+      "tier_attained": "L0"
+     },
+     "math.alg.exponents-logs": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.7,
+      "tier_attained": "L1"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.95,
+      "tier_attained": "L1"
+     },
+     "sw.c.variables": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.75,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "90 min desktop focus"
+  },
+  {
+   "expected": {
+    "available_minutes": 30.0,
+    "fill": 0.583,
+    "fits": true,
+    "tasks": [
+     {
+      "est_min": 4.0,
+      "interleaved": true,
+      "position": 1,
+      "reason": "due_review_interleaved",
+      "skill_key": "elec.dc.kirchhoff-laws",
+      "strategy_prompt": true,
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 4.0,
+      "interleaved": true,
+      "position": 2,
+      "reason": "due_review_interleaved",
+      "skill_key": "elec.dc.series-parallel",
+      "strategy_prompt": true,
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 4.0,
+      "interleaved": true,
+      "position": 3,
+      "reason": "due_review_interleaved",
+      "skill_key": "elec.dc.kirchhoff-laws",
+      "strategy_prompt": true,
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 4.0,
+      "interleaved": true,
+      "position": 4,
+      "reason": "due_review_interleaved",
+      "skill_key": "elec.dc.series-parallel",
+      "strategy_prompt": true,
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 1.5,
+      "position": 5,
+      "reason": "due_review",
+      "skill_key": "math.alg.exponents-logs",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 17.5
+   },
+   "fn": "pack_session",
+   "id": "pack-interleave",
+   "input": {
+    "available_minutes": 30,
+    "context": "desktop",
+    "interleave": {
+     "dc": 1
+    },
+    "node_minutes": {},
+    "session_type": "focus",
+    "states": {
+     "elec.dc.kirchhoff-laws": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.8,
+      "tier_attained": "L1"
+     },
+     "elec.dc.ohms-law": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.82,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.8,
+      "tier_attained": "L1"
+     },
+     "math.alg.exponents-logs": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.7,
+      "tier_attained": "L1"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.95,
+      "tier_attained": "L1"
+     },
+     "sw.c.variables": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.75,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "due skills in same module interleaved as a stage-1 set"
+  },
+  {
+   "expected": {
+    "available_minutes": 20.0,
+    "fill": 0.6,
+    "fits": true,
+    "tasks": [
+     {
+      "est_min": 2.5,
+      "position": 1,
+      "reason": "checkpoint_overdue",
+      "skill_key": "math.alg.linear-equations",
+      "task_kind": "checkpoint"
+     },
+     {
+      "est_min": 2.5,
+      "position": 2,
+      "reason": "checkpoint_overdue",
+      "skill_key": "elec.dc.ohms-law",
+      "task_kind": "checkpoint"
+     },
+     {
+      "est_min": 2.5,
+      "position": 3,
+      "reason": "checkpoint_overdue",
+      "skill_key": "sw.c.variables",
+      "task_kind": "checkpoint"
+     },
+     {
+      "est_min": 1.5,
+      "position": 4,
+      "reason": "due_review",
+      "skill_key": "math.alg.exponents-logs",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 5,
+      "reason": "due_review",
+      "skill_key": "sw.c.variables",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 6,
+      "reason": "due_review",
+      "skill_key": "elec.dc.ohms-law",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 12.0
+   },
+   "fn": "pack_session",
+   "id": "pack-checkpoint-overdue",
+   "input": {
+    "available_minutes": 20,
+    "checkpoint": "overdue",
+    "checkpoint_skills": [
+     "math.alg.linear-equations",
+     "elec.dc.ohms-law",
+     "sw.c.variables"
+    ],
+    "context": "phone",
+    "node_minutes": {},
+    "session_type": "micro",
+    "states": {
+     "elec.dc.ohms-law": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.82,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "loop_step": "faded_problem",
+      "mastery_state": "learning",
+      "retrievability": 0.9,
+      "tier_attained": "L0"
+     },
+     "math.alg.exponents-logs": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.7,
+      "tier_attained": "L1"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.95,
+      "tier_attained": "L1"
+     },
+     "sw.c.variables": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.75,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "overdue checkpoint reserved first"
+  },
+  {
+   "expected": {
+    "available_minutes": 20.0,
+    "fill": 0.0,
+    "fits": true,
+    "tasks": [],
+    "total_est_min": 0.0
+   },
+   "fn": "pack_session",
+   "id": "pack-bench",
+   "input": {
+    "available_minutes": 60,
+    "context": "bench",
+    "node_minutes": {},
+    "session_type": "micro",
+    "states": {
+     "elec.dc.ohms-law": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.82,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "loop_step": "faded_problem",
+      "mastery_state": "learning",
+      "retrievability": 0.9,
+      "tier_attained": "L0"
+     },
+     "math.alg.exponents-logs": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.7,
+      "tier_attained": "L1"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.95,
+      "tier_attained": "L1"
+     },
+     "sw.c.variables": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.75,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "bench context yields no cards in micro"
+  },
+  {
+   "expected": {
+    "available_minutes": 180.0,
+    "fill": 0.581,
+    "fits": true,
+    "tasks": [
+     {
+      "est_min": 40,
+      "position": 1,
+      "reason": "project_step",
+      "skill_key": "elec.dc.voltage-divider",
+      "step_key": "prj.L1.divider#s01",
+      "task_kind": "project_step"
+     },
+     {
+      "est_min": 60,
+      "position": 2,
+      "reason": "project_step",
+      "skill_key": "elec.dc.voltage-divider",
+      "step_key": "prj.L1.divider#s02",
+      "task_kind": "project_step"
+     },
+     {
+      "est_min": 1.5,
+      "position": 3,
+      "reason": "lab_review",
+      "skill_key": "math.alg.exponents-logs",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 4,
+      "reason": "lab_review",
+      "skill_key": "sw.c.variables",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 5,
+      "reason": "lab_review",
+      "skill_key": "elec.dc.ohms-law",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 104.5
+   },
+   "fn": "pack_session",
+   "id": "pack-lab",
+   "input": {
+    "available_minutes": 180,
+    "context": "desktop",
+    "node_minutes": {},
+    "project_steps": [
+     {
+      "est_min": 40,
+      "key": "prj.L1.divider#s01",
+      "skill_key": "elec.dc.voltage-divider"
+     },
+     {
+      "est_min": 60,
+      "key": "prj.L1.divider#s02",
+      "skill_key": "elec.dc.voltage-divider"
+     },
+     {
+      "est_min": 90,
+      "key": "prj.L1.divider#s03",
+      "skill_key": "elec.dc.voltage-divider"
+     }
+    ],
+    "session_type": "lab",
+    "states": {
+     "elec.dc.ohms-law": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.82,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "loop_step": "faded_problem",
+      "mastery_state": "learning",
+      "retrievability": 0.9,
+      "tier_attained": "L0"
+     },
+     "math.alg.exponents-logs": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.7,
+      "tier_attained": "L1"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.95,
+      "tier_attained": "L1"
+     },
+     "sw.c.variables": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.75,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "lab: steps that fit, then <=10 min reviews"
+  },
+  {
+   "expected": {
+    "available_minutes": 20.0,
+    "fill": 0.675,
+    "fits": true,
+    "tasks": [
+     {
+      "est_min": 1.5,
+      "position": 1,
+      "reason": "due_review",
+      "skill_key": "sw.c.variables",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 2,
+      "reason": "due_review",
+      "skill_key": "elec.dc.ohms-law",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 4.0,
+      "position": 3,
+      "reason": "new_frontier",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "worked_example"
+     },
+     {
+      "est_min": 5.0,
+      "position": 4,
+      "reason": "new_frontier",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 1.5,
+      "position": 5,
+      "reason": "same_day_retrieval",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 13.5
+   },
+   "fn": "pack_session",
+   "id": "pack-micro-new-skill",
+   "input": {
+    "available_minutes": 20,
+    "context": "phone",
+    "node_minutes": {},
+    "project_pull": {
+     "elec.dc.ohms-law": 0.3333,
+     "elec.dc.series-parallel": 0.3333,
+     "elec.dc.voltage-divider": 0.5,
+     "math.alg.linear-equations": 0.25,
+     "sw.c.control-flow": 0.3333,
+     "sw.c.variables": 0.25,
+     "sw.fw.adc-reading": 1.0,
+     "sw.fw.gpio": 0.5
+    },
+    "session_type": "micro",
+    "states": {
+     "elec.dc.ohms-law": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.82,
+      "tier_attained": "L1"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.95,
+      "tier_attained": "L1"
+     },
+     "sw.c.variables": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.75,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "no in-progress skill: one new frontier skill (worked + faded) plus same-day retrieval"
+  },
+  {
+   "expected": {
+    "available_minutes": 30.0,
+    "fill": 0.617,
+    "fits": true,
+    "tasks": [
+     {
+      "est_min": 1.5,
+      "position": 1,
+      "reason": "due_review",
+      "skill_key": "elec.dc.voltage-divider",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 2,
+      "reason": "due_review",
+      "skill_key": "elec.dc.ohms-law",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 4.0,
+      "position": 3,
+      "reason": "new_frontier",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "worked_example"
+     },
+     {
+      "est_min": 5.0,
+      "position": 4,
+      "reason": "new_frontier",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 5.0,
+      "position": 5,
+      "reason": "new_frontier",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 1.5,
+      "position": 6,
+      "reason": "same_day_retrieval",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 18.5
+   },
+   "fn": "pack_session",
+   "id": "pack-untagged-not-interleaved",
+   "input": {
+    "available_minutes": 30,
+    "context": "desktop",
+    "interleave": {
+     "dc": 1
+    },
+    "node_minutes": {},
+    "session_type": "focus",
+    "states": {
+     "elec.dc.ohms-law": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.82,
+      "tier_attained": "L1"
+     },
+     "elec.dc.voltage-divider": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.8,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "06 section 7.6: a skill with no confusable_set is never interleaved"
+  },
+  {
+   "expected": {
+    "available_minutes": 20.0,
+    "fill": 0.525,
+    "fits": true,
+    "tasks": [
+     {
+      "est_min": 4.0,
+      "position": 1,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.variables",
+      "task_kind": "worked_example"
+     },
+     {
+      "est_min": 5.0,
+      "position": 2,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.variables",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 1.5,
+      "position": 3,
+      "reason": "same_day_retrieval",
+      "skill_key": "sw.c.variables",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 10.5
+   },
+   "fn": "pack_session",
+   "id": "pack-blocked-not-continued",
+   "input": {
+    "available_minutes": 20,
+    "context": "desktop",
+    "node_minutes": {},
+    "session_type": "micro",
+    "states": {
+     "elec.dc.ohms-law": {
+      "blocked_by": "math.alg.linear-equations",
+      "loop_step": "faded_problem",
+      "mastery_state": "learning",
+      "retrievability": 0.9,
+      "tier_attained": "L0"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.95,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "06 section 10: a blocked skill leaves continuation"
+  },
+  {
+   "expected": {
+    "available_minutes": 20.0,
+    "fill": 0.525,
+    "fits": true,
+    "tasks": [
+     {
+      "est_min": 4.0,
+      "position": 1,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.variables",
+      "task_kind": "worked_example"
+     },
+     {
+      "est_min": 5.0,
+      "position": 2,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.variables",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 1.5,
+      "position": 3,
+      "reason": "same_day_retrieval",
+      "skill_key": "sw.c.variables",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 10.5
+   },
+   "fn": "pack_session",
+   "id": "pack-decayed-prereq-low-r",
+   "input": {
+    "available_minutes": 20,
+    "context": "desktop",
+    "node_minutes": {},
+    "session_type": "micro",
+    "states": {
+     "elec.dc.ohms-law": {
+      "loop_step": "faded_problem",
+      "mastery_state": "learning",
+      "retrievability": 0.9,
+      "tier_attained": "L0"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "decayed",
+      "retrievability": 0.5,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "06 section 4.3: below R 0.70 a decayed prerequisite stops continuation"
+  },
+  {
+   "expected": {
+    "available_minutes": 20.0,
+    "fill": 0.325,
+    "fits": true,
+    "tasks": [
+     {
+      "est_min": 5.0,
+      "position": 1,
+      "reason": "continue",
+      "skill_key": "elec.dc.ohms-law",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 1.5,
+      "position": 2,
+      "reason": "same_day_retrieval",
+      "skill_key": "elec.dc.ohms-law",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 6.5
+   },
+   "fn": "pack_session",
+   "id": "pack-decayed-prereq-high-r",
+   "input": {
+    "available_minutes": 20,
+    "context": "desktop",
+    "node_minutes": {},
+    "session_type": "micro",
+    "states": {
+     "elec.dc.ohms-law": {
+      "loop_step": "faded_problem",
+      "mastery_state": "learning",
+      "retrievability": 0.9,
+      "tier_attained": "L0"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "decayed",
+      "retrievability": 0.75,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "06 section 4.3: at R 0.70 or above the in-progress skill continues (hysteresis)"
+  },
+  {
+   "expected": {
+    "available_minutes": 10.0,
+    "fill": 0.15,
+    "fits": true,
+    "tasks": [
+     {
+      "est_min": 1.5,
+      "position": 1,
+      "reason": "due_review",
+      "skill_key": "math.alg.linear-equations",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 1.5
+   },
+   "fn": "pack_session",
+   "id": "pack-placed-verify",
+   "input": {
+    "available_minutes": 10,
+    "context": "phone",
+    "node_minutes": {},
+    "session_type": "micro",
+    "states": {
+     "math.alg.linear-equations": {
+      "loop_step": "verify",
+      "mastery_state": "reviewing",
+      "source": "placement",
+      "tier_attained": "L0"
+     }
+    }
+   },
+   "note": "06 section 3: a placed skill has no card, so its verification is a class (a) task"
+  },
+  {
+   "expected": {
+    "available_minutes": 10.0,
+    "fill": 0.6,
+    "fits": true,
+    "tasks": [
+     {
+      "est_min": 1.5,
+      "position": 1,
+      "reason": "due_review",
+      "skill_key": "sw.c.variables",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 2,
+      "reason": "due_review",
+      "skill_key": "elec.dc.ohms-law",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 3,
+      "reason": "verify_inferred",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 4,
+      "reason": "verify_inferred",
+      "skill_key": "math.alg.exponents-logs",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 6.0
+   },
+   "fn": "pack_session",
+   "id": "pack-verify-inferred",
+   "input": {
+    "available_minutes": 10,
+    "context": "phone",
+    "node_minutes": {},
+    "session_type": "micro",
+    "states": {
+     "elec.dc.ohms-law": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.82,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "loop_step": "verify",
+      "mastery_state": "learning",
+      "retrievability": 0.9,
+      "tier_attained": "L0"
+     },
+     "math.alg.exponents-logs": {
+      "loop_step": "verify",
+      "mastery_state": "learning",
+      "retrievability": 0.9,
+      "tier_attained": "L0"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.95,
+      "tier_attained": "L1"
+     },
+     "sw.c.variables": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.75,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "diagnostic-inferred skills get cheap verification retrievals and do not use a new-skill slot"
+  },
+  {
+   "expected": {
+    "confidence": 2,
+    "expected_ms": 1000,
+    "grader_type": "mixed",
+    "latency_ms": 500,
+    "max_hint_level": 1,
+    "score": 0.5,
+    "task_kind": "problem"
+   },
+   "fn": "aggregate_attempts",
+   "id": "agg-two-items",
+   "input": {
+    "attempts": [
+     {
+      "confidence": 4,
+      "expected_ms": 40000,
+      "grader_type": "exact_numeric",
+      "latency_ms": 20000,
+      "max_hint_level": 0,
+      "score": 1.0,
+      "task_kind": "problem"
+     },
+     {
+      "confidence": 2,
+      "expected_ms": 40000,
+      "grader_type": "exact_numeric",
+      "latency_ms": 60000,
+      "max_hint_level": 1,
+      "score": 0.0,
+      "task_kind": "problem"
+     }
+    ]
+   },
+   "note": "interleaved set of 2 items for one skill becomes one review unit"
+  },
+  {
+   "expected": {
+    "available_minutes": 20.0,
+    "fill": 0.15,
+    "fits": true,
+    "tasks": [
+     {
+      "est_min": 1.5,
+      "position": 1,
+      "reason": "due_review",
+      "skill_key": "sw.c.variables",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 2,
+      "reason": "due_review",
+      "skill_key": "elec.dc.ohms-law",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 3.0
+   },
+   "fn": "pack_session",
+   "id": "pack-backlog-suspend",
+   "input": {
+    "available_minutes": 20,
+    "backlog_suspend_new": true,
+    "context": "phone",
+    "node_minutes": {},
+    "session_type": "micro",
+    "states": {
+     "elec.dc.ohms-law": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.82,
+      "tier_attained": "L1"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.95,
+      "tier_attained": "L1"
+     },
+     "sw.c.variables": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.75,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "backlog: no new skills"
+  },
+  {
+   "expected": {
+    "available_minutes": 90.0,
+    "fill": 0.822,
+    "fits": true,
+    "tasks": [
+     {
+      "est_min": 1.5,
+      "position": 1,
+      "reason": "due_review",
+      "skill_key": "sw.c.variables",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 2,
+      "reason": "due_review",
+      "skill_key": "elec.dc.ohms-law",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 4.0,
+      "position": 3,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "worked_example"
+     },
+     {
+      "est_min": 5.0,
+      "position": 4,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 5.0,
+      "position": 5,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 4.0,
+      "position": 6,
+      "reason": "new_frontier",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "worked_example"
+     },
+     {
+      "est_min": 5.0,
+      "position": 7,
+      "reason": "new_frontier",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 5.0,
+      "position": 8,
+      "reason": "new_frontier",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 9,
+      "reason": "practice",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 10,
+      "reason": "practice",
+      "skill_key": "math.alg.exponents-logs",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 11,
+      "reason": "practice",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 12,
+      "reason": "practice",
+      "skill_key": "math.alg.exponents-logs",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 1.5,
+      "position": 13,
+      "reason": "same_day_retrieval",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 14,
+      "reason": "same_day_retrieval",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 74.0
+   },
+   "fn": "pack_session",
+   "id": "pack-focus-practice",
+   "input": {
+    "available_minutes": 90,
+    "context": "desktop",
+    "node_minutes": {},
+    "project_pull": {
+     "elec.dc.ohms-law": 0.3333,
+     "elec.dc.series-parallel": 0.3333,
+     "elec.dc.voltage-divider": 0.5,
+     "math.alg.linear-equations": 0.25,
+     "sw.c.control-flow": 0.3333,
+     "sw.c.variables": 0.25,
+     "sw.fw.adc-reading": 1.0,
+     "sw.fw.gpio": 0.5
+    },
+    "session_type": "focus",
+    "states": {
+     "elec.dc.ohms-law": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.82,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "loop_step": "practice",
+      "mastery_state": "learning",
+      "retrievability": 0.9,
+      "tier_attained": "L0"
+     },
+     "math.alg.exponents-logs": {
+      "mastery_state": "reviewing",
+      "retrievability": 0.88,
+      "tier_attained": "L0"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.95,
+      "tier_attained": "L1"
+     },
+     "sw.c.variables": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.75,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "focus: reviews, practice, new skills with two faded problems, practice fill"
+  },
+  {
+   "expected": {
+    "available_minutes": 120.0,
+    "fill": 0.7,
+    "fits": true,
+    "served_as": "focus",
+    "tasks": [
+     {
+      "est_min": 1.5,
+      "position": 1,
+      "reason": "due_review",
+      "skill_key": "sw.c.variables",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 2,
+      "reason": "due_review",
+      "skill_key": "elec.dc.ohms-law",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 4.0,
+      "position": 3,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "worked_example"
+     },
+     {
+      "est_min": 5.0,
+      "position": 4,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 5.0,
+      "position": 5,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 4.0,
+      "position": 6,
+      "reason": "new_frontier",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "worked_example"
+     },
+     {
+      "est_min": 5.0,
+      "position": 7,
+      "reason": "new_frontier",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 5.0,
+      "position": 8,
+      "reason": "new_frontier",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 9,
+      "reason": "practice",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 10,
+      "reason": "practice",
+      "skill_key": "math.alg.exponents-logs",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 11,
+      "reason": "practice",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 12,
+      "reason": "practice",
+      "skill_key": "math.alg.exponents-logs",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 13,
+      "reason": "practice",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 1.5,
+      "position": 14,
+      "reason": "same_day_retrieval",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 15,
+      "reason": "same_day_retrieval",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 84.0
+   },
+   "fn": "pack_session",
+   "id": "pack-lab-no-steps",
+   "input": {
+    "available_minutes": 180,
+    "context": "desktop",
+    "node_minutes": {},
+    "project_pull": {
+     "elec.dc.ohms-law": 0.3333,
+     "elec.dc.series-parallel": 0.3333,
+     "elec.dc.voltage-divider": 0.5,
+     "math.alg.linear-equations": 0.25,
+     "sw.c.control-flow": 0.3333,
+     "sw.c.variables": 0.25,
+     "sw.fw.adc-reading": 1.0,
+     "sw.fw.gpio": 0.5
+    },
+    "project_steps": [],
+    "session_type": "lab",
+    "states": {
+     "elec.dc.ohms-law": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.82,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "loop_step": "practice",
+      "mastery_state": "learning",
+      "retrievability": 0.9,
+      "tier_attained": "L0"
+     },
+     "math.alg.exponents-logs": {
+      "mastery_state": "reviewing",
+      "retrievability": 0.88,
+      "tier_attained": "L0"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.95,
+      "tier_attained": "L1"
+     },
+     "sw.c.variables": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.75,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "00a G4: a lab slot with no project step is served as a focus session capped at 120 minutes"
+  },
+  {
+   "expected": {
+    "available_minutes": 120.0,
+    "fill": 0.7,
+    "fits": true,
+    "served_as": "focus",
+    "tasks": [
+     {
+      "est_min": 1.5,
+      "position": 1,
+      "reason": "due_review",
+      "skill_key": "sw.c.variables",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 2,
+      "reason": "due_review",
+      "skill_key": "elec.dc.ohms-law",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 4.0,
+      "position": 3,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "worked_example"
+     },
+     {
+      "est_min": 5.0,
+      "position": 4,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 5.0,
+      "position": 5,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 4.0,
+      "position": 6,
+      "reason": "new_frontier",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "worked_example"
+     },
+     {
+      "est_min": 5.0,
+      "position": 7,
+      "reason": "new_frontier",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 5.0,
+      "position": 8,
+      "reason": "new_frontier",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 9,
+      "reason": "practice",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 10,
+      "reason": "practice",
+      "skill_key": "math.alg.exponents-logs",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 11,
+      "reason": "practice",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 12,
+      "reason": "practice",
+      "skill_key": "math.alg.exponents-logs",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 13,
+      "reason": "practice",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 1.5,
+      "position": 14,
+      "reason": "same_day_retrieval",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 15,
+      "reason": "same_day_retrieval",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 84.0
+   },
+   "fn": "pack_session",
+   "id": "pack-lab-step-too-big",
+   "input": {
+    "available_minutes": 150,
+    "context": "desktop",
+    "node_minutes": {},
+    "project_pull": {
+     "elec.dc.ohms-law": 0.3333,
+     "elec.dc.series-parallel": 0.3333,
+     "elec.dc.voltage-divider": 0.5,
+     "math.alg.linear-equations": 0.25,
+     "sw.c.control-flow": 0.3333,
+     "sw.c.variables": 0.25,
+     "sw.fw.adc-reading": 1.0,
+     "sw.fw.gpio": 0.5
+    },
+    "project_steps": [
+     {
+      "est_min": 200,
+      "key": "prj.L1.divider#s09",
+      "skill_key": "elec.dc.voltage-divider"
+     }
+    ],
+    "session_type": "lab",
+    "states": {
+     "elec.dc.ohms-law": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.82,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "loop_step": "practice",
+      "mastery_state": "learning",
+      "retrievability": 0.9,
+      "tier_attained": "L0"
+     },
+     "math.alg.exponents-logs": {
+      "mastery_state": "reviewing",
+      "retrievability": 0.88,
+      "tier_attained": "L0"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.95,
+      "tier_attained": "L1"
+     },
+     "sw.c.variables": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.75,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "00a G4: the only step does not fit the slot, so no step is eligible: focus fallback"
+  },
+  {
+   "expected": {
+    "available_minutes": 90.0,
+    "fill": 0.822,
+    "fits": true,
+    "served_as": "focus",
+    "tasks": [
+     {
+      "est_min": 1.5,
+      "position": 1,
+      "reason": "due_review",
+      "skill_key": "sw.c.variables",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 2,
+      "reason": "due_review",
+      "skill_key": "elec.dc.ohms-law",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 4.0,
+      "position": 3,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "worked_example"
+     },
+     {
+      "est_min": 5.0,
+      "position": 4,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 5.0,
+      "position": 5,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 4.0,
+      "position": 6,
+      "reason": "new_frontier",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "worked_example"
+     },
+     {
+      "est_min": 5.0,
+      "position": 7,
+      "reason": "new_frontier",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 5.0,
+      "position": 8,
+      "reason": "new_frontier",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 9,
+      "reason": "practice",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 10,
+      "reason": "practice",
+      "skill_key": "math.alg.exponents-logs",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 11,
+      "reason": "practice",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 12,
+      "reason": "practice",
+      "skill_key": "math.alg.exponents-logs",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 1.5,
+      "position": 13,
+      "reason": "same_day_retrieval",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 14,
+      "reason": "same_day_retrieval",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 74.0
+   },
+   "fn": "pack_session",
+   "id": "pack-lab-short-no-steps",
+   "input": {
+    "available_minutes": 90,
+    "context": "desktop",
+    "node_minutes": {},
+    "project_pull": {
+     "elec.dc.ohms-law": 0.3333,
+     "elec.dc.series-parallel": 0.3333,
+     "elec.dc.voltage-divider": 0.5,
+     "math.alg.linear-equations": 0.25,
+     "sw.c.control-flow": 0.3333,
+     "sw.c.variables": 0.25,
+     "sw.fw.adc-reading": 1.0,
+     "sw.fw.gpio": 0.5
+    },
+    "project_steps": [],
+    "session_type": "lab",
+    "states": {
+     "elec.dc.ohms-law": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.82,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "loop_step": "practice",
+      "mastery_state": "learning",
+      "retrievability": 0.9,
+      "tier_attained": "L0"
+     },
+     "math.alg.exponents-logs": {
+      "mastery_state": "reviewing",
+      "retrievability": 0.88,
+      "tier_attained": "L0"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.95,
+      "tier_attained": "L1"
+     },
+     "sw.c.variables": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.75,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "00a G4: the 120-minute cap does not extend a shorter slot"
+  },
+  {
+   "expected": {
+    "available_minutes": 20.0,
+    "fill": 0.8,
+    "fits": true,
+    "tasks": [
+     {
+      "est_min": 1.5,
+      "position": 1,
+      "reason": "due_review",
+      "skill_key": "sw.c.variables",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 4.0,
+      "position": 2,
+      "reason": "applied_gap",
+      "skill_key": "elec.dc.ohms-law",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 4.0,
+      "position": 3,
+      "reason": "new_frontier",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "worked_example"
+     },
+     {
+      "est_min": 5.0,
+      "position": 4,
+      "reason": "new_frontier",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 1.5,
+      "position": 5,
+      "reason": "same_day_retrieval",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 16.0
+   },
+   "fn": "pack_session",
+   "id": "pack-applied-gap-micro",
+   "input": {
+    "available_minutes": 20,
+    "context": "phone",
+    "node_minutes": {},
+    "project_pull": {
+     "elec.dc.ohms-law": 0.3333,
+     "elec.dc.series-parallel": 0.3333,
+     "elec.dc.voltage-divider": 0.5,
+     "math.alg.linear-equations": 0.25,
+     "sw.c.control-flow": 0.3333,
+     "sw.c.variables": 0.25,
+     "sw.fw.adc-reading": 1.0,
+     "sw.fw.gpio": 0.5
+    },
+    "session_type": "micro",
+    "states": {
+     "elec.dc.ohms-law": {
+      "mastery_state": "reviewing",
+      "needs_applied": true,
+      "retrievability": 0.9,
+      "tier_attained": "L0"
+     },
+     "math.alg.exponents-logs": {
+      "mastery_state": "reviewing",
+      "needs_applied": true,
+      "retrievability": 0.88,
+      "tier_attained": "L0"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.95,
+      "tier_attained": "L1"
+     },
+     "sw.c.variables": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.75,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "reviewing skills missing only the applied attempt: one problem_short (the one with more dependents) before the new-skill slot"
+  },
+  {
+   "expected": {
+    "available_minutes": 90.0,
+    "fill": 0.867,
+    "fits": true,
+    "tasks": [
+     {
+      "est_min": 1.5,
+      "position": 1,
+      "reason": "due_review",
+      "skill_key": "sw.c.variables",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 10.0,
+      "position": 2,
+      "reason": "applied_gap",
+      "skill_key": "elec.dc.ohms-law",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 3,
+      "reason": "applied_gap",
+      "skill_key": "math.alg.exponents-logs",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 4.0,
+      "position": 4,
+      "reason": "new_frontier",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "worked_example"
+     },
+     {
+      "est_min": 5.0,
+      "position": 5,
+      "reason": "new_frontier",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 5.0,
+      "position": 6,
+      "reason": "new_frontier",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 4.0,
+      "position": 7,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "worked_example"
+     },
+     {
+      "est_min": 5.0,
+      "position": 8,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 5.0,
+      "position": 9,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 4.0,
+      "position": 10,
+      "reason": "new_frontier",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "worked_example"
+     },
+     {
+      "est_min": 5.0,
+      "position": 11,
+      "reason": "new_frontier",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 5.0,
+      "position": 12,
+      "reason": "new_frontier",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 10.0,
+      "position": 13,
+      "reason": "practice",
+      "skill_key": "math.alg.exponents-logs",
+      "task_kind": "problem"
+     },
+     {
+      "est_min": 1.5,
+      "position": 14,
+      "reason": "same_day_retrieval",
+      "skill_key": "elec.dc.series-parallel",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 15,
+      "reason": "same_day_retrieval",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 16,
+      "reason": "same_day_retrieval",
+      "skill_key": "math.calc.exponential-decay",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 78.0
+   },
+   "fn": "pack_session",
+   "id": "pack-applied-gap-focus",
+   "input": {
+    "available_minutes": 90,
+    "context": "desktop",
+    "node_minutes": {},
+    "project_pull": {
+     "elec.dc.ohms-law": 0.3333,
+     "elec.dc.series-parallel": 0.3333,
+     "elec.dc.voltage-divider": 0.5,
+     "math.alg.linear-equations": 0.25,
+     "sw.c.control-flow": 0.3333,
+     "sw.c.variables": 0.25,
+     "sw.fw.adc-reading": 1.0,
+     "sw.fw.gpio": 0.5
+    },
+    "session_type": "focus",
+    "states": {
+     "elec.dc.ohms-law": {
+      "mastery_state": "reviewing",
+      "needs_applied": true,
+      "retrievability": 0.9,
+      "tier_attained": "L0"
+     },
+     "math.alg.exponents-logs": {
+      "mastery_state": "reviewing",
+      "needs_applied": true,
+      "retrievability": 0.88,
+      "tier_attained": "L0"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.95,
+      "tier_attained": "L1"
+     },
+     "sw.c.variables": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.75,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "focus: both applied-gap skills get one problem, ahead of new frontier skills"
+  },
+  {
+   "expected": {
+    "focus": {
+     "len_min": 90,
+     "n": 2
+    },
+    "lab": {
+     "len_min": 180,
+     "n": 1
+    },
+    "micro": {
+     "len_min": 20,
+     "n": 5
+    },
+    "planned_total_min": 460,
+    "slack_min": 20
+   },
+   "fn": "weekly_plan_slots",
+   "id": "week-480",
+   "input": {
+    "weekly_minutes": 480
+   },
+   "note": "weekly plan for 480 min"
+  },
+  {
+   "expected": {
+    "focus": {
+     "len_min": 45,
+     "n": 2
+    },
+    "lab": {
+     "len_min": 120,
+     "n": 1
+    },
+    "micro": {
+     "len_min": 15,
+     "n": 5
+    },
+    "planned_total_min": 285,
+    "slack_min": 15
+   },
+   "fn": "weekly_plan_slots",
+   "id": "week-300",
+   "input": {
+    "weekly_minutes": 300
+   },
+   "note": "weekly plan for 300 min"
+  },
+  {
+   "expected": {
+    "focus": {
+     "len_min": 75,
+     "n": 2
+    },
+    "lab": {
+     "len_min": 0,
+     "n": 0
+    },
+    "micro": {
+     "len_min": 15,
+     "n": 5
+    },
+    "planned_total_min": 225,
+    "slack_min": 15
+   },
+   "fn": "weekly_plan_slots",
+   "id": "week-240",
+   "input": {
+    "weekly_minutes": 240
+   },
+   "note": "weekly plan for 240 min"
+  },
+  {
+   "expected": {
+    "focus": {
+     "len_min": 120,
+     "n": 2
+    },
+    "lab": {
+     "len_min": 240,
+     "n": 1
+    },
+    "micro": {
+     "len_min": 20,
+     "n": 5
+    },
+    "planned_total_min": 580,
+    "slack_min": 20
+   },
+   "fn": "weekly_plan_slots",
+   "id": "week-600",
+   "input": {
+    "weekly_minutes": 600
+   },
+   "note": "weekly plan for 600 min"
+  },
+  {
+   "expected": {
+    "actions": [
+     "focus: moved to day 6"
+    ],
+    "carry": {
+     "focus_min": 0,
+     "lab_min": 0
+    },
+    "planned_remaining_min": 360,
+    "slots": [
+     {
+      "day": 0,
+      "min": 20,
+      "status": "done",
+      "type": "micro"
+     },
+     {
+      "day": 6,
+      "min": 90,
+      "status": "planned",
+      "type": "focus"
+     },
+     {
+      "day": 3,
+      "min": 90,
+      "status": "planned",
+      "type": "focus"
+     },
+     {
+      "day": 5,
+      "min": 180,
+      "status": "planned",
+      "type": "lab"
+     }
+    ]
+   },
+   "fn": "rebalance",
+   "id": "rebal-focus-moved",
+   "input": {
+    "slots": [
+     {
+      "day": 0,
+      "min": 20,
+      "status": "done",
+      "type": "micro"
+     },
+     {
+      "day": 1,
+      "min": 90,
+      "status": "missed",
+      "type": "focus"
+     },
+     {
+      "day": 3,
+      "min": 90,
+      "status": "planned",
+      "type": "focus"
+     },
+     {
+      "day": 5,
+      "min": 180,
+      "status": "planned",
+      "type": "lab"
+     }
+    ],
+    "today_idx": 3,
+    "weekly_minutes": 480
+   },
+   "note": "missed focus on day 1; day 3 focus exists; day 4 adjacent, day 5 has lab, so moved to day 6"
+  },
+  {
+   "expected": {
+    "actions": [
+     "micro: added extra micro on day 3",
+     "micro day 0: not made up; due reviews carry over",
+     "micro day 1: not made up; due reviews carry over"
+    ],
+    "carry": {
+     "focus_min": 0,
+     "lab_min": 0
+    },
+    "planned_remaining_min": 200,
+    "slots": [
+     {
+      "day": 0,
+      "min": 20,
+      "status": "missed",
+      "type": "micro"
+     },
+     {
+      "day": 1,
+      "min": 20,
+      "status": "missed",
+      "type": "micro"
+     },
+     {
+      "day": 2,
+      "min": 20,
+      "status": "done",
+      "type": "micro"
+     },
+     {
+      "day": 5,
+      "min": 180,
+      "status": "planned",
+      "type": "lab"
+     },
+     {
+      "day": 3,
+      "min": 20,
+      "status": "planned",
+      "type": "micro"
+     }
+    ]
+   },
+   "fn": "rebalance",
+   "id": "rebal-two-micro",
+   "input": {
+    "slots": [
+     {
+      "day": 0,
+      "min": 20,
+      "status": "missed",
+      "type": "micro"
+     },
+     {
+      "day": 1,
+      "min": 20,
+      "status": "missed",
+      "type": "micro"
+     },
+     {
+      "day": 2,
+      "min": 20,
+      "status": "done",
+      "type": "micro"
+     },
+     {
+      "day": 5,
+      "min": 180,
+      "status": "planned",
+      "type": "lab"
+     }
+    ],
+    "today_idx": 3,
+    "weekly_minutes": 480
+   },
+   "note": "2 missed micro: add one extra, no make-up of the rest"
+  },
+  {
+   "expected": {
+    "actions": [
+     "lab: moved to day 6"
+    ],
+    "carry": {
+     "focus_min": 0,
+     "lab_min": 0
+    },
+    "planned_remaining_min": 180,
+    "slots": [
+     {
+      "day": 6,
+      "min": 180,
+      "status": "planned",
+      "type": "lab"
+     }
+    ]
+   },
+   "fn": "rebalance",
+   "id": "rebal-lab-moved",
+   "input": {
+    "slots": [
+     {
+      "day": 5,
+      "min": 180,
+      "status": "missed",
+      "type": "lab"
+     }
+    ],
+    "today_idx": 4,
+    "weekly_minutes": 480
+   },
+   "note": "lab moved to last free day"
+  },
+  {
+   "expected": {
+    "module_checkpoints": [],
+    "status": "none"
+   },
+   "fn": "checkpoint_status",
+   "id": "cp-none",
+   "input": {
+    "days_since_last": 5,
+    "days_since_module": {},
+    "module_fraction_ready": {
+     "dc": 0.5
+    }
+   },
+   "note": "nothing due"
+  },
+  {
+   "expected": {
+    "module_checkpoints": [],
+    "status": "due"
+   },
+   "fn": "checkpoint_status",
+   "id": "cp-due",
+   "input": {
+    "days_since_last": 12,
+    "days_since_module": {},
+    "module_fraction_ready": {}
+   },
+   "note": "day 12: reserve"
+  },
+  {
+   "expected": {
+    "module_checkpoints": [],
+    "status": "overdue"
+   },
+   "fn": "checkpoint_status",
+   "id": "cp-overdue",
+   "input": {
+    "days_since_last": 15,
+    "days_since_module": {},
+    "module_fraction_ready": {}
+   },
+   "note": "day 15: overdue"
+  },
+  {
+   "expected": {
+    "module_checkpoints": [
+     "dc"
+    ],
+    "status": "due"
+   },
+   "fn": "checkpoint_status",
+   "id": "cp-module",
+   "input": {
+    "days_since_last": 3,
+    "days_since_module": {
+     "dc": null
+    },
+    "module_fraction_ready": {
+     "c": 0.5,
+     "dc": 0.85
+    }
+   },
+   "note": "module 80% ready"
+  },
+  {
+   "expected": {
+    "reason": "consecutive_fails",
+    "stuck": true
+   },
+   "fn": "is_stuck",
+   "id": "stuck-yes",
+   "input": {
+    "recent": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "a",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "b",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 0.2,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "c",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 0.2,
+      "submitted_at": "2026-10-26T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "d",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 0.1,
+      "submitted_at": "2026-10-26T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ]
+   },
+   "note": "3 fails over 2 variants and 2 days"
+  },
+  {
+   "expected": {
+    "reason": null,
+    "stuck": false
+   },
+   "fn": "is_stuck",
+   "id": "stuck-same-day",
+   "input": {
+    "recent": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "b",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 0.2,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "c",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 0.2,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "d",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 0.2,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ]
+   },
+   "note": "3 fails same day: not yet"
+  },
+  {
+   "expected": {
+    "reason": "reveals",
+    "stuck": true
+   },
+   "fn": "is_stuck",
+   "id": "stuck-reveals",
+   "input": {
+    "recent": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "a",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "b",
+      "item_tier": "L1",
+      "max_hint_level": 4,
+      "score": 0.0,
+      "submitted_at": "2026-10-25T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "c",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-26T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "d",
+      "item_tier": "L1",
+      "max_hint_level": 4,
+      "score": 0.0,
+      "submitted_at": "2026-10-27T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ]
+   },
+   "note": "2 reveals in last 4"
+  },
+  {
+   "expected": {
+    "blocked_by": [
+     "elec.dc.series-parallel"
+    ],
+    "chain": [
+     "elec.dc.series-parallel"
+    ],
+    "mark_decayed": [],
+    "prioritise": [
+     "elec.dc.series-parallel"
+    ],
+    "skill": "elec.dc.voltage-divider",
+    "source": "state",
+    "status": "blocked"
+   },
+   "fn": "trace_back",
+   "id": "trace-state-suspect",
+   "input": {
+    "skill_key": "elec.dc.voltage-divider",
+    "states": {
+     "elec.dc.ohms-law": {
+      "elo": 1450,
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "elo": 1400,
+      "mastery_state": "reviewing",
+      "retrievability": 0.6,
+      "tier_attained": "L0"
+     },
+     "math.alg.linear-equations": {
+      "elo": 1500,
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "prereq with R<0.8 is the suspect"
+  },
+  {
+   "expected": {
+    "blocked_by": [],
+    "chain": [],
+    "probe": [
+     "elec.dc.series-parallel"
+    ],
+    "skill": "elec.dc.voltage-divider",
+    "status": "probe_needed"
+   },
+   "fn": "trace_back",
+   "id": "trace-probe-needed",
+   "input": {
+    "skill_key": "elec.dc.voltage-divider",
+    "states": {
+     "elec.dc.ohms-law": {
+      "elo": 1450,
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "elo": 1400,
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "math.alg.linear-equations": {
+      "elo": 1500,
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "no suspect: probe prereq"
+  },
+  {
+   "expected": {
+    "blocked_by": [
+     "elec.dc.series-parallel"
+    ],
+    "chain": [
+     "elec.dc.series-parallel"
+    ],
+    "mark_decayed": [
+     "elec.dc.series-parallel"
+    ],
+    "prioritise": [],
+    "skill": "elec.dc.voltage-divider",
+    "source": "probe",
+    "status": "blocked"
+   },
+   "fn": "trace_back",
+   "id": "trace-probe-fail-recurse",
+   "input": {
+    "probe_results": {
+     "elec.dc.ohms-law": 1.0,
+     "elec.dc.series-parallel": 0.0
+    },
+    "skill_key": "elec.dc.voltage-divider",
+    "states": {
+     "elec.dc.ohms-law": {
+      "elo": 1450,
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "elo": 1400,
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "math.alg.linear-equations": {
+      "elo": 1500,
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "failed probe on series-parallel; recursion probes ohms-law"
+  },
+  {
+   "expected": {
+    "action": "restart_loop_at_worked_example",
+    "blocked_by": [],
+    "chain": [],
+    "flag_content_review": true,
+    "skill": "elec.dc.voltage-divider",
+    "status": "skill_specific"
+   },
+   "fn": "trace_back",
+   "id": "trace-skill-specific",
+   "input": {
+    "probe_results": {
+     "elec.dc.series-parallel": 1.0
+    },
+    "skill_key": "elec.dc.voltage-divider",
+    "states": {
+     "elec.dc.ohms-law": {
+      "elo": 1450,
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "elo": 1400,
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     },
+     "math.alg.linear-equations": {
+      "elo": 1500,
+      "mastery_state": "mastered",
+      "retrievability": 0.9,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "all probes pass: skill-specific"
+  },
+  {
+   "expected": {
+    "flag": false,
+    "rate": 0.5
+   },
+   "fn": "hint_reliance",
+   "id": "hint-reliance",
+   "input": {
+    "recent": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 2,
+      "score": 1.0,
+      "submitted_at": "2026-10-01T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-02T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 2,
+      "score": 1.0,
+      "submitted_at": "2026-10-03T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i4",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-04T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i5",
+      "item_tier": "L1",
+      "max_hint_level": 2,
+      "score": 1.0,
+      "submitted_at": "2026-10-05T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i6",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-06T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i7",
+      "item_tier": "L1",
+      "max_hint_level": 2,
+      "score": 1.0,
+      "submitted_at": "2026-10-07T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i8",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-08T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i9",
+      "item_tier": "L1",
+      "max_hint_level": 2,
+      "score": 1.0,
+      "submitted_at": "2026-10-09T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i10",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-10T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i11",
+      "item_tier": "L1",
+      "max_hint_level": 2,
+      "score": 1.0,
+      "submitted_at": "2026-10-11T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i12",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-12T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ]
+   },
+   "note": "50% hinted: not above threshold"
+  },
+  {
+   "expected": {
+    "flag": true,
+    "rate": 0.6667
+   },
+   "fn": "hint_reliance",
+   "id": "hint-reliance-high",
+   "input": {
+    "recent": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 3,
+      "score": 1.0,
+      "submitted_at": "2026-10-01T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 3,
+      "score": 1.0,
+      "submitted_at": "2026-10-02T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-03T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i4",
+      "item_tier": "L1",
+      "max_hint_level": 3,
+      "score": 1.0,
+      "submitted_at": "2026-10-04T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i5",
+      "item_tier": "L1",
+      "max_hint_level": 3,
+      "score": 1.0,
+      "submitted_at": "2026-10-05T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i6",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-06T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i7",
+      "item_tier": "L1",
+      "max_hint_level": 3,
+      "score": 1.0,
+      "submitted_at": "2026-10-07T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i8",
+      "item_tier": "L1",
+      "max_hint_level": 3,
+      "score": 1.0,
+      "submitted_at": "2026-10-08T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i9",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-09T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i10",
+      "item_tier": "L1",
+      "max_hint_level": 3,
+      "score": 1.0,
+      "submitted_at": "2026-10-10T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i11",
+      "item_tier": "L1",
+      "max_hint_level": 3,
+      "score": 1.0,
+      "submitted_at": "2026-10-11T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i12",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-12T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ]
+   },
+   "note": "8 of 12 hinted: flag"
+  },
+  {
+   "expected": 0.85,
+   "fn": "desired_retention",
+   "id": "retention-w0-none",
+   "input": {
+    "observed_minus_predicted": null,
+    "weeks_since_start": 0
+   },
+   "note": "00a G5: week 0, no calibration data: 0.85"
+  },
+  {
+   "expected": 0.85,
+   "fn": "desired_retention",
+   "id": "retention-w7_9-0_0",
+   "input": {
+    "observed_minus_predicted": 0.0,
+    "weeks_since_start": 7.9
+   },
+   "note": "00a G5: inside the first 8 weeks: 0.85 even with a perfect calibration"
+  },
+  {
+   "expected": 0.9,
+   "fn": "desired_retention",
+   "id": "retention-w8-0_02",
+   "input": {
+    "observed_minus_predicted": 0.02,
+    "weeks_since_start": 8
+   },
+   "note": "00a G5: week 8, observed - predicted = +0.02: 0.90"
+  },
+  {
+   "expected": 0.9,
+   "fn": "desired_retention",
+   "id": "retention-w8-m0_07",
+   "input": {
+    "observed_minus_predicted": -0.07,
+    "weeks_since_start": 8
+   },
+   "note": "00a G5: boundary: exactly -0.07 is still within 0.07: 0.90"
+  },
+  {
+   "expected": 0.85,
+   "fn": "desired_retention",
+   "id": "retention-w8-m0_08",
+   "input": {
+    "observed_minus_predicted": -0.08,
+    "weeks_since_start": 8
+   },
+   "note": "00a G5: observed 0.08 below predicted: stay at 0.85"
+  },
+  {
+   "expected": 0.85,
+   "fn": "desired_retention",
+   "id": "retention-w12-0_1",
+   "input": {
+    "observed_minus_predicted": 0.1,
+    "weeks_since_start": 12
+   },
+   "note": "00a G5: observed 0.10 above predicted: the model is off the other way, stay at 0.85 (two-sided)"
+  },
+  {
+   "expected": 0.85,
+   "fn": "desired_retention",
+   "id": "retention-w20-none",
+   "input": {
+    "observed_minus_predicted": null,
+    "weeks_since_start": 20
+   },
+   "note": "00a G5: no calibration data after week 8: stay at 0.85"
+  },
+  {
+   "expected": {
+    "flag": true,
+    "gap": 0.325,
+    "reason": "unaided_trails_aided",
+    "tutor_mode": "post_attempt_only"
+   },
+   "fn": "tutor_overreliance",
+   "id": "reliance-trigger",
+   "input": {
+    "checkpoints": [
+     {
+      "aided_correct": 18,
+      "aided_n": 20,
+      "unaided_correct": 6,
+      "unaided_n": 10
+     },
+     {
+      "aided_correct": 17,
+      "aided_n": 20,
+      "unaided_correct": 5,
+      "unaided_n": 10
+     }
+    ]
+   },
+   "note": "00a G6: strict-unaided 11/20 = 0.55 against aided 35/40 = 0.875: gap 0.325, post-attempt-only"
+  },
+  {
+   "expected": {
+    "flag": false,
+    "gap": 0.15,
+    "reason": "within_threshold",
+    "tutor_mode": "normal"
+   },
+   "fn": "tutor_overreliance",
+   "id": "reliance-exactly-threshold",
+   "input": {
+    "checkpoints": [
+     {
+      "aided_correct": 10,
+      "aided_n": 10,
+      "unaided_correct": 8,
+      "unaided_n": 10
+     },
+     {
+      "aided_correct": 10,
+      "aided_n": 10,
+      "unaided_correct": 9,
+      "unaided_n": 10
+     }
+    ]
+   },
+   "note": "00a G6: gap exactly 0.15 is not more than 0.15: no flag"
+  },
+  {
+   "expected": {
+    "flag": true,
+    "gap": 0.2,
+    "reason": "unaided_trails_aided",
+    "tutor_mode": "post_attempt_only"
+   },
+   "fn": "tutor_overreliance",
+   "id": "reliance-just-over",
+   "input": {
+    "checkpoints": [
+     {
+      "aided_correct": 10,
+      "aided_n": 10,
+      "unaided_correct": 8,
+      "unaided_n": 10
+     },
+     {
+      "aided_correct": 10,
+      "aided_n": 10,
+      "unaided_correct": 8,
+      "unaided_n": 10
+     }
+    ]
+   },
+   "note": "00a G6: gap 0.20: flag"
+  },
+  {
+   "expected": {
+    "flag": false,
+    "gap": null,
+    "reason": "too_few_attempts",
+    "tutor_mode": "normal"
+   },
+   "fn": "tutor_overreliance",
+   "id": "reliance-too-few-attempts",
+   "input": {
+    "checkpoints": [
+     {
+      "aided_correct": 18,
+      "aided_n": 20,
+      "unaided_correct": 1,
+      "unaided_n": 4
+     },
+     {
+      "aided_correct": 18,
+      "aided_n": 20,
+      "unaided_correct": 1,
+      "unaided_n": 5
+     }
+    ]
+   },
+   "note": "00a G6: only 9 strict-unaided attempts in the window: no decision"
+  },
+  {
+   "expected": {
+    "flag": false,
+    "gap": null,
+    "reason": "too_few_checkpoints",
+    "tutor_mode": "normal"
+   },
+   "fn": "tutor_overreliance",
+   "id": "reliance-one-checkpoint",
+   "input": {
+    "checkpoints": [
+     {
+      "aided_correct": 28,
+      "aided_n": 30,
+      "unaided_correct": 3,
+      "unaided_n": 12
+     }
+    ]
+   },
+   "note": "00a G6: needs two checkpoints"
+  },
+  {
+   "expected": {
+    "flag": false,
+    "gap": 0.05,
+    "reason": "within_threshold",
+    "tutor_mode": "normal"
+   },
+   "fn": "tutor_overreliance",
+   "id": "reliance-recovery",
+   "input": {
+    "checkpoints": [
+     {
+      "aided_correct": 18,
+      "aided_n": 20,
+      "unaided_correct": 3,
+      "unaided_n": 10
+     },
+     {
+      "aided_correct": 18,
+      "aided_n": 20,
+      "unaided_correct": 4,
+      "unaided_n": 10
+     },
+     {
+      "aided_correct": 17,
+      "aided_n": 20,
+      "unaided_correct": 8,
+      "unaided_n": 10
+     },
+     {
+      "aided_correct": 17,
+      "aided_n": 20,
+      "unaided_correct": 8,
+      "unaided_n": 10
+     }
+    ]
+   },
+   "note": "00a G6: only the last two checkpoints count, so the switch lifts when the gap closes"
+  },
+  {
+   "expected": {
+    "flag": false,
+    "gap": -0.3,
+    "reason": "within_threshold",
+    "tutor_mode": "normal"
+   },
+   "fn": "tutor_overreliance",
+   "id": "reliance-unaided-better",
+   "input": {
+    "checkpoints": [
+     {
+      "aided_correct": 12,
+      "aided_n": 20,
+      "unaided_correct": 9,
+      "unaided_n": 10
+     },
+     {
+      "aided_correct": 12,
+      "aided_n": 20,
+      "unaided_correct": 9,
+      "unaided_n": 10
+     }
+    ]
+   },
+   "note": "00a G6: unaided accuracy above aided accuracy: no flag"
+  },
+  {
+   "expected": {
+    "flag": true,
+    "gap": 0.45,
+    "reason": "unaided_trails_aided",
+    "tutor_mode": "post_attempt_only"
+   },
+   "fn": "tutor_overreliance",
+   "id": "reliance-uses-last-two",
+   "input": {
+    "checkpoints": [
+     {
+      "aided_correct": 18,
+      "aided_n": 20,
+      "unaided_correct": 9,
+      "unaided_n": 10
+     },
+     {
+      "aided_correct": 18,
+      "aided_n": 20,
+      "unaided_correct": 4,
+      "unaided_n": 10
+     },
+     {
+      "aided_correct": 18,
+      "aided_n": 20,
+      "unaided_correct": 5,
+      "unaided_n": 10
+     }
+    ]
+   },
+   "note": "00a G6: three checkpoints: the first is ignored"
+  }
+ ]
+}

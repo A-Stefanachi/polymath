@@ -1,0 +1,695 @@
+# Skill specifications for pillar T3, track key mechanical. Original wording.
+# Scope: every skill under track mechanical in spine-module-plan.yaml; all were stub in the graph on 2026-11-02.
+# Nothing here is a certified structural sign-off. Handbook figures are teaching values, not design allowables.
+# Worked numbers were computed with Python. Standards marked as not read were not read.
+
+# --- mech.cad ---
+- key: mech.cad.parametric-sketch
+  description: "Build a fully constrained sketch whose named driving parameters regenerate a bracket or arm profile without breaking."
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, faded_problem, project_step]
+  grader_types: [multiple_choice, exact_numeric, human_review]
+  phone_suitable: false
+  objective: "Capture design intent in a sketch so that changing a named parameter gives the intended part."
+  core_ideas:
+    - "Driving dimensions set geometry and reference dimensions only report it; name each driving dimension after its function, such as motor_bcd, so expressions read as design intent."
+    - "Dimension from function: locate motor holes from the bolt circle centre, not from the arm edge, so an arm length change does not move the pattern relative to its own centre."
+    - "Attach sketches to origin planes or datum planes rather than generated faces, because a modelling step can rename faces and leave dependants broken or silently wrong."
+    - "FreeCAD 1.0 added a naming algorithm that reduces this failure, but its documentation says it does not fix every case, so the habit stays. [CAD tool choice is open question OQ-SP-2; these points use FreeCAD as the example.]"
+  misconceptions:
+    - "Fully constrained means well designed; a sketch can have zero degrees of freedom and still encode the wrong intent."
+    - "An STL is a design file; it holds no parameters or features."
+    - "Any face is a safe sketch support because the model rebuilds today."
+  worked_example: "Four motor holes on a 19 mm bolt circle, 45 degrees from the arm axis, sit 9.5 x sin 45 = 6.718 mm from centre in x and y. Drive them with motor_bcd so that setting 16 mm gives 8 x sin 45 = 5.657 mm with no manual edit."
+  unaided_check: "Change motor_bcd to 25 mm on your own model and state the hole offset before regenerating. Pass: 8.839 mm predicted, and three driving parameters change with no rebuild error."
+  sources:
+    - "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/main/wiki/Topological_naming_problem.md"
+    - "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/main/wiki/Sketcher_Workbench.md"
+
+- key: mech.cad.constraints-dof
+  description: "Count degrees of freedom in a 2D sketch and choose the exact constraints that remove them with no redundancy."
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [multiple_choice, exact_numeric, human_review]
+  phone_suitable: true
+  objective: "Predict sketch DOF by hand and diagnose redundant or conflicting constraints."
+  core_ideas:
+    - "Planar DOF: point 2, line 4, circle 3, circular arc 5. Sketch DOF is the sum over geometry minus the independent constraints."
+    - "Coincident removes 2, horizontal or vertical 1, tangent 1 on top of a shared endpoint, and a length or radius 1."
+    - "Redundant means a constraint adds nothing because others already imply it; conflicting means constraints cannot all hold. Both are faults to delete, not to work around."
+    - "Keeping a redundant relation is fragile: the sketch may solve today and then fail when a parameter changes."
+  misconceptions:
+    - "More constraints make a sketch safer."
+    - "Zero DOF proves the sketch is free of redundant constraints; the solver reports these separately."
+  worked_example: "Rectangle plus two holes: 4 lines give 16 and 2 circles give 6, so 22 DOF. Remove 8 by corner coincidents, 4 by horizontal and vertical, 2 by width and height, 2 by placing one corner at the origin, 4 by the two hole centres, and 2 by one diameter plus an equal constraint. 22 - 22 = 0."
+  unaided_check: "A slot is 2 lines and 2 arcs with all 4 joints tangent. Give the DOF left and the constraints that finish it. Expected: 18 - 12 = 6, removed by centre at origin (2), horizontal (1), equal radius (1), length (1), radius (1)."
+  sources:
+    - "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/main/wiki/Sketcher_Workbench.md"
+
+- key: mech.cad.extrude-patterns
+  description: "Turn constrained sketches into pads, pockets, mirrors and patterns whose counts and spacings stay driven by parameters."
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, faded_problem, project_step]
+  grader_types: [exact_numeric, human_review]
+  phone_suitable: false
+  objective: "Model an arm with parametric features and check the result against a hand mass estimate."
+  core_ideas:
+    - "A feature tree is cumulative: each feature builds on the previous result, so order is a design decision and a late edit can invalidate later features."
+    - "Pattern a feature instead of copying sketch geometry; one seed feature with driven count and spacing keeps one source of truth."
+    - "Mirror about an origin plane so symmetry survives a resize."
+    - "Check volume by hand after each major feature; a pocket through the wrong side or a pattern overflow shows up immediately as a wrong mass."
+  misconceptions:
+    - "Lightening pockets cost no stiffness; they remove shear web and add stress raisers."
+    - "A pattern that previews correctly is correct; check the last instance still lies inside the part."
+  worked_example: "Arm 120 x 20 x 3 mm with five 10 mm pockets at 20 mm pitch: area 2400 - 5 x 78.54 = 2007.3 mm2, volume 6021.9 mm3, mass at 1.60 g/cm3 = 9.64 g. The web between pockets is 20 - 10 = 10 mm."
+  unaided_check: "Arm 150 x 18 x 4 mm with six 12 mm pockets at density 1.60 g/cm3. Expected: volume 8085.7 mm3 and mass 12.94 g, within 1% of the CAD value."
+  sources:
+    - "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/main/wiki/PartDesign_Workbench.md"
+
+# --- mech.cad.assemblies ---
+- key: mech.cad.assemblies
+  description: "Assemble motors, standoffs and the flight stack with grounded parts and joints, then check clearance and export a bill of materials."
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, project_step]
+  grader_types: [exact_numeric, human_review]
+  phone_suitable: false
+  objective: "Use an assembly to find collisions, service-access faults and missing parts before fabrication."
+  core_ideas:
+    - "A free rigid body has 6 DOF; ground one part, then each joint removes a known number: fixed 6, revolute 5."
+    - "Model harness, battery and service access as real volumes, because cables and fingers cause most integration clashes."
+    - "A clash check needs a real method: the FreeCAD Assembly page lists no interference tool, so intersect the parts with Part Common, which computes their overlap, and require zero common volume."
+    - "On an X quad, adjacent motors are diagonal / sqrt 2 apart, so tip gap = diagonal / sqrt 2 - prop diameter."
+  misconceptions:
+    - "CAD mass matches reality without wires, glue and screws."
+    - "No visible overlap on screen means no collision."
+  worked_example: "Base grounded, motor fixed to base, prop revolute on motor: 12 free DOF - 6 - 5 = 1, which is the prop spin. For a 220 mm diagonal, adjacent motors are 155.56 mm apart, so a 127 mm prop leaves a 28.56 mm tip gap."
+  unaided_check: "Will 7 inch (177.8 mm) props fit on a 250 mm diagonal X frame? Expected: spacing 176.78 mm gives a gap of -1.02 mm, so tips overlap and the frame or prop must change."
+  sources:
+    - "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/main/wiki/Assembly_Workbench.md"
+    - "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/main/wiki/Part_Common.md"
+
+- key: mech.cad.export-step-stl
+  description: "Export STEP for shops and STL for slicers, setting mesh deviation and units and verifying the file by re-import."
+  est_minutes: 20
+  task_kinds: [retrieval, worked_example, project_step]
+  grader_types: [exact_numeric, multiple_choice, human_review]
+  phone_suitable: false
+  objective: "Produce a handoff package a fabricator can use without asking questions."
+  core_ideas:
+    - "STEP keeps exact surfaces; STL is only triangles, with no units, no parameters and curved faces approximated."
+    - "For a circle of radius r cut into n chords, the deviation is s = r(1 - cos(pi/n)), so n = pi / acos(1 - s/r)."
+    - "STL units are arbitrary: a mm model read as inches is 25.4 times too big, so re-import and measure one known length."
+    - "AP242 (first published 2014) merged AP203 and AP214 and is the protocol built for model-based exchange with PMI, meaning dimensions and tolerances in the model. AP214 and AP203 edition 2 also carry colours and layers. Readers differ in what they import, so confirm which AP the shop accepts (NIST AMS 100-51, 2023, sections 1 and 5)."
+  misconceptions:
+    - "A higher triangle count fixes a wrong hole size; it only fixes faceting."
+    - "A STEP file carries your tolerances; without a drawing or PMI the shop sees nominal geometry only."
+  worked_example: "4 mm hole, r = 2 mm, allowed deviation 0.01 mm: acos(0.995) = 0.10004 rad, n = 31.4, so use 32 chords. Check: 2(1 - cos(pi/32)) = 0.0096 mm."
+  unaided_check: "An M3 clearance hole has r = 1.7 mm and allowed deviation 0.01 mm. Give the chord count. Expected: 29. Also state what scale error appears if the slicer assumes inches. Expected: 25.4 times."
+  sources:
+    - "https://en.wikipedia.org/wiki/STL_(file_format)"
+    - "https://nvlpubs.nist.gov/nistpubs/ams/NIST.AMS.100-51.pdf (section 1 p. 1, section 5 pp. 7-9)"
+
+- key: mech.cad.mass-cg-export
+  description: "Compute total mass, centre of gravity and yaw inertia from CAD and component data, then state what still needs a scale."
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem, project_step]
+  grader_types: [exact_numeric, human_review]
+  phone_suitable: false
+  objective: "Build a mass and CG table that predicts within 5% and 3 mm of the real vehicle."
+  core_ideas:
+    - "CG: x = sum(m_i x_i) / sum(m_i), computed per axis from one stated origin."
+    - "Replace CAD density guesses with weighed masses for every purchased item, and add explicit lines for wire, solder, glue and screws."
+    - "Inertia adds by the parallel axis theorem, I = I_cg + m d^2; motors at radius r dominate yaw through 4 m r^2."
+    - "Check whether your CAD mass uses a real density or density 1; computing volume x density yourself avoids the trap. FreeCAD's Check Geometry lists volume, mass and centre of mass, but its page does not say which density it uses. [Density used by Check Geometry unconfirmed.]"
+    - "Verify by measurement: hang the vehicle from two points and intersect the plumb lines, or use a bifilar pendulum, J = m g D^2 T^2 / (16 pi^2 L), with D the wire spacing, L the wire length and T the period. This is the University of Minnesota form J = (T / 2 pi)^2 m g R^2 / L with R = D/2, the distance from the axis to each wire."
+  misconceptions:
+    - "CAD mass matches the vehicle without wires, glue or screws."
+    - "CG is a fixed property; moving the battery moves it."
+  worked_example: "Frame 110 g at x = 0, battery 185 g at +12 mm, FC stack 30 g at -5 mm, camera 25 g at +45 mm, four motors 112 g at 0. Total 462 g, moment 3195 g mm, CG x = 6.92 mm. Four 28 g motors at 0.11 m add 4 x 0.028 x 0.11^2 = 0.00136 kg m2 about yaw."
+  unaided_check: "Swap to a 200 g battery at +20 mm in the same table. Expected: total 477 g and CG x = 10.43 mm. On hardware, pass is mass within 5% and CG within 3 mm."
+  sources:
+    - "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/main/wiki/Std_Measure.md"
+    - "https://dept.aem.umn.edu/~uav/repository/export/miprop.pdf (Chai, University of Minnesota UAV lab, 2007, eq. 1)"
+    - "https://raw.githubusercontent.com/FreeCAD/FreeCAD-documentation/main/wiki/Part_CheckGeometry.md"
+
+# --- mech.draw ---
+- key: mech.draw.drawings-datums
+  description: "Produce a dimensioned drawing with function-based datums and allocate fastener position tolerances that an outside shop can inspect."
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, faded_problem, project_step, explain_back]
+  grader_types: [exact_numeric, human_review]
+  phone_suitable: false
+  objective: "Write a drawing that tells a stranger what to make and how to check it."
+  core_ideas:
+    - "The drawing is the specification; CAD nominal says nothing about what variation is acceptable."
+    - "A datum is a theoretically exact plane, axis or point established from a real feature. Choose datums as the part is located in use: seating face first, then the locating features."
+    - "Datum precedence (A, then B, then C) takes the part's 6 degrees of freedom to zero. With three perpendicular planes, the first plane removes 3 (one translation, two rotations), the second 2 and the third 1: the 3-2-1 idea. Other datum types, such as an axis, split the 6 differently."
+    - "Fastener formulas at MMC: floating fastener T = H - F for each part; fixed fastener T1 + T2 = H - F, shared. [Exam-prep summary of ASME practice; standard not read.]"
+    - "ISO 5456-2 offers first-angle, third-angle and reference-arrow methods, each with its own symbol. First angle is the usual European practice and third angle the US one, so always show the projection symbol. Add dimensions last in FreeCAD TechDraw, since model edits can break them."
+  misconceptions:
+    - "CAD nominal is the specification."
+    - "The most convenient measuring edge is the right datum."
+    - "A clearance hole gives each part the full fixed-fastener tolerance; that can block assembly."
+  worked_example: "Motor bolts into threads in the motor through 3.4 mm holes in the mount, a fixed fastener: H - F = 3.4 - 3.0 = 0.4 mm total. Split it as position 0.2 mm on the mount holes and 0.2 mm assumed for the motor threads. Datum A is the mount's seating face, B the centre bore."
+  unaided_check: "Draw the L9 motor mount. Pass: an outside reader can state each datum's function and inspect every feature with no question, and all fastener tolerances sum correctly."
+  sources:
+    - "https://open-exam-prep.com/study-guides/asme-gdtp-senior/location-2/fixed-floating-fasteners"
+    - "https://en.wikipedia.org/wiki/Geometric_dimensioning_and_tolerancing"
+    - "https://static.aminer.org/pdf/PDF/000/352/237/a_geometric_approach_to_establishment_of_datum_reference_frames.pdf (Voelcker, Cornell, ASPE 2002: datum precedence reduces six degrees of freedom to zero)"
+    - "https://cdn.standards.iteh.ai/samples/11502/cef8abb25a204691907a077adf420d24/ISO-5456-2-1996.pdf (official preview, clauses 4.1 and 5.1)"
+    - "https://help.autodesk.com/cloudhelp/ENU/FDOC-Core/files/GUID-0DB05CD9-BE99-4E45-9FBD-8B8AF1F297BF.htm"
+
+- key: mech.draw.iso-gps
+  description: "Read an ISO GPS drawing under independency, add the envelope requirement where fit needs it, and spot ASME Rule 1 differences."
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [multiple_choice, exact_numeric, human_review]
+  phone_suitable: false
+  objective: "Know what a tolerance controls by default in each system."
+  core_ideas:
+    - "ISO default (ISO 8015, independency principle): each dimensional or geometrical tolerance is met independently unless a relation is stated, so a size tolerance does not limit form. ISO 286-1:2010 notes that ISO 14405-1 made the two-point size the default, so form is no longer controlled by a size tolerance."
+    - "ASME default (Rule 1, envelope): a feature of size must lie within a perfect-form boundary at MMC, so size also limits form. ASME has an independency symbol for exceptions."
+    - "Under ISO, request envelope on a mating feature with the circled E modifier placed after the size tolerance. The envelope requirement now sits in ISO 14405-1:2025 (3.8 and clause 9); the circled E symbol was defined in ISO 8015:1985, 6.1."
+    - "ISO 2768-2 (classes H, K, L) is withdrawn: the ISO 22081:2021 foreword says it cancels and replaces ISO 2768-2:1989. So a callout like ISO 2768-mK is out of date, while ISO 2768-1 classes f and m still give linear limits: over 6 up to 30 mm, +/-0.1 and +/-0.2 mm (ISO 2768-1:1989, Table 1)."
+    - "[Evidence: official previews of ISO 22081:2021, ISO 286-1:2010, ISO 14405-1:2025, ISO 2768-1:1989 and the withdrawn ISO 8015:1985 were read. The current ISO 8015:2011 clause 5.5 and ASME Y14.5 Rule 1 were not read, so the ASME statements rest on summaries. The syllabus plan says to write final items from the purchased text.]"
+  misconceptions:
+    - "ISO and ASME symbols mean the same defaults."
+    - "A size tolerance controls straightness on an ISO drawing."
+  worked_example: "Shaft 10 +/-0.05 mm, every local size 10.00 mm, bowed by 0.08 mm. The enveloping cylinder is 10.08 mm, above the 10.05 mm MMC limit. ASME Rule 1 rejects it. ISO independency accepts it unless envelope or straightness is specified."
+  unaided_check: "A pin 8 +/-0.02 mm must enter an 8.05 mm minimum hole, and a bent pin passes inspection. Say why under ISO and fix it. Expected: size does not limit form under independency; add envelope, or a straightness tolerance."
+  sources:
+    - "https://www.keyence.com/ss/products/measure-sys/gd-and-t/basic/international.jsp"
+    - "https://cdn.standards.iteh.ai/samples/72514/e37511bdd16d41dca37e48f3e13e5591/ISO-22081-2021.pdf (official preview: foreword, scope, 5.2 note 2)"
+    - "https://cdn.standards.iteh.ai/samples/45975/c0a5df14167f48eebc6c17dc4da5f9c4/ISO-286-1-2010.pdf (official preview: introduction)"
+    - "https://cdn.standards.iteh.ai/samples/iso/iso-14405-1-2025/12b879e743d748899b20ebe1383ff0bb/iso-14405-1-2025.pdf (official preview: contents, clause 9 title)"
+    - "https://cdn.standards.iteh.ai/samples/15023/d3f687ec73eb4c09888caa642f59a15c/ISO-8015-1985.pdf (withdrawn edition: clauses 4 and 6.1)"
+    - "https://cdn.standards.iteh.ai/samples/7748/62ad250fa883403897dfadc6f29c583b/ISO-2768-1-1989.pdf (Table 1)"
+
+- key: mech.draw.fits-iso286
+  description: "Read ISO 286 limits for holes and shafts and calculate the minimum and maximum clearance or interference of a fit."
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: "Turn a fit code into limits and classify it."
+  core_ideas:
+    - "The letter gives zone position and the number gives zone width. Capitals are holes, lower case shafts."
+    - "Hole basis: H has lower deviation 0, so the hole stays at nominal and the shaft letter sets the fit."
+    - "A size equal to a range's upper limit belongs to that range, so 10 mm uses 6 to 10."
+    - "Teaching values in um, 6 to 10 mm: H7 +15/0, g6 -5/-14, h6 0/-9, k6 +10/+1, p6 +24/+15. For 10 to 18 mm: H7 +18/0, g6 -6/-17, h6 0/-11, k6 +12/+1, p6 +29/+18. [Two independent published tables agree, and the IT6 and IT7 widths match the standard tolerance-unit formula recomputed here; the ISO 286-2 tables themselves were not read.]"
+    - "ISO 286-1 calls a fit an interference fit even when the largest hole equals the smallest shaft, the extreme case (3.3.3.2)."
+    - "Minimum clearance = smallest hole - largest shaft; maximum clearance = largest hole - smallest shaft. A negative value is interference."
+  misconceptions:
+    - "H7/p6 always guarantees interference; at 6 to 10 mm its minimum is exactly 0."
+    - "A fit code alone can be achieved by a printed part; prints do not hold these bands."
+  worked_example: "10 H7/g6: hole 10.000 to 10.015, shaft 9.986 to 9.995. Clearance 0.005 to 0.029 mm. 10 H7/k6: from 0.014 clearance to 0.010 interference, a transition fit."
+  unaided_check: "Classify 12 H7/k6. Expected: hole 12.000 to 12.018, shaft 12.001 to 12.012; maximum clearance 0.017 mm and maximum interference 0.012 mm, a transition fit."
+  sources:
+    - "https://www.roymech.co.uk/Useful_Tables/ISO_Tolerances/how-to-use-iso-tolerances/"
+    - "https://www.wevolver.com/article/h7-tolerance-explained-iso-286-hole-tolerance-charts"
+    - "https://www.cadforum.cz/en/tolerance.asp"
+    - "https://cdn.standards.iteh.ai/samples/45975/c0a5df14167f48eebc6c17dc4da5f9c4/ISO-286-1-2010.pdf (official preview: 3.1.4 to 3.3.3)"
+
+# --- matl.select ---
+- key: matl.select.ashby-indices
+  description: "Derive a material index from function, objective, constraint and free variable, then rank candidates and defend the choice against process limits."
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, faded_problem, problem, explain_back]
+  grader_types: [symbolic_equivalence, exact_numeric, multiple_choice, rubric_llm]
+  phone_suitable: false
+  objective: "Select a material from a derived index instead of a strength table."
+  core_ideas:
+    - "Method: write the objective (mass), write the constraint (stiffness), eliminate the free variable, and read off the material group to maximise."
+    - "Square section cantilever with free side b: S = 3EI/L^3 and I = b^4/12, so m = 2 L^2.5 sqrt(S) rho/sqrt(E), and the index is sqrt(E)/rho."
+    - "Free thickness at fixed width gives E^(1/3)/rho. Fixed section gives E/rho. The index depends on the free variable, not on the material."
+    - "Indices use chosen values: CFRP fabric reaches E = 70 GPa only along the fibres, and 19.1 GPa at 45 degrees. [Reference values, not allowables.]"
+  misconceptions:
+    - "The strongest material is the best material; a stiffness-limited arm is not governed by strength."
+    - "7075 beats 6061 for stiffness; E and density are nearly the same."
+  worked_example: "Stiffness 2000 N/m at L = 0.15 m with free square section. Inputs E (GPa) and rho (g/cm3): CFRP fabric 70, 1.60; 6061 68.9, 2.70; 7075 71.7, 2.81; PLA 2.68, 1.24. sqrt(E)/rho in GPa^0.5 per g/cm3: CFRP fabric 5.23, 6061 3.07, 7075 3.01, PLA 1.32. Masses: 4.71 g, 8.02 g, 8.18 g, 18.67 g. Process check: PLA side is 10.0 mm, and fabric plate cannot be bought as a solid square section, so a tube or plate version must be re-evaluated."
+  unaided_check: "Derive the index for fixed width and free thickness, then rank fabric CFRP, 6061 and PLA. Expected: E^(1/3)/rho gives 2.58, 1.52, 1.12. Then defend one choice against one process limit."
+  sources:
+    - "https://ocw.tudelft.nl/wp-content/uploads/Materiaalkunde_1_slides_chapter5.pdf (TU Delft OCW, chapter 5 after Ashby, slides 18 to 21 and 25)"
+    - "https://www.performance-composites.com/carbonfibre/mechanicalproperties_2.asp"
+
+- key: matl.select.cfrp-plate
+  description: "Predict CFRP plate stiffness by loading direction, choose isolation from aluminium, and plan fabrication that avoids dust exposure at home."
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, explain_back]
+  grader_types: [multiple_choice, exact_numeric, human_review]
+  phone_suitable: false
+  objective: "Treat CFRP as an anisotropic plate and apply a conservative handling rule."
+  core_ideas:
+    - "Reference data: standard fabric at 0/90 has E = 70 GPa, tensile strength 600 MPa, G12 = 5 GPa; at +/-45 it has E = 19.1 GPa, tensile strength 120 MPa and G12 = 30 GPa. standard UD at 60% fibre: 135 GPa along and 50 MPa transverse strength, so a stated fibre modulus of 230 GPa is never the plate value."
+    - "CFRP has no useful yield: it fails with little warning, and damage can hide as delamination, so a crashed arm is suspect even when it looks intact."
+    - "Bending stiffness of a thin laminate depends on ply order, so EI from one E is an estimate; test a coupon of your actual plate."
+    - "Dust rule for this project: do not cut, drill, sand or chamfer CFRP dry at home; order parts cut by a service. DGUV FBHM-074 treats its measures as state of the art because carcinogenic properties of carbon fibres remain unresolved, and thermal processes can create more WHO fibres (over 5 um long, under 3 um wide, ratio over 3:1). Never burn or heat CFRP."
+    - "If one operation is unavoidable: wet work or on-tool extraction with an M or H class extractor, sealed goggles, long clothing, and no gloves near rotating tools. DGUV's listed minimum for mid exposure is FFP2 or P2; this project asks for FFP3 as its own stricter choice, because a home has no fibre measurement. Clean by extractor or wet wipe, never compressed air or dry sweeping. Household vacuums are not accepted (project judgement). Dust is conductive, so keep it from electronics. Carbon against aluminium needs an insulating layer and moisture sealing. [DGUV addresses employers; its text says CFRP parts are generally non-conductive, yet hobby practice treats plate edges as conductive, so measure yours and insulate wires.]"
+  misconceptions:
+    - "Carbon fibre is isotropic."
+    - "A quick dry sand of the edges is harmless because it is a small job."
+    - "Carbon fibre is simply stronger than aluminium in all directions."
+  worked_example: "Plate arm 16 x 4 mm, L = 150 mm, tip load 10 N: I = 85.33 mm4. Along the fibres, delta = 10 x 150^3 / (3 x 70000 x 85.33) = 1.88 mm. Same plate cut at 45 degrees, E = 19.1 GPa: 6.90 mm, 3.66 times softer."
+  unaided_check: "Repeat for a 5 mm plate, then say how you would get a hole added. Expected: 0.96 mm at 0/90 and 3.53 mm at 45 degrees; the hole is ordered from a service or designed in, not drilled dry at home."
+  sources:
+    - "https://publikationen.dguv.de/widgets/pdf/download/article/4944"
+    - "https://www.performance-composites.com/carbonfibre/mechanicalproperties_2.asp"
+
+- key: matl.select.printed-polymers
+  description: "Size a printed polymer part using direction-dependent strength, temperature limits and sustained-load creep rather than a headline datasheet value."
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [multiple_choice, exact_numeric]
+  phone_suitable: false
+  objective: "Choose a printed polymer and working stress you could defend for your own printer."
+  core_ideas:
+    - "Data varies hugely by setup: one Ender 3 study gives PLA 21.7 MPa flat and 9.5 MPa in XZ, a 56% loss; Bambu's own PLA Basic sheet gives 39 MPa X-Y and 35 MPa Z. Test your own coupons."
+    - "Heat: Bambu PLA has Tg 60 C and HDT 57 C at 0.45 MPa, and in an informal oven test PLA gave way at about 60 C, PETG 80 C and ASA 110 C. Motors and a parked car can exceed the PLA figure."
+    - "Creep: 3D-printed PLA shows non-negligible flexural creep well below Tg, so a clamp under sustained load relaxes. Screw preload in plastic does not stay put."
+    - "[Project judgement, no source: keep sustained stress below about 25% of tested strength. No comparable creep data for PETG, ASA and PA-CF was found.]"
+  misconceptions:
+    - "Printed PLA has datasheet strength in every direction."
+    - "Below Tg a polymer has no creep."
+  worked_example: "Bracket 20 x 4 mm with bending across layers, F = 10 N, arm 30 mm: M = 300 N mm, S = 53.33 mm3, stress 5.63 MPa. Against the measured 9.55 MPa the factor is 1.70. For a factor of 3: S = 94.25 mm3, so t = 5.32 mm."
+  unaided_check: "Same bracket at 12 N. Give the thickness for factor 3. Expected: t = 5.83 mm. Also say why a motor-adjacent PLA mount fails even if the sum passes. Expected: temperature near Tg, plus creep."
+  sources:
+    - "https://pmc.ncbi.nlm.nih.gov/articles/PMC9230522/"
+    - "https://cdn.shopify.com/s/files/1/0380/5149/files/Bambu_PLA_Basic_Technical_Data_Sheet.pdf"
+
+# --- mech.struct ---
+- key: mech.struct.statics-loads
+  description: "Draw a free-body diagram of an arm and calculate reactions, bolt forces and the moment at the root from motor thrust."
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: "Follow a load from the rotor to the frame by hand."
+  core_ideas:
+    - "Isolate the body, show every external force and moment, and write sum F = 0 and sum M = 0 about a point that removes unknowns."
+    - "Size for maximum thrust, not hover: hover is only m g / 4 per motor."
+    - "Short bolt spacing with a long overhang amplifies force by L/a, so bolt forces can far exceed thrust."
+    - "Motor reaction torque also twists the arm, so a real arm carries bending, shear and torsion together."
+  misconceptions:
+    - "The bolts see the thrust force directly."
+    - "A load path ends at the arm; it continues through the plates to the battery mass."
+  worked_example: "1.2 kg quad: hover thrust 2.94 N per motor. Maximum 12 N at 120 mm from bolt A, with bolt B 30 mm further in. Moment about A: B = 12 x 120 / 30 = 48 N. Force balance: A = 48 + 12 = 60 N. Root moment 1.44 N m."
+  unaided_check: "Same bolts with a 150 mm overhang and 12 N. Expected: B = 60 N, A = 72 N, root moment 1.80 N m."
+  sources:
+    - "https://en.wikipedia.org/wiki/Bolted_joint"
+
+- key: mech.struct.stress-strain
+  description: "Calculate stress, strain, elongation and von Mises stress, and pick the right failure property for ductile or brittle materials."
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: "Connect force and geometry to a material limit."
+  core_ideas:
+    - "sigma = F/A, epsilon = sigma/E, delta = epsilon L, and transverse strain = -nu epsilon."
+    - "Reference 6061-T6: E about 69 GPa, nu 0.33, typical yield 270 MPa, UTS 310 MPa. Specified minimums for extruded bar and tube are 35 ksi (241 MPa) yield and 38 ksi (262 MPa) tensile (Aluminum Association Tables 11.1 and 12.1); 290 MPa tensile is the figure usually quoted for sheet and plate. Use the minimum for your product form in checks, written as 240 MPa yield here."
+    - "Stiffness is E and strength is the yield or failure stress. 7075 has roughly 1.8 times the yield of 6061 but nearly the same E, so it deflects the same."
+    - "Ductile metals: von Mises, sqrt(sigma^2 + 3 tau^2), against yield. Composites and printed polymers have no yield point of this kind, and von Mises does not apply to them."
+  misconceptions:
+    - "Stiff equals strong."
+    - "A stronger alloy deflects less."
+  worked_example: "6061-T6 strap 12 x 3 mm, 1500 N, 100 mm: stress 41.67 MPa, strain 6.04e-4 at E = 69 GPa, stretch 0.0604 mm, width change -0.0024 mm, factor to the 240 MPa minimum yield = 5.76 (6.48 on the typical 270 MPa)."
+  unaided_check: "sigma = 120 MPa with tau = 60 MPa in 6061-T6. Expected: von Mises 158.7 MPa and a factor of 1.51 on the 240 MPa minimum (1.70 on the typical 270 MPa)."
+  sources:
+    - "https://en.wikipedia.org/wiki/6061_aluminium_alloy"
+    - "https://www.aluminum.org/sites/default/files/2022-12/Table_11.1.pdf (Aluminum Standards and Data, extruded rod and bar, 6061-T6 row)"
+    - "https://www.aluminum.org/sites/default/files/2022-12/Table_12.1.pdf (extruded tube, 6061-T6 row)"
+
+- key: mech.struct.beam-bending
+  description: "Size an arm section for tip deflection and bending stress, and show why material far from the neutral axis matters most."
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, faded_problem, problem, project_step]
+  grader_types: [exact_numeric, multiple_choice, measurement_check]
+  phone_suitable: false
+  objective: "Predict deflection within 15% and compare it with a bench measurement."
+  core_ideas:
+    - "Cantilever with tip load: delta = F L^3 / (3 E I), peak sigma = M c / I at the root."
+    - "Tube: I = pi (OD^4 - ID^4) / 64. Rectangle: I = b h^3 / 12, so thickness is cubed and width is linear."
+    - "Length is cubed in deflection, so a 10% longer arm is 33% softer."
+    - "A real root is not perfectly fixed. Bolts and plate flex can add noticeable tip deflection, so measure before blaming E. Root rotation adds tip deflection in proportion to L^2, so calibrate it at the same length and clamp torque you test at."
+    - "Measure the tube: on a 12/10 mm tube a 1% error in outside diameter is about a 7.7% error in I, so use caliper readings, not nominal sizes."
+  misconceptions:
+    - "FEA replaces hand checks."
+    - "A plate is equally stiff either way up."
+  worked_example: "Tube 12/10 mm, E = 70 GPa, L = 120 mm, F = 12 N: I = 527.0 mm4, A = 34.56 mm2, delta 0.187 mm, sigma 16.4 MPa. A solid rod of equal area, 6.63 mm, has I = 95.0 mm4, delta 1.04 mm, sigma 50.3 MPa. Same mass, 5.55 times stiffer."
+  unaided_check: "Tube 14/12 mm with the same load. Expected: I = 867.9 mm4, delta 0.114 mm, sigma 11.6 MPa. On hardware: measure OD and ID with calipers; clamp a solid steel reference rod of the same OD at the same length and torque, and take its extra deflection over F L^3 / (3 E I) as the clamp term; take the tube's deflection as the slope of at least five loads. Pass is measured deflection within 15% of the hand prediction plus the clamp term. [project convention: 15% is kept because a simulation with calibration passes a correct build almost always, while without calibration only about half pass, so the band still tests the method.]"
+  sources:
+    - "https://en.wikipedia.org/wiki/Euler%E2%80%93Bernoulli_beam_theory"
+
+- key: mech.struct.fatigue-concentration
+  description: "Locate stress raisers, estimate peak stress at a hole or notch, and diagnose whether a crack came from fatigue."
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, debug_case, explain_back]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: "Read a part for where cracks start."
+  core_ideas:
+    - "A circular hole in a wide plate has Kt = 3 on gross stress; in finite plates use net-section values. Heywood's fit Kt_net = 2 + (1 - d/w)^3 gives 2.73, 2.51 and 2.13 at d/w = 0.1, 0.2 and 0.5, within about 2% of finite element results in Fethallah and Deghboudj (2022), Table 2."
+    - "Fatigue strength uses Kf = 1 + q(Kt - 1), with notch sensitivity q from 0 to 1."
+    - "Cracks start at raisers: holes, thread roots, sharp corners, machining marks and fretting under clamps."
+    - "Fix the geometry first: a larger radius or moving a hole off the peak moment beats a better alloy."
+  misconceptions:
+    - "Static safety implies fatigue safety."
+    - "A ductile metal ignores stress concentration; that only holds for a single static overload."
+  worked_example: "6061 strap w = 20, t = 3 mm, 4 mm hole, +/-600 N. Net area 48 mm2, nominal 12.5 MPa. Kt_net = 2 + 0.8^3 = 2.51, peak 31.4 MPa. With q = 0.8, Kf = 2.21 and the effective alternating stress is 27.6 MPa."
+  unaided_check: "An arm cracks at the motor screw hole after 200 h with no overload. Name the cause and two fixes. Pass: identifies fatigue at a raiser in the high-moment region and proposes geometry changes. Numeric: q = 0.5 gives Kf = 1.76 and 21.9 MPa."
+  sources:
+    - "https://en.wikipedia.org/wiki/Stress_concentration"
+    - "https://www.uoanbar.edu.iq/eStoreImages/Bank/3249.pdf"
+    - "https://iieta.org/download/file/fid/83267 (Fethallah and Deghboudj, Rev. Compos. Mater. Av. 32(5), 2022, eq. 7 and Table 2, doi 10.18280/rcma.320503)"
+
+- key: mech.struct.vibration-modes
+  description: "Predict an arm's first bending frequency with tip mass and check it against rotor harmonics on a simple Campbell check."
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, problem, project_step]
+  grader_types: [exact_numeric, measurement_check]
+  phone_suitable: false
+  objective: "Predict a first mode within 10% and locate the RPM that excites it."
+  core_ideas:
+    - "Uniform cantilever: omega1 = 3.516 / L^2 x sqrt(EI / mu), mu being mass per length."
+    - "With a tip mass: k = 3EI/L^3, m_eff = M + 33/140 m_arm, f = sqrt(k/m_eff) / (2 pi). This Rayleigh estimate reads about 1.5% high for a bare beam."
+    - "Rotor excitation in Hz: n x RPM / 60, with n = 1 for imbalance and blade-pass multiples for a two-blade prop. Resonance occurs where a line crosses the mode on a Campbell plot."
+    - "Joint flexibility lowers the real mode, so measure with a tap test: strike lightly, record, and read the spectrum peak."
+    - "This is the start of one chain: rotor harmonic, structural mode, IMU, filter delay, phase margin. PX4 warns not to fix a high-vibration vehicle with filter tuning."
+  misconceptions:
+    - "A stiffer arm is automatically safe; moving a mode can place it on another harmonic."
+    - "A notch filter removes structural vibration; it only hides it from the controller."
+  worked_example: "Tube 12/10 mm, E = 70 GPa, L = 0.12 m: k = 64045 N/m. Arm 6.64 g, tip 35 g: m_eff = 36.56 g, f = 210.6 Hz. 1x crossing at 12638 RPM, 2x crossing at 6319 RPM."
+  unaided_check: "Heavier 50 g tip on the same arm. Expected: f = 177.4 Hz, with 1x crossing at 10642 RPM and 2x at 5321 RPM. On hardware, predict f from the static stiffness you measured on the same arm in the same clamp and from weighed masses, record long enough that the spectrum bin is under 1% of f (at least 0.5 s near 200 Hz), then pass is a tap test within 10%. [project convention: 10% is kept because using the measured installed stiffness removes the clamp error that made an ideal-clamp prediction fail about a third of correct builds.]"
+  sources:
+    - "https://en.wikipedia.org/wiki/Euler%E2%80%93Bernoulli_beam_theory"
+    - "https://docs.px4.io/main/en/config_mc/filter_tuning.html"
+
+- key: mech.struct.bolted-joints
+  description: "Explain how preload carries a joint, estimate torque and clamp force, and choose a loosening defence suited to the materials."
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, problem, explain_back]
+  grader_types: [multiple_choice, exact_numeric, human_review]
+  phone_suitable: false
+  objective: "Think of a bolt as a spring that clamps, not a pin that shears."
+  core_ideas:
+    - "Torque estimate: T = K d P, with K about 0.20 dry; NASA gives 0.11 to 0.15 for lubricated fasteners."
+    - "Torque is a poor proxy for preload: typically +/-35% dry and +/-25% lubricated with a torque wrench, because most torque goes into friction."
+    - "M3 8.8: stress area 5.03 mm2, proof stress 580 MPa, proof load 2917 N. Preload is often targeted at 75% of proof in metal joints."
+    - "Self-loosening is mainly driven by transverse slip, so keep clamp force above the shear load; the Junker test (DIN 65151) exposes this."
+    - "Anaerobic threadlocker can stress-crack some thermoplastics; for plastic use the maker's guidance, or cyanoacrylate as the source reports. Printed parts and CFRP cannot take metal preload, so use washers and metal inserts."
+  misconceptions:
+    - "Tighter always helps."
+    - "The same torque gives the same preload after lubrication."
+    - "A spring washer stops loosening. [Common claim contested in practice; no primary test opened, so teach as unproven.]"
+  worked_example: "M3 8.8 at 75% of proof: P = 2188 N, T = 0.2 x 3 x 2188 = 1.31 N m. At 1.0 N m dry: P nominal = 1667 N, range 1083 to 2250 N. Two screws with mu = 0.15 hold 500 N of slip nominally."
+  unaided_check: "Give torque for M4 8.8 at 75% proof (stress area 8.78 mm2). Expected: proof 5092 N, P = 3819 N, T = 3.06 N m, and state one reason this torque is wrong in a printed part."
+  sources:
+    - "https://en.wikipedia.org/wiki/Bolted_joint"
+    - "https://ntrs.nasa.gov/api/citations/19960012183/downloads/19960012183.pdf"
+
+- key: mech.struct.torsion-sections
+  description: "Calculate twist of open and closed thin-wall sections and explain why a slit in a tube destroys torsional stiffness."
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, explain_back]
+  grader_types: [exact_numeric, multiple_choice, rubric_llm]
+  phone_suitable: false
+  objective: "Choose closed sections wherever torsion matters."
+  core_ideas:
+    - "Twist: theta = T L / (G J)."
+    - "Closed thin wall (Bredt): J = 4 A^2 / integral(ds/t), which is 4 A^2 t / P at uniform t; shear flow q = T / (2 A)."
+    - "Open thin wall: J = U t^3 / 3 with U the midline length, so a slit tube loses stiffness by 3 (r/t)^2."
+    - "G depends on layup: fabric at 0/90 has 5 GPa and at +/-45 has 30 GPa, so a tube for torsion wants +/-45 plies. [Reference values, not allowables.]"
+  misconceptions:
+    - "Torsion stiffness is mainly a function of material."
+    - "A cable slot along a tube costs little."
+  worked_example: "Tube mean radius 5.5 mm, wall 1 mm: A = 95.03 mm2, P = 34.56 mm, closed J = 1045.4 mm4, slit J = 11.52 mm4, ratio 90.75. T = 0.25 N m, L = 120 mm, G = 5 GPa: closed 0.33 degrees, slit 29.8 degrees. Closed with G = 30 GPa: 0.055 degrees."
+  unaided_check: "Square tube, 12 mm midline side, 1 mm wall. Expected: closed J = 1728 mm4, slit J = 16 mm4, ratio 108."
+  sources:
+    - "https://en.wikipedia.org/wiki/Torsion_constant"
+    - "https://ocw.mit.edu/courses/16-20-structural-mechanics-fall-2002/a58ea050460c29f7389ff55e084521ed_ho3.pdf (MIT 16.20 Handout 3: open thin-walled J = b h^3 / 3, Bredt, closed J = 4 A^2 / integral ds/t)"
+    - "https://ocw.mit.edu/courses/16-20-structural-mechanics-fall-2002/d01996bd6822461f4dcbdc3fbf2ea16f_unit12.pdf (Unit 12, eq. 12-2 and p. 12-18)"
+
+- key: mech.struct.safety-factors
+  description: "List load cases including landing and crash, convert a drop to an equivalent static load, and report factors and margins correctly."
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, explain_back]
+  grader_types: [exact_numeric, multiple_choice, rubric_llm]
+  phone_suitable: false
+  objective: "Show which case governs and state a margin honestly, without implying certification."
+  core_ideas:
+    - "Enumerate cases: hover, maximum thrust, yaw torque, vibration, hard landing, crash, transport and heat."
+    - "Realised factor = failure load / applied load; the design factor is a chosen requirement; margin = realised / design - 1, passing at 0 or above."
+    - "Elastic drop: IF = 1 + sqrt(1 + 2h / delta_st), and force = IF x W. A sudden load with h = 0 doubles the static effect. Real energy loss makes this an upper estimate."
+    - "A stiffer landing path raises impact force at the same drop; when h is much larger than delta_st, force grows roughly with sqrt k."
+    - "Aerospace often quotes 1.5 as a factor, but that is a convention with test and quality behind it, not a value a hobby build earns. This work is learning, not structural sign-off."
+  misconceptions:
+    - "A big factor covers an unknown load case."
+    - "Stronger landing gear is always kinder to the frame."
+  worked_example: "1.2 kg, W = 11.77 N, landing stiffness 8000 N/m, delta_st = 1.47 mm, drop 300 mm: IF = 21.2, F = 249.8 N. Part failure load 400 N, design factor 1.5: realised 1.60, margin 0.07."
+  unaided_check: "Same craft, drop 150 mm; then 300 mm with k = 16000 N/m. Expected: 180.3 N (IF 15.3); then 348.1 N (IF 29.6), showing the stiffer path is worse."
+  sources:
+    - "https://en.wikipedia.org/wiki/Factor_of_safety"
+    - "https://www.mechref.org/mf/Impact"
+
+- key: mech.struct.fatigue-design
+  description: "Estimate a corrected fatigue strength with Marin factors and find the Goodman factor for a part with mean and alternating stress."
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: "Compute a finite-life fatigue check by hand and state its limits."
+  core_ideas:
+    - "Se = ka kb kc kd ke kf Se'. Steel estimate Se' = 0.5 Sut up to about 1400 MPa."
+    - "Aluminium has no true endurance limit, so use a fatigue strength at stated cycles: 6061-T6 about 97 MPa at 5e8 reversed cycles (R.R. Moore)."
+    - "Teaching values: machined ka = 4.51 Sut^-0.265 (MPa), reliability 90% 0.897, 99% 0.814, 99.9% 0.753; for axial load, kb = 1 and kc = 0.85. kc = 0.85 axial (1 bending, 0.59 torsion) matches university course sheets based on Shigley 10th edition and the EES library based on the 11th (2020), and Se' = 0.5 Sut holds up to 1400 MPa. [ka coefficients come from a lecture copy of an older Shigley edition and are fitted for steel, so applying them to aluminium is an approximation. Table 6-2 of the 11th edition was not read, and the EES as-forged example does not match the older forged fit, so the machined values may have changed.]"
+    - "Modified Goodman: sigma_a / Se + sigma_m / Sut = 1 / n. Always check first-cycle yield too. Use the specified minimum Sut for your product form, 262 MPa for extruded 6061-T6, not the typical 310 MPa."
+    - "The ka fit gives 1.03 at Sut = 262 MPa; a machined surface cannot beat the polished test bar, so cap ka at 1."
+    - "Convert time to cycles: 5e8 cycles at 150 Hz is 926 h, so 'infinite life' on aluminium has a real clock."
+  misconceptions:
+    - "Aluminium parts have infinite life below some stress."
+    - "Static safety implies fatigue safety."
+    - "Goodman is a precise prediction; it is a conservative line through scattered data."
+  worked_example: "Extruded 6061-T6: minimum Sut 262 MPa, Sf 96.5 MPa, ka capped at 1, kc 0.85, ke 0.814: Se = 66.8 MPa. Nominal sigma_a 25, sigma_m 35, Kf 2.2. With Kf on both: 55 / 66.77 + 77 / 262 gives n = 0.89. With Kf on alternating only: 55 / 66.77 + 35 / 262 gives n = 1.04. Yield check: 132 MPa peak gives 1.82 on the 240 MPa minimum. Fail against a target of 1.5 either way."
+  unaided_check: "Same part with 99.9% reliability. Expected: Se = 61.8 MPa, n = 0.84 with Kf on both. Also state the time to 5e8 cycles at 200 Hz. Expected: 694 h."
+  sources:
+    - "https://en.wikipedia.org/wiki/Goodman_relation"
+    - "https://www.uoanbar.edu.iq/eStoreImages/Bank/3249.pdf"
+    - "https://rbb.union.edu/courses/MER419/content/data/Lectures/MER419%20L15%20Welding%20Bending-Fatigue-Strength.pdf (Union College MER419, slide 19, Shigley 10th)"
+    - "https://www.secs.oakland.edu/~latcha/me486/ME_486_Equations.pdf (Oakland University ME 486 equation sheet, p. 3)"
+    - "https://fchartsoftware.com/ees/mechanical_design/endurance/hs105.htm (EES Reliability_Factor, Shigley 11th: ke = 0.7528 at 99.9%)"
+
+- key: mech.struct.bolted-joint-design
+  description: "Calculate preload range, bolt load share, separation margin and proof utilisation for a tension joint under an external load."
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: "Check a joint numerically at both ends of preload scatter."
+  core_ideas:
+    - "Preload at the extremes: P_min and P_max = P(1 -/+ u). Check separation at P_min and bolt stress at P_max."
+    - "Load factor C = k_b / (k_b + k_c). The bolt gains C F and the joint loses (1 - C) F of clamp. Well-designed metal joints often give 0.1 to 0.2."
+    - "Separation: F_sep = P / (1 - C). Beyond it, the bolt takes the whole load and its fatigue range jumps."
+    - "Bolt fatigue amplitude under F 0 to F: C F / 2 over stress area, so high preload and a low C both protect the bolt."
+    - "Thread engagement: at least 1.5 d in aluminium as a minimum thread length guide. VDI 2230 is the full German method, including embedding loss. [VDI 2230 Part 1 (2015-11) not read, and this is not a substitute.]"
+  misconceptions:
+    - "Tightening harder always raises fatigue life; past proof it damages the fastener."
+    - "External load adds fully to bolt tension."
+  worked_example: "M3 8.8, P = 1800 N +/-25%, C = 0.25, F = 400 N. P range 1350 to 2250 N. Separation at 1800 N, factor 4.5. Peak bolt 2350 N, 0.81 of proof. Amplitude 50 N over 5.03 mm2 = 9.94 MPa. For reference, k_b = 5.03 x 205000 / 8 = 128900 N/mm at 8 mm grip."
+  unaided_check: "M3 8.8, P = 2000 N +/-25%, C = 0.20, F = 600 N. Expected: separation 1875 N, factor 3.13, peak bolt 2620 N, 0.90 of 2917 N proof."
+  sources:
+    - "https://ntrs.nasa.gov/api/citations/19960012183/downloads/19960012183.pdf"
+    - "https://en.wikipedia.org/wiki/Bolted_joint"
+
+- key: mech.struct.flight-fft-compare
+  description: "Separate a fixed frame mode from RPM-tracking rotor peaks in a flight FFT and compare it with the bench tap-test frequency."
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, problem, project_step]
+  grader_types: [measurement_check, exact_numeric]
+  phone_suitable: false
+  objective: "Close the loop between hand prediction, tap test and flight log."
+  core_ideas:
+    - "Bin width = fs / N; Nyquist = fs / 2. Content above Nyquist folds down to |f - k fs|, so a peak may be a lie."
+    - "Rotor peaks move with throttle; a structural mode stays put. Compare spectra at two throttle bands."
+    - "On ArduPilot, H7 boards on 4.5 or later prefer raw IMU logging; older or slower boards use the batch sampler. PX4 uses the high-rate logging profile with Flight Review FFT plots."
+    - "ArduPilot VIBE guidance: below 30 m/s/s is normally fine, above 60 usually hurts position hold, and clip counters should stay near zero and not climb."
+    - "RPM from ESC: mechanical RPM = eRPM / pole pairs. Filters on a peak do not fix the structure."
+  misconceptions:
+    - "The biggest peak is the frame."
+    - "A notch filter proves the problem is fixed."
+  worked_example: "fs = 1000 Hz, N = 1024: bin 0.977 Hz. A 700 Hz input aliases to 300 Hz. Hover 8880 RPM predicts 148 Hz and 296 Hz. Log shows those plus a 212 Hz peak that stays at higher throttle. Tap test 205 Hz: difference 3.4%, inside 10%, so 212 Hz is the frame mode."
+  unaided_check: "fs = 800 Hz, N = 2048. Give bin width, alias of 900 Hz, and rotor 1x at 36000 eRPM for 14 poles. Expected: 0.391 Hz, 100 Hz, 85.7 Hz (5143 RPM). On hardware, pass is a logged peak classified with two throttle bands."
+  sources:
+    - "https://ardupilot.org/copter/docs/common-imu-notch-filtering.html"
+    - "https://ardupilot.org/copter/docs/common-measuring-vibration.html"
+
+# --- mech.tol ---
+- key: mech.tol.fit
+  description: "Choose a CAD size for a printed hole from measured undersize and target clearance, and confirm the resulting fit range."
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: "Specify a fit a printer can actually meet."
+  core_ideas:
+    - "CAD size = target size + measured undersize; the target centres the clearance window."
+    - "Window check: min clearance = smallest hole - largest pin, max = largest hole - smallest pin."
+    - "FDM holes print undersized depending on nozzle, slicer, size and material, so a coupon beats any general number. CNC Kitchen found 0.1 mm undersize on its Prusa with Prusament and says the figure applies to that setup."
+    - "For a critical bore, print undersize and ream or drill, rather than chasing band width with the printer."
+  misconceptions:
+    - "A CAD hole prints true."
+    - "An ISO fit code means the same on a print as on a ground shaft."
+  worked_example: "Pin 8 h6 (7.991 to 8.000). Hole undersize 0.18 +/-0.05 mm. Target clearance 0.05 to 0.25, centre 0.15. CAD 8.33 mm gives holes 8.10 to 8.20, clearance 0.100 to 0.209 mm, inside the window."
+  unaided_check: "Pin 4.99 to 5.00 mm, undersize 0.12 +/-0.04 mm, target clearance 0.05 to 0.20. Expected: CAD 5.245 mm, holes 5.085 to 5.165, clearance 0.085 to 0.175 mm."
+  sources:
+    - "https://www.cnckitchen.com/blog/threaded-inserts-for-3d-prints-cheap-vs-expensive"
+
+- key: mech.tol.print-shrink
+  description: "Measure printed coupons, separate material shrink from extrusion width error, and apply the correct compensation to each."
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem, project_step]
+  grader_types: [measurement_check, exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: "Calibrate with numbers instead of slicer folklore."
+  core_ideas:
+    - "Measured shrink on one setup: PLA 0.35%, PETG 0.4%, ABS and ASA about 0.7%. Treat these as starting points."
+    - "Shrink is a material effect, so use a per-material factor and do not alter steps/mm unless you print one material."
+    - "Average outside and inside measurements of a feature: the mean is size and half the difference is extrusion bias."
+    - "Small cubes are poor gauges; use large coupons with flat faces, measure each three times, and check skew by diagonals. Then print once more to verify."
+    - "Scale cannot fix small holes: 0.35% of 4 mm is 0.014 mm, far less than a 0.1 mm undersize, which needs an offset."
+  misconceptions:
+    - "A 20 mm cube is a good calibration part."
+    - "XY scale fixes holes."
+  worked_example: "100 mm bar measures 99.65 mm: shrink 0.35%, scale factor 1.00351. Feature nominal 50: outside 50.12, inside 49.72, so mean 49.92 (0.16% small) and bias 0.20 mm."
+  unaided_check: "Print a 50 mm coupon and predict scale. A reading of 49.82 mm gives shrink 0.36% and scale 1.00361. Pass: second print within your stated gauge error."
+  sources:
+    - "https://cnckitchen.com/blog/calibration-cubes-are-bad-this-is-how-you-calibrate-your-3d-printer"
+
+- key: mech.tol.fastener-stack
+  description: "Pick screw length and standoff stack for a soft-mounted flight controller so threads engage fully, never bottom out and keep isolation."
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [human_review, multiple_choice, exact_numeric]
+  phone_suitable: true
+  objective: "Check a screw and standoff stack by arithmetic before assembly."
+  core_ideas:
+    - "Screw length is a grip plus engagement. Check both ends: at least about 1.5 d thread, and less than the blind thread depth."
+    - "Use the compressed height of a soft mount, not the free height."
+    - "Over-clamped grommets transmit vibration; soft mounts also add latency because they act as filters, so softer is not always better."
+    - "Stack height needs a tolerance for shims, and the sum must clear the top plate and connectors."
+    - "Threadlocker on metal only; anaerobic liquid near some plastics risks stress cracking."
+  misconceptions:
+    - "Longer screws are safer."
+    - "Clamping a damper harder makes the stack more secure with no cost."
+  worked_example: "Washer 0.5, PCB 1.6, gummy compressed 5 to 3 mm: grip 5.1 mm. Need 4.5 mm engagement: length at least 9.6 mm, so M3 x 10. It reaches 4.9 mm into a 6 mm blind thread, so it does not bottom out."
+  unaided_check: "Same stack with an 8 mm screw and a gummy compressed to 2 mm. Expected: grip 4.1 mm, engagement 3.9 mm, below the 4.5 mm guide, so reject it."
+  sources:
+    - "https://docs.px4.io/main/en/config_mc/filter_tuning.html"
+    - "https://hubs.com/knowledge-base/how-design-parts-cnc-machining"
+
+- key: mech.tol.stack-analysis
+  description: "Compute worst-case and RSS gap limits, then compare a predicted distribution with ten measured parts and explain the difference."
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, problem, project_step]
+  grader_types: [exact_numeric, measurement_check]
+  phone_suitable: false
+  objective: "Predict a stack distribution honestly and test it."
+  core_ideas:
+    - "Worst case T = sum |a_i T_i|: an absolute bound for parts inside tolerance, growing linearly with part count."
+    - "RSS T = sqrt(sum (a_i T_i)^2) assumes independent, centred, near-normal terms with +/-3 sigma at the limit."
+    - "RSS is optimistic with few parts or shared bias: mean shifts add arithmetically, and same-printer parts correlate. Bender's empirical factor 1.5 (Bender, 1962) is a common hedge, but with very few terms it can exceed worst case, so never report more than the worst-case value."
+    - "With ten parts, the 95% interval on the mean is +/- t s / sqrt(10), with t = 2.262 for 9 degrees of freedom. Gauge error adds in quadrature."
+  misconceptions:
+    - "RSS is always safe with few parts."
+    - "Measured parts are the true values, ignoring the caliper."
+  worked_example: "Gap nominal 0.30 with +/-0.10, 0.10, 0.20, 0.05. Worst case 0.45 gives -0.15. RSS 0.25 gives +0.05. Bender 0.375 gives -0.075. Illustrative ten readings: mean 0.080, s 0.037, CI +/-0.027. Prediction for three parts, shift -0.05 each and sigma 0.03: mean 0.150, sigma 0.052. The mean misses, so shift was underestimated."
+  unaided_check: "Gap 0.25 with +/-0.15, 0.15, 0.10. Expected: worst case 0.40 gives -0.15; RSS 0.235 gives +0.015; Bender 0.352 gives -0.102. On hardware, explain the ten-part difference with a named cause."
+  sources:
+    - "https://www.wevolver.com/article/tolerance-stack-up-analysis-worst-case-vs-rss-methods"
+    - "https://www.itl.nist.gov/div898/handbook/eda/section3/eda3672.htm (NIST/SEMATECH e-Handbook, t table, row 9, column 0.975)"
+    - "https://arxiv.org/pdf/1912.09365 (Diet et al., section 1: Bender's 1.5 factor and its limit with few inputs)"
+
+# --- matl.mfg ---
+- key: matl.mfg.pcb-fabrication
+  description: "Trace a multilayer board through fabrication and check a design against a fab house's published minimums before ordering."
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [multiple_choice, exact_numeric]
+  phone_suitable: true
+  objective: "Know what the fab does and read its rules. [The review proposes moving this skill to T1; it stays here while the plan lists it.]"
+  core_ideas:
+    - "Order: inner imaging and etch, AOI, lay-up and lamination, drilling, hole metallisation, outer imaging, plating, outer etch, mask, finish, legend, electrical test, profile, final inspection."
+    - "Each rule comes from a step: registration sets annular ring, etch sets trace and space, plating sets aspect ratio."
+    - "Annular ring = (pad - hole) / 2."
+    - "JLCPCB, read 2026-11-02: 1 oz multilayer trace/space 0.09 mm; preferred minimum via hole 0.2 mm; PTH ring on multilayer 0.20 recommended, 0.15 absolute; copper at least 0.2 mm from routed edge. Rules change, so read the live page."
+  misconceptions:
+    - "The absolute minimum is the design target."
+    - "One fab's numbers are universal."
+  worked_example: "PTH hole 0.3 mm, pad 0.6 mm: ring 0.15 mm, at the absolute limit. Recommended ring 0.20 needs pad 0.70 mm."
+  unaided_check: "Pad 0.8 mm, hole 0.4 mm, multilayer 1 oz. Expected: ring 0.20 mm, meets the recommended value. Put lamination, drilling and plating in order. Expected: lamination, drilling, plating."
+  sources:
+    - "https://www.eurocircuits.com/?p=3614"
+    - "https://jlcpcb.com/capabilities/Capabilities"
+
+- key: matl.print.settings
+  description: "Choose slicer walls, layer height, flow rate and drying for a functional part and justify each with its effect on strength."
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [multiple_choice, exact_numeric, human_review]
+  phone_suitable: true
+  objective: "Set a slicer profile for function rather than appearance."
+  core_ideas:
+    - "Strength is mostly set by perimeters, not infill, according to Prusa's guidance; add walls first."
+    - "Keep layer height below 80% of nozzle diameter, about 0.32 mm for 0.4 mm. Layer height cannot exceed the nozzle."
+    - "Walls overlap, so wall width is not count x line width: two 0.45 mm lines at 0.2 mm layer give about 0.86 mm."
+    - "Volumetric flow = layer x width x speed. Exceeding the hot end's limit starves layers, which cuts bonding."
+    - "Dry hygroscopic filament; Bambu quotes 55 C for 8 h for PLA Basic. Follow the sheet for your filament."
+  misconceptions:
+    - "Infill alone sets strength."
+    - "A finer layer is always stronger."
+  worked_example: "Layer 0.2, width 0.45 mm: 100 mm/s is 9 mm3/s and 150 mm/s is 13.5. With an 11 mm3/s limit, cap speed at 122 mm/s."
+  unaided_check: "Layer 0.25, width 0.45, limit 11 mm3/s. Expected: 97.8 mm/s. Also give the maximum layer for a 0.4 nozzle: 0.32 mm."
+  sources:
+    - "https://help.prusa3d.com/article/layers-and-perimeters_1748"
+
+- key: matl.print.orientation-strength
+  description: "Orient a printed part so its peak tensile stress runs along layers, and predict failure location and approximate load ratio."
+  est_minutes: 20
+  task_kinds: [retrieval, worked_example, perceptual_drill, problem]
+  grader_types: [multiple_choice, exact_numeric]
+  phone_suitable: true
+  objective: "See layer planes as built-in weak seams."
+  core_ideas:
+    - "Layer bonds carry tension worst. Align the tensile side of the bending moment along filaments."
+    - "Part-level hook tests on one printer: upright versus flat was 40/73 kg for PLA (0.55), 25/55 for PETG (0.45), 17/57 for ASA (0.30). In a warm enclosure ASA reached 20 kg."
+    - "Ratios vary by test: coupon data gave PLA XZ/XY of 0.44, and a maker's sheet gave Z/X-Y of 0.90."
+    - "Fail location is the highest stress across a layer, usually at a fillet at the root."
+  misconceptions:
+    - "Layer lines do not matter under bending."
+    - "The ratio from one test is a constant of the material."
+  worked_example: "ASA hook 57 kg flat. Using 0.298 upright predicts 17.0 kg, matching the measured 17 kg, which is a check of the arithmetic only, as the ratio came from that test."
+  unaided_check: "A PLA hook holds 60 kg flat. Predict the upright load with 0.548. Expected: 33 kg, at the root layer. On hardware, three orientations are predicted, then coupons broken, and location is right in at least two of three."
+  sources:
+    - "https://cnckitchen.com/blog/comparing-pla-petg-amp-asa-feat-prusament"
+    - "https://pmc.ncbi.nlm.nih.gov/articles/PMC9230522/"
+
+- key: matl.mfg.cnc-basics
+  description: "Decide between CNC and printing for a bracket and apply cavity, radius, wall and thread rules so it can actually be machined."
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem, explain_back]
+  grader_types: [multiple_choice, exact_numeric, human_review]
+  phone_suitable: true
+  objective: "Design a part a shop can quote and pick the right process."
+  core_ideas:
+    - "Guide values: cavity depth at most 4 x width; internal corner radius at least 1/3 depth; walls 0.8 mm for metal and 1.5 mm for plastic; thread length 1.5 to 3 d; holes in standard drill sizes."
+    - "Rotating tools leave radii, so a sharp internal corner needs a relief."
+    - "Normal capability is about +/-0.1 mm, with ISO 2768 medium or fine as the usual grade. Tighten only what function needs. Process variation exists on CNC as well as on prints; a fit needs a tolerance, not faith."
+    - "Choose by need: printing for shape and speed, CNC for stiffness, heat, threads and accuracy. Same 6000 mm3 bracket: 16.2 g in 6061 or 7.44 g in PLA, with about 26 times the modulus for 2.2 times the mass."
+    - "CFRP is not a home CNC material: send it to a service unless you can meet the dust controls in matl.select.cfrp-plate."
+  misconceptions:
+    - "Machining can produce any shape in CAD."
+    - "Tight tolerances are free."
+  worked_example: "Pocket 12 mm deep: radius at least 4 mm. Width at least 3 mm by the depth rule, but radius demands 8 mm if both corners meet, so 8 mm binds. M3 threaded length at least 4.5 mm."
+  unaided_check: "Pocket 18 mm deep, M4 thread. Expected: radius at least 6 mm, width at least 12 mm, thread length at least 6 mm. Write one sentence choosing print or CNC for a motor mount near 80 C. Pass: CNC or a higher-temperature material, with reasons."
+  sources:
+    - "https://hubs.com/knowledge-base/how-design-parts-cnc-machining"
+    - "https://www.adhesivesmag.com/articles/96391-can-we-use-anaerobic-threadlockers-for-screws-used-in-plastics"

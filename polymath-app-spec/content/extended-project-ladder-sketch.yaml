@@ -1,0 +1,66 @@
+# Sketch only — not validated by validate_projects.py in v1.
+# Full step specs are future work (doc 15, doc 10 section 4).
+version: "1.0"
+status: sketch
+
+projects:
+  - key: prj.L6.bldc-esc-bench
+    ladder_level: 6
+    tier_gate: L1
+    est_hours: null
+    summary: "Bench BLDC motor and ESC; current and RPM predicted from the motor model, then measured under real load with torque; efficiency map; Li-ion safety gates."
+    safety: [battery, high_current]
+    skill_keys_hint: [elec.semi.battery-safety, pwr.bldc.esc]
+
+  - key: prj.L7.imu-ground-logger
+    ladder_level: 7
+    tier_gate: L1
+    est_hours: null
+    summary: "IMU calibration and fusion; ground-only attitude logging; PID closed on a clamped one-axis rig, with the step response predicted first."
+    safety: [high_current, rotating_parts]
+    skill_keys_hint: [ctl.pid.closed-loop-rig, sig.sampling.nyquist-aliasing]
+
+  - key: prj.L8.kit-quad-maiden
+    ladder_level: 8
+    tier_gate: L1
+    est_hours: null
+    summary: "Legal route first (00a H9): privately built or class-marked quad; PX4 on H7; maiden under a test card. The key name is historical: the vehicle is never a single ready-to-assemble kit (2019/947 Art. 2(16), GM1 Article 2(16)), and parts are bought as separately listed articles until the LBA answers."
+    safety: [flight_line, battery]
+    ops_module: robo.uav.ops-eu
+
+  - key: prj.L9.custom-frame-cad
+    ladder_level: 9
+    tier_gate: L1
+    needs_project: prj.L8.kit-quad-maiden
+    est_hours: null
+    summary: "Custom frame in CAD; print or CNC; fit on L8 stack; deflection and first mode predicted, then measured."
+    evidence_kinds: [repo, photo, log]
+    skill_keys_hint: [mech.cad.parametric-sketch]
+
+  - key: prj.L10.pdb-4layer
+    ladder_level: 10
+    tier_gate: L1
+    est_hours: null
+    summary: "Power distribution or 4-layer PDB/FC board; high-current layout and bring-up."
+    skill_keys_hint: [matl.mfg.pcb-fabrication, elec.pcb.kicad-schematic-erc]
+
+  - key: prj.L11.telemetry-lakehouse
+    ladder_level: 11
+    tier_gate: L1
+    est_hours: null
+    summary: "Secure telemetry from companion or edge device to lakehouse; replay; a validated twin with state estimation, an uncertainty-based residual alert and one human-approved decision."
+    skill_keys_hint: [sys.req.requirements, net.proto.ip-and-sockets]
+
+  - key: prj.L12.mission-geofence-rtl
+    ladder_level: 12
+    tier_gate: L1
+    est_hours: null
+    summary: "GPS waypoint mission; geofence; return-to-launch on PX4/ArduPilot-class stack."
+    safety: [flight_line]
+
+  - key: prj.L13.field-test-campaign
+    ladder_level: 13
+    tier_gate: L1
+    est_hours: null
+    summary: "Field test matrix; golden vehicle configuration; regression documentation."
+    skill_keys_hint: [sys.req.requirements, robo.uav.test]

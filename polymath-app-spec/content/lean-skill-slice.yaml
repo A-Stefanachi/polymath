@@ -1,0 +1,27 @@
+# Lean M1 skill slice (BL-0067). Keys must exist in content/mvp-skill-graph.yaml.
+# Validated: python3 reference/validate_graph.py (graph OK); keys checked 2026-11-01.
+# Hard prerequisites of listed skills are either in this list or graph roots / satisfied by frontier order.
+schema_version: 1
+as_of: '2026-11-01'
+task: BL-0067
+count: 19
+skill_keys:
+  - math.alg.order-of-operations
+  - math.alg.units-and-prefixes
+  - math.alg.solve-linear
+  - math.alg.rearrange-formulas
+  - math.alg.ratios-proportions
+  - math.alg.linear-functions
+  - math.alg.systems-2x2
+  - math.alg.exponents-roots
+  - math.alg.quadratics
+  - elec.meas.lab-safety-esd
+  - elec.meas.schematic-reading
+  - elec.dc.charge-current-voltage
+  - elec.dc.ohms-law
+  - elec.dc.power-energy
+  - elec.dc.series-parallel
+  - elec.dc.voltage-divider
+  - elec.dc.kirchhoff-laws
+  - elec.dc.nodal-analysis
+  - elec.dc.thevenin-norton

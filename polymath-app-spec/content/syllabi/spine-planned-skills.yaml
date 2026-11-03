@@ -1,0 +1,5 @@
+version: '1.0'
+status: planning
+description: Spine-only skill keys from spine-module-plan.yaml not yet in mvp-skill-graph.yaml.
+regenerate: python reference/generate_pillar_syllabi.py
+planned_skills: []

@@ -1,0 +1,2356 @@
+# Spine module syllabi — planning only. Merged with mvp-skill-graph.yaml on generate.
+# Regenerate: python reference/generate_pillar_syllabi.py
+version: "1.0"
+status: planning
+
+tracks:
+  power-motion:
+    capstone_map: |
+      | Ladder | Terminal skills / modules |
+      |--------|---------------------------|
+      | L6 BLDC bench | `pwr.bldc.motor-model`, `pwr.bldc.esc-modes`, `pwr.bldc.thrust-measurement`, `elec.semi.battery-safety`, `phys.thermal.heat-transfer` |
+      | L10 PDB (optional cross-track) | `matl.mfg.pcb-fabrication`, high-current layout skills [P] |
+    modules:
+      - key: elec.semi.battery-spine
+        title: Battery safety and runtime budget
+        order: 1
+        node: elec
+        outcomes:
+          - State handling, charging and storage rules before wiring any cell pack.
+          - Estimate flight or bench runtime from capacity, C-rate and regulator efficiency.
+        evidence: Safety ack gates (doc 10); L6 project steps; numeric budget items.
+        projects: prj.L6.bldc-esc-bench; foundation L2 regulator path
+        checkpoint: Scenario MC + numeric budget; battery safety ack before L6 unlock
+        confusables: alkaline-vs-lithium, series-parallel-packs
+        templates_p: "~12 templates; rubric_llm on handling scenarios"
+        hard_task: "From a datasheet and a duty profile, choose series and parallel count, fuse and wire, then predict endurance within 10% of a logged run."
+        skills:
+          - key: elec.semi.battery-safety
+          - key: elec.semi.battery-budget
+          - key: pwr.batt.pack-wiring
+            title: Series/parallel pack wiring and fuse placement
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [multiple_choice, exact_numeric]
+            status: planned
+          - key: pwr.batt.charge-storage
+            title: Charging profiles and storage state of charge
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, rubric_llm]
+            status: planned
+
+      - key: pwr.batt.li-ion-safe
+        title: Li-ion packs for bench and UAV
+        order: 2
+        node: pwr
+        outcomes:
+          - Choose cell format and C-rate limits for propulsion vs housekeeping loads.
+          - Interpret BMS basics and when to stop a test.
+        evidence: L6 preflight checklist; measurement reconciliation on pack voltage sag
+        projects: prj.L6.bldc-esc-bench
+        checkpoint: Unaided items on C-rate and thermal runaway literacy
+        confusables: nominal-vs-cutoff-voltage
+        templates_p: "~10 templates"
+        hard_task: "Fit R0 and one RC pair from pulse data, then predict sag for an unseen pulse within 5%."
+        skills:
+          - key: pwr.batt.cell-formats
+            title: "Cell format versus chemistry"
+            tier_target: L1
+            est_minutes: 20
+            phone_suitable: true
+            grader_types: [multiple_choice]
+            status: planned
+          - key: pwr.batt.c-rate-limits
+            title: C-rate and continuous vs burst current
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: pwr.batt.bms-literacy
+            title: "BMS on protected packs (optional branch)"
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, debug_case]
+            status: planned
+          - key: pwr.batt.preflight-checklist
+            title: Pre-energize inspection for high-current bench
+            tier_target: L1
+            est_minutes: 20
+            phone_suitable: true
+            grader_types: [checklist, rubric_llm]
+            status: planned
+          - key: pwr.batt.high-discharge-packs
+            title: Rules for unprotected high-discharge packs
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [multiple_choice, checklist]
+            status: planned
+          - key: pwr.batt.damage-disposal
+            title: Damaged packs, storage and disposal
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: false
+            grader_types: [multiple_choice, checklist]
+            status: planned
+          - key: pwr.batt.equivalent-circuit
+            title: "OCV, R0 and RC pack model"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [log_parser, exact_numeric]
+            status: planned
+
+      - key: pwr.emc.practical
+        title: Practical EMC for high-current harnesses
+        order: 3
+        node: pwr
+        outcomes:
+          - Route power and signal grounds; use twisted pairs and ferrites where appropriate.
+          - Recognize when bench noise invalidates a measurement.
+        evidence: Checklist on harness build; optional scope screenshot rubric [P]
+        projects: prj.L6.bldc-esc-bench; feeds T4 telemetry noise topics
+        checkpoint: MC + checklist items
+        confusables: ground-loop-vs-shield
+        templates_p: "~8 templates"
+        hard_task: "Diagnose a seeded noise fault, prove the measurement is valid with a shorted-probe test, then show a before-and-after reduction."
+        skills:
+          - key: pwr.emc.grounding-harness
+            title: "Return paths, loop area and when star ground fits"
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, checklist]
+            status: planned
+          - key: pwr.emc.motor-noise
+            title: Motor/ESC noise on sensors and UART
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [debug_case, multiple_choice]
+            status: planned
+          - key: pwr.emc.connector-current
+            title: Connector and wire gauge for burst current
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: pwr.emc.dc-link-inductance
+            title: "Loop area, DC-link inductance and spikes"
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [exact_numeric, debug_case]
+            status: planned
+          - key: pwr.emc.probe-validity
+            title: "Prove a noisy measurement is real"
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [debug_case, log_parser]
+            status: planned
+
+      - key: phys.thermal
+        title: Thermal management for power electronics
+        order: 4
+        node: phys
+        outcomes:
+          - Use thermal resistance models for regulators, ESCs and motors at literacy depth.
+          - Relate bench measurements to derating decisions.
+        evidence: Compare IR thermometer or thermistor readings to predicted rise [P]
+        projects: prj.L6.bldc-esc-bench; L2 regulator dissipation (foundation)
+        checkpoint: Numeric thermal resistance items
+        confusables: r-theta-ja-vs-jc
+        templates_p: "~8 templates when stub promoted + 4 planned"
+        hard_task: "Predict the temperature-time curve of an ESC or motor under a step load, then match it within 10 \u00b0C."
+        skills:
+          - key: phys.thermal.heat-transfer
+          - key: phys.thermal.heatsink-sizing
+            title: Heatsink and airflow trade-offs
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: phys.thermal.esc-motor-hotspot
+            title: ESC and motor hotspot awareness
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, rubric_llm]
+            status: planned
+          - key: phys.thermal.transients
+            title: "Thermal time constants and burst ratings"
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [exact_numeric, log_parser]
+            status: planned
+
+      - key: sw.rel
+        title: Firmware reliability
+        order: 5
+        node: sw
+        outcomes:
+          - Log the reset cause on every boot and survive a crash with evidence.
+          - Use a watchdog that proves every critical task is alive.
+          - Handle brown-outs from motor load without corrupting state.
+        evidence: "Fault-injection log showing a hung task, a brown-out and the recorded reset cause"
+        projects: prj.L6.bldc-esc-bench
+        checkpoint: Log verification plus debug cases
+        confusables: hardware-vs-task-watchdog, reset-vs-brownout
+        templates_p: "~10 templates"
+        hard_task: "An outsider injects a hidden hang or brown-out, and you find the cause from logs alone."
+        skills:
+          - key: sw.rel.reset-causes
+            title: Reset causes and boot logging
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: false
+            grader_types: [code_tests, multiple_choice]
+            status: planned
+          - key: sw.rel.watchdog-supervisor
+            title: Supervised watchdog for critical tasks
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [code_tests, debug_case]
+            status: planned
+          - key: sw.rel.brownout
+            title: Brown-out behaviour under motor load
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [log_parser, debug_case]
+            status: planned
+          - key: sw.rel.crash-capture
+            title: Crash capture that survives a reset
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [code_tests, debug_case]
+            status: planned
+
+      - key: pwr.conv
+        title: "Power conversion"
+        order: 6
+        node: pwr
+        outcomes:
+          - "Design a buck converter from volt-second and charge balance."
+          - "Split MOSFET loss into conduction, switching and dead time."
+          - "Explain what an ESC half-bridge and DC link do."
+        evidence: "Low-voltage, current-limited synchronous buck with predicted efficiency"
+        projects: "prj.L6.bldc-esc-bench"
+        checkpoint: "Unaided design set before the buck lab"
+        confusables: duty-vs-current, conduction-vs-switching-loss
+        templates_p: "~14 templates"
+        hard_task: "Closed book, design a buck for a given ripple, predict the loss split, then measure efficiency within 3 points."
+        skills:
+          - key: pwr.conv.balance-principles
+            title: "Volt-second and charge balance"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: pwr.conv.buck-design
+            title: "Buck converter design"
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: pwr.conv.mosfet-losses
+            title: "MOSFET conduction and switching loss"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: pwr.conv.half-bridge-gate-drive
+            title: "Half-bridge, dead time and gate drive"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [multiple_choice, exact_numeric]
+            status: planned
+          - key: pwr.conv.dc-link
+            title: "DC-link ripple and capacitors"
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: pwr.conv.buck-lab
+            title: "Build a low-voltage buck and measure efficiency"
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [log_parser, human_review]
+            status: planned
+
+      - key: pwr.bldc.esc
+        title: BLDC motors and ESC on the bench
+        order: 7
+        node: pwr
+        outcomes:
+          - Explain BLDC commutation and ESC PWM at working depth.
+          - Run a motor on a fixture with thrust or load measurement and logged telemetry.
+        evidence: L6 accepted evidence — log + measurement_check + human_review on high-current steps
+        projects: prj.L6.bldc-esc-bench
+        checkpoint: Module checkpoint before full L6 credit
+        confusables: kv-vs-kt, pwm-vs-duty
+        templates_p: "~16 templates; log parser grader [P] when implemented"
+        hard_task: "Given an unlabelled motor, measure R, Kv and I0, then predict current and RPM on a stated prop within 10% before the first loaded run; the no-prop, current-limited spins that give Kv and I0 come first."
+        skills:
+          - key: pwr.bldc.motor-basics
+            title: BLDC poles, KV and mechanical load
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [multiple_choice, exact_numeric]
+            status: planned
+          - key: pwr.bldc.esc-modes
+            title: "ESC protocols: PWM, DShot and telemetry"
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [checklist, multiple_choice]
+            status: planned
+          - key: pwr.bldc.thrust-measurement
+            title: Thrust stand or load cell measurement method
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [measurement_check, human_review]
+            status: planned
+          - key: pwr.bldc.prop-matching-intro
+            title: Prop diameter/pitch vs current draw intuition
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: pwr.bldc.motor-model
+            title: Predict current and RPM from the motor equations
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [exact_numeric, log_parser]
+            status: planned
+          - key: pwr.bldc.efficiency-map
+            title: Build a grams-per-watt efficiency map
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [log_parser, exact_numeric]
+            status: planned
+          - key: pwr.bldc.current-sensing-foc
+            title: Current sensing and field-oriented control literacy
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [multiple_choice, explain_back]
+            status: planned
+          - key: pwr.bldc.current-sense-amp
+            title: Build and calibrate a shunt current amplifier
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [log_parser, exact_numeric]
+            status: planned
+          - key: pwr.bldc.phase-vs-battery-current
+            title: "Phase current versus battery current"
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: pwr.bldc.torque-measurement
+            title: "Measure torque and separate motor from prop losses"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [log_parser, exact_numeric]
+            status: planned
+          - key: pwr.bldc.foc-lab
+            title: "FOC lab: dq frame and motor identification"
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [log_parser, human_review]
+            status: planned
+
+      - key: elec.pcb
+        title: High-current PCB layout (spine)
+        order: 8
+        node: elec
+        outcomes:
+          - Capture schematic with ERC and layout 2–4 layer PDB with correct copper weight [P].
+          - Bring up PDB with current and thermal checks.
+        evidence: L10 repo + photo + measurement_check
+        projects: prj.L10.pdb-4layer
+        checkpoint: ERC/layout checklist before fab order
+        confusables: none
+        templates_p: "~12 templates when kicad stub promoted"
+        hard_task: "Build a PDB, then predict and measure voltage drop and temperature rise at a defined current."
+        skills:
+          - key: elec.pcb.kicad-schematic-erc
+          - key: elec.pcb.copper-weight
+            title: Copper weight and via current capacity
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: elec.pcb.pdb-layout
+            title: PDB layout for ESC/motor feeds
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [checklist, human_review]
+            status: planned
+
+  control:
+    capstone_map: |
+      | Ladder | Terminal skills / modules |
+      |--------|---------------------------|
+      | L7 IMU logger and rig | `sig.imu.calibration-two-step`, `ctl.est.complementary-filter`, `ctl.pid.closed-loop-rig` |
+    modules:
+      - key: ctl.sys
+        title: Dynamic systems mathematics
+        order: 1
+        node: ctl
+        outcomes:
+          - Solve first- and second-order differential equations and read damping from them.
+          - Use eigenvalues and poles to judge stability.
+          - Move between time response, transfer function and Bode plot.
+        evidence: Constructed-response items; predictions reused on the one-axis rig
+        projects: prj.L7.imu-ground-logger
+        checkpoint: Unaided derivation and numeric set
+        confusables: laplace-vs-fourier, damping-vs-natural-frequency
+        templates_p: "~14 templates"
+        hard_task: "Given L(s) with an unstable pole and a delay, sketch Nyquist unaided, count encirclements, find the maximum delay, and check by simulation."
+        skills:
+          - key: math.vec.cross-product
+          - key: math.vec.rotation-matrices
+          - key: math.calc.partial-derivatives-jacobians
+          - key: math.calc.partial-fractions
+          - key: math.prob.normal-distribution
+          - key: math.prob.conditional-bayes
+          - key: ctl.sys.feedback-basics
+          - key: ctl.sys.ode-first-second
+            title: First- and second-order differential equations
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: ctl.sys.eigenvalues-stability
+            title: Eigenvalues, poles and stability
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: ctl.sys.laplace-transfer
+            title: Laplace transforms and transfer functions
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: ctl.sys.discrete-time
+            title: Discrete-time models and the z-domain
+            tier_target: L1
+            est_minutes: 50
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: ctl.sys.linearisation
+            title: "Linearise at an operating point"
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: ctl.sys.frequency-response
+            title: "Frequency response and Bode by hand"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: ctl.sys.nyquist-criterion
+            title: "Nyquist stability criterion"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: ctl.sys.sensitivity-functions
+            title: "Sensitivity, complementary sensitivity and Ms"
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: ctl.sys.state-space
+            title: "State-space form and modes"
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+
+      - key: phys.mech
+        title: Mechanics foundation for control
+        order: 2
+        node: phys
+        outcomes:
+          - Apply Newton's laws to single-body forces relevant to drones and fixtures.
+          - Relate mass, inertia and reaction torque at literacy depth.
+        evidence: Numeric word problems; no flight closed-loop
+        projects: prj.L7.imu-ground-logger (indirect)
+        checkpoint: Constructed-response mechanics items
+        confusables: none
+        templates_p: "~10 templates when stub promoted + 3 planned"
+        hard_task: "Derive the arm's nonlinear model, linearise at 0 and 30 degrees, predict how natural frequency differs, then measure it."
+        skills:
+          - key: phys.mech.newton-laws
+          - key: phys.mech.forces-body-frame
+            title: Body vs inertial frame for forces
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, exact_numeric]
+            status: planned
+          - key: phys.mech.inertia-torque
+            title: Inertia and reaction torque intuition
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: phys.mech.euler-rigid-body
+            title: "Euler equations and gearbox reflected inertia"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+
+      - key: sig.freq
+        title: Frequency-domain intuition
+        order: 3
+        node: sig
+        outcomes:
+          - Read magnitude plots and relate them to RC and filter behaviour already learned.
+          - Identify dominant frequency content in a logged sensor trace [P].
+        evidence: Bode/plot reading MC; L7 log interpretation items
+        projects: prj.L7.imu-ground-logger
+        checkpoint: Unaided plot reading set
+        confusables: fourier-vs-laplace-literacy
+        templates_p: "~12 templates"
+        hard_task: "From an unlabelled bench log, identify fundamental, blade-pass, harmonics and one aliased tone, then design a filter stack and state its lag at crossover."
+        skills:
+          - key: sig.freq.fourier-intuition
+          - key: sig.freq.fft-log-reading
+            title: Read a simple FFT of IMU noise
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [multiple_choice, log_parser]
+            status: planned
+          - key: sig.freq.filter-cutoff-choice
+            title: Choose cutoff given sample rate and noise
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: sig.freq.notch-rpm
+            title: Notch filters and RPM-tracked vibration
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [multiple_choice, log_parser]
+            status: planned
+          - key: sig.freq.windowing-spectrogram
+            title: "Windowing, leakage, spectrograms and group delay"
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [exact_numeric, log_parser]
+            status: planned
+
+      - key: sig.sampling
+        title: Sampling, aliasing and digital filters
+        order: 4
+        node: sig
+        outcomes:
+          - Set the sample rate above twice the highest frequency left after the anti-alias chain.
+          - Explain aliasing symptoms in logged data.
+        evidence: L7 logger configuration checklist; numeric Nyquist items
+        projects: prj.L7.imu-ground-logger
+        checkpoint: Module-end unaided set
+        confusables: nyquist-sampling-vs-nyquist-stability
+        templates_p: "~10 templates"
+        hard_task: "Given a sensor filter chain and vibration spectrum, predict alias frequencies, then confirm at two output data rates."
+        skills:
+          - key: sig.sampling.nyquist-aliasing
+          - key: sig.sampling.imu-rate-selection
+            title: IMU ODR and filter bandwidth trade-offs
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [multiple_choice, exact_numeric]
+            status: planned
+          - key: sig.sampling.anti-alias-practice
+            title: Anti-alias filtering on logged streams
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, debug_case]
+            status: planned
+
+      - key: sig.imu
+        title: IMU frames and calibration
+        order: 5
+        node: sig
+        outcomes:
+          - Apply right-hand frame conventions (body, NED/ENU literacy).
+          - Run two-step bias/scale calibration and document residuals.
+        evidence: L7 calibration log + plot rubric
+        projects: prj.L7.imu-ground-logger
+        checkpoint: human_review on calibration write-up
+        confusables: ned-vs-enu
+        templates_p: "~12 templates"
+        hard_task: "From an overnight log and six-face data, produce ARW, bias instability, a calibration matrix and residuals, then predict and measure tilt drift at 60 s."
+        skills:
+          - key: sig.imu.frames
+            title: Body and world frames for IMU
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [multiple_choice, symbolic_equivalence]
+            status: planned
+          - key: sig.imu.calibration-two-step
+            title: Two-reference calibration for accel/gyro
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [log_parser, rubric_llm]
+            status: planned
+          - key: sig.imu.static-test-fixture
+            title: Ground-only fixture and motion constraints
+            tier_target: L1
+            est_minutes: 20
+            phone_suitable: true
+            grader_types: [checklist, rubric_llm]
+            status: planned
+          - key: sig.imu.quaternions
+            title: Quaternions and rotation composition
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [exact_numeric, code_tests]
+            status: planned
+          - key: sig.imu.specific-force
+            title: Specific force and what an accelerometer measures
+            tier_target: L1
+            est_minutes: 20
+            phone_suitable: true
+            grader_types: [multiple_choice, exact_numeric]
+            status: planned
+          - key: sig.imu.allan-variance
+            title: Allan variance for gyro noise and bias
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [log_parser, exact_numeric]
+            status: planned
+          - key: sig.imu.multi-position-calibration
+            title: "Multi-position calibration with misalignment"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [log_parser, exact_numeric]
+            status: planned
+
+      - key: ctl.pid
+        title: PID control
+        order: 6
+        node: ctl
+        outcomes:
+          - Tune P, PI and PID loops on a real plant, with anti-windup, and predict the response first.
+          - Relate step response metrics to gain choices [P].
+        evidence: Simulation or ground fixture step logs; rubric on tuning narrative
+        projects: prj.L7.imu-ground-logger (one-axis ground rig, not flight)
+        checkpoint: Numeric + plot response items
+        confusables: pi-vs-pid, derivative-kick
+        templates_p: "~14 templates"
+        hard_task: "On a held-out rig setup, fit a model from one step, lock predicted overshoot, settling time, margin and saturated recovery, then pass within stated bands."
+        skills:
+          - key: ctl.pid.pid-controller
+            est_minutes: 25
+            grader_types: [code_tests, multiple_choice]
+          - key: ctl.pid.anti-windup
+            title: Integrator windup and saturation
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, debug_case]
+            status: planned
+          - key: ctl.pid.tuning-step-response
+            title: Step response and manual tuning workflow
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [log_parser, rubric_llm]
+            status: planned
+          - key: ctl.pid.cascade-intuition
+            title: Cascade loops (rate vs angle) intuition
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [multiple_choice]
+            status: planned
+          - key: ctl.pid.plant-identification
+            title: Identify a plant from a logged step response
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [log_parser, exact_numeric]
+            status: planned
+          - key: ctl.pid.margins-delay
+            title: Phase margin, gain margin and delay
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: ctl.pid.closed-loop-rig
+            title: Close a loop on a one-axis rig and compare with prediction
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [log_parser, human_review]
+            status: planned
+          - key: ctl.pid.simc-tuning
+            title: "Model-based tuning with SIMC"
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [exact_numeric, log_parser]
+            status: planned
+          - key: ctl.pid.discrete-pid-code
+            title: "Code-tested discrete PID"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [code_tests, debug_case]
+            status: planned
+          - key: ctl.pid.feedforward-scheduling
+            title: "Feedforward and gain scheduling"
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [exact_numeric, log_parser]
+            status: planned
+          - key: ctl.pid.delay-budget
+            title: "Measure the loop delay budget"
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [log_parser, exact_numeric]
+            status: planned
+
+      - key: ctl.est
+        title: Complementary filter and estimation literacy
+        order: 7
+        node: ctl
+        outcomes:
+          - Implement complementary fusion for attitude at literacy depth.
+          - Compare complementary vs full EKF trade-offs without deriving EKF.
+        evidence: L7 attitude plot acceptance criteria
+        projects: prj.L7.imu-ground-logger
+        checkpoint: Log numeric compare on fused angle
+        confusables: complementary-vs-kalman
+        templates_p: "~10 templates"
+        hard_task: "Implement a two-state filter blind on a log with a bias step and an accelerometer fault, show NIS consistency, detect the fault, and beat a reference RMS against encoder truth."
+        skills:
+          - key: ctl.est.complementary-filter
+            title: Complementary filter for attitude
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [code_tests, log_parser]
+            status: planned
+          - key: ctl.est.gyro-integration-drift
+            title: Gyro integration drift and bias effects
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, debug_case]
+            status: planned
+          - key: ctl.est.ekf-literacy
+            title: EKF role on modern FC stacks (literacy)
+            tier_target: L1
+            est_minutes: 20
+            phone_suitable: true
+            grader_types: [multiple_choice, explain_back]
+            status: planned
+          - key: ctl.est.kalman-1d
+            title: Derive a one-dimensional Kalman filter
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [exact_numeric, code_tests]
+            status: planned
+          - key: ctl.est.innovation-checks
+            title: Innovations and bad-sensor detection
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: false
+            grader_types: [multiple_choice, debug_case]
+            status: planned
+          - key: ctl.est.two-state-kalman
+            title: "Two-state Kalman filter with bias"
+            tier_target: L1
+            est_minutes: 50
+            phone_suitable: false
+            grader_types: [code_tests, log_parser]
+            status: planned
+          - key: ctl.est.mahony-madgwick
+            title: "Mahony and Madgwick filters"
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [code_tests, multiple_choice]
+            status: planned
+
+      - key: ctl.adv
+        title: "Advanced control and estimation (L2)"
+        order: 8
+        node: ctl
+        outcomes:
+          - "Design state feedback with an observer, and show what the observer costs in margin."
+          - "Identify a plant with validation data and quantify model error."
+          - "Compare LQG and constrained MPC on the fixed ground rig."
+        evidence: "Unaided items, code tests and held-out logs; no project grants L2"
+        projects: "prj.L7.imu-ground-logger (rig only, after L7)"
+        checkpoint: "Blind held-out rig configuration"
+        confusables: lqr-vs-lqg, identification-vs-validation
+        templates_p: "~12 templates"
+        hard_task: "Identify the rig, design LQG and constrained MPC, predict the robustness margin, and show which fails first under added delay and saturation."
+        skills:
+          - key: ctl.adv.state-feedback-observers
+            title: "State feedback and observers"
+            tier_target: L2
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [exact_numeric, code_tests]
+            status: planned
+          - key: ctl.adv.lqr-lqg
+            title: "LQR and LQG with their limits"
+            tier_target: L2
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [exact_numeric, code_tests]
+            status: planned
+          - key: ctl.adv.system-identification
+            title: "System identification and validation"
+            tier_target: L2
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [log_parser, exact_numeric]
+            status: planned
+          - key: ctl.adv.robustness-limits
+            title: "Robustness limits and the waterbed effect"
+            tier_target: L2
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: ctl.adv.error-state-filter
+            title: "Error-state filter on quaternions"
+            tier_target: L2
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [code_tests, log_parser]
+            status: planned
+          - key: ctl.adv.mpc-constraints
+            title: "Constrained MPC on a rig"
+            tier_target: L2
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [code_tests, log_parser]
+            status: planned
+
+  mechanical:
+    capstone_map: |
+      | Ladder | Terminal skills / modules |
+      |--------|---------------------------|
+      | L9 CAD frame | `mech.cad.parametric-sketch`, `mech.cad.assemblies`, `mech.tol.fit`, `mech.struct.vibration-modes` |
+      | L10 PDB | `matl.mfg.pcb-fabrication`, `elec.pcb.kicad-schematic-erc` |
+    modules:
+      - key: mech.cad
+        title: Parametric CAD workflow
+        order: 1
+        node: mech
+        outcomes:
+          - Build constrained sketches and parametric features for a frame arm or bracket.
+          - Export STEP/STL with named parameters documented.
+        evidence: CAD manifest checklist + human_review (capability-tracks grading_note)
+        projects: prj.L9.custom-frame-cad
+        checkpoint: Checklist before L9 credit
+        confusables: parametric-vs-direct-edit
+        templates_p: "~10 templates + manifest grader [P]"
+        hard_task: "From a drawing, model a part in 60 minutes, then change three driving parameters with no rebuild failures."
+        skills:
+          - key: mech.cad.parametric-sketch
+          - key: mech.cad.constraints-dof
+            title: Sketch constraints and DOF
+            tier_target: L0
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, checklist]
+            status: planned
+          - key: mech.cad.extrude-patterns
+            title: Extrude, mirror and pattern features
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [checklist, human_review]
+            status: planned
+
+      - key: mech.cad.assemblies
+        title: Assemblies and integration
+        order: 2
+        node: mech
+        outcomes:
+          - Mate motors, standoffs and FC stack in an assembly with collision checks.
+          - Document mass properties export for CG budgeting [P].
+        evidence: L9 photo + assembly manifest
+        projects: prj.L9.custom-frame-cad; fits on prj.L8.kit-quad-maiden stack
+        checkpoint: human_review rubric on fit and clearance
+        confusables: none
+        templates_p: "~8 templates"
+        hard_task: "Predict mass within 5% and CG within 3 mm, then measure both on the real vehicle."
+        skills:
+          - key: mech.cad.assemblies
+            title: Assembly mates and BOM from CAD
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [checklist, human_review]
+            status: planned
+          - key: mech.cad.export-step-stl
+            title: Export STEP/STL for fab handoff
+            tier_target: L1
+            est_minutes: 20
+            phone_suitable: true
+            grader_types: [checklist]
+            status: planned
+          - key: mech.cad.mass-cg-export
+            title: Mass and CG from CAD model
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [exact_numeric, checklist]
+            status: planned
+
+      - key: mech.draw
+        title: "Engineering drawings and tolerancing"
+        order: 3
+        node: mech
+        outcomes:
+          - "Write a drawing that an outside shop could inspect."
+          - "Choose datums from function."
+          - "Use ISO GPS by default and recognise ASME differences."
+        evidence: "Drawing of the L9 motor mount reviewed by an outside reader"
+        projects: "prj.L9.custom-frame-cad"
+        checkpoint: "Drawing checklist plus numeric fit items"
+        confusables: iso-gps-vs-asme-y14-5
+        templates_p: "~10 templates; standards are paid, so write from the purchased text"
+        hard_task: "Write a drawing for a motor mount that an outside shop could inspect, with datums tied to function."
+        skills:
+          - key: mech.draw.drawings-datums
+            title: "Drawings, views and datums"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [checklist, human_review]
+            status: planned
+          - key: mech.draw.iso-gps
+            title: "ISO GPS basics and ASME differences"
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [multiple_choice, checklist]
+            status: planned
+          - key: mech.draw.fits-iso286
+            title: "ISO fits and limits"
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+
+      - key: matl.select
+        title: "Materials selection"
+        order: 4
+        node: matl
+        outcomes:
+          - "Derive a material index from function, objective and constraints."
+          - "Treat CFRP as anisotropic plate."
+          - "Design for printed polymer anisotropy, heat and creep."
+        evidence: "Written selection for the L9 arm with derived index"
+        projects: "prj.L9.custom-frame-cad"
+        checkpoint: "Numeric index items"
+        confusables: strength-vs-specific-stiffness
+        templates_p: "~8 templates"
+        hard_task: "Derive the index for a stiffness-limited, mass-minimum arm, pick a material, and defend it against a process limit."
+        skills:
+          - key: matl.select.ashby-indices
+            title: "Ashby material indices"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: matl.select.cfrp-plate
+            title: "CFRP plate behaviour and handling"
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [multiple_choice, exact_numeric]
+            status: planned
+          - key: matl.select.printed-polymers
+            title: "Printed polymers: anisotropy, heat and creep"
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [multiple_choice, exact_numeric]
+            status: planned
+
+      - key: mech.struct
+        title: Structures and vibration
+        order: 5
+        node: mech
+        outcomes:
+          - Find loads, stresses and deflections by hand for arms and brackets.
+          - Separate stiffness failures from strength failures.
+          - Predict a frame's first vibration mode and check it with a tap test.
+        evidence: Hand calculation compared with measured deflection and tap-test frequency on the L9 frame
+        projects: prj.L9.custom-frame-cad
+        checkpoint: Unaided numeric set before L9 credit
+        confusables: stiffness-vs-strength, static-vs-fatigue-failure
+        templates_p: "~16 templates"
+        hard_task: "Size an arm unaided for stiffness, strength and first mode, measure clamp compliance on a reference bar, then predict deflection within 15% and frequency within 10%."
+        skills:
+          - key: mech.struct.statics-loads
+            title: Free-body diagrams and load paths
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: mech.struct.stress-strain
+            title: Stress, strain and material properties
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: mech.struct.beam-bending
+            title: Beam bending and section stiffness
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: mech.struct.fatigue-concentration
+            title: Stress concentration and fatigue
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [multiple_choice, debug_case]
+            status: planned
+          - key: mech.struct.vibration-modes
+            title: Natural frequency, resonance and rotor excitation
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [exact_numeric, log_parser]
+            status: planned
+          - key: mech.struct.bolted-joints
+            title: Bolted joints, preload and loosening
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [multiple_choice, checklist]
+            status: planned
+          - key: mech.struct.torsion-sections
+            title: "Torsion and open versus closed sections"
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: mech.struct.safety-factors
+            title: "Load cases, crash and safety factors"
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: mech.struct.fatigue-design
+            title: "Fatigue design with Goodman and Marin factors"
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: mech.struct.bolted-joint-design
+            title: "Numeric bolted joint design"
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: mech.struct.flight-fft-compare
+            title: "Compare frame modes with a flight FFT"
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [log_parser, exact_numeric]
+            status: planned
+
+      - key: mech.tol
+        title: Tolerances and fit
+        order: 6
+        node: mech
+        outcomes:
+          - Specify print/CNC tolerances for arms and motor mounts.
+          - Plan shim/spacer strategies for stack height alignment.
+        evidence: Tolerance table on L9 submission
+        projects: prj.L9.custom-frame-cad
+        checkpoint: Numeric tolerance stack item
+        confusables: clearance-vs-interference
+        templates_p: "~8 templates"
+        hard_task: "Predict a stack distribution, then measure ten printed parts and explain the difference."
+        skills:
+          - key: mech.tol.fit
+            title: Clearance and interference fits for prints
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: mech.tol.print-shrink
+            title: FDM shrink and hole tolerance practice
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, rubric_llm]
+            status: planned
+          - key: mech.tol.fastener-stack
+            title: Standoff stack-up and vibration awareness
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [checklist, multiple_choice]
+            status: planned
+          - key: mech.tol.stack-analysis
+            title: "Worst-case and RSS stacks with measured data"
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [exact_numeric, log_parser]
+            status: planned
+
+      - key: matl.mfg
+        title: Fabrication processes
+        order: 7
+        node: matl
+        outcomes:
+          - Choose print vs CNC vs ordered PCB for a part class.
+          - Apply DFM rules from a fab house checklist.
+        evidence: L9 material/process note; L10 fab quote checklist [P]
+        projects: prj.L9.custom-frame-cad; prj.L10.pdb-4layer
+        checkpoint: MC on DFM rules
+        confusables: none
+        templates_p: "~10 templates"
+        hard_task: "Predict failure location and load for three print orientations, then break the coupons."
+        skills:
+          - key: matl.mfg.pcb-fabrication
+          - key: matl.print.settings
+            title: Slicer settings for functional prints
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [multiple_choice, checklist]
+            status: planned
+          - key: matl.print.orientation-strength
+            title: Layer orientation vs strength
+            tier_target: L1
+            est_minutes: 20
+            phone_suitable: true
+            grader_types: [multiple_choice]
+            status: planned
+          - key: matl.mfg.cnc-basics
+            title: CNC vs print trade-offs for brackets
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, rubric_llm]
+            status: planned
+
+  robo:
+    capstone_map: |
+      | Ladder | Terminal skills / modules |
+      |--------|---------------------------|
+      | L8 maiden | `robo.uav.sitl-first`, `robo.uav.fc-config`, `robo.uav.preflight`, `robo.uav.ops-eu` ack |
+      | L12 mission | `robo.uav.mission-geofence`, `robo.uav.fault-injection`, `robo.uav.log-analysis`, `net.proto.ip-and-sockets`, telemetry contract |
+    modules:
+      - key: robo.uav.ops-eu
+        title: EU UAS operational literacy (default region)
+        order: 1
+        node: robo
+        outcomes:
+          - Complete ops acknowledgement for DE/EU default rules [P].
+          - Identify when registration, insurance or geographic restrictions apply.
+        evidence: Ops module ack gate (AC-SP-3); scenario MC only — not legal advice
+        projects: prj.L8.kit-quad-maiden; prj.L12.mission-geofence-rtl
+        checkpoint: Scenario set with required ack
+        confusables: open-vs-specific-category
+        templates_p: "~10 scenario templates; human sign-off on ack"
+        hard_task: "Given three real sites and two vehicles, decide category, restrictions and paperwork, or say not permitted. Not legal advice."
+        skills:
+          - key: robo.uav.ops-eu
+            title: EU UAS category and operator responsibilities
+            tier_target: L0
+            est_minutes: 60
+            phone_suitable: true
+            grader_types: [multiple_choice, rubric_llm]
+            status: planned
+          - key: robo.uav.ops-airspace
+            title: Airspace and NOTAM literacy
+            tier_target: L0
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice]
+            status: planned
+          - key: robo.uav.ops-privacy
+            title: Privacy and data from onboard cameras
+            tier_target: L0
+            est_minutes: 20
+            phone_suitable: true
+            grader_types: [multiple_choice, explain_back]
+            status: planned
+          - key: robo.uav.ops-legal-route
+            title: "Legal route for your vehicle: class, private build, A3"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [multiple_choice, human_review]
+            status: planned
+          - key: robo.uav.ops-germany
+            title: "German duties: insurance, geozones, registration"
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [multiple_choice, checklist]
+            status: planned
+          - key: robo.uav.ops-specific-sora
+            title: "Specific category and SORA literacy"
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [multiple_choice, rubric_llm]
+            status: planned
+
+      - key: robo.uav.physics
+        title: Multirotor physics and weight budget
+        order: 2
+        node: robo
+        outcomes:
+          - Build a weight/CG budget table linking arms, battery and payload.
+          - Relate thrust margin to safe hover and climb [P].
+        evidence: Numeric budget template; human_review on maiden margin
+        projects: prj.L8.kit-quad-maiden
+        checkpoint: Budget MC + numeric
+        confusables: thrust-margin-vs-hover-throttle
+        templates_p: "~10 templates"
+        hard_task: "From bench data, predict hover power, throttle and endurance within 10%, then confirm by log."
+        skills:
+          - key: robo.uav.weight-cg-budget
+            title: Weight and CG budget worksheet
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [exact_numeric, checklist]
+            status: planned
+          - key: robo.uav.thrust-margin
+            title: Thrust-to-weight and hover throttle margin
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: robo.uav.propulsion-match
+            title: Motor/prop/ESC compatibility matrix
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [multiple_choice, exact_numeric]
+            status: planned
+          - key: robo.uav.momentum-theory
+            title: "Thrust coefficients, momentum theory, figure of merit"
+            tier_target: L1
+            est_minutes: 50
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: robo.uav.mixer-allocation
+            title: "Mixer, allocation and yaw authority"
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: robo.uav.rotor-limits
+            title: "Rotor drag, ground effect and descent limits"
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [multiple_choice, exact_numeric]
+            status: planned
+
+      - key: robo.uav.propulsion
+        title: Quad propulsion integration
+        order: 3
+        node: robo
+        outcomes:
+          - Mount motors/props with correct rotation and torque arms.
+          - Run ground tests before flight line.
+        evidence: Checklist + photo evidence on L8
+        projects: prj.L8.kit-quad-maiden; builds on L6 bench learning
+        checkpoint: Pre-maiden checklist sign-off
+        confusables: cw-ccw-motor-order
+        templates_p: "~8 templates"
+        hard_task: "Diagnose seeded motor-order and prop-direction errors from logs and a props-off test."
+        skills:
+          - key: robo.uav.motor-direction
+            title: Motor rotation and prop pairing
+            tier_target: L1
+            est_minutes: 20
+            phone_suitable: true
+            grader_types: [multiple_choice, checklist]
+            status: planned
+          - key: robo.uav.esc-calibration-quad
+            title: "PWM-only ESC calibration note"
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: false
+            grader_types: [checklist, human_review]
+            status: planned
+          - key: robo.uav.ground-test-props-off
+            title: Props-off ground test procedure
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: true
+            grader_types: [checklist, human_review]
+            status: planned
+
+      - key: robo.uav.fc
+        title: Flight controller configuration literacy
+        order: 4
+        node: robo
+        outcomes:
+          - Configure and tune one chosen flight stack (default PX4) at integrator depth.
+          - Verify sensor orientation and failsafe basics.
+        evidence: Config export + checklist on L8
+        projects: prj.L8.kit-quad-maiden
+        checkpoint: FC config quiz + checklist
+        confusables: failsafe-severity-order
+        templates_p: "~12 templates"
+        hard_task: "Rebuild a safe configuration from scratch, justify every changed parameter, and pass a seeded-misconfiguration audit."
+        skills:
+          - key: robo.uav.fc-config
+            title: Open FC stack configuration workflow
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [checklist, multiple_choice]
+            status: planned
+          - key: robo.uav.sensor-orientation
+            title: IMU/magnetometer orientation in FC
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, debug_case]
+            status: planned
+          - key: robo.uav.failsafe-basics
+            title: Failsafe, RTL and geofence literacy
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: true
+            grader_types: [multiple_choice, checklist]
+            status: planned
+
+      - key: robo.uav.flight-test
+        title: "Flight test and piloting"
+        order: 5
+        node: robo
+        outcomes:
+          - "Write test cards with build-up, abort criteria and stop rules."
+          - "Analyse hazards before each new test."
+          - "Recover manually from a failed automatic mode."
+        evidence: "Test cards plus logged simulator hours and a manual-recovery check, with an outside reviewer where possible"
+        projects: "prj.L8.kit-quad-maiden; prj.L12.mission-geofence-rtl"
+        checkpoint: "Manual-recovery check before the maiden"
+        confusables: test-card-vs-checklist
+        templates_p: "~8 templates"
+        hard_task: "Write a test card for your own mission with computed fence margin and stop rules, and pass a manual-recovery check in simulation."
+        skills:
+          - key: robo.uav.test-cards
+            title: "Test cards, build-up and stop rules"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [checklist, human_review]
+            status: planned
+          - key: robo.uav.hazard-analysis
+            title: "Hazard analysis for a flight test"
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [checklist, human_review]
+            status: planned
+          - key: robo.uav.manual-recovery
+            title: "Simulator hours and manual recovery"
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [log_parser, human_review]
+            status: planned
+
+      - key: robo.uav.test
+        title: Integration test matrix
+        order: 6
+        node: robo
+        outcomes:
+          - Run propulsion, sensors, failsafe and mission slices in a documented matrix.
+          - Produce regression notes for golden vehicle config [P].
+        evidence: prj.L13.field-test-campaign habits start here; L12 mission evidence
+        projects: prj.L12.mission-geofence-rtl; prj.L13.field-test-campaign
+        checkpoint: Test matrix checklist + human_review
+        confusables: none
+        templates_p: "~10 templates"
+        hard_task: "Given an unseen flight log with a hidden fault, identify the cause, evidence and fix."
+        skills:
+          - key: robo.uav.test
+            title: Integration test matrix design
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: true
+            grader_types: [checklist, rubric_llm]
+            status: planned
+          - key: robo.uav.mission-geofence
+            title: Waypoint mission with geofence and RTL
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [checklist, log_parser, human_review]
+            status: planned
+          - key: robo.uav.preflight
+            title: Written preflight for maiden and mission flights
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [checklist, human_review]
+            status: planned
+          - key: robo.uav.sitl-first
+            title: Rehearse missions and failsafes in software-in-the-loop
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [log_parser, checklist]
+            status: planned
+          - key: robo.uav.fault-injection
+            title: "Fault injection, SITL first"
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [log_parser, checklist]
+            status: planned
+          - key: robo.uav.log-analysis
+            title: Flight log analysis
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [log_parser, debug_case]
+            status: planned
+
+      - key: sens.meas
+        title: Sensor error budgets
+        order: 7
+        node: sens
+        outcomes:
+          - Combine offset, gain, noise and drift into one error budget.
+          - Tie budgets to calibration logs from foundation and L7.
+        evidence: Error budget template on L8/L12 logs
+        projects: prj.L8.kit-quad-maiden; prj.L12.mission-geofence-rtl
+        checkpoint: Numeric budget submission
+        confusables: none
+        templates_p: "~8 templates"
+        hard_task: "From a real log, build the error budget, set a mission margin, and defend it."
+        skills:
+          - key: sens.meas.calibration-uncertainty
+          - key: sens.meas.gps-error-literacy
+            title: GPS horizontal error and mission planning margin
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+
+      - key: net.rf
+        title: Telemetry, IP and link budget
+        order: 8
+        node: net
+        outcomes:
+          - Set up lossy IP between companion and ground station at literacy depth.
+          - Read a simple link budget for telemetry radio [P].
+        evidence: L11/L12 log connectivity checklist; link budget numeric items
+        projects: prj.L11.telemetry-lakehouse; prj.L12.mission-geofence-rtl
+        checkpoint: MC + numeric link budget
+        confusables: tcp-vs-udp-mission
+        templates_p: "~12 templates"
+        hard_task: "Choose a legal radio setup, predict range margin, then log RSSI against the prediction on the ground."
+        skills:
+          - key: net.proto.ip-and-sockets
+          - key: rf.basics.link-budget
+          - key: net.proto.telemetry-contract
+            title: Telemetry message contract versioning
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [multiple_choice, schema_test]
+            status: planned
+          - key: net.proto.companion-bridge
+            title: Companion computer bridge to FC
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [checklist, log_parser]
+            status: planned
+          - key: rf.basics.eu-bands
+            title: "EU radio bands, limits and legal setups"
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [multiple_choice, checklist]
+            status: planned
+
+  cloud-twin:
+    capstone_map: |
+      | Ladder | Terminal skills / modules |
+      |--------|---------------------------|
+      | L11 lakehouse and twin | `sys.twin.residual-alert`, `sys.telemetry.schema-version`, `ml.ops.evals`, secure uplink checklist |
+    modules:
+      - key: sys.req
+        title: Requirements and verification
+        order: 1
+        node: sys
+        outcomes:
+          - Write testable requirements and map each to a verification method.
+          - Maintain requirements ↔ test matrix for vehicle and cloud slice.
+        evidence: L11 and L13 documentation rubric
+        projects: prj.L11.telemetry-lakehouse; prj.L13.field-test-campaign
+        checkpoint: Requirements traceability MC + rubric
+        confusables: requirement-vs-spec
+        templates_p: "~10 templates"
+        hard_task: "From a vague L11 brief, write 15 requirements with methods, then trace a planted interface defect to the requirement that should have caught it."
+        skills:
+          - key: sys.req.requirements
+          - key: sys.req.vv-matrix
+            title: Verification and validation matrix
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [multiple_choice, rubric_llm]
+            status: planned
+          - key: sys.req.icd-basics
+            title: Interface control document habits
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [checklist, rubric_llm]
+            status: planned
+
+      - key: sw.cloud
+        title: Cloud integration patterns (extend `sw`)
+        order: 2
+        node: sw
+        outcomes:
+          - Structure firmware/companion repos for CI and secret hygiene.
+          - Wire device provisioning narrative to cloud twin [P].
+        evidence: Repo checklist on L11 submission
+        projects: prj.L11.telemetry-lakehouse
+        checkpoint: Checklist + MC on secrets handling
+        confusables: none
+        templates_p: "~8 templates"
+        hard_task: "Cut power at a random point in OTA, serve an old signed image and a tampered image; the device must end healthy or recover each time, with logs."
+        skills:
+          - key: sw.cloud.device-provisioning
+            title: Device identity and provisioning flow
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [multiple_choice, checklist]
+            status: planned
+          - key: sw.cloud.ci-firmware
+            title: CI for firmware and companion services
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [checklist, rubric_llm]
+            status: planned
+          - key: sw.cloud.ota-rollback
+            title: Signed OTA updates with A/B rollback
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [multiple_choice, checklist]
+            status: planned
+          - key: sw.cloud.incident-response
+            title: "Incident response and postmortems"
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [checklist, rubric_llm]
+            status: planned
+
+      - key: sys.telemetry
+        title: Edge-to-cloud telemetry contracts
+        order: 3
+        node: sys
+        outcomes:
+          - Define versioned telemetry schema with replay and retention rules.
+          - Implement secure uplink from device to lakehouse [P].
+        evidence: L11 accepted artifact — schema + replay job + alert firing
+        projects: prj.L11.telemetry-lakehouse
+        checkpoint: Automated schema tests + log verification
+        confusables: schema-version-vs-api-version
+        templates_p: "~14 templates"
+        hard_task: "Replay a log with duplicates, an outage, a clock-resetting reboot and two schema versions; output must be identical across runs with every record accounted for."
+        skills:
+          - key: sys.telemetry.tls-basics
+          - key: sys.telemetry.schema-version
+            title: Versioned telemetry schema design
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [schema_test, rubric_llm]
+            status: planned
+          - key: sys.telemetry.secure-uplink
+            title: TLS/mTLS and device identity for uplink
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [multiple_choice, checklist]
+            status: planned
+          - key: sys.telemetry.replay-alert
+            title: Replay pipeline and alert SLO definition
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [log_parser, schema_test]
+            status: planned
+          - key: sys.telemetry.lakehouse-partition
+            title: Partitioning and cost-aware ingestion
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, exact_numeric]
+            status: planned
+          - key: sys.telemetry.time-model
+            title: "Event time, ingest time, sequence and boot counter"
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [multiple_choice, schema_test]
+            status: planned
+          - key: sys.telemetry.idempotent-replay
+            title: "Idempotent replay and backfill"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [code_tests, schema_test]
+            status: planned
+          - key: sys.telemetry.data-slos
+            title: "Freshness, correctness and coverage SLOs"
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [multiple_choice, log_parser]
+            status: planned
+          - key: sys.telemetry.mqtt-semantics
+            title: "MQTT QoS and store-and-forward"
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [multiple_choice, debug_case]
+            status: planned
+
+      - key: ml.core
+        title: ML foundations for telemetry
+        order: 4
+        node: ml
+        outcomes:
+          - Fit and evaluate linear models on tabular flight/telemetry features.
+          - Interpret metrics without over-claiming causal effect (NG-07).
+        evidence: Eval report rubric on L11 dataset [P]
+        projects: prj.L11.telemetry-lakehouse
+        checkpoint: Numeric eval + short answer on leakage
+        confusables: train-test-leakage
+        templates_p: "~12 templates"
+        hard_task: "Find three planted leaks, then show MASE below 1 on a rolling origin, or state that no model is justified."
+        skills:
+          - key: ml.core.linear-regression
+          - key: ml.core.feature-leakage
+            title: Detect label leakage in time-series splits
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [multiple_choice, debug_case]
+            status: planned
+          - key: ml.core.metrics-interpret
+            title: Interpret RMSE/MAE for ops alerts
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: ml.core.rolling-validation
+            title: "Rolling-origin validation and scaled errors"
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [exact_numeric, code_tests]
+            status: planned
+
+      - key: sys.twin
+        title: Digital twin modelling
+        order: 5
+        node: sys
+        outcomes:
+          - Run a physical model of the device beside live telemetry.
+          - Calibrate it from bench data and report its error.
+          - Alert on the residual between model and measurement.
+        evidence: "L11 accepted artifact: predicted against measured trace plus a residual alert fired by a real fault"
+        projects: prj.L11.telemetry-lakehouse
+        checkpoint: Log verification on a replayed run
+        confusables: dashboard-vs-twin
+        templates_p: "~10 templates"
+        hard_task: "Calibrate on one run, predict a different profile with intervals before seeing it, then detect a blind fault and report latency and false alarms."
+        skills:
+          - key: sys.twin.state-model
+            title: State model of a physical subsystem
+            tier_target: L1
+            est_minutes: 50
+            phone_suitable: false
+            grader_types: [multiple_choice, exact_numeric]
+            status: planned
+          - key: sys.twin.model-calibration
+            title: Calibrate a twin from bench data
+            tier_target: L1
+            est_minutes: 50
+            phone_suitable: false
+            grader_types: [log_parser, exact_numeric]
+            status: planned
+          - key: sys.twin.residual-alert
+            title: Residual monitoring and alerts
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [log_parser, schema_test]
+            status: planned
+          - key: sys.twin.state-estimation
+            title: "Twin state estimation with a Kalman filter"
+            tier_target: L1
+            est_minutes: 50
+            phone_suitable: false
+            grader_types: [code_tests, log_parser]
+            status: planned
+          - key: sys.twin.vvuq
+            title: "Verification, validation and uncertainty for twins"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [rubric_llm, human_review]
+            status: planned
+          - key: sys.twin.closed-decision
+            title: "Closed decision: twin changes a limit with human approval"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [log_parser, human_review]
+            status: planned
+          - key: sys.twin.uncertainty-thresholds
+            title: "Residual thresholds from uncertainty"
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [exact_numeric, log_parser]
+            status: planned
+
+      - key: ml.pred
+        title: Prognostics and anomaly detection
+        order: 6
+        node: ml
+        outcomes:
+          - Beat a trivial baseline before claiming a detector works.
+          - Score anomaly detectors honestly, without point adjustment.
+          - Combine physics residuals with data on real device logs.
+        evidence: "Eval report on L6 and L11 logs with a labelled injected fault and a trivial baseline"
+        projects: prj.L11.telemetry-lakehouse
+        checkpoint: Numeric eval plus rubric_llm with human sign-off
+        confusables: point-vs-event-scoring, anomaly-vs-prognosis
+        templates_p: "~10 templates; sources are listed in SYLLABUS-GUIDE.md"
+        hard_task: "Compare a detector with a trivial baseline on a blind log using event-level precision, recall and delay, and report it if the baseline wins."
+        skills:
+          - key: ml.pred.baselines
+            title: Trivial baselines for telemetry
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: ml.pred.anomaly-evaluation
+            title: Honest anomaly detection evaluation
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: ml.pred.physics-residuals
+            title: Physics residuals as model features
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [log_parser, exact_numeric]
+            status: planned
+          - key: ml.pred.rul-literacy
+            title: Remaining useful life literacy
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [multiple_choice, explain_back]
+            status: planned
+
+      - key: ml.ops
+        title: Production ML ops literacy
+        order: 7
+        node: ml
+        outcomes:
+          - Document evals, monitoring and rollback for a deployed model slice.
+          - Relate cloud cost and latency to batch vs streaming inference [P].
+        evidence: L11 eval report + monitoring checklist
+        projects: prj.L11.telemetry-lakehouse
+        checkpoint: Rubric_llm with human sign-off
+        confusables: offline-vs-online-metrics
+        templates_p: "~10 templates"
+        hard_task: "Given a degraded model and logs, locate the cause among skew, recalibration and drift, then ship a rollback decision with evidence."
+        skills:
+          - key: ml.ops.evals
+            title: Eval suites and acceptance thresholds
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: true
+            grader_types: [rubric_llm, checklist]
+            status: planned
+          - key: ml.ops.monitoring-drift
+            title: Data drift monitoring basics
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [multiple_choice, debug_case]
+            status: planned
+          - key: ml.ops.cost-latency
+            title: Cost and latency trade-offs in production
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, exact_numeric]
+            status: planned
+          - key: ml.ops.training-serving-skew
+            title: "Training-serving skew and feedback loops"
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [debug_case, multiple_choice]
+            status: planned
+          - key: ml.ops.shadow-canary
+            title: "Versioning, shadow and canary releases"
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [multiple_choice, checklist]
+            status: planned
+
+      - key: ml.edge
+        title: Edge inference and quantization
+        order: 8
+        node: ml
+        outcomes:
+          - Quantize a small model for microcontroller or companion SBC class hardware.
+          - Compare accuracy vs latency on device [P].
+        evidence: Bench log + before/after metrics
+        projects: prj.L11.telemetry-lakehouse (edge slice optional)
+        checkpoint: Numeric compare on INT8 vs FP32 [P]
+        confusables: quantization-calibration
+        templates_p: "~10 templates"
+        hard_task: "Deploy under stated RAM, flash and deadline budgets, prove worst-case timing with hardware, and report on-device accuracy."
+        skills:
+          - key: ml.core.neural-network-basics
+          - key: ml.edge.quantization
+          - key: ml.edge.deploy
+            title: Deploy quantized model to edge runtime
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [code_tests, log_parser]
+            status: planned
+          - key: ml.edge.tensor-memory
+            title: Tensor memory budget on device
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+
+      - key: ml.llm
+        title: Production LLM systems
+        order: 9
+        node: ml
+        outcomes:
+          - Build an LLM feature with structured outputs and an offline eval set.
+          - Evaluate retrieval and agents with measurable criteria.
+          - Treat all retrieved and user text as untrusted.
+        evidence: Eval report and adversarial test results for an LLM feature over L11 logs
+        projects: prj.L11.telemetry-lakehouse (optional analysis slice)
+        checkpoint: Rubric_llm with human sign-off
+        confusables: prompt-injection-vs-jailbreak, retrieval-vs-generation-failure
+        templates_p: "~10 templates"
+        hard_task: "Run an agent over L11 logs with one write tool and a planted injection; the unauthorised action must be impossible by design, with a repeated-trial regression eval."
+        skills:
+          - key: ml.llm.structured-outputs
+            title: Structured outputs and schema validation
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [code_tests, multiple_choice]
+            status: planned
+          - key: ml.llm.retrieval-evals
+            title: Retrieval design and evals
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [rubric_llm, exact_numeric]
+            status: planned
+          - key: ml.llm.prompt-injection
+            title: Prompt injection and least privilege
+            tier_target: L1
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [multiple_choice, debug_case]
+            status: planned
+          - key: ml.llm.agent-evals
+            title: Evaluating agents and tool use
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [rubric_llm, checklist]
+            status: planned
+
+  governance:
+    capstone_map: |
+      | Checkpoint bundle | Modules |
+      |-------------------|---------|
+      | Export + device security | `prof.eu.cra-obligations`, `prof.law.export-control-literacy`, `def.export.scenarios`, `sec.hw.threat-modelling`, `sec.ot.zones` |
+      | Integrator habits | `prof.integrator.docs`, `econ.cost.bom-costing` |
+    modules:
+      - key: prof.law
+        title: Export-control literacy
+        order: 1
+        node: prof
+        outcomes:
+          - Recognise when a design file or technology may trigger export review.
+          - Describe workflow with counsel — no legal outcomes taught.
+        evidence: Scenario MC; governance-only tag (AC-SP-4)
+        projects: none (parallel track)
+        checkpoint: Scenario checkpoint set with ack
+        confusables: dual-use-vs-munitions-list
+        templates_p: "~10 scenario templates"
+        hard_task: "Within 30 minutes of a red-flag scenario, write the hold decision and note to counsel, with facts, unknowns and what stays frozen."
+        skills:
+          - key: prof.law.export-control-literacy
+          - key: prof.law.de-eu-awareness
+            title: DE/EU export awareness for integrators
+            tier_target: L0
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, explain_back]
+            status: planned
+          - key: prof.law.classification-workflow
+            title: Classification workflow with counsel (process)
+            tier_target: L0
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [multiple_choice, rubric_llm]
+            status: planned
+          - key: prof.law.stop-escalate-drill
+            title: Stop, hold and escalate drill
+            tier_target: L0
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [rubric_llm, human_review]
+            status: planned
+          - key: prof.law.german-layer
+            title: "Ausfuhrverantwortlicher, Nullbescheid and BAFA practice"
+            tier_target: L0
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [multiple_choice, rubric_llm]
+            status: planned
+          - key: prof.law.compliance-programme
+            title: "One-person internal compliance programme"
+            tier_target: L0
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [checklist, rubric_llm]
+            status: planned
+
+      - key: def.export
+        title: Export control scenarios
+        order: 2
+        node: def
+        outcomes:
+          - Work through Annex I category literacy scenarios [P].
+          - Decompose products into controlled vs non-controlled elements.
+        evidence: Scenario MC only; no evasion content
+        projects: none
+        checkpoint: Module checkpoint before integrator docs module
+        confusables: none
+        templates_p: "~12 templates"
+        hard_task: "From a fictional spec, identify candidate entries, the parameters needing data, and what cannot be concluded without counsel."
+        skills:
+          - key: def.export.scenarios
+            title: Dual-use scenario decision exercises
+            tier_target: L0
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [multiple_choice, rubric_llm]
+            status: planned
+          - key: def.export.product-decomposition
+            title: Product decomposition for control lists
+            tier_target: L0
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, explain_back]
+            status: planned
+          - key: def.export.tech-data-sharing
+            title: Technical data sharing red flags
+            tier_target: L0
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, rubric_llm]
+            status: planned
+          - key: def.export.classification-memo
+            title: "Classification memo on your own design"
+            tier_target: L1
+            est_minutes: 60
+            phone_suitable: false
+            grader_types: [human_review, checklist]
+            status: planned
+          - key: def.export.general-notes
+            title: "General Notes and encryption tests"
+            tier_target: L1
+            est_minutes: 40
+            phone_suitable: false
+            grader_types: [multiple_choice, rubric_llm]
+            status: planned
+
+      - key: sec.hw
+        title: Embedded threat modelling
+        order: 3
+        node: sec
+        outcomes:
+          - Model assets, attackers and trust boundaries for your own device.
+          - Link threats to mitigations at literacy depth.
+        evidence: Threat model rubric on template device
+        projects: optional cross-link L11 secure uplink
+        checkpoint: human_review on threat model diagram
+        confusables: threat-vs-vulnerability
+        templates_p: "~10 templates"
+        hard_task: "Threat model L4 or L11, map it to EMB3D, and run a verification test for each top risk; an independent reviewer looks for the biggest miss."
+        skills:
+          - key: sec.hw.threat-modelling
+          - key: sec.hw.secure-boot-literacy
+            title: Secure boot and signing literacy
+            tier_target: L0
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, explain_back]
+            status: planned
+          - key: sec.hw.sbom-basics
+            title: SBOM and supply-chain narrative
+            tier_target: L0
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, checklist]
+            status: planned
+          - key: sec.hw.own-device-model
+            title: Threat model your own L4 or L11 device
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [human_review, checklist]
+            status: planned
+          - key: sec.hw.iot-baselines
+            title: EN 303 645 and EN 18031 baselines
+            tier_target: L0
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [multiple_choice, checklist]
+            status: planned
+          - key: sec.hw.applied-crypto
+            title: "Applied crypto: AEAD, nonces and key hierarchy"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [multiple_choice, code_tests]
+            status: planned
+          - key: sec.hw.key-lifecycle
+            title: "Key lifecycle from provisioning to end of life"
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [multiple_choice, checklist]
+            status: planned
+
+      - key: sec.ot
+        title: OT zones and cloud backhaul
+        order: 4
+        node: sec
+        outcomes:
+          - Place device, edge and cloud into zones/conduits narrative [P].
+          - Relate to ISAGCA-style OT thinking without certifying.
+        evidence: Zone diagram checklist
+        projects: prj.L11.telemetry-lakehouse (architecture slice)
+        checkpoint: MC + checklist
+        confusables: it-vs-ot-boundary
+        templates_p: "~8 templates"
+        hard_task: "Draw zones and conduits for L11 with risk rationale, and defend one remote-maintenance path against a compromise scenario."
+        skills:
+          - key: sec.ot.zones
+            title: Purdue/zones and conduits for CPS
+            tier_target: L0
+            est_minutes: 30
+            phone_suitable: true
+            grader_types: [multiple_choice, checklist]
+            status: planned
+          - key: sec.ot.remote-access
+            title: Remote access and jump host patterns
+            tier_target: L0
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [multiple_choice, rubric_llm]
+            status: planned
+          - key: sec.ot.iec62443-product
+            title: "IEC 62443-4-1 and 4-2 for product builders"
+            tier_target: L0
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [multiple_choice, checklist]
+            status: planned
+
+      - key: prof.integrator
+        title: Defense integrator documentation
+        order: 5
+        node: prof
+        outcomes:
+          - Produce integrator-facing architecture and test evidence summaries.
+          - Maintain golden configuration discipline [P].
+        evidence: Rubric on documentation pack template
+        projects: prj.L13.field-test-campaign
+        checkpoint: rubric_llm + human sign-off
+        confusables: none
+        templates_p: "~8 templates"
+        hard_task: "A sceptical reviewer picks any claim, and you reproduce its evidence from the exact configuration within an hour."
+        skills:
+          - key: prof.integrator.docs
+            title: Integrator architecture and evidence pack
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: true
+            grader_types: [rubric_llm, checklist]
+            status: planned
+          - key: prof.integrator.golden-config
+            title: Golden vehicle/build configuration log
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [checklist, rubric_llm]
+            status: planned
+
+      - key: econ.cost
+        title: Programme economics
+        order: 6
+        node: econ
+        outcomes:
+          - Build BOM cost with volume and assembly assumptions.
+          - Relate cost drivers to design choices on PDB and avionics [P].
+        evidence: Numeric BOM spreadsheet template
+        projects: cross-link L10/L11 BOM notes
+        checkpoint: Numeric BOM items
+        confusables: unit-cost-vs-nre
+        templates_p: "~8 templates"
+        hard_task: "From supplied quotes, model 100, 1k and 10k units with price, margin, peak cash need, and where a printed part should become moulded."
+        skills:
+          - key: econ.cost.bom-costing
+          - key: econ.cost.volume-scaling
+            title: Volume scaling and MOQ effects
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: true
+            grader_types: [exact_numeric, multiple_choice]
+            status: planned
+          - key: econ.cost.programme-nre
+            title: NRE vs recurring cost literacy
+            tier_target: L1
+            est_minutes: 20
+            phone_suitable: true
+            grader_types: [multiple_choice, exact_numeric]
+            status: planned
+          - key: econ.cost.unit-economics
+            title: "Unit P&L, landed cost and cash model"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [exact_numeric, checklist]
+            status: planned
+          - key: econ.cost.evt-dvt-pvt
+            title: "EVT, DVT and PVT gates"
+            tier_target: L1
+            est_minutes: 25
+            phone_suitable: false
+            grader_types: [multiple_choice, checklist]
+            status: planned
+
+      - key: prof.eu
+        title: EU product compliance
+        order: 7
+        node: prof
+        outcomes:
+          - Recognise when the Cyber Resilience Act applies and what it requires.
+          - Plan vulnerability handling, an SBOM and a support period for a connected product.
+          - Map CE marking and radio rules to a wireless product, with counsel.
+        evidence: Scenario set plus a compliance checklist for the founder's own L11 device; not legal advice
+        projects: prj.L11.telemetry-lakehouse (architecture slice)
+        checkpoint: Scenario checkpoint with human sign-off
+        confusables: cra-vs-nis2, ce-marking-vs-certification
+        templates_p: "~10 scenario templates; verify every date and scope against the Official Journal when authoring"
+        hard_task: "Map which laws apply to your device with dates and evidence, then run a 72-hour reporting drill. Every date must cite an Official Journal source."
+        skills:
+          - key: prof.eu.cra-obligations
+            title: Cyber Resilience Act scope and obligations
+            tier_target: L0
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [multiple_choice, rubric_llm]
+            status: planned
+          - key: prof.eu.vulnerability-handling
+            title: Vulnerability handling and reporting duties
+            tier_target: L0
+            est_minutes: 25
+            phone_suitable: false
+            grader_types: [multiple_choice, checklist]
+            status: planned
+          - key: prof.eu.ce-radio
+            title: CE marking and radio equipment rules
+            tier_target: L0
+            est_minutes: 25
+            phone_suitable: false
+            grader_types: [multiple_choice, rubric_llm]
+            status: planned
+          - key: prof.eu.product-liability
+            title: Product liability for hardware and software
+            tier_target: L0
+            est_minutes: 25
+            phone_suitable: false
+            grader_types: [multiple_choice, rubric_llm]
+            status: planned
+          - key: prof.eu.reporting-drill
+            title: "Timed CRA 24 h, 72 h and 14 day drill"
+            tier_target: L1
+            est_minutes: 35
+            phone_suitable: false
+            grader_types: [human_review, checklist]
+            status: planned
+          - key: prof.eu.applicability-map
+            title: "Applicability map for your own device"
+            tier_target: L1
+            est_minutes: 45
+            phone_suitable: false
+            grader_types: [human_review, checklist]
+            status: planned
+
+      - key: prof.data
+        title: "Data and AI law"
+        order: 8
+        node: prof
+        outcomes:
+          - "Scope the Data Act for a connected product."
+          - "Map personal data in telemetry under GDPR."
+          - "Scope the AI Act, including where defence exclusions do not apply."
+        evidence: "Annotated L11 data inventory; not legal advice"
+        projects: "prj.L11.telemetry-lakehouse"
+        checkpoint: "Scenario set with human sign-off"
+        confusables: exclusive-defence-vs-dual-use
+        templates_p: "~8 scenario templates; check every date against the Official Journal"
+        hard_task: "Annotate L11's data inventory for owner, personal data, user access route, retention and export-controlled content."
+        skills:
+          - key: prof.data.data-act
+            title: "Data Act scoping for connected products"
+            tier_target: L0
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [multiple_choice, rubric_llm]
+            status: planned
+          - key: prof.data.gdpr-telemetry
+            title: "GDPR for telemetry and location logs"
+            tier_target: L0
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [multiple_choice, checklist]
+            status: planned
+          - key: prof.data.ai-act
+            title: "AI Act literacy and AI risk management"
+            tier_target: L0
+            est_minutes: 30
+            phone_suitable: false
+            grader_types: [multiple_choice, rubric_llm]
+            status: planned
+

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Curriculum — Polymath documentation</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="curriculum">
+  <a class="skip" href="#main">Skip to content</a>
+  <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+    <div class="main-wrap">
+      <main id="main" class="content">
+        <p class="kicker">Skill graph &amp; projects</p>
+        <h1>Curriculum structure</h1>
+        <p class="spec-ref">
+          <a href="../docs/05-skill-graph-and-curriculum-spec.md">docs/05-skill-graph-and-curriculum-spec.md</a>,
+          <a href="syllabi.html">Pillar syllabi viewer</a>,
+          <a href="../content/syllabi/README.md">content/syllabi/</a>,
+          <a href="../content/mvp-skill-graph.yaml">content/mvp-skill-graph.yaml</a>,
+          <a href="../content/project-ladder.yaml">content/project-ladder.yaml</a>
+        </p>
+
+        <div class="summary">
+          <h2>Summary</h2>
+          <ul>
+            <li>Skills form a directed acyclic graph with explicit prerequisite edges.</li>
+            <li>Tiers <code>L0</code>–<code>L3</code> describe depth; the product targets tier <code>L1</code> working knowledge per subject.</li>
+            <li><code>stub</code> nodes reserve future map space and are neither taught nor used as prerequisites for active skills.</li>
+            <li>The <strong>project ladder</strong> supplies bench evidence; level L5 (KiCad board) is specified but scheduled late in delivery.</li>
+          </ul>
+        </div>
+
+        <h2>Competence tiers</h2>
+        <dl class="compact">
+          <dt>L0</dt><dd>Recognition and guided execution.</dd>
+          <dt>L1</dt><dd>Working knowledge: guided projects, debugging, unaided checkpoints.</dd>
+          <dt>L2</dt><dd>Deeper design and trade-off reasoning (future spine).</dd>
+          <dt>L3</dt><dd>Expert breadth; aspirational, not a version 1 commitment.</dd>
+        </dl>
+
+        <h2>Capability pillars (syllabi)</h2>
+        <p>
+          Seven tracks from the <a href="spine.html">capability spine</a>.
+          Browse module outcomes and skill tables in the
+          <a href="syllabi.html"><strong>pillar syllabi viewer</strong></a>
+          (T0–T6), or open markdown under <code>content/syllabi/</code>.
+        </p>
+        <ul class="pills">
+          <li><a href="syllabi.html#T0">T0 Foundation</a> (<code>foundation-module-plan.yaml</code>)</li>
+          <li><a href="syllabi.html#T1">T1 Power</a></li>
+          <li><a href="syllabi.html#T2">T2 Control</a></li>
+          <li><a href="syllabi.html#T3">T3 Mechanical</a></li>
+          <li><a href="syllabi.html#T4">T4 UAV</a></li>
+          <li><a href="syllabi.html#T5">T5 Cloud twin</a></li>
+          <li><a href="syllabi.html#T6">T6 Governance</a></li>
+        </ul>
+
+        <h2>Initial delivery slice</h2>
+        <ul class="pills">
+          <li>Mathematics essentials</li>
+          <li>Electronics (DC, passives, elementary circuits)</li>
+          <li>Embedded software (C, peripherals, debugging)</li>
+        </ul>
+        <p>
+          Version 1 <strong>ships</strong> the first walk only; stub nodes reserve future map space.
+          After first-walk L1, tracks in the <a href="spine.html">capability spine</a> extend the same loop to power, control, mechanical design, UAV integration, cloud twin, and governance.
+        </p>
+
+        <h2>Project ladder (foundation)</h2>
+        <ol class="flow-steps">
+          <li><strong>L0</strong> — Blink LED (included in lean slice as manual evidence).</li>
+          <li>Voltage divider / RC filter correlated with simulation.</li>
+          <li>Transistor switch and regulator.</li>
+          <li>I2C sensor with UART logging.</li>
+          <li>State machine with interrupt service.</li>
+          <li><strong>L5</strong> — First KiCad PCB (ERC/DRC verification; milestone M5).</li>
+        </ol>
+
+        <h2>Project ladder (spine sketch L6–L13)</h2>
+        <p class="spec-ref"><a href="../content/extended-project-ladder-sketch.yaml">extended-project-ladder-sketch.yaml</a></p>
+        <ul>
+          <li>L6 BLDC/ESC bench · L7 IMU ground logger · L8 kit quad maiden · L9 custom CAD frame</li>
+          <li>L10 power PCB · L11 telemetry lakehouse · L12 mission/geofence · L13 field test campaign</li>
+        </ul>
+
+        <h2>Confusable skill sets</h2>
+        <p>
+          Skills that learners commonly conflate (for example, series versus parallel reasoning) are grouped for interleaved practice.
+          Sets are declared in the graph data, not assigned ad hoc at runtime.
+        </p>
+
+        <h2>Hardware to buy</h2>
+        <p>
+          Phased instrument and parts lists (foundation through quad and 3D print) are documented in
+          <a href="hardware.html">Hardware &amp; tools</a>.
+        </p>
+
+        <div class="callout tip">
+          The lean slice activates a reviewed subset of approximately 15–20 skills, primarily math and <code>elec.dc</code>,
+          where numeric and symbolic graders cover the configured task kinds.
+        </div>
+      </main>
+      <footer class="page-footer">Graph validation: <code>python3 reference/validate_graph.py</code>.</footer>
+    </div>
+  </div>
+  <script src="assets/nav.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Delivery plan — Polymath documentation</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="plan">
+  <a class="skip" href="#main">Skip to content</a>
+  <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+    <div class="main-wrap">
+      <main id="main" class="content">
+        <p class="kicker">Planning · estimates marked [P]</p>
+        <h1>Delivery plan and lean slice</h1>
+        <p class="spec-ref">
+          <a href="../docs/00d-lean-slice-plan.md">docs/00d-lean-slice-plan.md</a>,
+          <a href="../docs/lean-build-gate.md">lean build gate</a>,
+          <a href="../docs/factory-wave-manifest.md">factory wave manifest</a>,
+          <a href="../docs/13-roadmap-and-backlog.md">docs/13-roadmap-and-backlog.md</a>,
+          <a href="../docs/14-risk-register.md">docs/14-risk-register.md</a>
+        </p>
+
+        <div class="summary">
+          <h2>Summary</h2>
+          <ul>
+            <li>Delivery is staged: <strong>lean gate</strong> tasks only until go/no-go (<strong>BL-0181</strong>), then one deferred group at a time—see the <a href="../docs/factory-wave-manifest.md">wave manifest</a> for build order and green commands.</li>
+            <li><strong>Phase −1</strong> validates study habits without application code (four weeks).</li>
+            <li>The <strong>lean slice</strong> delivers the daily study loop: graph, FSRS, sessions, numeric/symbolic/MC grading, PWA, and verified templates (hour estimates in doc 13 remain [P] planning bands).</li>
+            <li>Curriculum detail: <a href="syllabi.html">pillar syllabi</a> and <a href="curriculum.html">skill graph overview</a>.</li>
+          </ul>
+        </div>
+
+        <h2 id="phase-minus-one">Phase −1 (pre-build)</h2>
+        <p>
+          Phase −1 measures whether the founder can sustain approximately 2.5 hours per week of structured practice across four weeks,
+          with delayed retrieval of week-one material in weeks three and four. The same activity supports learning during subsequent implementation.
+        </p>
+        <ol class="flow-steps">
+          <li>Select approximately eight skills from the lean curriculum (algebra and DC electronics fundamentals).</li>
+          <li>Run FSRS scheduling in Anki; use generated problem sheets from <code>reference/verifiers</code>.</li>
+          <li>Record adherence, minutes, and delayed recall in a structured log.</li>
+          <li class="end">Record decision: proceed, adjust scope, or halt before major implementation investment.</li>
+        </ol>
+
+        <h2>Lean slice scope</h2>
+        <div class="grid-2">
+          <article class="card good">
+            <h3>In scope</h3>
+            <ul>
+              <li>Authentication, sessions, frontier, due inbox</li>
+              <li>Worked example, faded problems, retrieval sequencing</li>
+              <li>Numeric, multiple-choice, and symbolic grading</li>
+              <li>Verification gate (zero unverified serves)</li>
+              <li>Progress views and installable PWA</li>
+              <li>Manual project log (notes and photos)</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Deferred (groups D1–D9)</h3>
+            <ul>
+              <li>Tutor, execution sandbox, code and SPICE graders</li>
+              <li>Checkpoints, diagnostic, experiment UI</li>
+              <li>Offline pack and push notifications</li>
+              <li>Automated evidence verification, KiCad, beta operations</li>
+            </ul>
+          </article>
+        </div>
+
+        <h2>Full milestone sequence</h2>
+        <ol class="flow-steps">
+          <li>Repository, CI, schema, RLS, content sync — <strong>M0</strong></li>
+          <li>Scheduler, learner UI, PWA shell — <strong>M1</strong></li>
+          <li>Tutor, sandbox, checkpoints, offline basics — <strong>M2</strong></li>
+          <li>Projects, evidence pipeline, lab flows — <strong>M3</strong></li>
+          <li>Privacy export, security release gate — <strong>M4</strong></li>
+          <li>PWA hardening, beta, KiCad integration — <strong>M5</strong></li>
+        </ol>
+
+        <h2>Planning risks</h2>
+        <div class="grid-2">
+          <article class="card"><h3>R-22</h3><p>Weekly hours cannot be allocated twice; learning time is reserved before build time.</p></article>
+          <article class="card"><h3>R-23</h3><p>Implementing the full product before validating the study loop.</p></article>
+          <article class="card"><h3>Estimate overrun</h3><p>Logged effort beyond approximately twice the model triggers replanning.</p></article>
+          <article class="card"><h3>Claims compliance</h3><p>Marketing or in-app copy outside the evidence policy triggers correction or stop.</p></article>
+        </div>
+
+        <div class="callout tip">
+          Select the next deferred group from operational logs: tutor need (D2/D4), bench readiness (D7), offline reliability (D6), and similar signals documented in 00d §7.
+        </div>
+      </main>
+      <footer class="page-footer">
+        Factory: <a href="../docs/lean-build-gate.md">lean-build-gate.md</a>,
+        <a href="../docs/factory-wave-manifest.md">factory-wave-manifest.md</a>.
+        Tasks: <a href="../backlog/backlog.yaml">backlog/backlog.yaml</a> (filter <code>lean: true</code>).
+      </footer>
+    </div>
+  </div>
+  <script src="assets/nav.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

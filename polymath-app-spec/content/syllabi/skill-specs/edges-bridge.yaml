@@ -1,0 +1,120 @@
+# Curated prerequisite edges for the nine bridge skills in skill-specs/T2-bridge.yaml. Authored 2026-11-02.
+# Authoring input only: not a graph file, sets no status.
+# Every edge respects `modules:` order in content/mvp-skill-graph.yaml; validator rule 13 applies to soft edges too.
+# min_tier is L1, or L0 where the prerequisite's tier_target is L0 (net.proto.ip-and-sockets).
+edges:
+  # Stub prerequisite kept. Matrix action on a vector carries the rotation; inverse and det frame R^T = R^-1
+  math.vec.rotation-matrices:
+    - {skill: math.vec.matrix-vector, strength: hard, min_tier: L1}
+    - {skill: math.vec.det-inverse, strength: soft, min_tier: L1}
+  # Dot product gives the perpendicular check and angles; the determinant layout is a memory aid only
+  math.vec.cross-product:
+    - {skill: math.vec.dot-product, strength: hard, min_tier: L1}
+    - {skill: math.vec.det-inverse, strength: soft, min_tier: L1}
+  # Sine, exp and power rules. math.vec.matrix-vector is NOT an edge: math.vec (17) follows math.calc (11),
+  # so the spec reads a Jacobian as a table of slopes and sums each row by hand
+  math.calc.partial-derivatives-jacobians:
+    - {skill: math.calc.derivative-functions, strength: hard, min_tier: L1}
+  # Factoring quadratics, and small linear systems for coefficients
+  math.calc.partial-fractions:
+    - {skill: math.alg.quadratics, strength: hard, min_tier: L1}
+    - {skill: math.alg.systems-2x2, strength: hard, min_tier: L1}
+    - {skill: math.cplx.complex-arithmetic, strength: soft, min_tier: L1}
+    - {skill: math.calc.antiderivatives, strength: soft, min_tier: L1}
+  # Both stub edges kept. The soft edge is whitelisted in module_order_exceptions; dropping it would leave that entry stale
+  math.prob.normal-distribution:
+    - {skill: math.prob.variance, strength: hard, min_tier: L1}
+    - {skill: math.calc.integral-meaning, strength: soft, min_tier: L1}
+  # Stub prerequisite kept. The Gaussian update closes the spec, so the normal skill helps but does not gate
+  math.prob.conditional-bayes:
+    - {skill: math.prob.probability-rules, strength: hard, min_tier: L1}
+    - {skill: math.prob.normal-distribution, strength: soft, min_tier: L1}
+  # T, S and 1 + L are transfer-function algebra; closed-loop poles need the left half-plane test
+  ctl.sys.feedback-basics:
+    - {skill: ctl.sys.laplace-transfer, strength: hard, min_tier: L1}
+    - {skill: ctl.sys.eigenvalues-stability, strength: hard, min_tier: L1}
+  # W*x + b is the fitted linear model extended; matrix-vector is implied through math.vec.least-squares
+  ml.core.neural-network-basics:
+    - {skill: ml.core.linear-regression, strength: hard, min_tier: L1}
+  # Handshake runs over a socket; the validity window needs a device clock
+  sys.telemetry.tls-basics:
+    - {skill: net.proto.ip-and-sockets, strength: hard, min_tier: L0}
+    - {skill: sys.telemetry.time-model, strength: soft, min_tier: L1}
+
+rewire:
+  # Spec: F_inertial = R*F_body and omega x v_b. matrix-vector was the substitute; now implied through rotation-matrices
+  phys.mech.forces-body-frame:
+    add:
+      - {skill: math.vec.rotation-matrices, strength: hard, min_tier: L1}
+      - {skill: math.vec.cross-product, strength: hard, min_tier: L1}
+    remove: [math.vec.matrix-vector]
+  # Spec: R_world_body and its transpose, and x cross y = +z. matrix-vector was the substitute; now implied
+  sig.imu.frames:
+    add:
+      - {skill: math.vec.rotation-matrices, strength: hard, min_tier: L1}
+    remove: [math.vec.matrix-vector]
+  # Spec: v_body = Rz(90)*v_sensor. Named need; implied through sig.imu.frames, so the validator warns it is redundant
+  robo.uav.sensor-orientation:
+    add:
+      - {skill: math.vec.rotation-matrices, strength: hard, min_tier: L1}
+    remove: []
+  # Spec: NIS gates 3.84 and 6.63 are squared normal quantiles
+  ctl.est.innovation-checks:
+    add:
+      - {skill: math.prob.normal-distribution, strength: hard, min_tier: L1}
+    remove: []
+  # Spec: independent Gaussian axes and 50% and 95% radii
+  sens.meas.gps-error-literacy:
+    add:
+      - {skill: math.prob.normal-distribution, strength: hard, min_tier: L1}
+    remove: []
+  # Spec: k = 2 gives roughly 95% for a near-normal result
+  sens.meas.calibration-uncertainty:
+    add:
+      - {skill: math.prob.normal-distribution, strength: hard, min_tier: L1}
+    remove: []
+  # Spec: 3 standard deviation test, p = 0.0027
+  sys.twin.residual-alert:
+    add:
+      - {skill: math.prob.normal-distribution, strength: hard, min_tier: L1}
+    remove: []
+  # Spec: Gaussianity makes K the full conditional mean. math.prob.variance stays, since bayes does not imply it
+  ctl.est.kalman-1d:
+    add:
+      - {skill: math.prob.conditional-bayes, strength: hard, min_tier: L1}
+    remove: []
+  # Spec: alpha x r + omega x (omega x r). Named need; implied through forces-body-frame, so the validator warns it is redundant
+  sig.imu.specific-force:
+    add:
+      - {skill: math.vec.cross-product, strength: hard, min_tier: L1}
+    remove: []
+  # Quaternion products contain a cross product term
+  sig.imu.quaternions:
+    add:
+      - {skill: math.vec.cross-product, strength: hard, min_tier: L1}
+    remove: []
+  # Spec: A and B are the Jacobians at (xe, ue)
+  ctl.sys.linearisation:
+    add:
+      - {skill: math.calc.partial-derivatives-jacobians, strength: hard, min_tier: L1}
+    remove: []
+  # Spec: inverts transforms by partial fractions
+  ctl.sys.laplace-transfer:
+    add:
+      - {skill: math.calc.partial-fractions, strength: hard, min_tier: L1}
+    remove: []
+  # Spec: argument principle on 1 + L(s). eigenvalues-stability is now implied through feedback-basics
+  ctl.sys.nyquist-criterion:
+    add:
+      - {skill: ctl.sys.feedback-basics, strength: hard, min_tier: L1}
+    remove: [ctl.sys.eigenvalues-stability]
+  # Spec: Conv2D per-axis scales and activation ranges. Soft linear-regression was the substitute; now implied hard
+  ml.edge.quantization:
+    add:
+      - {skill: ml.core.neural-network-basics, strength: hard, min_tier: L1}
+    remove: [ml.core.linear-regression]
+  # Spec: CertificateRequest, chain and validity build on server-side TLS. ip-and-sockets is now implied through tls-basics
+  sys.telemetry.secure-uplink:
+    add:
+      - {skill: sys.telemetry.tls-basics, strength: hard, min_tier: L1}
+    remove: [net.proto.ip-and-sockets]

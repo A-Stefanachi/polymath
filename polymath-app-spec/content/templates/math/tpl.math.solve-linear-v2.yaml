@@ -1,0 +1,131 @@
+schema_version: 1
+key: tpl.math.solve-linear-v2
+version: 2
+authoring_status: ready
+skill_key: math.alg.solve-linear
+task_kind: problem
+grader_type: exact_numeric
+difficulty_prior: 0.4
+title: Linear with x on both sides
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-01'
+  llm_assistance:
+    used: true
+    roles:
+    - draft_template
+    - hints
+    - misconception_tags
+    model: claude-opus-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts:
+  - phone
+  - desktop
+  est_seconds: 90
+  phone_suitable: true
+  offline_gradable: true
+parameters:
+- name: a
+  type: int
+  min: 3
+  max: 9
+  description: x coefficient on the left
+- name: c
+  type: int
+  min: 2
+  max: 8
+  description: x coefficient on the right
+- name: b
+  type: int
+  min: 1
+  max: 15
+  description: Constant on the left
+- name: r
+  type: int
+  min: 2
+  max: 12
+  description: The solution, chosen first
+derived:
+- name: diff
+  expr: a - c
+- name: d
+  expr: (a - c) * r + b
+- name: rhs
+  expr: d - b
+constraints:
+- id: left-larger
+  expr: a > c
+  reason: The x terms must collect to a positive coefficient, and equal coefficients leave no x to solve for.
+render:
+  stem_md: 'Solve for $x$: ${{a|int}}x + {{b|int}} = {{c|int}}x + {{d|int}}$.'
+  answer_prompt: Enter the value of x.
+  alt_text: 'Solve for x: {{a|int}} x plus {{b|int}} equals {{c|int}} x plus {{d|int}}.'
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      sol: (d - b) / (a - c)
+  steps:
+  - id: s1
+    text_md: 'Subtract ${{c|int}}x$ from both sides: ${{diff|int}}x + {{b|int}} = {{d|int}}$.'
+  - id: s2
+    text_md: 'Subtract ${{b|int}}$ from both sides: ${{diff|int}}x = {{rhs|int}}$.'
+  - id: s3
+    text_md: Divide by ${{diff|int}}$ to get $x = {{sol|int}}$.
+answer:
+  kind: numeric
+  value: sol
+  unit: dimensionless
+  accept_units:
+  - dimensionless
+  bare_number_means: dimensionless
+  tolerance:
+    rel: 0.0
+    abs: 1.0e-06
+verifiers:
+- id: inverse-solve
+  kind: sympy_solve
+  independence: Solves the original equation with sympy instead of using the rearranged formula.
+  spec:
+    unknowns:
+    - x
+    equations:
+    - a * x + b - (c * x + d)
+    checks:
+    - unknown: x
+      output: sol
+  tolerance:
+    rel: 1.0e-09
+- id: window
+  kind: bounds
+  independence: Range limits derived from the parameter ranges, independent of any formula for the value.
+  spec:
+    output: sol
+    lo: '2'
+    hi: '12'
+hints:
+  l1: Where are the terms with x, and where are the plain numbers?
+  l2: Gather the x terms on one side and the plain numbers on the other, doing the same thing to both sides.
+  l3: 'Subtract ${{c|int}}x$ from both sides: ${{diff|int}}x + {{b|int}} = {{d|int}}$.'
+misconceptions:
+- tag: mc.adds-x-terms
+  description: Adds the x coefficients instead of subtracting one from both sides.
+  wrong_answer_expr: (d - b) / (a + c)
+  feedback_md: Moving an x term across means subtracting it from both sides, so the coefficients are not added.
+- tag: mc.sign-when-moving
+  description: Keeps the plus sign when moving the constant to the other side.
+  wrong_answer_expr: (d + b) / (a - c)
+  feedback_md: Removing a constant means subtracting it from both sides. Check the sign.
+- tag: mc.drops-x-term
+  description: Ignores the x term on the right.
+  wrong_answer_expr: (d - b) / a
+  feedback_md: The x term on the right still counts. Collect it with the other x term first.
+fuzz:
+  samples: 200
+  seed_base: 5000
+  max_rejection_rate: 0.7
+  min_distinct_param_sets: 50

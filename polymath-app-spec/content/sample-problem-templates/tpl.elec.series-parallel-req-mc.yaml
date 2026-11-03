@@ -1,0 +1,85 @@
+# Sample 4: multiple_choice with misconception-tagged distractors (series versus parallel grouping).
+schema_version: 1
+key: tpl.elec.series-parallel-req-mc
+version: 1
+authoring_status: ready
+skill_key: elec.dc.series-parallel
+task_kind: problem
+grader_type: multiple_choice
+difficulty_prior: 0.3
+title: Equivalent resistance of a mixed network
+license: original
+source: original
+provenance:
+  authors: [founder]
+  created: "2026-10-31"
+  llm_assistance:
+    used: true
+    roles: [distractors, misconception_tags]
+    model: claude-sonnet-5-5
+    prompt_version: template_assist_v1
+delivery: { contexts: [phone, desktop], est_seconds: 60, phone_suitable: true, offline_gradable: true }
+parameters:
+  - { name: r1, type: e_series, series: E12, decade_min: 2, decade_max: 4, unit: ohm }
+  - { name: r2, type: e_series, series: E12, decade_min: 2, decade_max: 4, unit: ohm }
+  - { name: r3, type: e_series, series: E12, decade_min: 2, decade_max: 4, unit: ohm }
+constraints:
+  - { id: pairwise-different, expr: "r1 != r2 and r2 != r3 and r1 != r3", reason: "Equal resistors let several wrong groupings produce the same value." }
+  - { id: comparable-magnitudes, expr: "max(r1, r2, r3) / min(r1, r2, r3) <= 15", reason: "Prevents one resistor from dominating so completely that wrong groupings round to the same value." }
+render:
+  stem_md: |
+    Resistor $R_1 = {{r1|tex}}$ is connected in series with a parallel pair made of
+    $R_2 = {{r2|tex}}$ and $R_3 = {{r3|tex}}$. Terminal A is the free end of $R_1$ and terminal B is the far end of the parallel pair.
+
+    What is the equivalent resistance between A and B?
+  alt_text: "R1 of {{r1|eng}} in series with the parallel combination of R2 of {{r2|eng}} and R3 of {{r3|eng}}. Choose the equivalent resistance between the two outer terminals."
+  figure: { kind: svg_template, template: series_parallel_r1_r2r3_v1, caption_md: "R1 in series with (R2 parallel R3)." }
+solution:
+  generator:
+    method: closed_form
+    outputs: { req: "r1 + r2*r3/(r2+r3)" }
+  steps:
+    - { id: s1, text_md: "Combine the parallel pair: $R_2 \\parallel R_3 = \\dfrac{R_2R_3}{R_2+R_3} = {{rp|tex:ohm}}$." }
+    - { id: s2, text_md: "Add the series resistor: $R_{eq} = R_1 + (R_2\\parallel R_3) = {{req|tex:ohm}}$." }
+derived:
+  - { name: rp, expr: "r2*r3/(r2+r3)", unit: ohm }
+answer:
+  n_shown: 4
+  shuffle: true
+  min_separation_rel: 0.04
+  options:
+    - { id: correct, correct: true, value_expr: req, text_md: "${{value|tex:ohm}}$" }
+    - { id: all-series, correct: false, value_expr: "r1 + r2 + r3", text_md: "${{value|tex:ohm}}$", misconception_tag: mc.all-series, feedback_md: "That adds all three as if they carried the same current. R2 and R3 share the same two nodes, so they are in parallel." }
+    - { id: all-parallel, correct: false, value_expr: "1/(1/r1 + 1/r2 + 1/r3)", text_md: "${{value|tex:ohm}}$", misconception_tag: mc.all-parallel, feedback_md: "R1 is not across the same two nodes as R2 and R3: all of R1's current continues through the pair, so it is in series." }
+    - { id: wrong-grouping, correct: false, value_expr: "(r1 + r2)*r3/(r1 + r2 + r3)", text_md: "${{value|tex:ohm}}$", misconception_tag: mc.wrong-grouping, feedback_md: "That puts R3 in parallel with R1 plus R2. Check which two resistors share both of their nodes." }
+    - { id: average-for-parallel, correct: false, value_expr: "r1 + (r2 + r3)/2", text_md: "${{value|tex:ohm}}$", misconception_tag: mc.parallel-as-average, feedback_md: "A parallel pair is smaller than either resistor, so the average is not right. Use the product over sum or the reciprocal rule." }
+verifiers:
+  - id: nodal-exact
+    kind: sympy_solve
+    independence: "Injects 1 A at terminal A and solves the two node equations exactly, instead of applying series and parallel formulas."
+    spec:
+      unknowns: [va, vm]
+      equations: ["1 - (va - vm)/r1", "(va - vm)/r1 - vm/r2 - vm/r3"]
+      checks: [{ unknown: va, output: req }]
+    tolerance: { rel: 1.0e-9 }
+  - id: options-distinct
+    kind: distinct_options
+    independence: "Pairwise comparison of every option value, independent of how each was derived; also requires exactly one correct option whose value equals the verified answer."
+    spec: { correct_output: req }
+    tolerance: { rel: 0.04 }
+  - id: dimension
+    kind: pint_dimension
+    independence: "Dimensional analysis with pint; every option value must have units of ohm."
+    spec:
+      checks:
+        - { expr: "r1 + r2*r3/(r2+r3)", result_unit: ohm }
+hints:
+  l1: "Trace the current from A. Does all of it go through R1? Where does it split?"
+  l2: "Two resistors are in parallel when both of their ends connect to the same two nodes. Reduce that pair first, then treat the result as one resistor."
+  l3: "Combine R2 and R3 first: their parallel value is {{rp|eng:ohm}}. Now it is a simple series circuit with R1."
+misconceptions:
+  - { tag: mc.all-series, description: "Adds every resistor regardless of topology." }
+  - { tag: mc.all-parallel, description: "Applies the reciprocal rule to every resistor." }
+  - { tag: mc.wrong-grouping, description: "Groups the wrong pair as parallel." }
+  - { tag: mc.parallel-as-average, description: "Takes the mean of the parallel resistors." }
+fuzz: { samples: 200, seed_base: 4000, max_rejection_rate: 0.9 }

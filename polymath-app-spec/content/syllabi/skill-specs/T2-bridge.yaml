@@ -1,0 +1,316 @@
+# Skill specifications for the nine bridge skills. Authored 2026-11-02. Original wording.
+# Three restore stub keys unchanged (math.vec.rotation-matrices, math.prob.normal-distribution,
+# math.prob.conditional-bayes); six are new. Prerequisites and rewiring are in edges-bridge.yaml.
+# Authoring input only: sets no status. Every worked number was computed in Python on 2026-11-02.
+# Sources are links only. "(benchmark only ...)" marks a non-commercial source used to check coverage, nothing more.
+- key: math.vec.rotation-matrices
+  title: Rotation matrices
+  description: Rotate vectors with 2D and 3D rotation matrices, compose rotations in the right order, and invert them with the transpose.
+  tier_target: L1
+  est_minutes: 35
+  task_kinds: [worked_example, faded_problem, problem, retrieval]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: >-
+    Build a rotation matrix from an axis and an angle, apply it, chain two of them, and undo the result without solving a linear system.
+  core_ideas:
+    - >-
+      2D: R(th) = [[cos th, -sin th], [sin th, cos th]] turns a vector counter-clockwise by th. Its columns are where the basis vectors land, so a matrix can be written by tracking x-hat and y-hat.
+    - >-
+      3D, right-handed: Rz(th) = [[c, -s, 0], [s, c, 0], [0, 0, 1]], Rx(th) = [[1, 0, 0], [0, c, -s], [0, s, c]], Ry(th) = [[c, 0, s], [0, 1, 0], [-s, 0, c]]. The sign in Ry sits on the other corner because z cross x = +y.
+    - >-
+      A matrix is a rotation exactly when R^T*R = I and det R = +1. So R^-1 = R^T, lengths and angles are kept, and det R = -1 marks a reflection, not a rotation.
+    - >-
+      Order matters in 3D: R2*R1*v applies R1 first. About fixed axes Rz(a)*Ry(b)*Rx(c) means x, then y, then z; read as body-attached axes the same product means z, then y', then x''. In 2D rotations commute.
+    - >-
+      The same matrix has two readings. Active: it moves the vector in one frame. Passive: it re-expresses one vector in another frame. R_world_body maps body components to world components, and its transpose R_body_world maps them back.
+  misconceptions:
+    - >-
+      Rotation order does not matter; it does for any two rotations about different axes in 3D.
+    - >-
+      Inverting a rotation needs a matrix inverse routine; the transpose is exact and cheaper.
+    - >-
+      Any matrix with unit-length columns is a rotation; the columns must also be mutually perpendicular, with det = +1.
+  worked_example: >-
+    A body yawed 30 degrees: R_world_body = Rz(30). Body vector v_b = (2, 0, 1) gives v_w = (2*cos 30, 2*sin 30, 1) = (1.732, 1.000, 1.000). The transpose returns (2, 0, 1), and det R = 1. Order check on y-hat = (0, 1, 0): Rz(90)*Rx(90)*y-hat = (0, 0, 1), but Rx(90)*Rz(90)*y-hat = (-1, 0, 0).
+  unaided_check: >-
+    Compute Rz(60)*(1, 1, 0), then Ry(90)*Rz(90)*(1, 0, 0) and Rz(90)*Ry(90)*(1, 0, 0). Expected: (-0.366, 1.366, 0); (0, 1, 0); (0, 0, -1).
+  sources:
+    - https://en.wikipedia.org/wiki/Rotation_matrix
+- key: math.vec.cross-product
+  title: Cross product in 3D
+  description: Compute a cross product by components, find its direction by the right-hand rule, and use it for area, torque and rotating-frame terms.
+  tier_target: L1
+  est_minutes: 30
+  task_kinds: [worked_example, faded_problem, problem, retrieval]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: >-
+    Compute a x b by hand, predict its sign and direction before computing, and read torque and omega x v results physically.
+  core_ideas:
+    - >-
+      Components: a x b = (a2*b3 - a3*b2, a3*b1 - a1*b3, a1*b2 - a2*b1). Basis check in a right-handed frame: x x y = z, y x z = x, z x x = y.
+    - >-
+      Size and direction: |a x b| = |a|*|b|*sin(th), for th between 0 and 180 degrees, which is the area of the parallelogram on a and b. The result is perpendicular to both, so (a x b).a = 0 and (a x b).b = 0 are free error checks. Parallel vectors give zero.
+    - >-
+      Algebra: a x b = -(b x a), and it is not associative. Expansion rule: a x (b x c) = b*(a.c) - c*(a.b).
+    - >-
+      Matrix form: a x b = [a]x*b, with [a]x = [[0, -a3, a2], [a3, 0, -a1], [-a2, a1, 0]], which is skew-symmetric. This form turns the operation into a matrix-vector product, which estimators and rigid-body code rely on.
+    - >-
+      Physics uses: torque tau = r x F; velocity of a point on a turning body v = omega x r; centripetal term omega x (omega x r), which points toward the axis. Under a proper rotation, (R*a) x (R*b) = R*(a x b).
+  misconceptions:
+    - >-
+      a x b = b x a, as for the dot product; the sign flips.
+    - >-
+      (a x b) x c = a x (b x c); with a = b = x-hat and c = y-hat the left side is zero and the right side is -y-hat.
+    - >-
+      The left-hand fingers work as well; the rule depends on a right-handed frame, and FRD and NED both are.
+  worked_example: >-
+    Torque: r = (0.2, 0.1, 0) m, F = (0, 0, 5) N. tau = (0.1*5 - 0, 0 - 0.2*5, 0) = (0.5, -1.0, 0) N m, size 1.118 N m. Check: tau.r = 0.1 - 0.1 = 0 and tau.F = 0. Rotating frame: omega = (0, 0, 2) rad/s, v = (0.6, 0, 0) m/s gives omega x v = (0, 1.2, 0) m/s^2, toward the left of travel for z up.
+  unaided_check: >-
+    Find a x b and the parallelogram area for a = (1, 2, 3), b = (4, 5, 6). Then find omega x (omega x r) for omega = (0, 0, 5) rad/s, r = (0.1, 0, 0) m. Expected: (-3, 6, -3); area 7.348; (-2.5, 0, 0) m/s^2, pointing at the axis.
+  sources:
+    - https://en.wikipedia.org/wiki/Cross_product
+- key: math.calc.partial-derivatives-jacobians
+  title: Partial derivatives and Jacobians
+  description: Take partial derivatives of functions of several variables, arrange them in a Jacobian, and predict small output changes around a point.
+  tier_target: L1
+  est_minutes: 35
+  task_kinds: [worked_example, faded_problem, problem, retrieval]
+  grader_types: [exact_numeric, symbolic_equivalence, multiple_choice]
+  phone_suitable: true
+  objective: >-
+    Differentiate a multi-input model by each input and use the resulting table of slopes to estimate how outputs move near an operating point.
+  core_ideas:
+    - >-
+      df/dx at (a, b) is the ordinary derivative in x with y held at b: the limit of (f(a+h, b) - f(a, b))/h. All the single-variable rules apply, treating the other inputs as constants.
+    - >-
+      First-order estimate for one output: df ~= f_x*dx + f_y*dy, with slopes taken at the base point. This is the tangent plane, and its error shrinks faster than the step does.
+    - >-
+      For outputs f1..fm of inputs x1..xn, the Jacobian J is the m-by-n table with J_ij = df_i/dx_j: one row per output, one column per input. Each output changes by df_i ~= sum over j of J_ij*dx_j, and it is built one row at a time.
+    - >-
+      Jacobians depend on the point. Always evaluate them at the operating point, since sin(th) has slope 1 at 0 and slope 0 at 90 degrees.
+    - >-
+      For smooth functions, mixed partials agree: f_xy = f_yx when both are continuous. Partials alone do not guarantee the estimate: f = x*y/(x^2 + y^2) with f(0, 0) = 0 has both partials zero at the origin yet is not differentiable there, and a kink or dead-zone edge has no single slope at all.
+  misconceptions:
+    - >-
+      Holding a variable constant means it disappears; it stays as a coefficient, so d(x^2*y)/dx = 2*x*y, not 2*x.
+    - >-
+      Rows are inputs; rows are outputs and columns are inputs, so a 2-output, 3-input model has a 2-by-3 Jacobian.
+    - >-
+      The linear estimate holds for any step; it is local, and it degrades as the step grows.
+  worked_example: >-
+    f1 = x^2*y, f2 = x + sin y at (2, 0). J = [[2xy, x^2], [1, cos y]] = [[0, 4], [1, 1]]. Base outputs are (0, 2). For dx = 0.1, dy = 0.05: df1 ~= 0*0.1 + 4*0.05 = 0.200 and df2 ~= 0.1 + 0.05 = 0.150. True changes are 0.2205 and 0.14998, so the estimate is close, and worse for f1, which has larger curvature.
+  unaided_check: >-
+    For g(th, w) = -9.81*sin(th) - 0.5*w, give the Jacobian row at th = pi/6, w = 0, estimate the change for dth = 0.1, dw = 0.2, and compare with the true change. Expected: row (-8.496, -0.5); estimate -0.950; true -0.924.
+  sources:
+    - https://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant
+- key: math.calc.partial-fractions
+  title: Partial fractions
+  description: Split a proper rational function into partial fractions for distinct, repeated and irreducible quadratic factors, and check the result.
+  tier_target: L1
+  est_minutes: 35
+  task_kinds: [worked_example, faded_problem, problem, retrieval]
+  grader_types: [exact_numeric, symbolic_equivalence, multiple_choice]
+  phone_suitable: true
+  objective: >-
+    Choose the right form for each denominator factor, find its coefficients quickly, and confirm the split by recombining or evaluating it.
+  core_ideas:
+    - >-
+      The method needs a proper fraction, with numerator degree below denominator degree. If it is not proper, divide first: polynomial plus proper remainder.
+    - >-
+      Forms: a simple factor (s + a) gets A/(s + a). A repeated factor (s + a)^r gets one term for each power, 1 to r. An irreducible real quadratic gets (B*s + C)/(s^2 + p*s + q), with a linear numerator.
+    - >-
+      Cover-up for a simple root: for F = N/D with root s = -a, A = N(-a)/D'(-a), which equals covering (s + a) and evaluating the rest at s = -a.
+    - >-
+      Repeated roots and quadratics: cover-up gives the highest power only. Find the rest by matching coefficients, or by substituting convenient s values, and solve the small linear system.
+    - >-
+      Why it matters: each term has a known inverse transform or integral, so A/(s + a) becomes A*exp(-a*t) and 1/(s + a)^2 becomes t*exp(-a*t). Check by picking one s value that is not a pole and comparing both sides.
+  misconceptions:
+    - >-
+      Constant numerators suit every factor; an irreducible quadratic needs a linear numerator.
+    - >-
+      A repeated factor needs only its top power; every lower power also needs a term, even if its coefficient turns out to be zero.
+    - >-
+      Decompose first and worry about degree later; an improper fraction gives wrong coefficients, so divide first.
+  worked_example: >-
+    (3s + 5)/((s + 1)(s + 2)): at s = -1, A = 2/1 = 2; at s = -2, B = (-1)/(-1) = 1. So 2/(s + 1) + 1/(s + 2). Repeated: 1/(s*(s + 1)^2) = 1/s - 1/(s + 1) - 1/(s + 1)^2; check at s = 1: 1/4 and 1 - 1/2 - 1/4 = 1/4. Quadratic: 5/(s*(s^2 + 2s + 5)) = 1/s - (s + 2)/(s^2 + 2s + 5). Improper: (s^2 + 1)/(s*(s + 1)) = 1 + 1/s - 2/(s + 1).
+  unaided_check: >-
+    Decompose (s + 3)/((s + 1)(s + 2)) and 4/(s*(s + 2)^2). Expected: 2/(s + 1) - 1/(s + 2); and 1/s - 1/(s + 2) - 2/(s + 2)^2.
+  sources:
+    - https://en.wikipedia.org/wiki/Partial_fraction_decomposition
+- key: math.prob.normal-distribution
+  title: Normal distribution
+  description: Use mean and standard deviation to find the fraction of a normal population in a range, set two-sided limits, and combine independent errors.
+  tier_target: L1
+  est_minutes: 30
+  task_kinds: [worked_example, faded_problem, problem, retrieval]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: >-
+    Turn a mean, a standard deviation and a limit into a probability, and turn a required probability into a limit.
+  core_ideas:
+    - >-
+      Density: f(x) = exp(-(x - mu)^2/(2*sigma^2))/(sigma*sqrt(2*pi)). Probability is area under it, so a range has a probability and a single exact value has none.
+    - >-
+      Standardise with z = (x - mu)/sigma, then use one table or function: Phi(z) = 0.5*(1 + erf(z/sqrt(2))). The upper tail is Q(z) = 1 - Phi(z).
+    - >-
+      Two-sided coverage: 1 sigma 68.27%, 2 sigma 95.45%, 3 sigma 99.73%. For round targets, 1.96 sigma gives 95% and 2.576 sigma gives 99%.
+    - >-
+      Independent normal errors add to a normal error, with variances adding: sigma_total = sqrt(s1^2 + s2^2). Standard deviations do not add directly.
+    - >-
+      Squaring z gives the gate values used later: 1.96^2 = 3.84 and 2.576^2 = 6.63. The normal is a model: real sensors can have heavier tails, outliers and bias, so tail figures need checking against data.
+  misconceptions:
+    - >-
+      Standard deviations add like means; independent errors add in quadrature.
+    - >-
+      3 sigma means it never happens; at 1 Hz with white noise it fires 233 times a day.
+    - >-
+      All noise is normal; the 68-95-99.7 figures hold only for a near-normal shape.
+  worked_example: >-
+    A reading has mu = 100, sigma = 4. P(92 < X < 108) has z = +/-2, so 95.45%. A 99% two-sided band is 100 +/- 2.576*4 = 89.7 to 110.3. A +/-3 sigma alarm on white Gaussian noise has p = 0.0027 per sample, so at 1 Hz it gives 0.0027*86,400 = 233 false alarms a day.
+  unaided_check: >-
+    With mu = 20, sigma = 2, find P(X > 23). Two independent errors have sigma 3 and 4: find the combined sigma and the probability the total lies within +/-5. Expected: 0.0668; sigma 5; 0.6827.
+  sources:
+    - https://en.wikipedia.org/wiki/Normal_distribution
+    - https://openstax.org/books/introductory-business-statistics-2e/pages/6-1-the-standard-normal-distribution (benchmark only, link only; licence CC BY-NC-SA, so no text or figures are copied)
+- key: math.prob.conditional-bayes
+  title: Conditional probability and Bayes
+  description: Use conditional probability and Bayes rule to update a belief after a test result, with attention to the base rate and repeated evidence.
+  tier_target: L1
+  est_minutes: 30
+  task_kinds: [worked_example, faded_problem, problem, retrieval]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: >-
+    Compute the probability of a cause given a noisy alarm, and update again when another independent reading arrives.
+  core_ideas:
+    - >-
+      P(A|B) = P(A and B)/P(B), for P(B) > 0. Conditioning shrinks the set of possible outcomes to B and rescales. Independence means P(A|B) = P(A).
+    - >-
+      Bayes rule: P(A|B) = P(B|A)*P(A)/P(B), where total probability gives P(B) = P(B|A)*P(A) + P(B|not A)*P(not A). It turns detector data into a statement about the cause.
+    - >-
+      Names: P(A) prior, P(B|A) likelihood, P(A|B) posterior. For alarms, P(alarm|fault) is sensitivity, and P(alarm|no fault) is the false-alarm rate.
+    - >-
+      Base rate: with rare faults, most alarms can be false, even with a good detector. P(A|B) and P(B|A) are different numbers.
+    - >-
+      Today's posterior is tomorrow's prior if the new evidence is independent given the state. For a Gaussian prior with variance P and a Gaussian measurement with variance R, the update has gain K = P/(P + R), mean x + K*(z - x) and variance (1 - K)*P, the scalar Kalman update.
+  misconceptions:
+    - >-
+      A 95% sensitive detector means a 95% chance of a fault after an alarm; that swaps P(A|B) and P(B|A).
+    - >-
+      Independent and mutually exclusive mean the same; disjoint events with nonzero probability are strongly dependent.
+    - >-
+      Repeating an update on the same reading adds evidence; repeated use of correlated data overstates confidence.
+  worked_example: >-
+    Fault prior 1%, sensitivity 0.95, false-alarm rate 0.02. P(alarm) = 0.95*0.01 + 0.02*0.99 = 0.0293. P(fault|alarm) = 0.0095/0.0293 = 0.324. A second independent alarm starts from 0.324 and gives 0.958. Gaussian case: prior N(10, 4), measurement 12 with variance 1: K = 0.8, mean 11.6, variance 0.8.
+  unaided_check: >-
+    A defect has prevalence 0.1%. A test has sensitivity 0.99 and false-positive rate 0.01. Find P(defect|positive). Repeat for prior 5%, sensitivity 0.9 and false-positive rate 0.1. Expected: 0.0902; 0.321.
+  sources:
+    - https://en.wikipedia.org/wiki/Bayes%27_theorem
+- key: ctl.sys.feedback-basics
+  title: Feedback loops and 1 + L
+  description: Derive closed-loop transfer functions from a loop, find closed-loop poles from 1 + L(s) = 0, and quantify how feedback reduces error and plant sensitivity.
+  tier_target: L1
+  est_minutes: 40
+  task_kinds: [worked_example, faded_problem, problem, retrieval]
+  grader_types: [exact_numeric, symbolic_equivalence, multiple_choice]
+  phone_suitable: false
+  objective: >-
+    From a plant and controller, write the closed-loop functions and predict tracking error, speed, gain robustness and stability without simulating.
+  core_ideas:
+    - >-
+      Negative feedback uses error e = r - y, with loop transfer L(s) = P(s)*C(s). Solving y = L*(r - y) gives T = L/(1 + L). With a return path H, the forward form is G/(1 + G*H), and L = G*H.
+    - >-
+      S = 1/(1 + L) and T = L/(1 + L), so S + T = 1 at every s. Error is e = S*r, and an output disturbance reaches y through S, so |S| < 1 means attenuation at that frequency, and |S| > 1 means amplification. Sensor noise reaches y through -T.
+    - >-
+      Closed-loop poles are the roots of 1 + L(s) = 0. For L = N/D this is D + N = 0. Poles of 1 + L are the open-loop poles, so the same function carries both counts, which is what Nyquist later uses.
+    - >-
+      Steady error to a step with stable closed loop: e = 1/(1 + L(0)). An integrator in L makes L(0) infinite and the step error zero. High loop gain makes T near 1 despite plant error.
+    - >-
+      More gain is not free: stability is a property of the whole loop. L = K/(s + 1)^3 has characteristic polynomial s^3 + 3s^2 + 3s + 1 + K, stable for positive K below 8. At K = 8, L(j*sqrt(3)) = -1, so 1 + L = 0 on the imaginary axis, which is why the point -1 matters.
+  misconceptions:
+    - >-
+      Stability of the plant guarantees stability of the loop; a stable plant can be destabilised by loop gain or delay.
+    - >-
+      Closed-loop poles are the poles of L; they are roots of 1 + L, and feedback moves them.
+    - >-
+      Higher gain always improves everything; it cuts low-frequency error but passes more sensor noise and can reach instability.
+  worked_example: >-
+    P = 1/(s + 1), C = K = 9, so L = 9/(s + 1). T = 9/(s + 10): pole moves from -1 to -10, so the time constant falls from 1 s to 0.1 s. T(0) = 0.9, and step error is S(0) = 0.1. A 20% plant gain rise gives T(0) = 10.8/11.8 = 0.915, a 1.7% change. The 20% plant change shrank 11.8-fold, which is 1 + L(0) at the raised gain.
+  unaided_check: >-
+    For L = K/(s*(s + 3)), write the characteristic polynomial, find the poles at K = 2, the K that gives zeta = 0.5, and the steady step error. Expected: s^2 + 3s + K; poles -1 and -2; K = 9; step error 0, as L has an integrator.
+  sources:
+    - https://en.wikipedia.org/wiki/Sensitivity_(control_systems)
+    - https://en.wikipedia.org/wiki/Closed-loop_transfer_function
+- key: ml.core.neural-network-basics
+  title: Neural network basics for inference
+  description: Trace a forward pass through dense and Conv2D layers with activations, and compute output shapes, parameter counts and multiply counts by hand.
+  tier_target: L1
+  est_minutes: 40
+  task_kinds: [worked_example, faded_problem, problem, retrieval]
+  grader_types: [exact_numeric, multiple_choice, code_tests]
+  phone_suitable: false
+  objective: >-
+    Read a small network description and state what each layer computes, the tensor shapes, and the storage and compute it needs on a device.
+  core_ideas:
+    - >-
+      Dense layer: y = act(W*x + b). With n_in inputs and n_out outputs it has n_in*n_out weights and n_out biases. Without a nonlinear activation, stacked layers collapse to one linear map, so depth adds nothing.
+    - >-
+      Activations act element by element: ReLU(x) = max(0, x); sigmoid = 1/(1 + exp(-x)) gives a value in (0, 1); softmax turns class scores into probabilities that sum to 1. ReLU is cheap and common in edge models.
+    - >-
+      Conv2D slides each filter over height and width: at each position it sums products of a small window with the kernel, across all input channels. Output is act(conv + bias). It reuses the same weights at every position, so it has far fewer parameters than a dense layer on the same image.
+    - >-
+      Conv2D size: n_out = floor((n_in + 2*p - k)/s) + 1 for dilation 1. Keras padding valid means p = 0; padding same with stride 1 keeps the size. Parameters: k_h*k_w*c_in*filters + filters. Multiplies: h_out*w_out*k_h*k_w*c_in*filters.
+    - >-
+      Inference is a fixed forward pass with stored weights; training fits them by gradient descent and is usually done off the device. Layouts differ: Keras defaults to (height, width, channels), and PyTorch to (channels, height, width), with weights of shape (out, in, k_h, k_w). Check before reading a per-axis setting.
+  misconceptions:
+    - >-
+      Output channels match input channels; output channels equal the number of filters.
+    - >-
+      Parameters set compute cost; a Conv2D's multiply count also scales with output height and width, while its parameters do not.
+    - >-
+      A filter looks at one input channel; each filter has k_h*k_w weights for every input channel.
+  worked_example: >-
+    Dense: W = [[1, -2], [0.5, 1]], b = (0.5, -1), x = (1, 0.5). W*x = (0, 1), plus b = (0.5, 0), ReLU keeps (0.5, 0). Output layer (2, -1) with bias 0.1 gives 1.1. Correlation: input [[1, 2, 0], [0, 1, 3], [2, 0, 1]] with kernel [[1, 0], [0, -1]] valid gives [[0, -1], [0, 0]]. Conv2D: 32x32x3 input, 16 filters, 3x3, stride 1, padding same: output 32x32x16; parameters 3*3*3*16 + 16 = 448; multiplies 32*32*3*3*3*16 = 442,368. With stride 2 and valid: floor(29/2) + 1 = 15 per side.
+  unaided_check: >-
+    A 96x96x1 input passes through Conv2D with 8 filters, 3x3, stride 2 and padding same (output size ceil(96/2)). Give the output shape, the parameter count and the multiply count. Expected: 48x48x8; 80 parameters; 165,888 multiplies.
+  sources:
+    - https://keras.io/api/layers/convolution_layers/convolution2d/
+    - https://docs.pytorch.org/docs/2.15/generated/torch.nn.Conv2d.html
+- key: sys.telemetry.tls-basics
+  title: TLS and certificate basics
+  description: Explain what TLS 1.3 protects, order the handshake messages, and decide whether a device should accept a certificate by name, time and chain.
+  tier_target: L1
+  est_minutes: 35
+  task_kinds: [worked_example, faded_problem, problem, retrieval]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: >-
+    Read a certificate and its chain, and state which check passes or fails before a device sends any telemetry.
+  core_ideas:
+    - >-
+      TLS gives three things: authentication of the peer (the server always, the client optionally), confidentiality of content, and integrity. It does not hide traffic length or timing, and it does not say what a peer may do.
+    - >-
+      Two kinds of key work together. A key exchange ((EC)DHE) agrees fresh session keys, and fast symmetric ciphers protect the data. Long-lived signing keys are used only to prove identity.
+    - >-
+      TLS 1.3 order: ClientHello with key share; ServerHello with key share; then, encrypted, EncryptedExtensions, Certificate, CertificateVerify, Finished; then client Finished, and application data flows. One round trip completes the handshake.
+    - >-
+      A certificate is a signed statement binding a public key to names, with subject, issuer, a validity window from notBefore to notAfter, and extensions. Service names belong in subjectAltName as DNS-IDs; Common Name must not be used to identify a service (RFC 9525).
+    - >-
+      Validation walks from a trust anchor already stored on the device to the leaf: each signature verifies with the issuer's key, each issuer name matches, each certificate is inside its validity window at the current time and not revoked, and each intermediate has cA true. Then the name must match, and CertificateVerify shows the peer holds the leaf's private key.
+  misconceptions:
+    - >-
+      Encrypted means authenticated; encryption to an unverified peer protects nothing about who the peer is.
+    - >-
+      A valid chain is enough; the certificate must also name the host the device meant to reach.
+    - >-
+      A certificate is secret; it is public, and only the private key stays secret.
+  worked_example: >-
+    On 2 Nov 2026 a device connects to broker.example.net. The leaf has subjectAltName broker.example.net, notBefore 2026-08-15 and a 90-day life, so notAfter is 2026-11-13. It is day 79, with 11 days left: valid. The renewal target of two thirds of life, day 60, was 2026-10-14, so renewal is 19 days overdue, a fleet problem to alert on. The chain is leaf, intermediate with cA true, then a root in the device store: accept. A device whose clock reset to 1970 would see the same leaf as not yet valid and reject it.
+  unaided_check: >-
+    A leaf for mqtt.example.org has notBefore 2026-11-01 and notAfter 2027-01-30, issued by an intermediate with cA true under a stored root. Decide each case: (a) clock 2026-11-02, host mqtt.example.org; (b) clock 2026-10-31, same host; (c) clock 2026-11-02, host mqtt-eu.example.org. Then give the certificate life in days and the date at two thirds of life. Expected: (a) accept; (b) reject, not yet valid; (c) reject, name mismatch; 90 days; 2026-12-31.
+  sources:
+    - https://datatracker.ietf.org/doc/html/rfc8446
+    - https://datatracker.ietf.org/doc/html/rfc5280
+    - https://www.rfc-editor.org/rfc/rfc9525.html

@@ -1,0 +1,57 @@
+# BL-0065 / BL-0066: production templates under content/templates/ (30 total).
+# Readiness: python reference/validate_lean_pool.py
+# Verify: cd reference/verifiers && python verify_template.py --samples 200 (all paths under content/templates/)
+schema_version: 1
+as_of: '2026-11-01'
+math_count: 15
+elec_count: 15
+by_skill:
+  math.alg.order-of-operations:
+    - tpl.math.order-pemdas
+    - tpl.math.order-parens
+  math.alg.units-and-prefixes:
+    - tpl.math.units-kilo
+    - tpl.math.units-mega
+  math.alg.solve-linear:
+    - tpl.math.solve-linear-v1
+    - tpl.math.solve-linear-v2
+  math.alg.rearrange-formulas:
+    - tpl.math.rearrange-ohm
+    - tpl.math.rearrange-power
+  math.alg.ratios-proportions:
+    - tpl.math.ratios-percent
+    - tpl.math.ratios-split
+  math.alg.linear-functions:
+    - tpl.math.linear-slope
+    - tpl.math.linear-intercept
+  math.alg.systems-2x2:
+    - tpl.math.systems-x
+  math.alg.exponents-roots:
+    - tpl.math.exponents-square
+  math.alg.quadratics:
+    - tpl.math.quadratics-roots
+  elec.meas.lab-safety-esd:
+    - tpl.elec.lab-esd
+    - tpl.elec.lab-probe
+  elec.meas.schematic-reading:
+    - tpl.elec.schematic-gnd
+    - tpl.elec.schematic-series
+  elec.dc.charge-current-voltage:
+    - tpl.elec.charge-current
+  elec.dc.ohms-law:
+    - tpl.elec.ohms-law-v
+    - tpl.elec.ohms-law-r
+  elec.dc.power-energy:
+    - tpl.elec.power-diss
+    - tpl.elec.energy-joule
+  elec.dc.series-parallel:
+    - tpl.elec.series-parallel-req-mc
+    - tpl.elec.parallel-pair
+  elec.dc.voltage-divider:
+    - tpl.elec.voltage-divider-vout
+  elec.dc.kirchhoff-laws:
+    - tpl.elec.kirchhoff-kcl
+  elec.dc.nodal-analysis:
+    - tpl.elec.nodal-unknown
+  elec.dc.thevenin-norton:
+    - tpl.elec.thevenin-model

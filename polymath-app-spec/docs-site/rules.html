@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contract & policy — Polymath documentation</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="rules">
+  <a class="skip" href="#main">Skip to content</a>
+  <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+    <div class="main-wrap">
+      <main id="main" class="content">
+        <p class="kicker">Shared contract</p>
+        <h1>Contract and product policy</h1>
+        <p class="lede">
+          The shared contract defines stack choices, identifiers, enums, core behaviours, and the claims policy for the entire package.
+          Rulings in the change-decisions document take precedence when text conflicts.
+        </p>
+        <p class="spec-ref">Specification: <a href="../docs/00-contract.md">docs/00-contract.md</a>, <a href="../docs/00a-change-decisions.md">docs/00a-change-decisions.md</a></p>
+
+        <div class="summary">
+          <h2>Summary</h2>
+          <ul>
+            <li>Initial deployment targets a single founder learner; a small beta cohort follows later milestones.</li>
+            <li>Version 1 ships as a mobile-first PWA, not native iOS or Android applications.</li>
+            <li>Runtime must not serve learning items unless database status is <strong>verified</strong>.</li>
+            <li>Large language models may explain, tutor, and assist rubrics; they must not be the sole grader for numeric correctness or executable test outcomes.</li>
+            <li>Learner-submitted code and netlists execute only in an isolated sandbox without credentials or network access.</li>
+            <li>Approved positioning: adaptive practice with spaced retrieval, graded feedback, and guided builds.</li>
+          </ul>
+        </div>
+
+        <h2>Technology stack</h2>
+        <div class="grid-2">
+          <article class="card"><h3>Application</h3><p>Next.js (App Router), React, Tailwind CSS, shadcn/ui, KaTeX, PWA manifest and service worker.</p></article>
+          <article class="card"><h3>Platform services</h3><p>Supabase: email magic-link authentication, PostgreSQL with row-level security, object storage.</p></article>
+          <article class="card"><h3>Worker tier</h3><p>Python 3.12 on Fly.io: symbolic grading, job processing, orchestration of sandbox runs.</p></article>
+          <article class="card"><h3>Content</h3><p>YAML in Git, verification pipeline, <code>content:sync</code> into PostgreSQL.</p></article>
+        </div>
+
+        <h2>Controlled vocabulary</h2>
+        <p>The following enum spellings are normative for schemas, APIs, and documentation cross-references.</p>
+        <dl class="compact">
+          <dt>Competence tiers</dt><dd><code>L0</code> through <code>L3</code>; tier <code>L1</code> denotes working knowledge.</dd>
+          <dt>Session types</dt><dd><code>micro</code> (≤20 min), <code>focus</code> (45–120 min), <code>lab</code> (120–240 min).</dd>
+          <dt>Device context</dt><dd><code>phone</code>, <code>desktop</code>, <code>bench</code>.</dd>
+          <dt>Mastery states</dt><dd><code>unseen</code>, <code>learning</code>, <code>reviewing</code>, <code>mastered</code>, <code>decayed</code>.</dd>
+          <dt>Skill identifier</dt><dd><code>{node}.{module}.{slug}</code>, for example <code>elec.dc.voltage-divider</code>.</dd>
+        </dl>
+
+        <h2>Normative product behaviours</h2>
+        <ol class="flow-steps">
+          <li>Each task requires an active learner response; passive consumption is not a valid completion path.</li>
+          <li>Tutor and hint affordances unlock only after a recorded attempt; checkpoint sessions exclude the tutor.</li>
+          <li>Strict-unaided assessment (no hints, tutor closed) is the primary integrity measure for retention claims.</li>
+          <li>Offline attempts on cached numeric or multiple-choice items receive provisional grades until server reconciliation.</li>
+          <li>Accepted project evidence may grant capped applied credit per contract §7.15; evidence alone does not confer mastery.</li>
+          <li class="end">Simulation and emulation supplement bench work; they do not satisfy applied requirements for tier L1.</li>
+        </ol>
+
+        <h2>Claims policy</h2>
+        <p>Examples of permitted versus prohibited user-facing statements:</p>
+        <div class="grid-2">
+          <blockquote class="callout tip">
+            <p>“Submit an attempt before hints unlock.”</p>
+            <p>“Report aided and unaided scores separately.”</p>
+          </blockquote>
+          <blockquote class="callout no">
+            <p>Claims of neurostimulation, sleep optimization, or cognitive enhancement.</p>
+            <p>Unqualified “learn faster” or “top 1%” outcomes.</p>
+            <p>Medical or mental-health efficacy statements.</p>
+          </blockquote>
+        </div>
+      </main>
+      <footer class="page-footer">See also: contract §5–§7 (full enums and entities), <a href="data.html">Data model overview</a>.</footer>
+    </div>
+  </div>
+  <script src="assets/nav.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

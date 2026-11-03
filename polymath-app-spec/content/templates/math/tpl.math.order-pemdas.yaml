@@ -1,0 +1,100 @@
+schema_version: 1
+key: tpl.math.order-pemdas
+version: 3
+authoring_status: ready
+skill_key: math.alg.order-of-operations
+task_kind: problem
+grader_type: exact_numeric
+difficulty_prior: 0.3
+title: Order of operations
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-01'
+  llm_assistance:
+    used: true
+    roles:
+    - draft_template
+    - hints
+    - misconception_tags
+    model: claude-sonnet-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts:
+  - phone
+  - desktop
+  est_seconds: 60
+  phone_suitable: true
+  offline_gradable: true
+parameters:
+- name: a
+  type: int
+  min: 2
+  max: 20
+- name: b
+  type: int
+  min: 2
+  max: 9
+- name: c
+  type: int
+  min: 2
+  max: 9
+constraints: []
+render:
+  stem_md: Evaluate ${{a|int}} + {{b|int}} \times {{c|int}}$.
+  answer_prompt: Enter a whole number.
+  alt_text: Evaluate {{a|int}} plus {{b|int}} times {{c|int}}.
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      ans: a + b * c
+  steps:
+  - id: s1
+    text_md: 'Multiply first: ${{b|int}} \times {{c|int}}$.'
+  - id: s2
+    text_md: Then add ${{a|int}}$ to get ${{ans|int}}$.
+answer:
+  kind: numeric
+  value: ans
+  unit: dimensionless
+  accept_units:
+  - dimensionless
+  bare_number_means: dimensionless
+  tolerance:
+    rel: 0.0
+    abs: 1.0e-06
+verifiers:
+- id: inverse-solve
+  kind: sympy_solve
+  independence: 'Inverts the expression: solves (x - a) / c = b exactly, so a wrong generator formula gives a different root.'
+  spec:
+    unknowns:
+    - x
+    equations:
+    - (x - a) / c - b
+    checks:
+    - unknown: x
+      output: ans
+  tolerance:
+    rel: 1.0e-09
+- id: window
+  kind: bounds
+  independence: Range limits derived from the parameter ranges, independent of any formula for the value.
+  spec:
+    output: ans
+    lo: '4'
+    hi: '101'
+hints:
+  l1: Which operation comes first when there are no parentheses?
+  l2: Multiplication comes before addition.
+  l3: 'Work out the product on its own: ${{b|int}} 	imes {{c|int}}$.'
+misconceptions:
+- tag: mc.add-first
+  description: Adds left to right instead of multiplying first.
+fuzz:
+  samples: 200
+  seed_base: 5000
+  max_rejection_rate: 0.9

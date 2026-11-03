@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Capability spine — Polymath documentation</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="spine">
+  <a class="skip" href="#main">Skip to content</a>
+  <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+    <div class="main-wrap">
+      <main id="main" class="content">
+        <p class="kicker">Long-term direction</p>
+        <h1>Cyber-physical capability spine</h1>
+        <p class="spec-ref">
+          <a href="../docs/15-cyber-physical-capability-spine.md">docs/15-cyber-physical-capability-spine.md</a>,
+          <a href="../docs/16-capability-outcomes.md">docs/16-capability-outcomes.md</a>,
+          <a href="../content/capability-tracks.yaml">content/capability-tracks.yaml</a>
+        </p>
+
+        <div class="summary">
+          <h2>Summary</h2>
+          <ul>
+            <li>Version 1 still delivers the <strong>first walk</strong> (math, electronics, embedded) and project ladder L0–L5; the lean slice is unchanged.</li>
+            <li>After first-walk L1 and the go/no-go, the product grows along <strong>seven tracks</strong> toward solo cyber-physical engineering.</li>
+            <li>Founder goals—dual-use literacy, defense-industrial integration, production AI, cybersecurity, real-world builds—share one stack with governance boundaries (no weapon or EW design labs).</li>
+            <li>Project ladder <strong>L6–L13</strong> (bench power → UAV integration → cloud twin → field V&amp;V) is sketched, not yet fully specified.</li>
+          </ul>
+        </div>
+
+        <h2>Tracks (delivery order)</h2>
+        <p>
+          Module-level syllabi (outcomes, evidence, skill tables):
+          <a href="syllabi.html">Pillar syllabi viewer</a>.
+        </p>
+        <ol class="flow-steps">
+          <li><strong><a href="syllabi.html#T0">T0 Foundation</a></strong> — first walk + sensor capstone (current MVP).</li>
+          <li><strong><a href="syllabi.html#T1">T1 Power &amp; motion</a></strong> — BLDC/ESC bench (L6).</li>
+          <li><strong><a href="syllabi.html#T2">T2 Control</a></strong> — IMU ground logger (L7).</li>
+          <li><strong><a href="syllabi.html#T3">T3 Mechanical</a></strong> — CAD frame (L9).</li>
+          <li><strong><a href="syllabi.html#T4">T4 UAV integration</a></strong> — kit quad maiden (L8), mission slice (L12); multirotor and EU UAS ops default.</li>
+          <li><strong><a href="syllabi.html#T5">T5 Cloud twin</a></strong> — telemetry to lakehouse (L11).</li>
+          <li class="end"><strong><a href="syllabi.html#T6">T6 Governance</a></strong> — export-control literacy, device threat modelling, defense integration case studies (parallel with T1+).</li>
+        </ol>
+
+        <h2>What changes in the product later</h2>
+        <p>
+          Non-goals NG-05 and NG-06 are refined for post-v1: more nodes ship as verified content;
+          governance and integration replace “stubs only” for defense-adjacent topics.
+          Automated CAD/FEA grading stays out initially; CAD may use checklist and human review (doc 15).
+        </p>
+
+        <h2>Hardware and tools</h2>
+        <p>
+          Phased shopping lists (foundation bench through quad kit and printer) are in
+          <a href="hardware.html">Hardware &amp; tools</a> (phases mapped to ladder levels and pillars) and
+          <a href="../docs/17-hardware-tools-and-bom.md">doc 17</a>.
+        </p>
+
+        <h2>Outcomes after the full spine</h2>
+        <p>
+          See <a href="../docs/16-capability-outcomes.md">capability outcomes</a>: credible edge-to-cloud principal,
+          integration-level UAV work, and export-aware documentation—not clearance or licensing authority.
+        </p>
+      </main>
+    </div>
+  </div>
+  <script src="assets/nav.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

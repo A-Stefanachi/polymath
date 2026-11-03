@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Security & privacy — Polymath documentation</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="security">
+  <a class="skip" href="#main">Skip to content</a>
+  <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+    <div class="main-wrap">
+      <main id="main" class="content">
+        <p class="kicker">Trust boundaries</p>
+        <h1>Security and privacy</h1>
+        <p class="spec-ref"><a href="../docs/12-security-privacy-compliance.md">docs/12-security-privacy-compliance.md</a></p>
+
+        <div class="summary">
+          <h2>Summary</h2>
+          <ul>
+            <li>Client input, uploads, and submitted code are treated as untrusted.</li>
+            <li>The sandbox runtime holds no database credentials, model API keys, or network egress.</li>
+            <li>LLM requests include item and response text only — not account identifiers.</li>
+            <li>Analytics use the internal <code>events</code> table; third-party trackers are out of scope for v1.</li>
+            <li>Data export and deletion flows are specified before beta (M4).</li>
+          </ul>
+        </div>
+
+        <h2>Primary threats and controls</h2>
+        <ul>
+          <li>Malicious learner code — confined to sandbox with CPU, memory, and wall-clock limits.</li>
+          <li>Compromised session token — row-level security limits data exposure; privileged keys remain server-side.</li>
+          <li>Prompt injection via item content — tutor policy, leak filtering, versioned prompt templates.</li>
+          <li>Evidence uploads — type and size limits, signed URLs, server-side validation.</li>
+        </ul>
+
+        <h2>LLM usage controls</h2>
+        <ol class="flow-steps">
+          <li>Centralized <code>LlmClient</code> in TypeScript and Python implementations.</li>
+          <li>Per-user and global daily spend caps.</li>
+          <li>Attempt-first gating reduces unnecessary invocations.</li>
+          <li class="end">Structured outputs validated with a single repair retry.</li>
+        </ol>
+
+        <h2>Compliance note</h2>
+        <p>
+          Legal review is required for GDPR-style rights, research consent, and retention statements marked for counsel in doc 12.
+          Treat those sections as draft until formally approved.
+        </p>
+      </main>
+      <footer class="page-footer">Security test identifiers (ST-*): doc 12 and backlog cross-references.</footer>
+    </div>
+  </div>
+  <script src="assets/nav.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

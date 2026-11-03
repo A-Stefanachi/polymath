@@ -1,0 +1,80 @@
+# Sample 2: exact_numeric (complex). Built by the inverse method: quotient and divisor are sampled, numerator is their product.
+schema_version: 1
+key: tpl.math.complex-division-rectangular
+version: 1
+authoring_status: ready
+skill_key: math.cplx.complex-arithmetic
+task_kind: problem
+grader_type: exact_numeric
+difficulty_prior: 0.45
+title: Divide complex numbers in rectangular form
+license: original
+source: original
+provenance:
+  authors: [founder]
+  created: "2026-10-31"
+  llm_assistance: { used: false }
+delivery: { contexts: [phone, desktop], est_seconds: 90, phone_suitable: true, offline_gradable: true }
+parameters:
+  - { name: qa, type: int, min: -6, max: 6, nonzero: true, description: Real part of the quotient }
+  - { name: qb, type: int, min: -6, max: 6, nonzero: true, description: Imaginary part of the quotient }
+  - { name: da, type: int, min: -5, max: 5, nonzero: true, description: Real part of the divisor }
+  - { name: db, type: int, min: -5, max: 5, nonzero: true, description: Imaginary part of the divisor }
+derived:
+  - { name: n, expr: "(qa*da - qb*db) + (qa*db + qb*da)*j" }
+  - { name: d, expr: "da + db*j" }
+  - { name: dc, expr: "da - db*j" }
+  - { name: dn2, expr: "da*da + db*db" }
+  - { name: ndc, expr: "n * dc" }
+  - { name: qq, expr: "qa + qb*j" }
+constraints:
+  - { id: quotient-not-divisor, expr: "not (qa == da and qb == db)", reason: "Avoids the trivial case where numerator is the square of the divisor." }
+  - { id: modest-numerator, expr: "abs(qa*da - qb*db) <= 40 and abs(qa*db + qb*da) <= 40", reason: "Keeps numbers small enough for mental or paper arithmetic." }
+render:
+  stem_md: |
+    Write the following quotient in rectangular form $a + bj$:
+
+    $$\dfrac{ {{n|tex_cplx}} }{ {{d|tex_cplx}} }$$
+  answer_prompt: "Enter a complex number such as 3 - 2j (i is also accepted)."
+  alt_text: "Divide the complex number {{n|cplx}} by the complex number {{d|cplx}} and give the result as a plus b j."
+  figure: { kind: none }
+solution:
+  generator:
+    method: closed_form
+    outputs: { qre: "qa", qim: "qb" }
+  steps:
+    - { id: s1, text_md: "Multiply top and bottom by the conjugate of the divisor, $\\overline{d} = {{dc|tex_cplx}}$." }
+    - { id: s2, text_md: "The denominator becomes $|d|^2 = {{dn2|int}}$. The numerator becomes $n\\,\\overline{d} = {{ndc|tex_cplx}}$." }
+    - { id: s3, text_md: "Divide each part by ${{dn2|int}}$ to get $ {{qq|tex_cplx}} $." }
+  explanation_md: "Multiplying by the conjugate turns the denominator into the real number $|d|^2$."
+answer:
+  kind: complex
+  re: qre
+  im: qim
+  complex_format: rectangular
+  tolerance: { abs: 0.01 }
+verifiers:
+  - id: exact-gaussian
+    kind: sympy_exact
+    independence: "Divides the displayed numerator by the displayed divisor in exact integer arithmetic via the conjugate, instead of reading back the sampled quotient."
+    spec:
+      checks:
+        - { output: qre, expr: "re(n * conjugate(d) / (d * conjugate(d)))" }
+        - { output: qim, expr: "im(n * conjugate(d) / (d * conjugate(d)))" }
+  - id: polar
+    kind: polar_vs_rectangular
+    independence: "Converts both numbers to polar form, divides magnitudes and subtracts angles, then converts back (floating point)."
+    spec: { numerator: n, denominator: d, re_output: qre, im_output: qim }
+    tolerance: { abs: 1.0e-9 }
+  - id: nonzero-denominator
+    kind: bounds
+    independence: "Range check: the divisor magnitude is positive."
+    spec: { output: "da*da + db*db", lo: "0", hi: "100", strict: true }
+hints:
+  l1: "Dividing by a complex number is awkward. What could you multiply the top and bottom by to make the bottom a real number?"
+  l2: "Multiply top and bottom by the complex conjugate of the divisor. A number times its conjugate is a real number, the squared magnitude."
+  l3: "The conjugate of {{d|cplx}} is {{dc|cplx}}. Multiply the numerator {{n|cplx}} by it first and collect real and imaginary parts."
+misconceptions:
+  - { tag: mc.complex-div-no-conjugate, description: "Multiplies by the divisor instead of its conjugate.", wrong_answer_expr: "(n*d)/(da*da + db*db)", feedback_md: "Multiplying by d does not make the denominator real. Use the conjugate." }
+  - { tag: mc.complex-div-componentwise, description: "Divides real by real and imaginary by imaginary.", wrong_answer_expr: "(qa*da - qb*db)/da + ((qa*db + qb*da)/db)*j", feedback_md: "Complex division is not componentwise." }
+fuzz: { samples: 200, seed_base: 2000, max_rejection_rate: 0.9 }

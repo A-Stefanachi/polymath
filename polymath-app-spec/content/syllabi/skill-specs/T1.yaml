@@ -1,0 +1,957 @@
+# Skill specifications for pillar T1 (track key power-motion).
+# Authoring input only: not a graph file, sets no status. Original wording.
+# Text tagged UNCERTAIN was not confirmed against a primary source.
+# Grader mapping applied: log parsing -> measurement_check, checklist -> human_review.
+# The plan's debug_case grader is carried as a task_kind, graded by the listed graders.
+
+- key: pwr.batt.pack-wiring
+  description: "Work out voltage, capacity, sag, fuse and prospective fault current for a chosen series and parallel pack, and place the fuse correctly."
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem, debug_case]
+  grader_types: [multiple_choice, exact_numeric]
+  phone_suitable: true
+  objective: "Specify an S/P arrangement of a bought pack or cells on paper and protect its wiring with a correctly placed fuse."
+  core_ideas:
+    - "For identical cells, nS mP gives V = n·Vcell, Ah = m·Ah_cell, Wh = n·m·Wh_cell and R_pack = n·R_cell/m. Series raises voltage only, parallel raises capacity and current only, energy scales with both."
+    - "Parallel groups share current only through their resistance match. Joining strings at different voltages drives current I ≈ ΔV/(sum of resistances) with nothing to limit it, so this course never parallels packs by hand and keeps pack building from loose cells out of scope."
+    - "A fuse protects the wire, so its rating sits above the normal load and below what the wire can carry, and it goes as close to the positive pack terminal as possible, because any conductor upstream of it is unprotected."
+    - "Four separate checks size a fuse: current rating with temperature rerating, voltage rating at least equal to full-charge pack voltage, interrupting rating above prospective fault current, and melting I²t above inrush. Common blade fuses are about 32 V DC."
+    - "Prospective fault current ≈ V_full/(R_pack + R_wire + R_contacts). The 16 mΩ DC figure for the P42A is a 10 A, 1 s value, so the true first-instant fault current can be higher. The 25 percent fuse derate follows Littelfuse's guide: at 25 °C, load a fuse to no more than 75 percent of nominal. Hotter ambient reratings come on top, and the fuse datasheet takes priority."
+  misconceptions:
+    - "Series and parallel are interchangeable as long as the watt-hours match."
+    - "A fuse belongs anywhere in the loop because the current is the same everywhere; placement sets how much wire is unprotected."
+    - "A fuse sized for load current will always clear a short; a fuse with too low an interrupting rating may fail to break the arc."
+  worked_example: "4S2P of cells rated 3.6 V, 4.2 Ah, 16 mΩ, load 20 A continuous, 10 mΩ of wiring and contacts. V = 14.4 V nominal, 16.8 V full. Capacity 8.4 Ah, energy 8 × 3.6 × 4.2 = 120.96 Wh. R_pack = 4 × 16/2 = 32 mΩ. Sag at 20 A = 0.64 V; each cell carries 10 A. Fuse: 20/0.75 = 26.7 A, so next standard 30 A, voltage rating at least 16.8 V. Fault current ≈ 16.8/0.042 = 400 A, so the interrupting rating must exceed 400 A at 16.8 V DC."
+  unaided_check: "Given a cell datasheet and a duty profile, choose S and P, fuse and wire, and state the fault current. Pass: bus voltage fits the ESC, per-cell current stays under the derated limit, fuse clears all four checks, and later predicted endurance is within 10 percent of a logged run."
+  sources:
+    - "https://www.rcscomponents.kiev.ua/datasheets/INR21700P42A-V4-80092.pdf"
+    - "https://info.littelfuse.com/hubfs/Fuseology%20Design%20Guide.pdf"
+
+- key: pwr.batt.charge-storage
+  description: "Set a charger correctly for chemistry and cell count, read the CC-CV profile, and bring a pack to the right storage voltage."
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem, explain_back]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: true
+  objective: "Choose charge voltage, current, termination and storage target from a datasheet and defend each setting."
+  core_ideas:
+    - "Lithium-ion charges CC then CV: constant current until the cell reaches its limit, then constant voltage while current tapers to a cut-off. The P42A datasheet shows 4.2 V, 4.2 A standard, 50 mA cut-off, about 1.5 h."
+    - "Peak voltage comes from the chemistry and the label: 4.20 V is common, high-voltage packs differ, and LFP is lower. Pick the charger profile from the label, never from a similar-looking pack."
+    - "Temperature limits are hard limits. The P42A datasheet states 0 to 45 °C for charge. Charging at or below freezing can plate lithium even when the charge looks normal."
+    - "Storage: move the pack to about 3.7 to 3.85 V per cell if unused for more than about two weeks, in a fire-resistant container. Time at high state of charge and high temperature accelerates ageing."
+    - "Procedure rules from the L6 brief: balance charger, one pack per channel, no parallel boards, stay with the pack, non-combustible surface inside a fire-resistant bag or box. Datasheet and charger manual outrank this text."
+  misconceptions:
+    - "Charging to a lower current is always safe, so temperature does not matter."
+    - "A pack is ready as soon as the CC phase ends; the CV phase still adds capacity."
+    - "Full charge is the safest state for storage."
+  worked_example: "3S 2200 mAh LiPo, label 1C maximum charge, standard 4.20 V per cell. Set LiPo profile, 3 cells, 2.2 A, balance mode, end voltage 12.6 V. For storage at 3.8 V per cell the target is 11.4 V; the brief's 3.7 to 3.85 V window is 11.1 to 11.55 V."
+  unaided_check: "A 4S pack at −3 °C in a cold garage must be ready in an hour, and the only charger channel is set to LiHV. List what is wrong and what you do. Pass: refuses to charge cold, corrects the profile, brings the pack within the datasheet range first, stays with it, and does not raise the current to save time."
+  sources:
+    - "https://www.rcscomponents.kiev.ua/datasheets/INR21700P42A-V4-80092.pdf"
+    - "https://www.batteryuniversity.com/article/bu-410-charging-at-high-and-low-temperatures"
+
+- key: pwr.batt.cell-formats
+  description: "Separate cell format from chemistry and packaging, then pick a cell type for propulsion or housekeeping loads from datasheet numbers."
+  est_minutes: 20
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [multiple_choice]
+  phone_suitable: true
+  objective: "Name what a label such as 21700 or LiPo does and does not tell you, then choose from data."
+  core_ideas:
+    - "Format is geometry: 21700 means about 21 mm diameter by 70 mm long. It says nothing about chemistry, capacity or current. The P42A's 21.7 mm and 70.2 mm are datasheet maximum figures."
+    - "Chemistry sets the voltage window: NMC and NCA cells run about 3.6 V nominal to 4.2 V; LFP runs about 3.2 to 3.3 V nominal and about 3.6 to 3.65 V at full charge. Makers differ: Lithium Werks lists 3.3 V nominal and 3.6 V charge for its 26650 cell, so read the datasheet for your cell."
+    - "'LiPo' in hobby use names a pouch package with a lithium-ion chemistry, not a separate voltage class. The important practical difference is that hobby pouch packs normally have no BMS and no can."
+    - "Energy cells and power cells trade off. Check datasheet discharge curves at your current, since usable capacity falls with rate and cold. Propulsion is sized on current and sag, housekeeping on energy and quiescent draw."
+  misconceptions:
+    - "All 21700 cells behave alike."
+    - "LiPo is a different chemistry family from lithium-ion."
+    - "A pack's Wh label is what you get at any current."
+  worked_example: "6S1P of P42A: 6 × 15.5 Wh = 93 Wh typical; cells weigh at most 6 × 70 g = 420 g, so at least 221 Wh/kg before wiring. The datasheet's 230 Wh/kg implies a typical cell near 67.4 g (15.5/230 kg), so use 70 g for a conservative budget."
+  unaided_check: "Two datasheets are shown: one high-capacity cell with a 2C rating and one power cell with a 10C rating, same format. Assign each to a 40 A propulsion load and a 2 A logger, and justify from sag and capacity. Pass: decision uses current and energy data, not the format name."
+  sources:
+    - "https://www.rcscomponents.kiev.ua/datasheets/INR21700P42A-V4-80092.pdf"
+    - "https://lithiumwerks.com/?p=3097"
+
+- key: pwr.batt.c-rate-limits
+  description: "Convert between C-rate and amps, tell continuous from burst claims, and predict heat and sag at a stated current."
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: "Judge from data whether a pack can really supply a load, and why a label alone does not settle it."
+  core_ideas:
+    - "I = C-rate × Ah, so 1C on 4.2 Ah is 4.2 A, and ideal runtime is 60/C minutes. Real capacity falls at high rate, so this is an upper bound."
+    - "The real limit is thermal: cell heating is about I²R, so going from 30 A to 45 A multiplies heating by 2.25. A continuous rating means little without its temperature condition and end voltage."
+    - "Hobby C ratings follow no common test method. Model Aviation's Battery Clinic (May 2013) says there is cause to suspect them and suggests checking internal resistance from the voltage change between a 1C and a 10C draw. Any true-to-label percentage you see quoted comes from hobby testers, so measure sag and temperature on your own pack rather than trust a label or a percentage."
+    - "The P42A datasheet lists 45 A continuous, yet its cycle-life curves are at 10 A and 20 A only. A maximum rating is not a life rating, so design well below it."
+    - "Abuse-free stop rule: stay inside datasheet current, end the run at the planned capacity or cut-off under load, and stop if the pack heats unexpectedly. Never hunt for the limit by pushing a pack harder."
+  misconceptions:
+    - "The C-rating on the label is a true continuous rating."
+    - "A cool pack is a healthy pack; heat depends on load and airflow too."
+    - "Voltage equals state of charge under load."
+  worked_example: "4S1P P42A, 4.2 Ah, 16 mΩ per cell, 30 A load. Rate = 30/4.2 = 7.14C. Ideal runtime = 4.2/30 h = 8.4 min. Heating = 30² × 0.016 = 14.4 W per cell. Pack sag = 4 × 0.016 × 30 = 1.92 V, so 14.4 V nominal becomes 12.48 V under load."
+  unaided_check: "A 1500 mAh 4S pack labelled 75C sags from 15.6 V to 13.8 V at 30 A and is warm after 60 s. Compute label current, implied pack resistance and heating at 30 A. Expected: 112.5 A, 60 mΩ, 54 W; conclude the label current is not usable."
+  sources:
+    - "https://www.rcscomponents.kiev.ua/datasheets/INR21700P42A-V4-80092.pdf"
+    - "https://library.modelaviation.com/article/battery-clinic-5 (Red Scholefield, Battery Clinic, Model Aviation, May 2013, pp. 95-96)"
+
+- key: pwr.batt.bms-literacy
+  description: "Read a protected-pack specification, predict its trip currents from shunt and thresholds, and explain why a pack suddenly went dead."
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, debug_case]
+  grader_types: [multiple_choice, exact_numeric]
+  phone_suitable: true
+  objective: "Know what a BMS does, what it does not do, and that hobby LiPo packs have none."
+  core_ideas:
+    - "A protector watches each cell's voltage, pack current via a shunt, and temperature, and opens separate charge and discharge FETs. As an example, the TI BQ77915 offers cell thresholds of 3 to 4.575 V over and 1.2 to 3 V under, plus discharge overcurrent stages set as shunt voltages."
+    - "Trip current is threshold voltage divided by shunt resistance, so a shunt change moves every current trip. Delays separate brief inrush from sustained overload."
+    - "Passive balancing burns charge in a resistor at small current, 50 mA with integrated FETs on that part. It corrects drift slowly and cannot rescue a weak cell."
+    - "A BMS is a last line of defence, and a motor load can trip it, removing ESC power without warning. On an aircraft that is a loss of thrust, so a propulsion design must treat this as a failure mode."
+  misconceptions:
+    - "LiPo packs have a BMS."
+    - "A BMS makes misuse safe."
+    - "Zero volts at a protected pack's terminals means the cells are empty; the discharge FET may simply be open."
+  worked_example: "Shunt 2 mΩ. OCD1 threshold 50 mV: trip at 50/2 = 25 A. Short-circuit threshold 200 mV: trip at 100 A. To remove a 100 mAh imbalance at 50 mA takes 100/50 = 2 h. A 30 A continuous motor would trip OCD1, so this design is wrong for that load."
+  unaided_check: "A protected pack reads 0 V after a motor throttle step, then recovers once the load is removed. Name the likely cause and two checks. Pass: discharge overcurrent or short-circuit trip; compares step current with threshold over shunt and checks cell voltages, and does not bypass the protector."
+  sources:
+    - "https://www.ti.com/product/BQ77915"
+
+- key: pwr.batt.preflight-checklist
+  description: "Run and record a go or no-go inspection of pack, wiring, fuse, current limit and guard before energising the high-current bench."
+  est_minutes: 20
+  task_kinds: [worked_example, retrieval, project_step, debug_case]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: "Apply stop criteria before power, record the numbers, and refuse to proceed on any failed item."
+  core_ideas:
+    - "First spin-up uses a current-limited bench supply and no propeller. The limit is set before connection, starting low, because a miswired ESC then fails at a safe current rather than at pack fault current."
+    - "Inspect each pack before use for swelling, dents, torn wrap and damaged leads, and record per-cell voltages. Any swelling, hiss, smell or unexpected heat is a stop, not a judgement call."
+    - "Check polarity with a meter before connection, continuity and no short between supply rails, fuse fitted near the source, and strain relief on all leads."
+    - "Loaded runs need a clamped motor, a guarded enclosure, a clear plane of rotation, eye protection and a tested way to cut power that is reachable without crossing the rotor plane."
+    - "A checklist proves only that it was read. Each entry is a measured value or an observed fact in the log, and review needs a second person or a pre-registered limit, because a solo sign-off is self-review."
+  misconceptions:
+    - "Passing yesterday means it passes today."
+    - "An ESC beep proves wiring is correct."
+    - "Rubber gloves or a bag make it safe to continue with a swollen pack."
+  worked_example: "4S pack, stop rule: resting cell spread above 0.05 V is a no-go [project convention: no standard sets a spread limit; a balance charger leaves cells far closer than this, so a larger resting spread points to a weak or damaged cell, and 0.05 V is tighter than common hobby practice]. Reading A: 3.80, 3.81, 3.79, 3.80 V, sum 15.20 V, spread 0.02 V, go. Reading B: 3.82, 3.80, 3.55, 3.81 V, sum 14.98 V, spread 0.27 V, no-go: do not use, do not charge, treat as defective and record it."
+  unaided_check: "From a photo set and a meter log, find the four seeded faults: reversed lead, missing fuse, bench limit set to 20 A for a first spin, propeller fitted. Pass: all four found, no energising recommended, verdict recorded, reviewed by a second person."
+  sources:
+    - "https://docs.px4.io/main/en/peripherals/dshot.html"
+
+- key: pwr.batt.high-discharge-packs
+  description: "Apply the charge, use and stop rules for unprotected high-discharge packs, where your own procedure is the only protection."
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, project_step]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: "Handle a BMS-free pack under the L6 brief, and plan each run so it ends with margin."
+  core_ideas:
+    - "Hobby high-discharge packs have no BMS, so nothing inside stops overcharge, over-discharge or a short. Doc 10 S9 keeps them out of v1. Decision 00a H6 allows them from L6 only under the L6 safety brief, with the S10 charging rules, and this skill is gated by that brief."
+    - "Charge: balance charger set for chemistry and cell count, one pack per channel, no parallel board, attended, on a non-combustible surface inside a fire-resistant bag or box. A parallel board hides individual cell voltages and lets packs at different voltages drive current into each other."
+    - "Use: inline fuse near the pack, a planned capacity limit and a timer, not a voltage reading alone, because voltage under load does not show state of charge."
+    - "Never go below the pack's cut-off. Never recover an over-discharged pack by charging. A swollen or deep-discharged pack is defective and is not charged or reused."
+    - "Failure is never induced on purpose: no puncture, overcharge, short-circuit or thermal tests in this course."
+  misconceptions:
+    - "The ESC's low-voltage cut-off protects the pack; it depends on settings and on loaded voltage and may not be fitted."
+    - "A fire bag makes unattended charging acceptable."
+    - "A slightly puffed pack is fine for bench use."
+  worked_example: "4S 1500 mAh, plan to use 80 percent: 1200 mAh. At a 20 A average: 1200/20000 h = 0.06 h = 3.6 min. Set a 3 min timer for margin. Charge at 1C = 1.5 A if the label allows, end voltage 16.8 V, balance mode."
+  unaided_check: "Answer the six L6 brief check questions unaided, then write a run plan for a stated pack and load. Pass: 6 of 6 correct, plan includes fuse, capacity limit, timer, stop conditions, and no parallel charging."
+  sources:
+    - "https://www.carson-modelsport.com/carson_en/blog/335-charging-storing-and-disposing-of-lipo-batteries-correctly"
+
+- key: pwr.batt.damage-disposal
+  description: "Respond to a damaged pack step by step and route it to the correct German collection path without shipping it or improvising."
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, project_step]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: "Make a damaged pack safe to hold for disposal and return it correctly in Germany."
+  core_ideas:
+    - "Stop if a pack swells, hisses, smells or heats up. If it is safe to do so, disconnect it and move away. Life safety first. For smoke or fire, do not fight it: leave, close the door if safe, and call 112 from outside. The gases are toxic, and a pack can reignite after it seems out."
+    - "Hold a defective pack away from other material on a non-combustible surface, outdoors if you can, until disposal. Do not open, puncture, crush or mail it. DEKRA suggests a sand-filled bucket outside the home for temporary storage."
+    - "Germany: use a retailer take-back or municipal site, ask before bringing a damaged pack, tape the terminals. The BattDG (BGBl. 2025 I Nr. 233) has been in force since 7 October 2025. § 14 obliges retailers to take back, free of charge, the categories of portable battery they sell, whatever their condition, in the quantities private users usually return. § 15 obliges public waste authorities to accept portable and LV batteries from households free of charge, whatever their condition. Neither section sets a separate rule for damaged packs, so each site's own handling instructions decide where and how you hand one in."
+    - "Do not post a damaged pack, since transport rules for damaged lithium batteries are strict."
+    - "Do not discharge to zero as your own fix. Sources disagree: Carson advises discharging before disposal, whereas the L6 brief says follow the collection point's instructions, and the brief wins here."
+  misconceptions:
+    - "A flat pack is a safe pack."
+    - "Household waste is acceptable for a small pack."
+    - "Salt-water baths are an approved disposal method."
+  worked_example: "A 520 g pack puffs during a run. Sequence: cut power, disconnect if safe. Only if it is not hot, hissing or smoking, move it to a non-combustible surface outdoors; otherwise leave it and get yourself clear. Watch from a distance. Once stable, tape the terminals, log the event, and phone the municipal site. Check its limits first: since 1 January 2026 Hannover's aha takes portable batteries above 500 g only at its hazardous-waste store in Lahe, not at ordinary recycling centres. Do not charge, post or bin it."
+  unaided_check: "Order eight actions for a hot, swollen pack and mark the three that must never happen. Pass: order puts personal safety and disconnection first, and the forbidden actions are charging, posting and opening."
+  sources:
+    - "https://www.dekra.com/en/batteries-a-valuable-raw-material-source/"
+    - "https://www.gesetze-im-internet.de/battdg/__14.html (BattDG § 14)"
+    - "https://www.gesetze-im-internet.de/battdg/__15.html (BattDG § 15)"
+    - "https://www.fire.nsw.gov.au/batteries/what-to-do"
+    - "https://www.hannover.de/Service/Presse-Medien/Hannover.de/Aktuelles/Service-2026/aha-nimmt-Batterien-über-500g-nur-im-Son­der­abfall­zwi­schen­la­ger-Lahe-an (aha notice, updated 7 January 2026)"
+
+- key: pwr.batt.equivalent-circuit
+  description: "Fit OCV, R0 and one RC pair to logged pulse data, then predict the voltage sag for a pulse the model has not seen."
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, faded_problem, problem, project_step]
+  grader_types: [measurement_check, exact_numeric]
+  phone_suitable: false
+  objective: "Build a first-order Thevenin pack model and validate it on unseen data."
+  core_ideas:
+    - "Model: V(t) = OCV(SOC) − I·R0 − I·R1·(1 − e^(−t/τ)), with τ = R1·C1, for a constant discharge step from rest. R0 acts at once; the RC pair models slower polarisation."
+    - "Identify from a rested pulse: R0 = instant voltage step/I, R1 = (slow settled drop)/I, τ from the shape of the relaxation. Read the step fast, since a slow first sample counts part of the RC drop as R0, so R0 reads high and R1 low."
+    - "Parameters depend on SOC, temperature and current. MathWorks' example tabulates them over SOC and temperature, so a single-point fit is valid only near its test conditions."
+    - "OCV needs a long rest, and the pulse itself moves SOC by I·t/Q, which is a real error source in long pulses."
+    - "Pulses stay within datasheet limits, starting at the pack's usual run current, on an attended, fused setup. This is a characterisation test, never a stress test."
+  misconceptions:
+    - "Voltage under load gives state of charge."
+    - "One internal resistance figure is enough; the DC and 1 kHz AC figures differ, 16 and 10 mΩ on the P42A."
+    - "A higher-order model fixes bad pulse data."
+  worked_example: "Rested at 3.900 V, 10 A step. Instant 3.760 V, 3.720 V at 10 s, settled 3.700 V. R0 = 0.140/10 = 14 mΩ. R1 = 0.060/10 = 6 mΩ. Slow part reached 2/3 at 10 s, so e^(−10/τ) = 1/3 and τ = 10/ln 3 = 9.10 s; C1 = 9.10/0.006 = 1517 F. For 20 A at 5 s: 20 × (0.014 + 0.006 × 0.4226) = 0.331 V, so 3.569 V."
+  unaided_check: "Fit R0 and one RC pair from your own pulse log, then predict sag for an unseen pulse. Pass: predicted sag within 5 percent of measured, with the fit script and log submitted."
+  sources:
+    - "https://www.mathworks.com/help/simscape-battery/ref/simscape.battery.parameters.fitequivalentcircuitmodel.fitecmtohppctest.html"
+    - "https://www.rcscomponents.kiev.ua/datasheets/INR21700P42A-V4-80092.pdf"
+
+- key: pwr.emc.grounding-harness
+  description: "Trace where return currents really flow in a harness, then shrink loop area and shared impedance, using a star only where it fits."
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem, explain_back]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: true
+  objective: "Draw the current loops of a motor bench and route power and signal returns so that they do not share impedance."
+  core_ideas:
+    - "Current flows in loops. Ground is a reference, not a sink, so ask where each return current goes, not where the ground symbol is."
+    - "Low-frequency return current divides by resistance; high-frequency return current follows the lowest-inductance path, which is the conductor next to the signal. The crossover is near f = R/(2πL)."
+    - "Common-impedance coupling: any return current through a shared conductor produces I·Z that adds to every signal referenced there."
+    - "Radiated and picked-up noise scale with loop area, so route each conductor beside its return and twist battery and phase bundles."
+    - "Star grounding is a low-frequency tool for keeping heavy return currents off a sensor reference. At high frequency, long star legs add inductance, so it is not a universal fix."
+  misconceptions:
+    - "Star ground fixes everything."
+    - "Current takes the shortest path to ground regardless of frequency."
+    - "A thicker ground wire always removes noise; it does nothing for loop area."
+  worked_example: "A sensor shares 10 mΩ of return wire with a 30 A motor: error 30 × 0.010 = 300 mV on its reference. Giving the sensor its own return makes the DC error near zero. For a return with R = 5 mΩ, L = 1 µH, the current path changes from resistance-led to inductance-led near 0.005/(2π × 1 µH) = 796 Hz, well below ESC PWM frequencies."
+  unaided_check: "Mark up a bench harness diagram with all current loops, then reroute it. Pass: no sensor reference carries motor return current, supply pairs run together, the ESC signal has a return beside it, reviewed against a rubric by a human."
+  sources:
+    - "https://www.signalintegrityjournal.com/blogs/4-eric-bogatin-signal-integrity-journal-editor/post/502-ground-rules-for-grounding"
+
+- key: pwr.emc.motor-noise
+  description: "Find how motor and ESC switching couples into sensors, UART and magnetometers, and select a fix that addresses the coupling path."
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, debug_case, explain_back]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: true
+  objective: "Classify noise by source, path and victim, then justify a fix."
+  core_ideas:
+    - "Every noise problem has a source, a coupling path and a victim. Sources here are fast edges and high di/dt in the DC link. Paths are shared return, magnetic loop, capacitive node and common mode."
+    - "V = L·di/dt across a shared ground wire can exceed a logic threshold and create false UART edges even when averaged current looks harmless."
+    - "A straight conductor makes B = μ0·I/(2πr). DC motor current near a magnetometer is a bias that depends on throttle. Twisting supply and return cancels most of it; distance helps further."
+    - "Ferrites are frequency-selective and lose impedance under DC bias. Analog Devices reports a large fall at 50 percent of rated current, so check the curve at your current. A ferrite with capacitance can also resonate."
+    - "Common-mode noise needs a common-mode remedy, for example a choke or shorter paths. Filtering one wire alone cannot remove it. UNCERTAIN: the ferrite figures were seen as a snippet, because the full article timed out."
+  misconceptions:
+    - "Ferrites work at every frequency."
+    - "Motor noise is only a high-frequency problem; magnetometer bias is near DC."
+    - "A shield fixes everything, whichever end is connected."
+  worked_example: "ESC edge 20 A/µs through 50 nH of shared ground wire: 20e6 × 50e-9 = 1.0 V. If a logic low must stay below an assumed 0.8 V, that edge can corrupt UART. Separately, 30 A at 5 cm from a magnetometer: 4πe-7 × 30/(2π × 0.05) = 120 µT, more than Earth's field of roughly 25 to 65 µT."
+  unaided_check: "Telemetry frames fail only above half throttle, and compass heading drifts with throttle. Identify two distinct paths and one fix for each, then state what evidence would prove each fix. Pass: UART return or ground-bounce path and magnetic path are separated, and proof is a before-and-after test."
+  sources:
+    - "https://www.analog.com/en/resources/analog-dialogue/articles/ferrite-beads-demystified.html (snippet)"
+    - "https://www.signalintegrityjournal.com/blogs/4-eric-bogatin-signal-integrity-journal-editor/post/502-ground-rules-for-grounding"
+
+- key: pwr.emc.connector-current
+  description: "Size wire and connectors for burst and continuous current from resistance, voltage drop and heat, including the rise with temperature."
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: "Compute harness drop and dissipation, and spot a connector or wire used beyond its data."
+  core_ideas:
+    - "R = (Ω/km × length). Count the round trip. Table values for solid copper at 20 °C: 3.28 Ω/km for 10 AWG, 5.21 for 12 AWG, 8.28 for 14 AWG, 13.2 for 16 AWG."
+    - "Copper resistance rises about 0.393 percent per kelvin near 20 °C, so a wire at 80 °C has about 1.24 times its cold resistance and dissipates more at the same current."
+    - "Loss is I²R and drop is I·R, so doubling current gives four times the heat. Stranded conductors run a few percent above solid tables."
+    - "Wire ampacity depends on insulation rating, bundling and airflow, and building-wire tables do not apply directly to 200 °C silicone hobby wire."
+    - "Amass's own catalogue rates the XT60 family at 35 A maximum with 12 AWG wire and the XT90 family at 45 A maximum with 10 AWG, each under a stated temperature condition, and gives no contact resistance. Shop listings that say 30 A continuous and 60 A peak do not come from that catalogue. Take the maker's figure as a ceiling, not a design point, and verify by measuring connector temperature."
+  misconceptions:
+    - "A connector named XT60 carries 60 A continuously."
+    - "Only wire length one way matters."
+    - "A burst rating applies at any duty cycle."
+  worked_example: "40 A burst, 12 AWG, 0.3 m out and 0.3 m back. R = 5.21 mΩ/m × 0.6 m = 3.13 mΩ. Drop = 0.125 V. Heat = 40² × 0.003126 = 5.0 W. At 80 °C, multiply by 1.236: 3.86 mΩ, 6.18 W. A connector pair of an assumed 0.5 mΩ (the maker gives no figure) adds 40² × 0.0005 = 0.8 W in a small body. 40 A is above the XT60's 35 A catalogue maximum, so the use must be a short, temperature-checked burst or a bigger connector."
+  unaided_check: "For a 60 A burst and 25 A continuous load over 0.5 m round trip, choose a gauge so that drop is under 2 percent of 14.8 V at 25 A, and state burst loss. Expected for 12 AWG: 2.605 mΩ, 0.065 V (0.44 percent), 9.4 W at 60 A. Pass: correct numbers and a stated connector limit."
+  sources:
+    - "https://hyperphysics.gsu.edu/hbase/Tables/wirega.html"
+    - "https://www.rcscomponents.kiev.ua/datasheets/Amas-cat1.pdf (Changzhou Amass catalogue, XT60 specification table p. 12, XT90 table)"
+    - "https://nvlpubs.nist.gov/nistpubs/Legacy/hb/nbshandbook100.pdf (NBS Handbook 100, Copper Wire Tables: 0.00393 per °C at 20 °C)"
+
+- key: pwr.emc.dc-link-inductance
+  description: "Estimate switch-node spikes from loop inductance and di/dt, and reduce them by shrinking the hot loop and placing local capacitance."
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, debug_case, project_step]
+  grader_types: [exact_numeric, measurement_check]
+  phone_suitable: false
+  objective: "Connect loop geometry to overshoot and MOSFET voltage margin."
+  core_ideas:
+    - "The hot loop is the path from DC-link capacitor through high-side and low-side switches and back. Its current commutates in nanoseconds, so V_spike = L_loop·di/dt adds to the bus at turn-off."
+    - "Long battery leads have high inductance, so without nearby capacitance the switch sees them directly. A local DC-link capacitor moves the loop from the leads down to the board."
+    - "Stray L and device capacitance ring at f = 1/(2π√(LC)), so overshoot is both a voltage stress and an EMI source. Damping may be needed, since a low-ESR capacitor and long leads can themselves resonate."
+    - "Fixes in priority: shrink the loop by placing capacitors at the switches and using a plane return, then control di/dt with gate resistance at a switching-loss cost."
+    - "Voltage-rating margin is checked on the measured peak, never on the nominal bus, using a low-inductance probe connection."
+  misconceptions:
+    - "A larger bulk capacitor far away solves ringing."
+    - "Only pack voltage determines the MOSFET rating."
+    - "A ringing scope trace is always real."
+  worked_example: "20 nH loop, 40 A commutated in 40 ns: 20e-9 × 40/40e-9 = 20 V, added to a 16.8 V bus gives 36.8 V, thin against 40 V FETs. Cutting the loop to 5 nH gives 5 V and 21.8 V. Ring frequency with 20 nH and 1 nF: 1/(2π√(20 nH × 1 nF)) = 35.6 MHz."
+  unaided_check: "From a measured overshoot of 12 V at 2 A/ns, find loop L and state the change needed for 4 V overshoot at the same di/dt. Expected: 6 nH now, 2 nH required. Then show the change on a layout. Pass: numbers right and a loop actually made smaller."
+  sources:
+    - "https://chargedevs.com/features/a-closer-look-at-the-dc-link"
+    - "https://ti.com/document-viewer/lit/html/SLVA959B/GUID-3449BFE0-BABF-41AE-B956-37DB154AD1CA"
+
+- key: pwr.emc.probe-validity
+  description: "Prove a noisy scope trace is real using a shorted-probe test, short ground connections and safe referencing, before trusting any waveform."
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, debug_case, project_step]
+  grader_types: [measurement_check, human_review]
+  phone_suitable: false
+  objective: "Separate circuit behaviour from measurement artefact, with evidence."
+  core_ideas:
+    - "A ground lead's inductance and the probe's input capacitance form a series LC: f = 1/(2π√(L·C)). ROHM estimates about 1 nH per mm, so a 160 mm lead and 4 pF ring near 200 MHz and show ringing that is not in the circuit."
+    - "Shorted-probe test: clip tip to the probe's own ground, at the same point, with circuit running in place. Any trace shown is pickup in the probe loop, and it sets the noise floor of that setup."
+    - "A short spring or tip adapter cuts the inductance to a few nH. At higher voltage or on floating nodes, use a differential probe."
+    - "Safety: a bench scope's ground lead is usually tied to mains earth. Clipping it to a node that is not earth-referenced can make a short through the lead, which Tektronix notes can heat the lead or melt it open like a fuse. Do not defeat the scope's protective earth, which Tektronix calls unsafe because the chassis then sits at the test-point voltage; use a differential probe instead."
+    - "Report a measurement with its method: probe, bandwidth limit, ground connection and shorted-probe floor."
+  misconceptions:
+    - "A noisy scope trace is always real."
+    - "More bandwidth always gives a truer trace."
+    - "Lifting the scope's earth is an acceptable way to float it."
+  worked_example: "160 nH and 4 pF: 1/(2π√(160e-9 × 4e-12)) = 198.9 MHz. A 10 mm spring (10 nH): 795.8 MHz, beyond a 200 MHz scope. Measured 400 mV noise, shorted-probe floor 300 mV: most of it is pickup, so invalid. With the spring the floor is 20 mV and the signal 150 mV: valid, real noise about 150 mV."
+  unaided_check: "On a seeded noise fault, diagnose the cause, show a shorted-probe capture that proves validity, then a before-and-after reduction with the same probe setup. Pass: floor at most a quarter of the reported signal and fix traced to a named coupling path."
+  sources:
+    - "https://fscdn.rohm.com/en/products/databook/applinote/common/method_for_monitoring_switching_waveform_an-e.pdf"
+    - "https://physics.wisc.edu/courses/home/fall2022/321/lab_equipment/MSO2014_scope_manuals/advanced_scope_info/Making_floating_measurements_on_a_scope.pdf (Tektronix, Fundamentals of Floating Measurements and Isolated Input Oscilloscopes, pp. 1-4)"
+
+- key: phys.thermal.heat-transfer
+  description: "Estimate junction temperature from a thermal resistance chain or a case measurement, choosing the datasheet metric that really applies."
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: "Use θ networks numerically, and avoid misapplying RθJA."
+  core_ideas:
+    - "Steady state: ΔT = P·θ, and series resistances add: Tj = Ta + P(θjc + θcs + θsa)."
+    - "RθJA describes a package on a standard test board. In still-air JEDEC tests, TI reports that 70 to 95 percent of chip power leaves through the board, so it is for comparing packages, not designing yours."
+    - "ΨJT is a characterisation parameter, not a true resistance, and gives Tj = T_top + ΨJT·P from a measured package-top temperature. That makes it the right tool for a real board."
+    - "RθJC applies only when most heat really leaves via that case surface, for example into a good heat sink."
+  misconceptions:
+    - "RθJA from a datasheet applies to your board."
+    - "An IR thermometer reads junction or winding temperature."
+    - "ΨJT is a thermal resistance you can stack in a network."
+  worked_example: "Chain: P = 3 W, θjc 1.2, θcs 0.5, θsa 8.0 °C/W, Ta 35 °C. Tj = 35 + 3 × 9.7 = 64.1 °C. Measurement route: 2 W, top 72 °C, ΨJT 0.5 °C/W gives Tj = 73 °C. A 40 °C/W RθJA at 25 °C would give 105 °C, a number that does not describe this board."
+  unaided_check: "A regulator dissipates 1.5 W, its top reads 81 °C, ΨJT = 0.8 °C/W, RθJA = 45 °C/W, Ta = 30 °C, Tj max 125 °C. Give Tj with the right metric and say why. Expected: 82.2 °C; RθJA is rejected because it gives 97.5 °C for the JEDEC board rather than this one."
+  sources:
+    - "https://ti.com/lit/SPRA953"
+
+- key: phys.thermal.heatsink-sizing
+  description: "Compute the required sink-to-ambient resistance and weigh interface material, airflow and margin to choose a heat sink."
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: "Turn a temperature budget into a θsa requirement and read sink data correctly."
+  core_ideas:
+    - "θsa ≤ (Tj_limit − Ta)/P − θjc − θcs. Only θcs and θsa are in your control. Use a design Tj below absolute maximum."
+    - "Interface resistance θcs = ρ·t/A, plus contact effects. Grease fills voids because air is far worse: Aavid's table gives ρ of 204 for silicone grease and 1200 °C·in/W for dead air."
+    - "Airflow moves θsa strongly. Sink data is specific: Aavid's natural-convection figures assume a 75 °C sink rise, and forced-air figures use a stated air speed, 1.0 m/s being about 200 LFM."
+    - "Propwash on an ESC is not constant, so a sink that depends on it fails on the bench at low speed. Check at the worst-case steady condition."
+  misconceptions:
+    - "A bigger sink always wins; orientation, airflow and mass matter."
+    - "More thermal paste is better."
+    - "Forced-air figures hold at any air speed."
+  worked_example: "P = 8 W, design Tj 110 °C, Ta 40 °C, θjc 1.5, θcs 0.5 °C/W. Total allowed (110 − 40)/8 = 8.75 °C/W. θsa ≤ 8.75 − 2.0 = 6.75 °C/W. Choose a sink at or below that at the actual airflow and sink rise."
+  unaided_check: "An ESC stage loses 12 W in still air at 35 °C with design Tj 105 °C, θjc 0.8, θcs 0.4 °C/W. Find θsa, and decide what changes if airflow can only be assured at half throttle. Expected: 4.63 °C/W; use the still-air rating or limit the duty."
+  sources:
+    - "https://hallaweb.jlab.org/tech/Detectors/public_html/manuals/data_sheets-manuals/A-C/A/aavid/How%20To%20Select%20a%20Heat%20Sink.pdf"
+
+- key: phys.thermal.esc-motor-hotspot
+  description: "Estimate the hidden hot spots of an ESC and motor from resistance rise and package data rather than trusting a surface reading."
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem, explain_back]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: true
+  objective: "Say where the heat is, why a surface reading is low, and how to measure the winding average."
+  core_ideas:
+    - "Copper resistance rises with temperature, so winding average temperature is T2 = (R2/R1)(234.5 + T1) − 234.5 for copper, using 4-wire readings taken as soon as safely possible after stopping."
+    - "IR thermometers read a surface and depend on emissivity. On a shiny bell or a coated FET they can read far below the real value, and they never see winding or junction temperature."
+    - "ESC hot spots are the MOSFETs on the phase carrying most current, plus shunts and capacitors. The ESC's temperature telemetry is one sensor, not necessarily the hottest point."
+    - "A winding average still hides the local peak inside the slot. A safe peak depends on insulation class and magnet grade, which hobby motors rarely publish. This course stops at 80 °C on the case or on the winding average, whichever comes first, unless the maker gives a limit [project convention: standard N-grade NdFeB magnets are rated to about 80 °C (Eclipse Magnetics datasheet), the grade is usually unknown, and the winding peak sits above both readings]."
+  misconceptions:
+    - "An IR thermometer reads junction or winding temperature."
+    - "A cool case means a cool winding."
+    - "The hottest part is always where the telemetry sensor sits."
+  worked_example: "Line-to-line resistance 0.120 Ω at 22 °C, hot reading 0.150 Ω. T2 = 1.25 × 256.5 − 234.5 = 86.1 °C. The motor case read 62 °C at the same time, so the winding average is 24.1 K above the case, which is why the case alone is not a safe limit."
+  unaided_check: "Cold 0.095 Ω at 18 °C, hot 0.118 Ω right after a run, 41 °C on an IR gun. Give the winding average and a conclusion. Expected: 79.1 °C, just under the 80 °C course limit, so do not raise the load; flag the 38 K difference to the surface reading."
+  sources:
+    - "https://ti.com/lit/SPRA953"
+    - "https://nvlpubs.nist.gov/nistpubs/Legacy/hb/nbshandbook100.pdf (NBS Handbook 100, Copper Wire Tables: coefficient 0.00393 at 20 °C, inferred zero-resistance temperature 234.5 °C for 100 percent conductivity)"
+    - "https://www.eclipsemagnetics.com/site/assets/files/19485/ndfeb_neodymium_iron_boron-standard_ndfeb_range_datasheet_rev1.pdf (standard Nxx grades to about +80 °C, guideline values)"
+
+- key: phys.thermal.transients
+  description: "Predict a temperature-time curve from thermal resistance and capacitance, and turn it into a burst power rating with limits."
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, faded_problem, problem, project_step]
+  grader_types: [exact_numeric, measurement_check]
+  phone_suitable: false
+  objective: "Fit a single-lump thermal model and use it for burst decisions."
+  core_ideas:
+    - "One lump: τ = Rth·Cth, and T(t) = Ta + P·Rth(1 − e^(−t/τ)) for a step from ambient. After 3τ the rise is about 95 percent of final."
+    - "Time to limit: t = τ ln(ΔT_final/(ΔT_final − ΔT_limit)). Short bursts are mostly limited by Cth, long runs by Rth."
+    - "Burst power: P_burst = P_cont/(1 − e^(−t_burst/τ)), for a start from ambient. A second burst starts hotter, so a rating assumes a stated cool-down."
+    - "Real parts are multi-stage. Device data gives Zth curves, often as Foster R and τ pairs, and Nexperia notes that Foster nodes have no physical meaning, so a Foster network should not be joined to a heat-sink network."
+    - "Copper loss rises with resistance as it heats, so a step-load prediction at constant P underestimates a current-driven winding."
+  misconceptions:
+    - "Burst ratings are unrelated to heat."
+    - "A thing that has not reached steady state is safe."
+    - "One time constant describes both a junction and a heavy motor."
+  worked_example: "Motor Rth 3 K/W, Cth 60 J/K, so τ = 180 s; 25 W from 25 °C gives a final rise of 75 K. T(60 s) = 25 + 75 × (1 − e^(−1/3)) = 46.3 °C. Time to 80 °C: 180 ln(75/20) = 238 s. Continuous power for 55 K rise is 18.3 W. A 30 s burst from cold allows 18.33/0.1535 = 119 W for the lump, about 2.55 times continuous current if loss scales with I²."
+  unaided_check: "Predict the temperature-time curve of an ESC or motor under a step load from a fitted τ and Rth, then run it. Pass: the measured curve stays within 10 °C of prediction, starting from a stated temperature."
+  sources:
+    - "https://www.mouser.com/pdfDocs/AN11261-3.pdf (snippet)"
+
+- key: sw.rel.reset-causes
+  description: "Read and log the reset cause at every boot on the Pico 2, and interpret which flags survive which kinds of reset."
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, debug_case, project_step]
+  grader_types: [code_tests, multiple_choice, human_review]
+  phone_suitable: false
+  objective: "Make every boot record why it happened, using the correct register and SDK calls."
+  core_ideas:
+    - "On RP2350, POWMAN CHIP_RESET records the last reset: bit 16 HAD_POR, 17 HAD_BOR, 18 HAD_RUN_LOW, 24 HAD_WATCHDOG_RESET_SWCORE and others. RP2040 has its own different register, so code cannot be shared without a check."
+    - "watchdog_caused_reboot() is true after a watchdog timeout or forced watchdog reboot, and false after power-on reset. watchdog_enable_caused_reboot() is stricter and looks for a marker in watchdog scratch register 4."
+    - "After a flash UF2 is dragged on, RP2350 reboots with REBOOT_TYPE_FLASH_UPDATE (datasheet). The Pico SDK's rom_get_last_boot_type() returns BOOT_TYPE_FLASH_UPDATE, 0x4, so a boot log can tell an update from a fault."
+    - "Storage matters: a chip-level watchdog reset clears the watchdog scratch registers, POWMAN scratch survives that, yet HAD_BOR's reset scope includes POWMAN. So a brownout may leave no clue in POWMAN scratch."
+    - "Log the raw word as well as a decoded name, so that a misread flag can be rechecked later, and increment a boot counter. Read it early, before anything else can reset."
+  misconceptions:
+    - "A watchdog flag means the code is at fault; a brown-out can be the underlying cause via a chain of events."
+    - "All resets clear RAM and all scratch registers alike."
+    - "RP2040 reset code will work on RP2350 unchanged."
+  worked_example: "CHIP_RESET reads 0x00060000. Bits set: 0x00020000 is bit 17 HAD_BOR and 0x00040000 is bit 18 HAD_RUN_LOW. Log: raw=0x00060000 causes=BOR,RUN_LOW. Reading 0x01000000 instead means bit 24, a watchdog timeout set for a switched-core reset."
+  unaided_check: "Write boot_log() that decodes bits 16, 17, 18 and 24 from a supplied 32-bit word and prints raw and names. Pass: hidden tests with single-bit, multi-bit and zero words all pass, and unknown bits are reported rather than dropped."
+  sources:
+    - "https://pip-assets.raspberrypi.com/categories/1214-rp2350/documents/RP-008373-DS-2-rp2350-datasheet.pdf?disposition=inline"
+    - "https://www.raspberrypi.com/documentation/pico-sdk/hardware.html"
+
+- key: sw.rel.watchdog-supervisor
+  description: "Design a supervised watchdog that only refreshes when every critical task has reported in, and calculate its worst-case detection time."
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, debug_case, project_step]
+  grader_types: [code_tests, exact_numeric, human_review]
+  phone_suitable: false
+  objective: "Build a watchdog that proves liveness of each task, not just of a timer."
+  core_ideas:
+    - "A bare watchdog proves only that something still refreshes it. A supervisor gives each critical task a check-in flag, and feeds hardware only when all flags are set within a window, then clears them."
+    - "Never feed from a timer interrupt alone, since interrupts can keep running while the main logic is stuck."
+    - "Worst-case hang-to-reset is T_window + T_wdt: a task can check in just after a window opens and hang, get counted, and the watchdog then runs a full timeout after the last feed."
+    - "SDK limits: watchdog_enable(delay_ms, pause_on_debug) tops out at 8388 ms on RP2040 and 16777 ms on RP2350. Set pause_on_debug for a debug build so a breakpoint does not reset the part, but only with the motor disconnected or no propeller fitted: a halted CPU stops the watchdog, while hardware PWM can keep driving the last throttle. The RP2350 datasheet gives the watchdog (CTRL PAUSE_DBG0/1) and the timer (DBGPAUSE) a debug-halt pause, but the PWM register list (section 12.5.3) has none."
+    - "Before resetting, record which flag was missing, and define the safe output state, since on reset the ESC signal stops and must lead to motor stop. Memfault recommends a task-level watchdog for tasks blocked on an OS primitive such as a mutex or queue."
+  misconceptions:
+    - "A watchdog proves health."
+    - "A long timeout is always safer."
+    - "Feeding at the end of main loop covers all tasks."
+  worked_example: "Tasks check in every 10, 100 and 1000 ms. Window must be at least the slowest: 1000 ms. With T_wdt = 2500 ms, worst-case detection is 1000 + 2500 = 3500 ms. A motor loop that must stop within 500 ms cannot rely on this, so it needs its own fast local timeout."
+  unaided_check: "Implement supervisor_tick() with N flags. Pass: hidden tests show feed only when all flags are set, flags cleared after each feed, the missing task id recorded, and no feed path from an ISR. An outsider-injected hang is found from logs alone."
+  sources:
+    - "https://www.raspberrypi.com/documentation/pico-sdk/hardware.html"
+    - "https://docs.memfault.com/docs/mcu/watchdogs"
+    - "https://pip-assets.raspberrypi.com/categories/1214-rp2350/documents/RP-008373-DS-2-rp2350-datasheet.pdf?disposition=inline (sections 12.5.3, 12.8, 12.9 register lists)"
+
+- key: sw.rel.brownout
+  description: "Diagnose brown-outs from motor load using logs, supply measurements and hold-up sums, and keep stored state uncorrupted."
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, debug_case, project_step]
+  grader_types: [measurement_check, exact_numeric]
+  phone_suitable: false
+  objective: "Link a load step to a supply dip and a reset, and design around it."
+  core_ideas:
+    - "A load step through harness resistance or a sagging pack drops the logic supply. If a regulator cannot hold up, behaviour degrades before any reset."
+    - "RP2350's BOD watches DVDD, the 1.1 V core rail, not 3.3 V IO. It resets when DVDD falls below the threshold for longer than the assertion delay, so an IOVDD dip can upset peripherals with no BOD event."
+    - "Section 7.6.2.2 gives a nominal threshold of 0.946 V at reset, range 0.913 to 0.979 V, and the BOD VSEL reset value 0x0b decodes to 0.946 V. The '0.860 V (default)' label in the same VSEL table, also in the SDK header, conflicts with both, so treat that label as wrong and read the register on your part."
+    - "A brown-out does not always reset cleanly, and flash writes in progress may be corrupted. Guard them: sense the supply with an ADC and block writes below a threshold, and use a two-copy or CRC record."
+    - "Hold-up capacitor: t = C·ΔV/I, sized for how long the supply dip lasts. Isolate MCU supply from motor current, and log throttle, voltage and reset cause together."
+  misconceptions:
+    - "A brown-out always resets cleanly."
+    - "The BOD protects the 3.3 V rail."
+    - "If the average voltage looks fine, the supply is fine; dips last milliseconds."
+  worked_example: "470 µF on a 5 V rail, MCU board draws 100 mA, and the regulator needs at least 4 V input for this example. t = 470e-6 × 1.0/0.1 = 4.7 ms. A 20 ms dip from a motor step defeats this, so either a separate supply or about 2000 µF (0.1 × 20 ms/1.0 V) is needed."
+  unaided_check: "An outsider injects a hidden brown-out or hang. Find the cause from logs alone. Pass: a correct verdict naming the supply or task, supported by reset flag, timestamps and voltage log, and no stored record corrupted."
+  sources:
+    - "https://pip-assets.raspberrypi.com/categories/1214-rp2350/documents/RP-008373-DS-2-rp2350-datasheet.pdf?disposition=inline"
+
+- key: sw.rel.crash-capture
+  description: "Capture fault registers and the stacked frame into memory that survives reset, validate it at boot, and decode the crash."
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, debug_case, project_step]
+  grader_types: [code_tests, multiple_choice, human_review]
+  phone_suitable: false
+  objective: "Leave evidence behind a fault so that the next boot can report the cause."
+  core_ideas:
+    - "On a Cortex-M exception the hardware stacks r0 to r3, r12, lr, pc and xPSR, in that order, so stacked PC sits at SP + 24. The handler chooses MSP or PSP by the EXC_RETURN value."
+    - "Cortex-M33, as in RP2350 Arm mode, has fault status registers: CFSR 0xE000ED28, HFSR 0xE000ED2C, MMFAR 0xE000ED34, BFAR 0xE000ED38. Save them first."
+    - "Store the record in RAM that startup does not clear, as Memfault and Arm's CMSIS-View do, then reset. The Pico SDK's __uninitialized_ram(group) macro does this: it places data in .uninitialized_data.<group>, and the SDK says it retains its value across a reset. The RP2350 datasheet says powered SRAM keeps its contents when the switched core is reset (section 6.2), the bootrom's pre-boot stack lives in separate boot RAM (section 4.3), but the bootrom erases SRAM0 to SRAM9 before it enters USB BOOTSEL mode (section 5.2.2). So a record can survive a watchdog reset into flash boot, is lost if the chip falls into BOOTSEL, and is junk after power-on or a brownout. The datasheet gives no per-reset table, so test each reset kind (watchdog, RUN pin, debugger) on your board."
+    - "A retained record needs a magic number and CRC, because at power-on or after a brown-out that memory holds junk. Read it, report, then clear it, so one crash is not reported twice."
+    - "Handlers must be small: no heap, no blocking, no printf. Use exception_set_exclusive_handler from hardware_exception, or the default vector, and keep a stack for the handler itself."
+  misconceptions:
+    - "A debugger will be attached when the crash happens."
+    - "RAM contents are always valid after any reset."
+    - "A HardFault tells you the root cause; it may be an escalated fault."
+  worked_example: "Fault with SP = 0x20001F00: stacked PC is at 0x20001F18. CFSR = 0x00008200: bit 9 PRECISERR and bit 15 BFARVALID, so a precise bus fault at the address in BFAR, caused by the instruction at the stacked PC. Next, look that PC up in the map file."
+  unaided_check: "Given a saved frame and CFSR, name the fault class, address and likely line from a map file. Then write a record validator. Pass: hidden tests reject bad magic and bad CRC and accept a valid record, and an injected fault is reported on next boot."
+  sources:
+    - "https://arm-software.github.io/CMSIS-View/main/flt_theory.html"
+    - "https://docs.memfault.com/docs/mcu/watchdogs"
+    - "https://pip-assets.raspberrypi.com/categories/1214-rp2350/documents/RP-008373-DS-2-rp2350-datasheet.pdf?disposition=inline (sections 4.3, 5.2.2, 6.2)"
+
+- key: pwr.conv.balance-principles
+  description: "Apply volt-second and charge balance to derive a converter's duty cycle, currents and efficiency, ideal and with resistive losses."
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, faded_problem, problem, explain_back]
+  grader_types: [exact_numeric, multiple_choice, rubric_llm]
+  phone_suitable: false
+  objective: "Derive steady-state relations from the two balance laws rather than memorise them."
+  core_ideas:
+    - "In periodic steady state, the average inductor voltage over a cycle is zero (volt-second balance), and the average capacitor current is zero (charge balance)."
+    - "Buck: (Vin − Vo)·D·T = Vo(1 − D)·T gives Vo = D·Vin. The inductor sets average output current; duty sets voltage."
+    - "Average input current is D·I_L, so a buck is a DC transformer: input current is less than output current by about D. Power balance checks this."
+    - "Loss enters by adding resistive drops to the balance: Vo = D·Vin − I·R, with R the effective path resistance. The balance method then gives an efficiency directly."
+    - "Small-ripple assumption: treat Vo as constant and I_L as constant when averaging. It breaks at very light load, where discontinuous conduction changes the relation."
+  misconceptions:
+    - "PWM duty sets current directly."
+    - "Input current equals output current."
+    - "A converter creates power, since current goes up."
+  worked_example: "Vin 12 V, Vo 5 V. Ideal D = 5/12 = 0.4167. With 2 A and 100 mΩ total path: D = (5 + 0.2)/12 = 0.4333. Average input current = 0.4333 × 2 = 0.867 A. Input power 12 × 0.8667 = 10.4 W, output 10 W, η = 96.2 percent."
+  unaided_check: "Derive Vo/Vin for a boost by volt-second balance, then find D for 5 V to 12 V at 1 A with 0.2 Ω inductor resistance and input current. Expected: Vo/Vin = 1/(1 − D). Solving 5 − I_L·0.2 = 12(1 − D) with I_L = 1/(1 − D) gives D ≈ 0.628, I_L ≈ 2.69 A."
+  sources:
+    - "https://ti.com/lit/pdf/SLVA477"
+
+- key: pwr.conv.buck-design
+  description: "Design a buck power stage for a ripple target, selecting inductor, output capacitor and peak current ratings with stated margins."
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: "Go from a specification to L, C and current ratings by hand."
+  core_ideas:
+    - "Ripple: ΔI = Vo(Vin − Vo)/(Vin·fs·L). Size at maximum Vin, where ripple peaks. TI's note uses an estimated ripple of about 20 to 40 percent of output current as a starting point."
+    - "Peak switch and inductor current = Iout + ΔI/2. Inductor saturation current must exceed the peak at the worst case, plus current-limit overshoot."
+    - "Output ripple: ΔV ≈ ΔI/(8·fs·C) + ΔI·ESR. Ceramic capacitance falls under DC bias, so use the effective value."
+    - "Choose a standard L at or above the calculation, then recompute ΔI. Trading L against ripple moves copper loss, core loss and transient speed."
+    - "Keep magnetics to one inductor design at this level: use a catalogue part and check Isat, DCR and ripple rating."
+  misconceptions:
+    - "Inductance sets average current."
+    - "A larger inductor is always better."
+    - "The capacitor's label value is what you get at 5 V."
+  worked_example: "12 V to 5 V, 2 A, 300 kHz, 30 percent ripple (0.6 A). L = 5 × 7/(12 × 300e3 × 0.6) = 16.2 µH; pick 22 µH. Recomputed ΔI = 0.442 A, peak 2.22 A. For 20 mV ripple: C ≥ 0.442/(8 × 300e3 × 0.02) = 9.2 µF of effective capacitance, ESR below 0.02/0.442 = 45 mΩ if ESR took the whole budget."
+  unaided_check: "Closed book, design a buck for a given ripple, predict the loss split, then measure efficiency. Expected for 9 V to 3.3 V, 1 A, 500 kHz, 40 percent ripple: L = 10.45 µH, next standard 12 µH gives ΔI = 0.348 A, peak 1.17 A. Lab pass: within 3 points."
+  sources:
+    - "https://ti.com/lit/pdf/SLVA477"
+
+- key: pwr.conv.mosfet-losses
+  description: "Split MOSFET loss in a synchronous buck into conduction, switching, gate, Coss and dead-time terms, and predict efficiency from datasheets."
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: "Build a loss budget and see which term dominates and why."
+  core_ideas:
+    - "Conduction: P = R_ds(on)·(hot factor)·duty·I_rms², with I_rms² = I² + ΔI²/12. R_ds(on) rises with temperature, so use the hot value."
+    - "Switching (high-side only in a synchronous buck): P ≈ ½·Vin·(I − ΔI/2)·fs·tr + ½·Vin·(I + ΔI/2)·fs·tf. The low-side FET switches at near zero voltage, so TI neglects its switching term."
+    - "Gate drive P = Qg·Vdrive·fs per FET. Coss P = ½·Qoss·Vin·fs per FET. Body-diode conduction in dead time P = VF·I·t_dead·fs for each edge. Reverse recovery P = Vin·Qrr·fs."
+    - "Trade-off: larger FETs lower R_ds(on) but raise Qg and capacitance, so an optimum exists and it moves with frequency and current."
+    - "Transition times come from gate-charge data: t ≈ (Qgs2 + Qgd)·(Rdrive + Rg)/(Vdrive − Vplateau) for turn-on. Datasheet plateau voltage is often estimated from curves."
+  misconceptions:
+    - "MOSFET loss is only I²R."
+    - "Switching loss is independent of input voltage."
+    - "Bigger FET always runs cooler."
+  worked_example: "12 V to 5 V, 2 A, 300 kHz, ΔI 0.442 A, D 0.4167, R_ds(on) 20 mΩ hot, tr = tf = 15 ns, Qg 15 nC at 5 V, Qoss 10 nC, VF 0.8 V, 30 ns dead time each edge. I_rms² = 4.016 A². High-side conduction 33.5 mW, low-side 46.9 mW, switching 108 mW, gate 45 mW (two FETs), Coss 36 mW (two), dead time 28.8 mW. Total 298 mW. FET-stage-only η = 10/10.298 = 97.1 percent; inductor and capacitor losses come on top."
+  unaided_check: "Double fs to 600 kHz in the example and recompute. Expected: frequency terms double to 435.6 mW, conduction stays 80.3 mW if ΔI were held (halving ripple changes it by under 1 mW), total about 516 mW. State which FET change would help most. Pass: switching is named as dominant."
+  sources:
+    - "https://ti.com/lit/pdf/slvaeq9"
+
+- key: pwr.conv.half-bridge-gate-drive
+  description: "Explain how a half-bridge is driven safely and calculate dead-time, bootstrap and Miller-induced turn-on limits."
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, problem, debug_case]
+  grader_types: [multiple_choice, exact_numeric]
+  phone_suitable: false
+  objective: "Connect gate-driver choices to shoot-through, voltage error and switching speed."
+  core_ideas:
+    - "Two switches across the bus must never overlap: shoot-through shorts the DC link. Dead time keeps both off during a transition, so the inductive current flows through a body diode."
+    - "Dead time costs output voltage: mean error ≈ ±Vbus·t_dead·fs, signed by current direction, and that distorts low-speed motor current. Set it above the worst-case turn-off, not far above."
+    - "A high-side N-FET needs gate volts above its source. A bootstrap capacitor charges while the low side is on, then supplies gate charge. It needs a refresh, so 100 percent duty is limited without a charge pump."
+    - "Miller turn-on: dv/dt on the switch node pushes current through Cgd into the off FET's gate. V ≈ Cgd·dv/dt·R_off. If that nears Vth, the FET partly turns on. Use a low-impedance turn-off path."
+    - "Separate Rg_on and Rg_off shape edges. Slowing them lowers EMI and overshoot but raises switching loss and required dead time."
+  misconceptions:
+    - "More dead time is always safer."
+    - "Gate drive is just a logic signal."
+    - "ESC input PWM is the inverter PWM."
+  worked_example: "Dead-time error at 16 V, 20 kHz, 500 ns: 16 × 500e-9 × 20e3 = 0.16 V. Gate supply average: 60 nC × 20 kHz = 1.2 mA. Bootstrap for 0.5 V droop: C ≥ 60 nC/0.5 V = 0.12 µF, before margin. Miller: 100 pF × 2 V/ns = 0.2 A, through 10 Ω is 2 V, marginal against a 2 V Vth, so reduce R_off."
+  unaided_check: "For a stated FET and driver, pick dead time, bootstrap C and Rg_off so that the Miller voltage stays under half of minimum Vth at 3 V/ns. For Cgd 80 pF and Vth(min) 2 V: R_off ≤ 4.17 Ω. Pass: all three are justified and the trade-off is named."
+  sources:
+    - "https://ti.com/lit/SLUA618"
+
+- key: pwr.conv.dc-link
+  description: "Size DC-link capacitors from ripple voltage, ripple current and regenerated energy, and set rules for running on a bench supply."
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, debug_case]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: "Explain what the capacitor does and check all three of its limits."
+  core_ideas:
+    - "The inverter draws chopped pulses, and the battery sees mostly DC, so the capacitor carries the difference. A single switching leg gives I_C,rms = I·√(D(1 − D)), peaking at D = 0.5 as I/2."
+    - "Charge balance gives the floor. During the on-time D·T the battery supplies the average D·I while the leg draws I, so the capacitor supplies I(1 − D) and sags by ΔV = I·D(1 − D)·T/C. The worst case is D = 0.5, so C ≥ I·T/(4ΔV) before ESR. ESR then adds ΔI·ESR on every edge. TI's rule C_bulk > k·ΔI·T_PWM/ΔV with k about 3 comes from brushed-motor tests on one eval board and gives 12 times the charge-balance floor at D = 0.5, so read it as a caution that ESR and wiring dominate, and check ripple on your own hardware."
+    - "Ripple current heats the capacitor as I²·ESR. That rating, not capacitance, often decides the part. Paralleling splits current and lowers ESR. Keep ceramics near the switches for the high frequencies."
+    - "Regeneration: a decelerating motor can return energy. A bench supply generally cannot sink it, so bus voltage climbs as V = √(V0² + 2E/C). Use limited throttle slew, adequate capacitance and voltage margin."
+    - "Pre-charge: a large capacitor charges through very low resistance at connection, which is the connector spark. Sizing an anti-spark resistor uses τ = RC and about 5τ to full."
+  misconceptions:
+    - "More capacitance is all that matters."
+    - "Battery amps equal capacitor amps."
+    - "A bench supply absorbs regen like a battery."
+  worked_example: "40 A swing, 24 kHz (T = 41.7 µs), allowed 0.5 V, D = 0.5. Charge balance: C ≥ 40 × 41.7e-6/(4 × 0.5) = 834 µF. ESR: 10 mΩ total gives 40 × 0.010 = 0.4 V, most of the budget, so low ESR matters more than extra capacitance. TI's rule for comparison: 3 × 40 × 41.7e-6/0.5 = 0.0100 F, about 10,000 µF. At D = 0.5, 40 A: I_C,rms = 20 A; with 10 mΩ total ESR that is 4 W in the capacitors. Regen of 1 J into 1000 µF at 16 V: √(256 + 2000) = 47.5 V, which would exceed a 40 V stage. That is why deceleration on a bench supply is slew-limited."
+  unaided_check: "12 V supply, 470 µF, 25 V parts, ESC rated 24 V: how much energy reaches 24 V? Expected: E = ½ × 470e-6 × (24² − 12²) = 0.102 J. Then write a bench rule. Pass: rule states current limit, capacitance and throttle slew."
+  sources:
+    - "https://edgeworker.ti.com/lit/pdf/slvaft0"
+    - "https://chargedevs.com/features/a-closer-look-at-the-dc-link"
+
+- key: pwr.conv.buck-lab
+  description: "Build a current-limited low-voltage synchronous buck, measure efficiency with Kelvin connections, and reconcile it against your loss budget."
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, project_step, debug_case]
+  grader_types: [measurement_check, human_review]
+  phone_suitable: false
+  objective: "Predict first, measure second, and explain the gap."
+  core_ideas:
+    - "Commit the prediction before power. Input at most 12 V from a current-limited supply set just above expected draw, no battery in this lab."
+    - "Measure V at the board terminals, with separate leads from those carrying current, or lead drop appears as false loss."
+    - "Efficiency error: with four independent readings each assumed good to ±0.5 percent, the root-sum-square is √4 × 0.5 = ±1.0 percent of the ratio, about ±0.9 points at 91 percent. Use your meters' stated accuracy and quote the band with the result."
+    - "Bring up in stages: no-load output, then light load, then rated load, watching FET and inductor temperature, and stopping for any unexpected current."
+    - "Never put a scope ground clip on the switch node: the ground lead is tied to mains earth and can short the circuit. Put the probe tip on the switch node and a short ground spring on local power ground, or use a differential probe, after a shorted-probe check."
+  misconceptions:
+    - "A multimeter reading at the supply equals board input."
+    - "One load point describes the converter."
+    - "If predicted and measured differ, the instrument must be wrong."
+  worked_example: "Measured Vin 12.00 V, Iin 0.912 A, Vo 4.98 V, Io 2.00 A. Pin = 12.00 × 0.912 = 10.944 W, Pout = 4.98 × 2.00 = 9.96 W, η = 9.96/10.944 = 91.0 percent, error band about ±0.9 points. Predicted 93 percent; difference 2 points, within the 3 point limit. Likely unmodelled: inductor core loss and PCB resistance."
+  unaided_check: "Build it, measure at three loads, reconcile. Pass: predicted loss split logged before power, efficiency at rated load within 3 points, safety log complete, reviewed by a second person where possible."
+  sources:
+    - "https://ti.com/lit/pdf/slvaeq9"
+
+- key: pwr.bldc.motor-basics
+  description: "Relate poles, Kv, Kt, electrical frequency and speed for a BLDC motor, and read a motor label without being misled."
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [multiple_choice, exact_numeric]
+  phone_suitable: true
+  objective: "Convert fluently among rpm, eRPM, electrical frequency, Kv and Kt."
+  core_ideas:
+    - "Pole pairs p = poles/2. Electrical frequency f_e = p·rpm/60, and eRPM = p·rpm. A common 14-pole motor has p = 7."
+    - "Kv is no-load rpm per volt. Kt and Kv are not independent: in SI, Kt ≈ 1/Kv_rad = 9.55/Kv_rpm, so a low-Kv motor makes more torque per amp."
+    - "Back-EMF rises with speed, so voltage sets speed and current sets torque. Load speed is below Kv·V because of I·R."
+    - "Six-step commutation drives two phases at a time through six states per electrical cycle. Sensorless control reads back-EMF on the third phase, which is why very low speed and start-up are harder."
+    - "Kt = 9.55/Kv holds for an ideal motor only when Kv and Kt use the same convention (peak or RMS, line-to-line or phase, six-step or sine drive). A label that just says '920KV' does not state its convention, so treat 9.55/Kv as an estimate and measure Kv yourself from no-load rpm per volt or spun back-EMF."
+  misconceptions:
+    - "Kv and Kt are unrelated."
+    - "High Kv means a more powerful motor."
+    - "Kv is the speed under load."
+  worked_example: "14-pole, 920 Kv, 14.8 V. No-load estimate 920 × 14.8 = 13616 rpm. At 12000 rpm: 7 × 12000/60 = 1400 Hz electrical, 84000 eRPM. Kt = 60/(2π × 920) = 0.01038 N·m/A."
+  unaided_check: "A log shows 58000 eRPM on a 12-pole motor. Find rpm and electrical frequency. Expected: 9667 rpm, 966.7 Hz. Then explain why a 2300 Kv and 920 Kv motor at equal power draw differ in current."
+  sources:
+    - "https://www.onsemi.com/company/news-media/blog/industrial/en-us/trapezoidal-control-of-bldc-motors"
+    - "https://betaflight.com/docs/development/API/Dshot"
+
+- key: pwr.bldc.esc-modes
+  description: "Tell input signal from inverter PWM, build and check a DShot frame, and pick the correct setup steps for each ESC protocol."
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, project_step]
+  grader_types: [multiple_choice, code_tests, human_review]
+  phone_suitable: false
+  objective: "Generate a valid throttle signal and read back telemetry with props off."
+  core_ideas:
+    - "ESC input is a command signal. The inverter PWM inside the ESC is a separate, much faster loop. Standard servo-style PWM uses a pulse width, roughly 1000 to 2000 µs, and needs endpoint calibration."
+    - "DShot frame is 16 bits: 11 throttle, 1 telemetry request, 4 CRC. CRC = (v ^ (v>>4) ^ (v>>8)) & 0x0F on the 12-bit value v. 0 is disarmed, 1 to 47 commands, 48 to 2047 throttle."
+    - "DShot600 bit time is 1.67 µs, high time 1.25 µs for a 1 and 0.625 µs for a 0, frame 26.72 µs. DShot needs no throttle calibration, because the value is digital."
+    - "Bidirectional DShot inverts the signal, inverts the command CRC, and returns eRPM on the same wire about 30 µs later, as GCR at 5/4 of the bit rate. Betaflight requires DShot300 or faster for it."
+    - "Commands 0 to 36 run only when motors are stopped, and some need repeats. Remove props before any ESC configuration, as PX4 also warns."
+  misconceptions:
+    - "ESC input PWM is the inverter PWM."
+    - "DShot needs throttle calibration."
+    - "Telemetry always comes back on the signal wire."
+  worked_example: "Throttle 1000, telemetry 0: v = 1000 << 1 = 2000 = 0x7D0. 0x7D0 ^ 0x07D ^ 0x007 has low nibble 0 ^ D ^ 7 = 0xA. Frame 0x7D0A = 0111 1101 0000 1010. With telemetry 1: v = 2001, CRC 0xB, frame 0x7D1B. Check: throttle 1046 gives 0x82C6, as Betaflight's example shows."
+  unaided_check: "Write dshot_frame(throttle, telem, bidir). Pass: hidden tests cover throttle 48, 1000, 2047, and both CRC modes; then a logic analyser capture from a Pico shows correct timing, with props off, reviewed."
+  sources:
+    - "https://betaflight.com/docs/development/API/Dshot"
+    - "https://docs.px4.io/main/en/peripherals/dshot.html"
+
+- key: pwr.bldc.thrust-measurement
+  description: "Calibrate a guarded load-cell rig, measure steady thrust with a stated uncertainty, and avoid the usual dynamic and airflow errors."
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, project_step, debug_case]
+  grader_types: [measurement_check, human_review]
+  phone_suitable: false
+  objective: "Produce a thrust number that someone else can trust."
+  core_ideas:
+    - "A rig needs real load: 'prop removed' gives no thrust. Spinning without a prop is only for first checks at current limit. Loaded tests run clamped inside a guarded enclosure, hands clear, eye protection on, power cut reachable."
+    - "Calibrate with known masses: gain = Δcounts/Δmass. Include the lever ratio, zero with motor unpowered, and repeat after the run to see drift."
+    - "HX711 gives 10 or 80 SPS with settling of 400 or 50 ms, so it suits dwell points, not transients. At gain 128 and 5 V, full scale is ±20 mV."
+    - "Keep wires from bridging the load cell, since a taut cable carries part of the force. Keep clear air: Tyto's static-thrust setup guide notes that an obstacle downstream of the prop changes thrust more than one upstream, and that reversing the thrust direction on the same fixture can shift results by 3 to 20 percent."
+    - "Record throttle command, V, I, RPM, thrust, temperature, and hold each dwell until the reading settles."
+  misconceptions:
+    - "Scale readings at any instant are valid."
+    - "Prop-off data proves thrust."
+    - "A stand close to the bench does not affect the air."
+  worked_example: "Zero 8050 counts, 500 g gives 220050 counts: gain = 212000/500 = 424 counts/g. Reading 170000 counts: (170000 − 8050)/424 = 382.0 g at the cell. Lever ratio 1.5 (150 mm motor arm over 100 mm cell arm) gives thrust 382.0/1.5 = 254.6 gf."
+  unaided_check: "Calibrate with three masses, measure thrust at four throttle steps, repeat twice. Pass: calibration residual within 1 percent, repeat scatter within 3 percent, zero drift logged, enclosure and cut-off verified."
+  sources:
+    - "https://e2e.ti.com/cfs-file/__key/communityserver-discussions-components-files/73/HX711.pdf"
+    - "https://tytorobotics.com/blogs/articles/recommended-propeller-setup-for-static-thrust-tests"
+
+- key: pwr.bldc.prop-matching-intro
+  description: "Predict how propeller diameter, pitch and speed change thrust, power and motor current, using scaling laws and coefficients."
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: "Estimate the effect of a prop change before fitting it."
+  core_ideas:
+    - "Static thrust T = C_T·ρ·n²·D⁴ and shaft power P = C_P·ρ·n³·D⁵, with n in rev/s. Coefficients come from measured data, and depend on Reynolds number and blade."
+    - "So at fixed n, 10 percent more diameter gives about 46 percent more thrust and 61 percent more power. At fixed power, it still gives about 7 percent more thrust."
+    - "Pitch raises C_P more or less like a load increase. Torque Q = P/(2πn) and motor current ≈ I0 + Q/Kt, so current grows about as n²."
+    - "Compare like with like: UIUC bases its coefficients on the measured true diameter, which can differ from the maker's listed size, and each data run is for one stated rpm, so check both before reusing a coefficient."
+  misconceptions:
+    - "Thrust is linear in throttle."
+    - "A larger prop always overloads, regardless of speed."
+    - "Pitch affects only top speed."
+  worked_example: "C_T = 0.11, ρ = 1.2 kg/m³, n = 100 rev/s, D = 0.254 m: T = 0.11 × 1.2 × 100² × 0.254⁴ = 5.49 N. Going to 11 in from 10 in at the same n: power × 1.1⁵ = 1.61, thrust × 1.1⁴ = 1.46. At fixed power, n falls to 0.853 of original and thrust rises to 1.066 times."
+  unaided_check: "A 5 inch prop draws 20 A at full throttle on a 4S motor; a 6 inch prop of similar pitch and shape is proposed. Estimate current at the same rpm. Expected: power up 2.49 times, near 50 A, so current limit and ESC rating must be re-checked; motor speed will fall in practice."
+  sources:
+    - "https://m-selig.ae.illinois.edu/props/propDB.html"
+    - "https://m-selig.ae.illinois.edu/props/volume-4/propDB-volume-4.html (UIUC Propeller Data Site, volume 4: true-diameter basis, rpm per run)"
+
+- key: pwr.bldc.motor-model
+  description: "Predict operating RPM, current and efficiency of a motor on a stated prop from R, Kv and I0, then measure these parameters."
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, faded_problem, problem, project_step]
+  grader_types: [exact_numeric, measurement_check]
+  phone_suitable: false
+  objective: "Solve the motor and load equations for an unlabelled motor before its first loaded run."
+  core_ideas:
+    - "Electrical: V = I·R + ω/Kv_rad. Mechanical: Kt(I − I0) = Q(ω), with prop Q = c·ω². Solve the two together numerically."
+    - "V is the effective motor voltage: duty × bus, less pack, wire and ESC drops. R here is measured line-to-line in the same convention as the model, plus FET and wire resistance if lumped."
+    - "Measure R with a 4-wire or known current method. Measure Kv from no-load rpm or from spun back-EMF. Measure I0 at a stated voltage, as it grows with speed."
+    - "Low currents through small meter clips and heating both distort R, and copper R rises 0.39 percent per kelvin, so state its temperature."
+    - "First spin: bench supply with current limit, no prop. Loaded validation runs in the guarded enclosure, with prediction logged beforehand."
+  misconceptions:
+    - "Kv × V is the loaded speed."
+    - "Battery amps equal phase amps."
+    - "I0 is a constant at every speed."
+  worked_example: "920 Kv (96.34 rad/s/V), Kt 0.01038 N·m/A, R 80 mΩ, I0 0.6 A, c = 2.0e-7 N·m/(rad/s)², V 14.0 V. Solving ω = 96.34(14 − 0.08 I), I = 0.6 + cω²/Kt gives ω = 1148 rad/s (10966 rpm), I = 26.0 A, torque 0.264 N·m, shaft power 303 W, electrical 364 W, η 83.2 percent."
+  unaided_check: "Given an unlabelled motor, measure R, Kv and I0, then predict current and RPM on a stated prop within 10 percent before the first loaded run; the no-prop, current-limited spins that give Kv and I0 come first. Pass: prediction timestamp precedes the run and both values are within 10 percent."
+  sources:
+    - "https://support.maxongroup.com/hc/en-us/articles/360005873794-Motor-constants (read 3 Nov 2026: kn·kM = 30,000/π in rpm/V × mNm/A, and = 1 in SI units)"
+    - "https://m-selig.ae.illinois.edu/props/propDB.html"
+
+- key: pwr.bldc.efficiency-map
+  description: "Build a thrust-per-watt map from logged steady points, interpolate an operating point, and state what the map cannot separate."
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, project_step]
+  grader_types: [measurement_check, exact_numeric]
+  phone_suitable: false
+  objective: "Turn rig logs into a usable efficiency table."
+  core_ideas:
+    - "Overall efficiency = thrust/(V·I) in g/W at the ESC input, for one specific motor, ESC, prop and voltage combination."
+    - "Use settled points only, averaged over a stated window, and discard transients. g/W falls with throttle for a given prop."
+    - "Plot power against thrust and read power at the intended hover thrust, interpolating between points, not extrapolating."
+    - "This number alone cannot separate motor from prop. Add torque and rpm to get motor and prop efficiency individually."
+    - "Sweep with thermal rests, keeping the same pack state or a regulated supply, since voltage changes the operating point."
+  misconceptions:
+    - "Higher g/W means a better motor."
+    - "A map is transferable to another voltage."
+    - "Peak g/W is the point to fly at."
+  worked_example: "Point: 820 g at 14.6 V, 12.4 A. Power = 181.04 W, 4.53 g/W. Interpolate power for 750 g between (600 g, 120 W) and (820 g, 181 W): 120 + (150/220) × 61 = 161.6 W, about 4.64 g/W."
+  unaided_check: "From a raw log, extract settled points, build the table, and interpolate a hover. Pass: script output matches the hidden answer within 2 percent and transient samples are excluded."
+  sources:
+    - "https://www.tytorobotics.com/blogs/general-knowledge/all-derived-efficiency-explanation"
+
+- key: pwr.bldc.current-sensing-foc
+  description: "Compare low-side, inline and DC-link current sensing, explain why FOC needs phase currents, and check sampling windows and scaling."
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, explain_back]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: false
+  objective: "Say what each sensing location can see and how FOC uses it."
+  core_ideas:
+    - "Low-side leg shunts see phase current only while the low FET conducts, so sampling sits in that window and needs settling time. Two shunts suffice, since ia + ib + ic = 0 for a floating star."
+    - "Inline shunts see phase current continuously but ride on full bus swings, needing high common-mode rejection. The INA240 is built for this: −4 to 80 V, 400 kHz, 93 dB AC CMRR at 50 kHz."
+    - "One DC-link shunt reconstructs phases from PWM states, and can miss them at short vectors."
+    - "FOC measures phases, transforms to the rotor frame, regulates id and iq, and transforms back for PWM. Rotor position comes from a sensor or estimator."
+    - "Scale: full-scale I = V_range/(R·G). Noise, offset, settling and shunt heat fix R and G together. The RP2350 datasheet gives the ADC 12 resolved bits but an ENOB of 9 minimum and 9.5 typical (Table 1438; the section 12.4 feature list says 9.2), so plan on about 9 effective bits and measure the noise on your own board."
+  misconceptions:
+    - "Battery current tells you phase current."
+    - "A low-side shunt is valid at any moment."
+    - "FOC needs no current sensing."
+  worked_example: "1 mΩ, gain 50, ADC 3.3 V with 1.65 V reference: ±33 A. LSB: 3.3/4096 = 0.806 mV, or 16.1 mA, but at 9 effective bits the resolvable step is 3.3/512 = 6.4 mV, or about 129 mA. Shunt heat at 33 A: 1.09 W. A 400 kHz amp has τ = 398 ns, so 5τ is about 2.0 µs. At 24 kHz (41.7 µs), a low-side window of 2 µs limits duty to about 95.2 percent."
+  unaided_check: "Explain in 150 words why sampling at the PWM centre avoids edges, and why a DC-link shunt fails at high modulation. Then compute full scale for 0.5 mΩ and gain 100 at 3.3 V mid-referenced. Expected: ±33 A."
+  sources:
+    - "https://www.ti.com/lit/ds/symlink/ina240.pdf"
+    - "https://ti.com/document-viewer/lit/html/TIDUF56/GUID-B1139E74-4262-4955-BE10-B3119186DBC0"
+    - "https://pip-assets.raspberrypi.com/categories/1214-rp2350/documents/RP-008373-DS-2-rp2350-datasheet.pdf?disposition=inline (section 12.4.1, Table 1438)"
+
+- key: pwr.bldc.current-sense-amp
+  description: "Build a Kelvin-connected shunt amplifier, calibrate it at two or more points, and state its offset and range errors."
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, project_step, debug_case]
+  grader_types: [measurement_check, exact_numeric]
+  phone_suitable: false
+  objective: "Produce a current channel whose calibration you can defend."
+  core_ideas:
+    - "Kelvin sense: take traces from the shunt pads directly to the amplifier, so that load current does not flow through the sense path. TI's INA240 datasheet shows this explicitly."
+    - "V_out = I·R·G + V_ref + offset. INA240 gains are 20, 50, 100, 200 V/V; offset is ±25 µV max, input-referred, so with 2 mΩ this alone is 12.5 mA."
+    - "TI advises against input filters on the INA240 where possible; external resistors there alter gain. Filter at the output instead."
+    - "Calibrate against a trusted DC meter at two or more currents, fit gain and offset, and check a third point. Use a DC-capable clamp or a series shunt, because AC clamps miss DC."
+    - "Shunt heat I²R changes resistance, so check its power and TCR, and make the rating fit the burst."
+  misconceptions:
+    - "Datasheet gain gives calibrated readings without measurement."
+    - "Any current clamp reads DC."
+    - "Input RC filters are harmless."
+  worked_example: "2 mΩ, gain 50, ideal 0.100 V/A. Calibration: 5.00 A → 0.512 V, 20.00 A → 2.015 V. Slope = 1.503/15 = 0.1002 V/A, offset = 0.512 − 0.501 = 0.011 V. Reading 1.200 V: (1.200 − 0.011)/0.1002 = 11.87 A. Shunt heat at 40 A: 3.2 W."
+  unaided_check: "Build and calibrate, then verify at an unseen current with a reference meter. Pass: error within 1 percent of reading or 50 mA, whichever is larger; Kelvin layout shown; no burst beyond shunt rating."
+  sources:
+    - "https://www.ti.com/lit/ds/symlink/ina240.pdf"
+    - "https://www.ti.com/product/ina240"
+
+- key: pwr.bldc.phase-vs-battery-current
+  description: "Convert between battery, phase and capacitor current for a duty cycle, and show why a low battery reading can hide high winding heat."
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: "Stop treating ESC input amps as motor amps."
+  core_ideas:
+    - "Six-step at duty D and ignoring ripple and loss: I_batt ≈ D·I_phase, because the DC link conducts phase current only during on-time. This relation is derived here; the supporting source only confirms chopped DC-link current."
+    - "Power balance: Vbus·I_batt ≈ D·Vbus·I_phase, so the ESC acts as a current step-up at low duty. Low-speed high-torque is the classic case."
+    - "Winding copper loss follows phase current, not battery current, so loss = I_phase²·R."
+    - "For FOC, use power balance: (3/2)·vq·iq ≈ Vbus·I_batt, in the amplitude-invariant frame, less losses."
+    - "So a battery-side limit does not protect the motor at low duty. Current limits must act on phase current, and battery clamps only measure what passes the capacitors."
+  misconceptions:
+    - "Battery amps equal phase amps."
+    - "An average DC meter reading on a phase wire is meaningful."
+    - "Low battery current means a cool motor."
+  worked_example: "16 V bus, D = 0.4, phase 30 A, R = 80 mΩ. I_batt = 12 A. Capacitor RMS = 30√(0.4 × 0.6) = 14.7 A. True copper loss = 30² × 0.08 = 72 W; assuming 12 A gives only 11.5 W, wrong by more than six times."
+  unaided_check: "At D = 0.25, 8 A battery, 60 mΩ, find phase current, copper loss, capacitor RMS. Expected: 32 A, 61.4 W, 13.9 A."
+  sources:
+    - "https://chargedevs.com/features/a-closer-look-at-the-dc-link"
+
+- key: pwr.bldc.torque-measurement
+  description: "Measure reaction torque and rpm, then separate motor-plus-ESC efficiency from propeller efficiency, with the guard and calibration in place."
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, project_step, debug_case]
+  grader_types: [measurement_check, exact_numeric]
+  phone_suitable: false
+  objective: "Split losses that a g/W figure hides."
+  core_ideas:
+    - "Reaction torque is measured at the mount: Q = F·arm, with force from a load cell on a calibrated lever. Mechanical power P = Q·ω."
+    - "Motor-and-ESC efficiency = Q·ω/(V·I), from torque, rpm, DC voltage and DC current. Tyto's stands report it the same way."
+    - "Prop mechanical efficiency = thrust/(Q·ω) in g/W, and overall = thrust/(V·I). Overall = motor × prop."
+    - "Wires, bearings and stiff cable bridges bias small torque readings, so check by applying a known torque and a dummy run with power off."
+    - "Rpm from an optical tach or ESC eRPM divided by pole pairs; cross-check one against the other. Runs stay in the guarded enclosure."
+  misconceptions:
+    - "Grams per watt tells you whether the motor or prop is bad."
+    - "ESC input power equals shaft power."
+    - "Torque and thrust can share one load path without cross-talk."
+  worked_example: "Load 6.0 N at 50 mm: Q = 0.30 N·m at 9000 rpm (942.5 rad/s) gives 282.7 W. Electrical 16 V × 20.5 A = 328 W. Motor plus ESC = 86.2 percent. Thrust 1400 gf: prop 4.95 g/W, overall 4.27 g/W; 0.862 × 4.95 = 4.27 checks."
+  unaided_check: "Run two props on one motor and show which part changed. Motor efficiency depends on torque and speed, so compare the two props at a matched torque and rpm point (or the nearest overlapping dwells). Pass: torque calibration shown, three dwells per prop, and motor-plus-ESC efficiency at the matched point agrees within 3 percentage points [project convention: four 1 percent errors in torque, rpm, voltage and current give a root-sum-square of 2 percent, about 1.7 points at 86 percent; the difference of two such results is √2 × 1.7 = 2.4 points, rounded up to 3]."
+  sources:
+    - "https://www.tytorobotics.com/blogs/general-knowledge/all-derived-efficiency-explanation"
+    - "https://m-selig.ae.illinois.edu/props/propDB.html"
+
+- key: pwr.bldc.foc-lab
+  description: "On a low-voltage evaluation board, identify Rs, Ls and flux, compute dq currents by hand, and run a current-limited FOC torque loop."
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, project_step, debug_case]
+  grader_types: [measurement_check, human_review]
+  phone_suitable: false
+  objective: "Connect the dq frame to measurements on a real board."
+  core_ideas:
+    - "Clarke (amplitude-invariant): iα = ia, iβ = (ia + 2ib)/√3. Park: id = iα cos θ + iβ sin θ, iq = −iα sin θ + iβ cos θ, with θ electrical. Both Park directions need rotor position."
+    - "For a surface-magnet motor, set id = 0 and torque = (3/2)·p·λ·iq. TI's design note states id reference zero for PMSM. Field weakening stays out of this lab."
+    - "Identification: Rs from a low DC-injection test, Ls from a current or voltage step (τ = L/R), flux from back-EMF. TI's InstaSPIN guide exposes these as identified parameters."
+    - "Trap: with Kv defined by DC bus equal to peak line-to-line back-EMF, λ = 1/(√3·p·Kv_rad) and torque per peak phase amp is 0.866/Kv_rad, not 1/Kv_rad. This derivation is ours and vendors vary, so identify it."
+    - "Use an eval board at a low bus, current-limited supply, no prop, motor clamped. Close the current loop before any speed loop, after T2 control skills."
+  misconceptions:
+    - "id and iq are two physical wires."
+    - "More id gives more torque in a surface-magnet motor."
+    - "An encoder angle is automatically electrical angle; multiply by pole pairs and fix offset."
+  worked_example: "ia = 10, ib = −2 A, θe = 30°. iα = 10, iβ = (10 − 4)/√3 = 3.464. id = 8.660 + 1.732 = 10.39 A, iq = −5 + 3 = −2.0 A. λ for 920 Kv, p = 7: 1/(1.732 × 7 × 96.34) = 0.000856 Wb. At iq = 10 A: T = 1.5 × 7 × 0.000856 × 10 = 0.0899 N·m. Rs: 2.0 V, 4.0 A line-to-line gives 0.5 Ω, so 0.25 Ω per phase for a star."
+  unaided_check: "Identify an eval-board motor, then predict torque at a stated iq and compare with a measured torque in a locked-rotor test: no prop, motor clamped, rotor held by an arm that presses on a calibrated load cell, supply current-limited. Hold iq at no more than half the motor's rated continuous current for no more than 5 s per point, and let the case cool below 40 °C between points [project convention: a locked rotor has no cooling airflow and turns all input power into heat, so short, half-current holds keep the winding far from its limit]. Pass: within 15 percent, safety log complete, reviewed, and current limit never disabled."
+  sources:
+    - "https://www.ti.com/document-viewer/lit/html/SPRUHJ1"
+    - "https://ti.com/document-viewer/lit/html/TIDUF56/GUID-B1139E74-4262-4955-BE10-B3119186DBC0"
+
+- key: elec.pcb.kicad-schematic-erc
+  description: "Capture a schematic in KiCad with correct pin types and power flags, run ERC, and resolve each finding on its merits."
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, project_step, debug_case]
+  grader_types: [drc_erc, human_review]
+  phone_suitable: false
+  objective: "Reach a clean ERC honestly, with no suppressions that hide faults."
+  core_ideas:
+    - "ERC checks connections against pin electrical types: inputs are driven, power inputs have a source. Types must be right for ERC to mean anything, and a Pin Conflicts Map sets which pairs warn or error."
+    - "A power net fed from off-board has no power output pin, so ERC warns. A PWR_FLAG marks that net as powered. Add it where the source really arrives; do not sprinkle it to silence warnings."
+    - "A no-connect flag marks a pin intentionally open. Use it only after reading the datasheet for that pin."
+    - "Clean ERC proves rule consistency, not a right design. It can't see wrong values, swapped pinouts in a symbol, or a wrong footprint."
+    - "The KiCad 9 manual's 'Electrical rules checking' section says ERC is imperfect and cannot detect all errors, and that wrongly drawn symbols make its report inaccurate. Its Pin Conflicts Map sets each pin-type pair to allowed, warning or error."
+  misconceptions:
+    - "No ERC errors means the board will work."
+    - "PWR_FLAG supplies power."
+    - "Suppressing an error is as good as fixing it."
+  worked_example: "ERC reports 'Input Power pin not driven by any Output Power pins' on +BATT, fed through J1 and fuse F1. Fix: since J1 and F1 are passive, the net has no output pin, so add one PWR_FLAG on +BATT and one on GND at the connector. Re-run: warning clears. An unused MCU pin with an unconnected warning gets a no-connect flag after checking its datasheet."
+  unaided_check: "Fix a seeded schematic with six ERC findings, two of which are real wiring faults hidden among flag issues. Pass: zero errors, both real faults fixed in wiring rather than suppressed, reviewer agrees."
+  sources:
+    - "https://docs.kicad.org/9.0/en/eeschema/eeschema.html#erc (Inspecting a schematic: Electrical rules checking; Power pins and power flags; ERC Configuration)"
+
+- key: elec.pcb.copper-weight
+  description: "Calculate trace and via resistance, drop and heat from copper weight, and use IPC width estimates while knowing their limits."
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: "Estimate PCB copper performance by hand, then verify by measurement."
+  core_ideas:
+    - "1 oz/ft² copper is about 35 µm thick, 2 oz about 70 µm. R = ρL/(w·t), with ρ ≈ 1.72e-8 Ω·m at 20 °C, plus about 0.39 percent per kelvin."
+    - "IPC-2221 form: I = k·ΔT^0.44·A^0.725, A in mil², k = 0.048 external, 0.024 internal. It is a curve fit to the IPC-2221 charts, which Jouppi traces back to 1955 NBS tests, so use it as a screen only. UNCERTAIN: the exponents and the stated validity range need the IPC-2221 text itself, which is paid."
+    - "IPC-2152 (2009) replaces the single formula with charts and corrections. Jouppi describes its baseline, a trace on a board with no copper planes in still air, as conservative, and Cadence reports that both methods tend to overestimate temperature rise in real assemblies, so a test board settles the matter. IPC's own store lists only the original version, released August 2009, as the current revision (checked 3 Nov 2026)."
+    - "Via barrel: A = π·d·t, so R = ρ·h/A. Vias in parallel don't share equally: those nearest the feed take more, so a calculated array is an optimistic figure."
+  misconceptions:
+    - "A width calculator proves safety."
+    - "Vias share current equally."
+    - "Doubling copper weight doubles thermal capacity across the board at no cost; etch and spacing change too."
+  worked_example: "2 oz, 20 mm wide, 50 mm long: R = 1.72e-8 × 0.05/(0.02 × 70e-6) = 0.614 mΩ. At 30 A: 18.4 mV, 0.553 W. IPC-2221 external at 10 K, 2173 mil²: 0.048 × 10^0.44 × 2173^0.725 = 34.7 A. Via 0.3 mm drill, 25 µm plating, 1.6 mm board, mid-wall 0.325 mm: A = 0.0255 mm², R = 1.08 mΩ."
+  unaided_check: "A 1 oz 10 mm wide 100 mm trace carries 20 A. Find R, drop and heat at 20 °C. Expected: 4.91 mΩ, 98.3 mV, 1.97 W. Then give a design change and how you'd measure the result."
+  sources:
+    - "https://resources.system-analysis.cadence.com/blog/ipc-2152-vs-ipc-2221-which-to-use-for-pcb-thermal-analysis"
+    - "https://www.electronics.org/system/files/technical_resource/E7%26S22_03.pdf (Michael R. Jouppi, The Value of IPC-2152, IPC APEX 2010: abstract and discussion)"
+    - "https://shop.electronics.org/ipc-2152/ipc-2152-standard-only/Revision-0/english (IPC store entry: original version, released August 2009, marked current revision; read 3 Nov 2026)"
+
+- key: elec.pcb.pdb-layout
+  description: "Lay out a power distribution board for ESC feeds with short loops, Kelvin sensing and checked copper, then pass DRC and an outside review."
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, project_step, debug_case]
+  grader_types: [drc_erc, human_review]
+  phone_suitable: false
+  objective: "Turn the current path into a reviewed layout, predicting drop and rise for later measurement."
+  core_ideas:
+    - "Start from current paths: pads, plane, sense shunt, ESC outputs. Each branch gets a calculated drop and heat, and the main feed gets the worst case of all ESCs together."
+    - "Keep local capacitance tight to each high-current exit and keep the switching loop small. TI's motor layout note asks for short, wide copper between FETs where switching occurs."
+    - "Use both outer layers for current where possible, with stitching vias, and treat them as unequal sharers. Keep sense traces Kelvin-connected and away from high di/dt copper."
+    - "DRC checks clearance and connectivity, not ampacity. Set net classes, then add a human review gate for thermal paths, connector mechanics and solder pad robustness."
+    - "First spin is low risk: assemble, continuity, current-limited supply, then rising load with temperature checks. Predicted and measured drop and rise close the loop."
+  misconceptions:
+    - "A clean DRC proves the board can carry current."
+    - "Star-shaped copper is always best."
+    - "A thick pour removes the need for measurement."
+  worked_example: "Four 30 A ESCs, 120 A total in two 2 oz layers (140 µm), 60 mm wide, 40 mm long: R = 1.72e-8 × 0.04/(0.06 × 140e-6) = 81.9 µΩ. Drop 9.8 mV, heat 1.18 W. That assumes equal sharing, so the real figure will be higher near the feed."
+  unaided_check: "Build a PDB, then predict and measure voltage drop and temperature rise at a defined current. Pass: DRC clean, external review recorded, drop within 20 percent, rise stated with method, tested on a current-limited supply first."
+  sources:
+    - "https://ti.com/document-viewer/lit/html/SLVA959B/GUID-3449BFE0-BABF-41AE-B956-37DB154AD1CA"
+    - "https://resources.system-analysis.cadence.com/blog/ipc-2152-vs-ipc-2221-which-to-use-for-pcb-thermal-analysis"

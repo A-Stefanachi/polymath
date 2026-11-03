@@ -1,0 +1,1529 @@
+# Skill specifications for pillar T2 (track key control). Authored 2026-11-02. Original wording.
+# Sources are links only; [uncertain ...] tags in entries flag facts that were not confirmed.
+- key: ctl.sys.ode-first-second
+  description: Solve first- and second-order linear ODEs with constant coefficients and read time constant, damping
+    ratio, natural frequency, overshoot and settling time from them.
+  est_minutes: 60
+  task_kinds: [worked_example, faded_problem, problem, retrieval]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: From a physical equation, predict the free and step response of a rig without simulating it.
+  core_ideas:
+  - 'First order: tau*y'' + y = k*u has step response y(t) = k*u0*(1 - exp(-t/tau)); it reaches 63.2% at t = tau
+    and 2% error near 3.9*tau.'
+  - 'Second order: J*x'''' + b*x'' + K*x = u normalises to x'''' + 2*zeta*wn*x'' + wn^2*x = u/J, with wn = sqrt(K/J)
+    and zeta = b/(2*sqrt(K*J)).'
+  - For 0 < zeta < 1 the poles are -zeta*wn +/- j*wd with wd = wn*sqrt(1 - zeta^2); the envelope decays as exp(-zeta*wn*t).
+  - 'Step overshoot depends only on zeta: Mp = exp(-pi*zeta/sqrt(1 - zeta^2)). Peak time is pi/wd. The 2% settling
+    time is about 4/(zeta*wn), which is an envelope estimate, not an exact value.'
+  - The total solution is homogeneous plus particular; initial conditions fix the homogeneous constants, and the
+    particular part alone cannot satisfy them.
+  misconceptions:
+  - A higher natural frequency always means less overshoot; overshoot depends on zeta, not wn.
+  - Settling time depends on wn alone; it depends on the real part zeta*wn.
+  - Adding damping always speeds a response up; past zeta = 1 the slow pole makes it slower.
+  worked_example: Rig with J = 0.002 kg m^2, b = 0.008 N m s/rad, K = 0.5 N m/rad. wn = sqrt(250) = 15.81 rad/s;
+    zeta = 0.008/(2*sqrt(0.001)) = 0.1265; wd = 15.68 rad/s; Mp = 0.670 (67%); peak time 0.200 s; 2% settling estimate
+    4/(zeta*wn) = 2.00 s, since zeta*wn = b/(2J) = 2 /s.
+  unaided_check: 'J = 0.01 kg m^2, K = 4 N m/rad, b = 0.02 N m s/rad. Find zeta, then the b that gives zeta = 0.7,
+    and the new settling estimate. Expected: zeta = 0.05; b = 0.28 N m s/rad; wn = 20 rad/s; settling 0.286 s.'
+  sources:
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+- key: ctl.sys.eigenvalues-stability
+  description: Compute eigenvalues of small system matrices, relate them to poles and modes, and decide continuous-time
+    stability, including by the Routh test for third-order polynomials.
+  est_minutes: 45
+  task_kinds: [worked_example, problem, retrieval]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: Decide stability from a matrix or a characteristic polynomial, by hand.
+  core_ideas:
+  - For x' = A*x, each eigenvalue gives a mode exp(lambda*t); asymptotic stability requires Re(lambda) < 0 for every
+    eigenvalue.
+  - For 2x2 A, the eigenvalues solve s^2 - tr(A)*s + det(A) = 0; stability holds exactly when tr(A) < 0 and det(A)
+    > 0.
+  - Poles of a transfer function are eigenvalues of A that survive into the input-output map; a cancelled eigenvalue
+    is still in the plant.
+  - For s^3 + a2*s^2 + a1*s + a0 with positive coefficients, stability requires a2*a1 > a0. Positive coefficients
+    alone are necessary, not sufficient, above second order.
+  - An eigenvalue on the imaginary axis gives bounded or polynomially growing motion depending on Jordan structure,
+    so it is not asymptotically stable.
+  misconceptions:
+  - Negative diagonal entries of A guarantee stability.
+  - All-positive polynomial coefficients guarantee stability at any order.
+  - The largest-magnitude eigenvalue dominates; the one closest to the imaginary axis is the slowest.
+  worked_example: A = [[-1, 2], [3, -2]]. tr(A) = -3, det(A) = 2 - 6 = -4, so s^2 + 3s - 4 = 0 and the eigenvalues
+    are +1 and -4. Unstable, despite both diagonal entries being negative.
+  unaided_check: 'For s^3 + 2s^2 + 3s + K, find the K range for stability and the frequency of oscillation at the
+    upper limit. Expected: 0 < K < 6; at K = 6 the roots include +/- j*sqrt(3), so 1.732 rad/s.'
+  sources:
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+- key: ctl.sys.laplace-transfer
+  description: Use Laplace transforms to turn linear ODEs into transfer functions, invert them by partial fractions,
+    and apply the final-value theorem only when its conditions hold.
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: Move between an ODE, a transfer function and a time response.
+  core_ideas:
+  - With zero initial conditions, derivative maps to s and the ODE a2*y'' + a1*y' + a0*y = b0*u gives G(s) = b0/(a2*s^2
+    + a1*s + a0).
+  - G(s) is the Laplace transform of the impulse response; a step response is the inverse transform of G(s)/s.
+  - 'Final value: lim t->inf y(t) = lim s->0 s*Y(s), valid only if all poles of s*Y(s) lie in the open left half-plane.'
+  - Laplace uses s = sigma + j*omega, so it handles growing signals and initial conditions; setting s = j*omega
+    on a stable system gives the frequency response. Fourier alone is not the same tool.
+  - A delay of theta seconds multiplies the transform by exp(-theta*s); it is not a rational function, and a Pade
+    fit is an approximation.
+  misconceptions:
+  - The final-value theorem works on any Y(s); on 1/(s(s-1)) it gives -1 while y(t) diverges.
+  - Laplace is simply Fourier under another name.
+  - Poles alone set the response shape; zeros change residues and so change the shape.
+  worked_example: G(s) = 10/(s^2 + 3s + 2) with a unit step. Y(s) = 10/(s(s+1)(s+2)) = 5/s - 10/(s+1) + 5/(s+2),
+    so y(t) = 5 - 10*exp(-t) + 5*exp(-2t). y(1) = 1.998; final value 5, equal to G(0).
+  unaided_check: 'Find the impulse response of 1/(s^2 + 2s + 5) and evaluate it at t = pi/4. Expected: y(t) = 0.5*exp(-t)*sin(2t);
+    y(pi/4) = 0.228.'
+  sources:
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+- key: ctl.sys.discrete-time
+  description: Discretise a continuous plant with a zero-order hold, map poles from s to z, and state the stability
+    region and the error of Euler approximations.
+  est_minutes: 50
+  task_kinds: [retrieval, worked_example, problem, faded_problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: Predict how a sampled loop differs from its continuous model.
+  core_ideas:
+  - 'Exact pole mapping under sampling: z = exp(s*T). The left half-plane maps inside the unit circle, and stability
+    means |z| < 1.'
+  - ZOH discretisation of 1/(tau*s + 1) gives G(z) = (1 - a)/(z - a) with a = exp(-T/tau).
+  - 'ZOH of a double integrator gives T^2*(z + 1)/(2*(z - 1)^2): sampling created a zero at z = -1 that the continuous
+    model does not have.'
+  - 'A hold adds a delay of about T/2 to the loop: its response carries the phase factor exp(-j*omega*T/2).'
+  - Forward Euler maps s to z = 1 + s*T, so a stable real pole -p stays stable only if T < 2/p. Backward Euler keeps
+    every stable pole stable, and Tustin maps the left half-plane exactly onto the unit disc while warping frequency.
+  misconceptions:
+  - Discrete stability is Re(z) < 0.
+  - A stable continuous controller stays stable under any sample time.
+  - The z-domain model has the same zeros as the s-domain model.
+  worked_example: 'tau = 0.1 s, T = 0.01 s: a = exp(-0.1) = 0.904837, b = 1 - a = 0.095163, so y[k+1] = 0.904837*y[k]
+    + 0.095163*u[k]. Euler would give 0.9 and 0.1 instead, a pole error of 0.0048.'
+  unaided_check: 'A real pole at s = -20 /s. Give the exact z pole and the Euler z pole at T = 0.01 s, then both
+    at T = 0.11 s, and the largest stable Euler step. Expected: 0.8187 and 0.8; 0.1108 and -1.2 (unstable); T <
+    0.1 s.'
+  sources:
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+  - https://en.wikipedia.org/wiki/Zero-order_hold
+- key: ctl.sys.linearisation
+  description: Find an equilibrium of a nonlinear model, derive its Jacobian linearisation at that point, and predict
+    how poles and gains change with the operating point.
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, problem, faded_problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: Turn the rig's nonlinear equation into a local linear model with stated validity.
+  core_ideas:
+  - 'Equilibrium: f(xe, ue) = 0. Then with dx = x - xe and du = u - ue, dx'' = A*dx + B*du where A and B are the
+    Jacobians at (xe, ue).'
+  - The hold input ue is not part of the linear model's job; it must be supplied separately, for example by feedforward.
+  - For an arm with J*th'' = -m*g*l*sin(th) - b*th' + u, measured from hanging, A contains -m*g*l*cos(th0)/J, so
+    wn^2 = (g/l)*cos(th0) for a point mass.
+  - Inverted (th0 = 180 degrees) the sign flips and an unstable pole appears, with the magnitude set by the same
+    g/l.
+  - A linear model cannot represent stiction or dead zone at zero, since those are not differentiable there; handle
+    them separately.
+  misconceptions:
+  - A linear model holds globally once fitted.
+  - Linearisation gives the required input as well as the local dynamics.
+  - Natural frequency of an arm does not depend on angle.
+  worked_example: 'Point-mass arm, m = 0.2 kg, l = 0.15 m, J = m*l^2 = 0.0045 kg m^2. At 0 degrees, wn = sqrt(9.81/0.15)
+    = 8.087 rad/s. At 30 degrees, wn = 8.087*sqrt(cos 30) = 7.526 rad/s, 6.9% lower. Hold torque at 30 degrees:
+    0.2*9.81*0.15*0.5 = 0.14715 N m.'
+  unaided_check: 'Same arm with b = 0.002 N m s/rad, linearised at the inverted point. Give the poles. Expected:
+    s^2 + 0.4444s - 65.4 = 0, so s = +7.868 and s = -8.312 /s.'
+  sources:
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+- key: ctl.sys.frequency-response
+  description: Sketch Bode magnitude and phase by hand from poles, zeros, integrators and delay, and read gain crossover
+    and phase margin from the result.
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, problem, perceptual_drill]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: Predict a loop's frequency response before running anything.
+  core_ideas:
+  - For a stable G, a sine at omega leaves as a sine with gain |G(j*omega)| and phase arg G(j*omega) after transients
+    die.
+  - 'Asymptotes: each pole adds -20 dB/decade past its corner and -90 degrees in total; each left-half-plane zero
+    adds +20 dB/decade and +90 degrees; the exact gain at a corner is 3 dB off the asymptote.'
+  - A delay leaves magnitude unchanged and adds phase -omega*theta radians, which grows without bound; in degrees
+    that is -360*f*theta.
+  - A right-half-plane zero has the same magnitude as its mirror but contributes lag instead of lead, so Bode's
+    gain-phase relation does not hold for it.
+  - Magnitudes multiply so decibels add; phases add. That is why a loop is sketched factor by factor.
+  misconceptions:
+  - Bandwidth is unrelated to delay.
+  - A delay shows up on the magnitude plot.
+  - Magnitude alone fixes phase for every system; that holds only for minimum-phase systems.
+  worked_example: L(s) = 10/(s(0.1s + 1)). |L| = 1 where omega*sqrt(1 + 0.01*omega^2) = 10, giving omega_gc = 7.86
+    rad/s. Phase there is -90 - atan(0.786) = -128.2 degrees, so PM = 51.8 degrees. At omega = 1 the gain is 19.96
+    dB; at omega = 100 it is -40.04 dB.
+  unaided_check: 'L(s) = 100/((s + 1)(s + 10)). Find DC gain in dB, exact gain crossover and phase margin. Expected:
+    20 dB; omega_gc = 7.82 rad/s; phase -120.7 degrees; PM = 59.3 degrees.'
+  sources:
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+- key: ctl.sys.nyquist-criterion
+  description: Sketch a Nyquist plot, count encirclements of -1 including open-loop unstable poles, and find the
+    delay or gain at which closed-loop stability is lost.
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, problem, explain_back]
+  grader_types: [exact_numeric, multiple_choice, rubric_llm]
+  phone_suitable: false
+  objective: Decide closed-loop stability from the open-loop frequency response, including unstable plants and delay.
+  core_ideas:
+  - 'Z = N + P: closed-loop right-half-plane poles equal clockwise encirclements of -1 by L(j*omega) plus open-loop
+    right-half-plane poles. Stability needs Z = 0.'
+  - With P = 0 the plot must not encircle -1. With P = 1 it must encircle -1 once counter-clockwise, so N = -1.
+  - The criterion follows from the argument principle applied to 1 + L(s) on a contour around the right half-plane,
+    indented around any poles on the imaginary axis.
+  - A delay rotates each point of the plot by -omega*theta without changing magnitude. The maximum extra delay is
+    PM(radians)/omega_gc when there is one gain crossover.
+  - Do not confuse this with the Nyquist sampling limit; the two only share a name.
+  misconceptions:
+  - Stable open loop means safe closed loop.
+  - Phase margin alone is enough for an unstable plant; such a loop can also have a lower gain limit.
+  - Encirclements must be zero for every stable system.
+  worked_example: 'L(s) = 2*exp(-theta*s)/(s - 1), P = 1. At theta = 0, L(0) = -2 and the plot encircles -1 once
+    counter-clockwise, so Z = 0. |L| = 1 where sqrt(1 + w^2) = 2, so w = 1.732 rad/s; phase there is -120 degrees,
+    PM = 60 degrees = pi/3 rad. Maximum delay = (pi/3)/1.732 = 0.6046 s. Check: root of s - 1 + 2*exp(-theta*s)
+    is at Re = -0.011 for theta = 0.60 and +0.013 for theta = 0.61; a time simulation decays at 0.55 s and grows
+    at 0.65 s.'
+  unaided_check: 'L(s) = K/(s(s + 1)(s + 2)). Find the K at which the plot passes through -1, the frequency there,
+    and the number of closed-loop right-half-plane poles at K = 8. Expected: K = 6 at 1.414 rad/s; Z = 2.'
+  sources:
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+- key: ctl.sys.sensitivity-functions
+  description: Compute S, T and their peaks from a loop transfer function, interpret Ms as distance to -1, and derive
+    guaranteed gain and phase margins from it.
+  est_minutes: 40
+  task_kinds: [worked_example, problem, retrieval]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: Use S, T and Ms as the working measures of loop quality.
+  core_ideas:
+  - S = 1/(1 + L) maps disturbance to output; T = L/(1 + L) maps setpoint and sensor noise to output; S + T = 1
+    as complex functions, so magnitudes need not sum to 1.
+  - Ms = max |S(j*omega)| = 1/sm, where sm is the shortest distance from the Nyquist curve to -1.
+  - A given Ms guarantees PM >= 2*asin(1/(2*Ms)) and tolerates gain changes between Ms/(Ms + 1) and Ms/(Ms - 1).
+  - 'Reasonable ranges from Astrom and Murray: PM 30-60 degrees, GM 2-5, sm 0.5-0.8, which gives Ms of about 1.25
+    to 2.'
+  - 'For Ms = 2 the exact bound is 28.96 degrees, from FBS eq. 10.7 with sm = 0.5. An FBS exercise says at least
+    30 degrees; that is a rounding, so use the formula value.'
+  misconceptions:
+  - S and T magnitudes add to 1.
+  - Good PM and GM guarantee a good Ms; a curve can pass close to -1 between the two crossovers.
+  - Ms = 1 is always achievable on a real plant.
+  worked_example: L = 2/(s(s + 1)). Scanning omega gives Ms = 1.785 at 1.55 rad/s, Mt = 1.512, sm = 0.560. Guaranteed
+    PM >= 32.5 degrees, and the actual PM is 38.7 degrees at omega_gc = 1.25 rad/s. Guaranteed upward gain margin
+    Ms/(Ms - 1) = 2.27; the actual GM of this loop is infinite.
+  unaided_check: 'A loop has Ms = 2. State the guaranteed PM and gain range. Explain why S + T = 1 stops S and T
+    both being small at one frequency. Expected: PM >= 28.96 degrees; gain factor 2/3 to 2; if |S| << 1 then T is
+    near 1, and they cannot both be small.'
+  sources:
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+- key: ctl.sys.state-space
+  description: Write a linear system in state-space form, convert it to a transfer function, decompose its response
+    into modes, and spot a mode that the transfer function hides.
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, problem, debug_case]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: Work with x' = Ax + Bu, y = Cx and recognise what G(s) cannot show.
+  core_ideas:
+  - G(s) = C*inv(sI - A)*B + D; its denominator divides det(sI - A), and the two differ by exactly the cancelled
+    modes.
+  - The free response is a sum of c_i*v_i*exp(lambda_i*t), where v_i are eigenvectors and c_i come from expanding
+    x(0) in that basis.
+  - A state change x = T*z leaves the transfer function and the eigenvalues unchanged, so states are a choice of
+    coordinates, not physics.
+  - A hidden unstable mode is uncontrollable or unobservable; G(s) can look stable while the internal state diverges.
+  - A rig arm has angle and rate as natural states; a cascade loop makes that rate state physically accessible.
+  misconceptions:
+  - The transfer function contains everything about the system.
+  - A system has one unique state vector.
+  - Pole-zero cancellation removes the mode from the hardware.
+  worked_example: A = [[0, 1], [-2, -3]], B = [0, 1]', C = [1, 0]. G(s) = 1/(s^2 + 3s + 2), modes -1 and -2 with
+    eigenvectors [1, -1]' and [1, -2]'. For x(0) = [1, 0]', x(0) = 2*v1 - v2, so x1(t) = 2*exp(-t) - exp(-2t).
+  unaided_check: 'A = [[-1, 0], [0, 2]], B = [1, 1]'', C = [1, 0]. Give G(s), the eigenvalues, and whether the system
+    is safe. Expected: G(s) = 1/(s + 1), eigenvalues -1 and +2; unsafe, because the +2 mode is unobservable and
+    grows unseen.'
+  sources:
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+- key: phys.mech.newton-laws
+  description: Draw a free-body diagram for a single body or a connected pair and apply Newton's laws to find acceleration
+    and internal forces on a ground fixture.
+  est_minutes: 30
+  task_kinds: [worked_example, problem, retrieval]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: Get from a physical setup to a correct force balance with signs.
+  core_ideas:
+  - 'Second law: the vector sum of external forces equals m*a in an inertial frame. For a body that gains or loses
+    mass, apply dp/dt to the whole closed system, or add the momentum carried by the mass that crosses the boundary.'
+  - 'Third law: action and reaction act on different bodies, so they never cancel in one body''s force balance.'
+  - Choosing the system decides which forces are external; a string's tension is internal to a two-body system and
+    external to each body.
+  - Kinetic friction magnitude is about mu*N, and it opposes sliding. Static friction takes whatever value is needed,
+    up to its limit.
+  - A lab bench is treated as inertial for these timescales; that is an approximation that holds to far better than
+    sensor accuracy here.
+  misconceptions:
+  - Weight and the normal force are a third-law pair; they act on one body, and the true partner of weight acts
+    on the Earth.
+  - A body moving at constant velocity must have a net force on it.
+  - Friction always equals mu*N, even when the body is not sliding.
+  worked_example: A 0.5 kg sled on a bench is pulled by a 2 N horizontal force, with mu = 0.1. Friction = 0.1*0.5*9.81
+    = 0.4905 N. a = (2 - 0.4905)/0.5 = 3.019 m/s^2. After 1 s from rest, v = 3.019 m/s. The sled pulls back on the
+    puller with 2 N.
+  unaided_check: 'A 1 kg block on a table (mu = 0.2) is connected over a pulley to a hanging 0.5 kg mass. Find the
+    acceleration and string tension with g = 9.81. Expected: a = 1.962 m/s^2; T = 3.924 N.'
+  sources:
+  - https://en.wikipedia.org/wiki/Newton%27s_laws_of_motion
+- key: phys.mech.forces-body-frame
+  description: Write force balances in a rotating body frame, including the omega cross v term, and distinguish
+    the derivative seen in the body frame from inertial acceleration.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem, explain_back]
+  grader_types: [multiple_choice, exact_numeric, rubric_llm]
+  phone_suitable: true
+  objective: Use a body-frame equation correctly for anything that turns.
+  core_ideas:
+  - For velocity expressed in body axes, m*(v_b' + omega x v_b) = F_b; v_b' is the rate seen by the body-fixed observer.
+  - omega x v_b is not a physical force; it is the rate at which the basis vectors themselves turn.
+  - Inertial acceleration is the same physical vector in either frame; only its components differ.
+  - Constant speed in a turn gives v_b' = 0 with a nonzero force, because all the acceleration is in omega x v_b.
+  - 'Conversions need the rotation matrix: F_inertial = R*F_body.'
+  misconceptions:
+  - A body-frame force law has no omega x v term.
+  - A zero body-frame derivative means zero acceleration.
+  - Coriolis-type terms are real forces that a free-body diagram should include.
+  worked_example: 'A sled on a turntable at r = 0.3 m, omega = 2 rad/s about +z (up). Body x is tangential forward
+    and y points to the centre, so v_b = (0.6, 0, 0). omega x v_b = (0, 1.2, 0) m/s^2, and with F/m = (0, 1.2, 0)
+    we get v_b'' = 0. Check: omega^2*r = 1.2 m/s^2.'
+  unaided_check: 'A 0.5 kg cart moves at v_b = (2, 0, 0) m/s and yaw rate 1 rad/s (z up) at constant speed. Find
+    the lateral force. Expected: 1 N towards body +y (left), since a_y = 2 m/s^2.'
+  sources:
+  - https://en.wikipedia.org/wiki/Rotating_reference_frame
+  - https://en.wikipedia.org/wiki/Newton%27s_laws_of_motion
+- key: phys.mech.inertia-torque
+  description: Compute moments of inertia of simple rig parts, apply torque equals inertia times angular acceleration,
+    and predict reaction torque on the base.
+  est_minutes: 30
+  task_kinds: [worked_example, problem, retrieval]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: Size torque, acceleration and reaction for a one-axis rig.
+  core_ideas:
+  - 'Rotational law about a fixed axis: torque = I*alpha. Common shapes: disc 0.5*m*r^2; rod about its end m*L^2/3;
+    point mass m*r^2.'
+  - Inertia scales with distance squared, so moving a mass outward matters more than adding it.
+  - Every motor torque on a rotor is matched by an equal and opposite torque on the stator, and so on the base.
+  - With no external torque, total angular momentum about the axis is conserved, so a spinning-up flywheel counter-rotates
+    a free base.
+  - 'Parallel axis: I = I_cm + m*d^2 for a part mounted off its centre.'
+  misconceptions:
+  - Heavier always means slower to control; inertia depends on where the mass sits and on available torque.
+  - Reaction torque exists only while the rotor speed is constant.
+  - Doubling a tip radius doubles its inertia; it quadruples it.
+  worked_example: 'Flywheel disc m = 0.1 kg, r = 0.04 m: I = 0.5*0.1*0.0016 = 8e-5 kg m^2. Torque 0.01 N m gives
+    alpha = 125 rad/s^2, so 500 rad/s takes 4 s. A free base with I = 0.02 kg m^2 accelerates at 0.5 rad/s^2 the
+    other way, which is why the rig base must be clamped. At 500 rad/s the disc stores 0.5*8e-5*500^2 = 10 J, ten
+    times the L7 brief''s 1 J cap, so on the rig the firmware speed limit is sqrt(2/8e-5) = 158 rad/s.'
+  unaided_check: 'A 0.3 m rod of 0.1 kg pivots at its end and has 0.05 kg at the tip. Find I and the torque for
+    40 rad/s^2, ignoring gravity. Expected: I = 0.003 + 0.0045 = 0.0075 kg m^2; torque 0.3 N m.'
+  sources:
+  - https://en.wikipedia.org/wiki/Moment_of_inertia
+- key: phys.mech.euler-rigid-body
+  description: Apply Euler's equations to a spinning body and refer motor and load inertia through a gearbox, including
+    the gear ratio that maximises load acceleration.
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, problem, faded_problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: Handle gyroscopic coupling and gearbox reflection in a rig model.
+  core_ideas:
+  - 'In principal body axes: I1*w1'' + (I3 - I2)*w2*w3 = M1, with the other two equations given by cyclic permutation.'
+  - The term omega x (I*omega) couples axes, so torque on one axis can come from rates on two others.
+  - Through a gearbox of ratio N (motor speed/load speed), load inertia seen at the motor is J_L/N^2, and motor
+    inertia seen at the load is N^2*J_m.
+  - Total inertia at the load is J_L + N^2*J_m; for a small motor with a high N, rotor inertia can dominate the
+    arm.
+  - 'For peak load acceleration from a fixed motor torque, N^2 = J_L/J_m. This ignores friction, backlash and efficiency,
+    and speed limits usually pick a lower N. Take gear efficiency for a given part from its datasheet.'
+  misconceptions:
+  - Gyroscopic terms exist only in fast spinning tops.
+  - Motor inertia is negligible once geared down; reflection multiplies it by N^2.
+  - Torque multiplication through a gearbox is free of any cost in bandwidth.
+  worked_example: 'Euler: I = (0.02, 0.03, 0.04) kg m^2, omega = (1, 2, 0) rad/s, M = 0. w3'' = -(I2 - I1)*w1*w2/I3
+    = -(0.01)(1)(2)/0.04 = -0.5 rad/s^2; w1'' = w2'' = 0 at that instant. Gearbox: J_m = 3e-6, N = 50, J_L = 0.01:
+    at the motor 4e-6 + 3e-6 = 7e-6 kg m^2; at the load 0.0075 + 0.01 = 0.0175 kg m^2.'
+  unaided_check: 'With J_m = 3e-6 and J_L = 0.01 kg m^2, find the N that maximises load acceleration and state one
+    reason a real rig would use less. Expected: N = sqrt(3333) = 57.7; a reason such as the motor speed limit, friction
+    or backlash.'
+  sources:
+  - https://en.wikipedia.org/wiki/Euler%27s_equations_(rigid_body_dynamics)
+  - https://www.motioncontroltips.com/how-do-gearmotors-impact-reflected-mass-inertia-from-the-load/
+- key: sig.freq.fourier-intuition
+  description: Describe a periodic signal as a sum of sinusoids, estimate harmonic amplitudes and RMS, and predict
+    which harmonics a nonlinearity or filter creates or removes.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, perceptual_drill]
+  grader_types: [multiple_choice, exact_numeric]
+  phone_suitable: true
+  objective: Think about a time trace as a set of frequencies.
+  core_ideas:
+  - A periodic signal has lines at multiples of its fundamental; a sharper waveform has stronger high harmonics.
+  - A +/-1 square wave has only odd harmonics with amplitudes 4/(pi*n), so 1.273 at the fundamental and 0.424 at
+    the third.
+  - 'Parseval: power adds across orthogonal components, so RMS^2 is the sum of A_n^2/2 for sinusoids.'
+  - A linear time-invariant system changes amplitude and phase but creates no new frequency; clipping and other
+    nonlinearities do create them.
+  - The square wave has 81.06% of its power in the fundamental, which is 8/pi^2.
+  misconceptions:
+  - Amplitudes add for RMS; powers add, not amplitudes.
+  - A filter can create new frequencies.
+  - Fourier and Laplace are the same tool.
+  worked_example: Signal 1.5*sin(2*pi*50*t) + 0.5*sin(2*pi*150*t + 1). RMS = sqrt((1.5^2 + 0.5^2)/2) = 1.118, independent
+    of phase, while the peak depends on phase.
+  unaided_check: 'A +/-1 square wave at 100 Hz passes an ideal low-pass at 250 Hz. What fraction of its power is
+    lost? Expected: 1 - 8/pi^2 = 0.1894, or 18.9%.'
+  sources:
+  - https://en.wikipedia.org/wiki/Square_wave_(waveform)
+  - https://en.wikipedia.org/wiki/Aliasing
+- key: sig.freq.fft-log-reading
+  description: Read an FFT of an IMU log by computing bin spacing and amplitude scaling, and identify rotation fundamentals,
+    blade-pass tones, harmonics and broadband noise.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, perceptual_drill, problem]
+  grader_types: [exact_numeric, multiple_choice, measurement_check]
+  phone_suitable: false
+  objective: Turn a logged spectrum into named physical sources, using bench or supplied logs only.
+  core_ideas:
+  - Bin spacing is fs/N, which equals 1/T for record length T; the highest frequency shown is fs/2.
+  - Single-sided amplitude of a tone is 2*|X|/(N*CG), where CG is the window's coherent gain (1 for rectangular,
+    0.5 for Hann).
+  - Rotation fundamental f = rpm/60; blade-pass is blades*f; harmonics sit at integer multiples.
+  - A tone that tracks speed in a sweep is mechanical; a fixed tone may be a structure resonance, and a tone that
+    moves oddly may be an alias.
+  - 'Largest peak does not mean largest problem: phase lag and what the control loop passes both matter. PX4 notes
+    that spectrum plots are comparable only on one vehicle because scales vary.'
+  misconceptions:
+  - The biggest FFT peak is the problem.
+  - More samples at one rate improve the highest visible frequency.
+  - Every peak in a log is a real frequency in the air.
+  worked_example: 'fs = 1000 Hz, N = 2048: spacing 0.488 Hz, record 2.048 s. Peak at bin 246 is 120.12 Hz, which
+    fits 7200 rpm (120 Hz). With a Hann window and |X| = 512, amplitude = 2*512/(2048*0.5) = 1.0 in sensor units.
+    On a two-blade bench setup the blade-pass would be at 240 Hz.'
+  unaided_check: 'fs = 800 Hz, N = 1024, peak at bin 300. Give spacing and tone frequency. Then give the N needed
+    to separate tones 1 Hz apart with a Hann window at 800 Hz (assume a separation of one main-lobe half-width, that
+    is two bins, or 2/T).
+    Expected: 0.781 Hz; 234.4 Hz; T >= 2 s so N >= 1600, use 2048.'
+  sources:
+  - https://docs.px4.io/main/en/config_mc/filter_tuning.html
+  - https://ardupilot.org/copter/docs/common-imu-notch-filtering.html
+- key: sig.freq.filter-cutoff-choice
+  description: Choose a low-pass cutoff given sample rate, noise frequency and allowed phase lag at crossover, and
+    quantify the delay the filter adds.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: Trade noise against phase lag with numbers, not by feel.
+  core_ideas:
+  - 'First-order low-pass: H = 1/(1 + j*f/fc), phase -atan(f/fc), low-frequency delay 1/(2*pi*fc).'
+  - Second-order Butterworth low-frequency delay is sqrt(2)/(2*pi*fc), about 41% more than first order. At 30 Hz
+    that is 7.5 ms, consistent with PX4's approximate 8 ms.
+  - 'Discrete first-order: y[k] = y[k-1] + a*(x[k] - y[k-1]) with a = 1 - exp(-2*pi*fc/fs).'
+  - A digital filter acts on already-sampled data, so it cannot remove an alias; it can only filter what aliasing
+    left behind.
+  - 'Delay scales inversely with cutoff: Betaflight''s notes use the same trade when raising cutoffs after removing
+    motor noise.'
+  misconceptions:
+  - A lower cutoff is always cleaner, with no cost.
+  - Filter delay matters only near the cutoff; it costs phase well below it.
+  - Filter cutoffs can be set without knowing the loop's crossover.
+  worked_example: 'PT1 at fc = 80 Hz, fs = 1 kHz: a = 0.3951; delay 1.99 ms. At a 20 Hz crossover the lag is atan(20/80)
+    = 14.04 degrees. At 200 Hz the gain is -8.60 dB.'
+  unaided_check: 'Crossover 15 Hz; allow 10 degrees from a PT1. Find the lowest fc and the attenuation it gives
+    at 240 Hz. Expected: fc = 85.1 Hz; -9.52 dB.'
+  sources:
+  - https://docs.px4.io/main/en/config_mc/filter_tuning.html
+  - https://betaflight.com/docs/wiki/tuning/4-1-Tuning-Notes
+- key: sig.freq.notch-rpm
+  description: Design a notch from a rotation frequency and bandwidth, compute its phase cost below crossover, and
+    explain why tracking the frequency from RPM beats a fixed notch.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem, debug_case]
+  grader_types: [exact_numeric, multiple_choice, measurement_check]
+  phone_suitable: false
+  objective: Remove a narrow rotating-machine tone at a known phase price.
+  core_ideas:
+  - 'Notch form: H(s) = (s^2 + w0^2)/(s^2 + (w0/Q)*s + w0^2), with -3 dB bandwidth about f0/Q.'
+  - Below w0 the phase lag is atan((w0*w/Q)/(w0^2 - w^2)), and the low-frequency delay is about 1/(Q*w0).
+  - Each harmonic needs its own notch, and delays add. ArduPilot notes that extra notches also add CPU load.
+  - Rotation tones move with speed, so a fixed narrow notch misses them away from its design point; RPM, throttle
+    or FFT sources move the centre.
+  - 'PX4 warns against using filtering to hide high vibration: fix the hardware first.'
+  misconceptions:
+  - A notch is free.
+  - A wider notch is always safer.
+  - A notch fixes the source of vibration.
+  worked_example: '7200 rpm with two blades gives 240 Hz. Bandwidth 24 Hz gives Q = 10. Phase at a 30 Hz crossover:
+    atan((240*30/10)/(240^2 - 30^2)) = atan(720/56700) = 0.728 degrees. Low-frequency delay 1/(10*2*pi*240) = 66.3
+    microseconds.'
+  unaided_check: 'Motor 6000 rpm, two blades. Place a Q = 5 notch on blade-pass and give the lag at 20 Hz. Expected:
+    200 Hz; atan(800/39600) = 1.157 degrees.'
+  sources:
+  - https://ardupilot.org/copter/docs/common-imu-notch-filtering.html
+  - https://docs.px4.io/main/en/config_mc/filter_tuning.html
+- key: sig.freq.windowing-spectrogram
+  description: Choose a window, quantify leakage and resolution, read a spectrogram with stated time and frequency
+    resolution, and compute the group delay of linear-phase filters.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, perceptual_drill]
+  grader_types: [exact_numeric, measurement_check]
+  phone_suitable: false
+  objective: Avoid artefacts when reading spectra and account for filter delay.
+  core_ideas:
+  - 'A record that is not an integer number of cycles leaks: the true spectrum is convolved with the window''s transform.'
+  - 'Computed window figures: rectangular -13.3 dB first sidelobe, 3.92 dB scalloping, ENBW 1.0 bin; Hann -31.5
+    dB, 1.42 dB, ENBW 1.5 bins, coherent gain 0.5.'
+  - Hann sidelobes fall at about 18 dB per octave, so distant strong tones hide far less of a weak one.
+  - A spectrogram's frame spacing is hop/fs and frequency spacing is fs/nperseg; better resolution in one costs
+    the other.
+  - A linear-phase FIR with N taps delays every frequency by (N - 1)/2 samples; group delay is -d(phase)/d(omega).
+  misconceptions:
+  - Zero padding adds resolving power; it only interpolates the spectrum.
+  - 'Windowing is free: it widens the main lobe.'
+  - Group delay equals phase delay for every filter.
+  worked_example: 'Spectrogram at fs = 1000 Hz, nperseg = 512, 50% overlap: frequency spacing 1.953 Hz; frame spacing
+    0.256 s. A 9-tap moving average at 1 kHz has group delay (9 - 1)/2 = 4 samples = 4 ms.'
+  unaided_check: 'fs = 1 kHz, N = 1024; tones at 100 Hz (amplitude 1) and 110 Hz (0.01). Which window reveals the
+    small tone? Expected: Hann. With a rectangular window, leakage from 100 Hz at the 110 Hz bin is about -28.6 dB
+    relative to the displayed 100 Hz peak, above the tone''s -40 dB; with Hann, leakage is about -70.8 dB, so the
+    tone stands clear at -40 dB.'
+  sources:
+  - https://en.wikipedia.org/wiki/Window_function
+- key: sig.sampling.nyquist-aliasing
+  description: Predict the frequency at which any tone appears after sampling, and state the correct sampling condition
+    in terms of what remains after the anti-alias chain.
+  est_minutes: 30
+  task_kinds: [worked_example, problem, retrieval]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: Compute aliases by hand and state the rule correctly.
+  core_ideas:
+  - A sampled sinusoid at f is indistinguishable from f + n*fs; the visible frequency is |f - fs*round(f/fs)|, which
+    lies in 0 to fs/2.
+  - The sample rate must exceed twice the highest frequency present after the anti-alias chain, not twice the band
+    of interest.
+  - An alias keeps the tone's amplitude. Once sampled it cannot be told apart from a real signal at that frequency.
+  - A known narrow alias can be notched at its folded frequency, but any real signal there is lost too.
+  - Do not confuse this with Nyquist stability; they share a name only.
+  misconceptions:
+  - Sampling at 2.1 times the band of interest is fine, whatever else is present.
+  - A digital low-pass fixes aliasing.
+  - Output data rate equals usable bandwidth.
+  worked_example: fs = 1000 Hz. A 1150 Hz tone appears at 150 Hz; 730 Hz at 270 Hz; 1900 Hz at 100 Hz.
+  unaided_check: 'fs = 1000 Hz, tones at 240, 480, 960, 1200 Hz. Give each visible frequency. Expected: 240, 480,
+    40, 200 Hz.'
+  sources:
+  - https://en.wikipedia.org/wiki/Aliasing
+- key: sig.sampling.imu-rate-selection
+  description: Select an IMU output rate and on-chip filter so that vibration folding into the control band is attenuated
+    by a stated amount, using a numeric budget.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [multiple_choice, exact_numeric]
+  phone_suitable: true
+  objective: Size rate and filter order from a required rejection.
+  core_ideas:
+  - Energy at frequencies from fs - fb to fs + fb folds into the band 0 to fb, so the filter must be judged at fs
+    - fb, not at fs/2.
+  - 'Butterworth gain of order n at f: 1/sqrt(1 + (f/fc)^(2n)).'
+  - Raising the rate moves the folding edge up, so a gentler filter works; doubling the rate at second order gains
+    about 13 dB in this budget.
+  - 'The chip''s real chain must be read from the datasheet. The ICM-42688-P (DS-000347, section 5) samples at 32
+    kHz, then applies a notch, a 2nd-order anti-alias filter (42 to 3979 Hz, can be bypassed) and a selectable UI
+    filter; ODR runs up to 32 kHz. PX4''s docs say it disables on-chip gyro low-pass filters where allowed, yet its
+    ICM-42688-P driver keeps the AAF on at 585 Hz with an 8 kHz ODR. Read the driver, not only the docs.'
+  - Clipping happens before all filtering and cannot be undone, so range choice is part of this decision.
+  misconceptions:
+  - ODR tells you the filter bandwidth.
+  - A faster ODR always helps, with no cost in noise or bus load.
+  - The anti-alias filter only needs to reach fs/2.
+  worked_example: Band fb = 100 Hz, fc = 200 Hz, second order. At fs = 1000 Hz, folding edge 900 Hz gives -26.1
+    dB. At fs = 2000 Hz, 1900 Hz gives -39.1 dB. Third order gives -39.2 and -58.7 dB. For a 40 dB requirement only
+    third order at 2000 Hz passes.
+  unaided_check: 'Same band and fc. What order passes 30 dB at fs = 1000 Hz, and why is fs/2 the wrong test point?
+    Expected: order 3 (-39.2 dB, while order 2 gives -26.1 dB); energy at 500-899 Hz folds to 101-500 Hz, outside
+    the band, so 900 Hz is the first frequency that lands in band.'
+  sources:
+  - https://invensense.tdk.com/en-us/download-resource/ds-000347-icm-42688-p-datasheet (DS-000347 rev 1.2, section
+    5 Signal Path and 5.3 Anti-Alias Filter; Tables 1-2)
+  - https://github.com/PX4/PX4-Autopilot/blob/main/src/drivers/imu/invensense/icm42688p/ICM42688P.hpp (register
+    config, read 2026-11-03)
+  - https://docs.px4.io/main/en/config_mc/filter_tuning.html
+  - https://en.wikipedia.org/wiki/Aliasing
+- key: sig.sampling.anti-alias-practice
+  description: Diagnose aliasing in a logged stream by changing the output rate, and compare true anti-alias filtering
+    with naive decimation and boxcar averaging.
+  est_minutes: 25
+  task_kinds: [retrieval, debug_case, problem, worked_example]
+  grader_types: [multiple_choice, exact_numeric]
+  phone_suitable: true
+  objective: Tell a real tone from an alias using data, then fix the chain.
+  core_ideas:
+  - A true tone stays at one frequency when the rate changes; an alias moves according to its folding rule.
+  - Dropping samples adds no filtering, so decimation needs a low-pass first.
+  - A boxcar average of N samples has gain |sin(N*pi*f/fs)/(N*sin(pi*f/fs))|; it has nulls at multiples of fs/N
+    but weak sidelobes.
+  - Filtering in the logger cannot repair a stream already aliased in the sensor, so filter as early as the signal
+    is still oversampled.
+  - Vibration rectification can put a DC shift into data even with clean spectra. Analog Devices describes two causes,
+    asymmetric clipping and even-order nonlinearity.
+  misconceptions:
+  - Lowering the log rate is harmless once the sensor runs fast.
+  - Averaging removes all high-frequency energy.
+  - A low-frequency peak in a log must be real motion.
+  worked_example: 'A peak at 150 Hz at 1000 Hz ODR moves to 350 Hz at 800 Hz ODR. A real 150 Hz would not move;
+    1150 Hz folds to 150 at 1000 Hz and to 350 at 800 Hz, so the tone is 1150 Hz. Boxcar of 8 samples from 8 kHz
+    to 1 kHz: gain 0.130 (-17.7 dB) at 1150 Hz and 0.984 at 100 Hz. Plain decimation would pass 1150 Hz at full
+    amplitude.'
+  unaided_check: 'Peak at 60 Hz at 1000 Hz ODR and at 260 Hz at 800 Hz ODR. Is it 940 or 1060 Hz? Expected: 1060
+    Hz; 940 Hz would appear at 140 Hz at 800 Hz ODR.'
+  sources:
+  - https://en.wikipedia.org/wiki/Aliasing
+  - https://docs.px4.io/main/en/config_mc/filter_tuning.html
+- key: sig.imu.frames
+  description: Convert vectors between body and world frames using right-handed conventions, and move correctly
+    between FRD/NED and ENU without sign errors.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem, perceptual_drill]
+  grader_types: [multiple_choice, symbolic_equivalence]
+  phone_suitable: true
+  objective: Keep frames and signs right in every calculation.
+  core_ideas:
+  - PX4 uses FRD body axes (front, right, down) and NED local axes (north, east, down). State the frame and direction
+    of every rotation you write.
+  - 'Right-handed check: x cross y = +z. FRD and NED both satisfy it.'
+  - 'NED to ENU: (n, e, d) becomes (e, n, -d). This matrix has determinant +1, is its own inverse, and is a 180-degree
+    rotation about (1, 1, 0)/sqrt(2).'
+  - R_world_body maps body components to world components; its transpose maps back.
+  - A sensor's printed axes may differ from the body axes; a fixed mounting rotation belongs in the model.
+  misconceptions:
+  - ENU and NED differ only by flipping z; that single flip would be left-handed.
+  - Angular rates about body axes equal roll, pitch and yaw angle rates.
+  - A positive gyro reading has the same sign on every board.
+  worked_example: 'Yaw 90 degrees in NED: body forward (1, 0, 0) maps to (0, 1, 0), which is east. A NED velocity
+    (3, 4, -2) m/s becomes ENU (4, 3, 2) m/s: 3 north, 4 east, climbing at 2.'
+  unaided_check: 'Write the yawed vector for body (1, 0, 0) at yaw 30 degrees in NED, and state the determinant
+    of the NED-ENU matrix. Expected: (0.866, 0.5, 0); +1.'
+  sources:
+  - https://docs.px4.io/main/en/contribute/notation.html
+- key: sig.imu.calibration-two-step
+  description: Estimate accelerometer bias and scale from a two-reference test and gyro bias and scale from a stationary
+    log and a known rotation, then report residuals.
+  est_minutes: 40
+  task_kinds: [retrieval, project_step, worked_example, problem]
+  grader_types: [measurement_check, rubric_llm]
+  phone_suitable: false
+  objective: Produce and document a first bias and scale calibration on the bench.
+  core_ideas:
+  - 'With an axis up and then down: bias = (a_up + a_down)/2 and scale = (a_up - a_down)/(2*g), using signed readings.'
+  - 'Gyro bias is the stationary mean; gyro scale needs a known rotation, such as a measured 360-degree turn. The
+    correction factor is c = true angle/integrated angle, which multiplies the reading. The accelerometer scale above
+    is the inverse kind, reading/true, which divides it.'
+  - This fixes neither misalignment nor temperature. Woodman notes that bias against temperature is often highly
+    nonlinear in MEMS sensors.
+  - Calibration lowers deterministic error only; noise and bias wander remain, so it does not stop drift.
+  - Always report residuals on data that were not used for the fit.
+  misconceptions:
+  - Calibration fixes drift.
+  - A bias stays constant after power-up.
+  - Local g can be ignored; use a stated value and note the error it brings.
+  worked_example: z up reads +9.90, z down reads -9.70 m/s^2. Bias = 0.100 m/s^2. Scale = 19.60/19.62 = 0.99898
+    with g = 9.81. A gyro integrates to 356.4 degrees over a true 360 degrees, so the correction factor is 1.0101.
+  unaided_check: 'Readings +10.10 and -9.52 m/s^2 with g = 9.81. Find bias and scale, and name one error this test
+    cannot detect. Expected: 0.29 m/s^2; 1.000; misalignment or temperature dependence. Rig pass: held-out residual
+    below the stated band, human-checked write-up.'
+  sources:
+  - https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-696.pdf
+- key: sig.imu.static-test-fixture
+  description: Specify a ground-only fixture that holds an IMU in known poses, limits motion, and quantifies how
+    pose errors reach the calibration.
+  est_minutes: 20
+  task_kinds: [retrieval, worked_example, project_step, explain_back, problem]
+  grader_types: [multiple_choice, human_review, rubric_llm]
+  phone_suitable: false
+  objective: Design a safe, measurable static fixture.
+  core_ideas:
+  - The fixture is clamped to the bench before any power, and its stops limit travel so that nothing reaches the
+    operator, wiring or supply.
+  - A pose error reaches the sensed axis as 1 - cos(error) on the vertical axis, and as sin(error) on the horizontal
+    axes. So static error is second order on one and first order on the others.
+  - Isolation from bench vibration, a settling wait and thermal warm-up are part of the procedure, since Woodman
+    shows temperature moves bias.
+  - 'The rig never flies: this skill uses retained parts, no lithium pack and a current-limited supply of 12 V or
+    less.'
+  - Record pose, temperature and time with each log so residuals can be traced.
+  misconceptions:
+  - A fixture needs no stops if the arm is light.
+  - Level by eye is good enough for any axis.
+  - Firmware limits replace a mechanical stop.
+  worked_example: 'A 1 degree tilt on a face-up pose: vertical axis error 1 - cos(1 degree) = 0.000152 g = 0.15
+    mg, or 0.0015 m/s^2. Horizontal axis error sin(1 degree) = 17.45 mg, which is 115 times larger.'
+  unaided_check: 'Write a pass/fail checklist for a six-face fixture. Pass: base clamped before power; stops; retained
+    parts; physical power cut; settle time; pose tolerance tied to a stated mg budget; temperature recorded; ground
+    only. Human review against the L7 brief.'
+  sources:
+  - https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-696.pdf
+- key: sig.imu.quaternions
+  description: Build unit quaternions from axis and angle, compose and apply them with the correct order and convention,
+    and integrate gyro rates with normalisation.
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, problem, faded_problem]
+  grader_types: [exact_numeric, code_tests]
+  phone_suitable: false
+  objective: Compute with quaternions with no convention errors.
+  core_ideas:
+  - 'Hamilton form: q = (cos(th/2), sin(th/2)*n). Rotation applies as v'' = q*(0, v)*conj(q); PX4 uses this scalar-first
+    form for body to local.'
+  - q and -q are the same rotation, so comparisons and interpolation must handle the sign.
+  - 'Composition order matters: with q2*q1 in the fixed-frame reading, q1 applies first, and multiplication is not
+    commutative.'
+  - 'JPL-style conventions reverse the order of multiplication: Trawny and Roumeliotis note that theirs is not Hamilton
+    notation, so never mix formulas between sources.'
+  - 'Integration: q[k+1] = q[k]*dq with dq = (cos(|w|*dt/2), sin(|w|*dt/2)*w/|w|), then normalise. Not every attitude
+    stack is quaternion-only: ArduPilot runs EKF3 as primary with an older DCM (rotation-matrix) estimator in the
+    background, and ArduPlane falls back to DCM when EKF3 stops using GPS.'
+  misconceptions:
+  - A unit quaternion's angle is th, not th/2.
+  - q and -q are different attitudes.
+  - Every published quaternion formula uses one convention.
+  worked_example: '90 degrees about z: q = (0.7071, 0, 0, 0.7071), which maps (1, 0, 0) to (0, 1, 0). With Hamilton
+    products, qz*qx = (0.5, 0.5, 0.5, 0.5), and qx*qz = (0.5, 0.5, -0.5, 0.5): different rotations. Applied to (0,
+    1, 0) they give (0, 0, 1) and (-1, 0, 0). One step at 1 rad/s and dt = 0.01 s: dq = (0.9999875, 0, 0, 0.0049999792).'
+  unaided_check: 'For q = (0.5, 0.5, 0.5, 0.5), give the axis, angle and the image of (1, 0, 0), then the image
+    under -q. Expected: (1, 1, 1)/sqrt(3), 120 degrees, (0, 1, 0), and the same under -q.'
+  sources:
+  - https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation
+  - https://docs.px4.io/main/en/contribute/notation.html
+  - https://ardupilot.org/plane/docs/common-apm-navigation-extended-kalman-filter-overview.html (intro and EKF3
+    Fallback to DCM)
+- key: sig.imu.specific-force
+  description: Predict accelerometer readings from specific force, including sign in FRD axes and the lever-arm
+    terms that spoil tilt estimates on a moving arm.
+  est_minutes: 20
+  task_kinds: [retrieval, worked_example, problem, explain_back]
+  grader_types: [multiple_choice, exact_numeric, rubric_llm]
+  phone_suitable: true
+  objective: Know exactly what an accelerometer reports.
+  core_ideas:
+  - 'An accelerometer measures specific force: non-gravitational force per unit mass, f = a - g, so at rest on a
+    bench it reads about 9.81 m/s^2 upward.'
+  - In free fall with no drag it reads zero, and gravity alone produces no reading.
+  - In FRD at rest and level, z reads about -9.81 m/s^2 because the sensed force points up, while z points down.
+  - Off-axis mounting adds alpha x r + omega x (omega x r) to the reading, so accelerometer tilt is valid only near
+    static conditions.
+  - Tilt from gravity needs low acceleration; a rotating or vibrating arm violates that.
+  misconceptions:
+  - An accelerometer measures gravity or tilt directly.
+  - On a level bench an up-pointing axis reads zero acceleration.
+  - Mounting the IMU off axis affects only the gyro.
+  worked_example: Arm hanging at th = 0 with r = 0.1 m, omega = 5 rad/s, alpha = 20 rad/s^2. Tangential f = r*alpha
+    = 2.0 m/s^2; radial f = 9.81 + omega^2*r = 12.31 m/s^2 toward the pivot. Apparent tilt = atan(2/12.31) = 9.23
+    degrees although the true angle is 0.
+  unaided_check: 'A lift accelerates at +1.5 m/s^2 upward. Give the reading on an up-pointing axis, then on an FRD
+    z-axis. Expected: 11.31 m/s^2; -11.31 m/s^2.'
+  sources:
+  - https://en.wikipedia.org/wiki/Specific_force
+  - https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-696.pdf
+- key: sig.imu.allan-variance
+  description: Compute an Allan deviation curve from a long stationary log and extract angle random walk and bias
+    instability with a stated convention.
+  est_minutes: 60
+  task_kinds: [retrieval, project_step, worked_example, problem]
+  grader_types: [measurement_check, exact_numeric]
+  phone_suitable: false
+  objective: Characterise a gyro from overnight data, as a project step.
+  core_ideas:
+  - Allan variance averages the signal into clusters of length t and measures half the mean squared difference of
+    neighbours; deviation is its square root.
+  - White rate noise gives slope -1/2 on log-log axes, and ARW is the fitted line read at t = 1 s. Woodman used
+    a 12-hour stationary log at 100 Hz.
+  - 'Bias instability is a flat region near the minimum. Woodman reads the minimum value directly, while IEEE 952-style
+    reporting divides it by sqrt(2*ln(2)/pi) = 0.664, the flicker-noise plateau factor (MathWorks; Inertial Sense
+    reports its figures this way): fix one convention and state it.'
+  - Integrated white noise gives sigma_theta(t) = sigma*sqrt(dt*t), which is ARW*sqrt(t).
+  - 'Temperature drift contaminates long tau; log temperature, and treat the rising tail with care. Rate random
+    walk and ramp slopes also exist. NIST gives a simple bound for M clusters: 1-sigma relative error no better
+    than 1/sqrt(M - 1).'
+  misconceptions:
+  - Allan variance needs only a few minutes of data.
+  - The minimum of the curve is a noise density.
+  - Datasheet bias stability figures all use one convention.
+  worked_example: AD(0.1 s) = 0.0632 deg/s on the -1/2 slope, so AD(1 s) = 0.0632*sqrt(0.1) = 0.0200 deg/s. ARW
+    = 0.02 deg/sqrt(s) = 1.2 deg/sqrt(h). Drift at 60 s = 0.02*sqrt(60) = 0.155 deg. Minimum AD 0.002 deg/s = 7.2
+    deg/h as read, or 10.8 deg/h after dividing by 0.664.
+  unaided_check: 'AD(1 s) = 0.01 deg/s. Predict the 1-sigma angle error at 300 s from white noise alone and name
+    what else will add. Expected: 0.173 deg; bias instability and temperature, which grow faster at long times.'
+  sources:
+  - https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-696.pdf
+  - https://www.mathworks.com/help/nav/ug/inertial-sensor-noise-analysis-using-allan-variance.html (bias instability
+    section)
+  - https://docs.inertialsense.com/user-manual/imx/performance/allan_deviation/ (IEEE Std 952-1997 convention note)
+- key: sig.imu.multi-position-calibration
+  description: Fit bias, scale and misalignment of a tri-axial accelerometer from multi-position static data by
+    least squares, and validate it with held-out poses.
+  est_minutes: 45
+  task_kinds: [retrieval, project_step, worked_example, problem]
+  grader_types: [measurement_check, exact_numeric]
+  phone_suitable: false
+  objective: Extend calibration to a full 3x3 model with residuals.
+  core_ideas:
+  - 'Model: f_meas = M*f_true + b, with 9 + 3 = 12 unknowns; each pose gives 3 equations, so six faces give 18 equations.'
+  - With ideal face poses, a row of M is (reading difference)/(2g) for each axis and b is the mean, so all three
+    face pairs should agree on b; disagreement signals pose error or nonlinearity.
+  - Off-diagonal terms give cross-axis alignment; asin(m) is the equivalent angle.
+  - Residuals must be checked on held-out poses, and a residual near the noise floor is the pass condition.
+  - Temperature is a further dimension, and a single warm fit does not cover it. Gyro scale cannot come from a static
+    pose; it needs a rotation of known size. A turntable gives one; the Tedaldi, Pretto and Menegatti method instead
+    integrates the gyro between static poses and compares the result with the gravity direction seen by the calibrated
+    accelerometer.
+  misconceptions:
+  - Two poses are enough for a 3x3 model.
+  - A low residual on fitted poses proves accuracy.
+  - Misalignment is only a mounting problem; the sensor itself has cross-axis terms.
+  worked_example: 'x-channel in six face poses (m/s^2): +x 9.92, -x -9.72; +y 0.25, -y -0.05; +z 0.20, -z 0.00.
+    Bias = 0.10 from all three pairs. Row of M: s = 19.64/19.62 = 1.00102; m_xy = 0.30/19.62 = 0.01529; m_xz = 0.20/19.62
+    = 0.01019. m_xy corresponds to 0.876 degrees.'
+  unaided_check: 'A student reports means 0.10, 0.10 and 0.32 for the three face pairs on one channel. Say what
+    this means and what to do. Expected: inconsistent bias; suspect the third pair''s pose, a thermal shift or a
+    logging fault; re-take and check on held-out poses.'
+  sources:
+  - https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-696.pdf
+  - https://imeko.org/publications/tc4-2014/IMEKO-TC4-2014-429.pdf (Pretto and Grisetti 2014, section II, eq. 9-11;
+    same method as Tedaldi et al., ICRA 2014, doi 10.1109/ICRA.2014.6907297)
+- key: ctl.pid.pid-controller
+  description: Explain what each PID term does to steady error, damping and noise, compute a controller output by
+    hand, and convert between parallel and standard gains.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [code_tests, multiple_choice]
+  phone_suitable: false
+  objective: Compute and reason about PID action on a measured signal.
+  core_ideas:
+  - 'Parallel: u = kp*e + ki*integral(e) + kd*de/dt. Standard: u = kp*(e + (1/Ti)*integral(e) + Td*de/dt), so Ti
+    = kp/ki and Td = kd/kp.'
+  - P alone leaves error 1/(1 + kp*k) to a step on a plant of DC gain k, unless the plant has an integrator.
+  - Integral action removes constant-disturbance error but adds 90 degrees of lag at low frequency. D adds phase
+    lead and raises high-frequency gain, so it needs a filter Tf = Td/N, with N typically 5-20 in FBS.
+  - PX4 keeps D on the feedback path to avoid derivative kick, and warns that too much D makes motors twitchy and
+    hot.
+  - Setpoint weights b and c let setpoint response change without changing disturbance response.
+  misconceptions:
+  - I fixes everything.
+  - More D always damps; with delay and filtering, more D eventually destabilises.
+  - PI and PID differ only in speed.
+  worked_example: 'kp = 2, ki = 1, kd = 0.5, with e = 0.5, integral(e) = 0.2, de/dt = -0.4: u = 1.0 + 0.2 - 0.2
+    = 1.0. Ti = 2 s; Td = 0.25 s; N = 10 gives Tf = 0.025 s. P-only on k = 2 with kp = 4: steady error 1/9 = 0.111.'
+  unaided_check: 'Implement u(e) for parallel gains as a pure function with a filtered derivative, and pass hidden
+    unit tests on step and ramp inputs. Also state why D on a step setpoint spikes. Pass: tests pass; derivative
+    of the error jumps at the step, unless taken on the measurement.'
+  sources:
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+  - https://docs.px4.io/main/en/config_mc/pid_tuning_guide_multicopter.html
+- key: ctl.pid.anti-windup
+  description: Show how actuator saturation winds up an integrator, compute the recovery time, and design clamping
+    or back-calculation with a stated tracking time constant.
+  est_minutes: 25
+  task_kinds: [retrieval, debug_case, worked_example, problem]
+  grader_types: [multiple_choice, exact_numeric]
+  phone_suitable: true
+  objective: Recognise windup in a trace and specify the fix.
+  core_ideas:
+  - 'While the actuator is saturated the loop is open: the integrator grows with no effect, then must unwind through
+    opposite-sign error, which causes overshoot.'
+  - 'Back-calculation: dI/dt = ki*e + (u_sat - u_cmd)/Tt. In steady saturation u_cmd exceeds the limit by ki*e*Tt,
+    so a smaller Tt holds the state closer to the limit. FBS shows the same structure with gain kaw.'
+  - Clamping stops integration when the output is saturated and the error would push it further. Pass the same saturation
+    limits to the anti-windup and the actuator model.
+  - A hard stop on the rig is a saturation in disguise. The L7 brief requires a zeroed integrator and a ramp on
+    enable, and a check that stop contact cannot wind up and cause a lunge.
+  - 'Astrom: Tt should lie between Td and Ti, and Tt = sqrt(Ti*Td) is a suggested rule of thumb. For PI (Td = 0)
+    FBS instead sets kaw = 1/Tt to a multiple of ki. Too small a Tt lets a spurious error or measurement glitch
+    reset the integrator, so tune and test on the rig.'
+  misconceptions:
+  - Windup needs a large overshoot in the linear model to appear.
+  - Lowering ki alone solves saturation.
+  - Anti-windup changes the linear loop's response when nothing saturates; it does not, when set up correctly.
+  worked_example: 'kp = 2, ki = 4, limit u <= 1. With e = 1 for 2 s and no protection, I = 8. Near the setpoint
+    with e = -0.1, I falls at 0.4 /s, so the output leaves saturation when 8 - 0.4t - 0.2 = 1: t = 17 s. With back-calculation
+    at Tt = 0.1 s, u_cmd holds at 1 + 4*1*0.1 = 1.4, so I = 1.4 - 2 = -0.6 with e = 1, and recovery starts at once.'
+  unaided_check: 'kp = 1, ki = 2, u limit 1, e = 2 held at saturation, Tt = 0.25 s. Find the steady I. Expected:
+    u_cmd = 1 + 2*2*0.25 = 2; I = 2 - 1*2 = 0.'
+  sources:
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf (section 11.4 Integral Windup,
+    pp. 11-16 to 11-17)
+  - https://www.cds.caltech.edu/~murray/courses/cds101/fa02/caltech/astrom-ch6.pdf (Astrom, Control System Design,
+    ch. 6, section 6.5 Windup, pp. 229-230)
+- key: ctl.pid.tuning-step-response
+  description: Extract rise, overshoot and settling from a logged step, estimate damping and natural frequency from
+    them, and choose a gain change with a predicted effect.
+  est_minutes: 35
+  task_kinds: [retrieval, project_step, worked_example, perceptual_drill]
+  grader_types: [measurement_check, rubric_llm]
+  phone_suitable: false
+  objective: Turn a logged step response into a justified tuning change, with the prediction written first.
+  core_ideas:
+  - 'Order of work: identify, predict, tune from a model, then adjust. Hand-tuning comes last.'
+  - For dominant second-order loops, zeta = -ln(Mp)/sqrt(pi^2 + ln(Mp)^2), and wn = pi/(tp*sqrt(1 - zeta^2)). This
+    does not hold where zeros, delay or saturation shape the response.
+  - 'PX4 tunes the rate loop first, then attitude: a change in the inner loop alters everything outside it.'
+  - Ziegler-Nichols sets gains from an oscillation test; FBS gives its tables, but it is aggressive, and driving
+    a real rig to sustained oscillation is a poor goal here.
+  - Use small commanded steps within the linear range, with output limits and the stop switch ready.
+  misconceptions:
+  - Ziegler-Nichols-style oscillation is a good target.
+  - One step shows all that is needed; check disturbance and saturated cases too.
+  - Overshoot always means too much proportional gain; it may be integral action or delay.
+  worked_example: 'Unit setpoint step: peak 1.16 at 0.30 s. zeta = 0.504, wd = 10.47 rad/s, wn = 12.12 rad/s, 2%
+    settling estimate 4/(zeta*wn) = 0.655 s.'
+  unaided_check: 'Overshoot 30%: give zeta. Then, on a supplied log, submit metrics and one gain change with prediction.
+    Expected: zeta = 0.358; measured metrics within tolerance of the verifier; rubric checks the prediction was
+    made first.'
+  sources:
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+  - https://docs.px4.io/main/en/config_mc/pid_tuning_guide_multicopter.html
+- key: ctl.pid.cascade-intuition
+  description: Explain why an inner rate loop sits inside an outer angle loop, and compute how outer gain and phase
+    margin depend on the inner loop's bandwidth.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, explain_back]
+  grader_types: [multiple_choice, exact_numeric, rubric_llm]
+  phone_suitable: true
+  objective: Reason about rate-versus-angle cascades using numbers.
+  core_ideas:
+  - The inner loop rejects disturbances and hides plant variation from the outer loop. PX4 runs rate innermost,
+    then attitude, and tunes in that order.
+  - Model a tuned inner loop as 1/(tau_i*s + 1). With outer P gain K on an integrating angle, L = K/(s*(tau_i*s
+    + 1)).
+  - The outer phase margin is 90 - atan(tau_i*omega_gc), so separation in bandwidth buys margin rather than a hard
+    requirement.
+  - 'Skogestad''s rule of thumb is an inner loop 4 to 10 times faster, and PX4''s tuning guide states no ratio. It
+    is only a rule of thumb, so compute PM as well.'
+  - A motor speed loop is close to first order, so proving a cascade needs the geared arm or flywheel rig, not the
+    motor alone.
+  misconceptions:
+  - Cascade works for any rate ratio.
+  - The outer loop can be tuned first.
+  - A cascade removes the delay of the inner loop.
+  worked_example: 'tau_i = 0.02 s (inner 50 rad/s). K = 10: omega_gc = 9.81 rad/s, PM 78.9 degrees, ratio 5.1. K
+    = 25: 22.75 rad/s, PM 65.5 degrees, ratio 2.2. K = 50: 39.31 rad/s, PM 51.8 degrees, ratio 1.3.'
+  unaided_check: 'tau_i = 0.01 s. Find the largest K with PM of at least 60 degrees. Expected: atan(0.01*w) = 30
+    degrees gives w = 57.7 rad/s; K = w*sqrt(1 + 1/3) = 66.7 /s.'
+  sources:
+  - https://docs.px4.io/main/en/config_mc/pid_tuning_guide_multicopter.html
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+- key: ctl.pid.plant-identification
+  description: Fit gain, time constant and delay to a logged open-loop step using a two-point method, and check
+    the fit on separate data.
+  est_minutes: 35
+  task_kinds: [retrieval, project_step, worked_example, problem]
+  grader_types: [measurement_check, exact_numeric]
+  phone_suitable: false
+  objective: Get a first-order-plus-delay model from one safe step on the rig.
+  core_ideas:
+  - Static gain k = (change in output)/(change in input), taken after settling and within the linear range.
+  - 'Two-point method: tau = 1.5*(t63 - t28), theta = t63 - tau, with t measured from the input step at 28.3% and
+    63.2% of the final change. This follows from the first-order step, which passes those levels at theta + tau/3
+    and theta + tau.'
+  - Remove a known offset or dead zone first; stiction biases gain at small steps, so test two amplitudes.
+  - Validate on a different step, because a fit to its own data proves little.
+  - Skogestad's half rule converts a higher-order model into this form when a model already exists.
+  misconceptions:
+  - Closed-loop data can be used as if open-loop; it can bias the fit.
+  - A larger step is always better; it can saturate or reach stops.
+  - Delay is just part of tau; they act differently on what is achievable.
+  worked_example: 'Input step 0.2 (duty); output settles 30 rad/s higher. k = 150 (rad/s)/duty. t28 = 0.08 s, t63
+    = 0.18 s: tau = 0.15 s, theta = 0.03 s.'
+  unaided_check: 't28 = 0.20 s, t63 = 0.35 s. Give tau and theta. Then, on a supplied log, fit k, tau, theta and
+    predict a held-out step. Expected: tau = 0.225 s; theta = 0.125 s; measurement check within stated bands.'
+  sources:
+  - https://skoge.folk.ntnu.no/publications/2003/tuningPID/README.html.folkmigration
+  - https://isy.gitlab-pages.liu.se/rt/assets/TSRT92/closedloop_session.pdf
+- key: ctl.pid.margins-delay
+  description: Compute gain margin, phase margin and delay margin of a loop with delay, and state how much added
+    delay a given margin can absorb.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, perceptual_drill]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: Relate margins to delay as numbers.
+  core_ideas:
+  - PM = 180 + arg L(j*omega_gc). GM = 1/|L(j*omega_pc)| at the frequency where the phase is -180 degrees.
+  - Delay margin = PM(radians)/omega_gc; delay moves phase, not gain, so omega_gc stays put and PM falls by omega_gc*theta.
+  - FBS gives reasonable ranges of PM 30-60 degrees and GM 2-5, with stability margin 0.5-0.8, which adds a third
+    measure.
+  - Small PM means ringing only for dominant second-order loops; check Ms directly.
+  - 'Delay is one limit among several: right-half-plane zeros, unstable poles and saturation also limit a loop.'
+  misconceptions:
+  - Delay decides everything.
+  - Good margins at one operating point hold at all others.
+  - Gain margin protects against delay.
+  worked_example: L = 10*exp(-0.02s)/(s(0.1s + 1)). omega_gc = 7.86 rad/s, PM = 42.8 degrees. Phase -180 at 21.6
+    rad/s, where GM = 5.16 (14.25 dB). Additional delay to instability = 0.0951 s. Separately, omega_gc = 20 rad/s
+    with PM 50 degrees gives delay margin 43.6 ms, and 5 ms costs 5.73 degrees.
+  unaided_check: 'omega_gc = 30 rad/s, PM 45 degrees. Find the delay margin. Would a 4 ms filter delay leave PM
+    above 30 degrees? Expected: 26.2 ms; it costs 6.88 degrees, leaving 38.1 degrees, so yes.'
+  sources:
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+- key: ctl.pid.closed-loop-rig
+  description: Close a loop on the one-axis ground rig, lock predicted overshoot, settling and margin first, then
+    pass stated bands with a disturbance and a saturation test.
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, project_step, explain_back]
+  grader_types: [measurement_check, human_review]
+  phone_suitable: false
+  objective: Demonstrate prediction against measurement on hardware, ground only.
+  core_ideas:
+  - Start with the motor speed loop, no propeller, then the geared arm or flywheel. A propeller beam is optional
+    and needs every L7 rule.
+  - 'Firmware limits come first: output clamp, setpoint ramp, stop on lost command or sensor fault. Each is tested
+    with no propeller.'
+  - A physical switch within reach must remove motor power even if firmware has crashed. On growing oscillation
+    cut power first, then investigate.
+  - 'Write the prediction before enabling: overshoot, settling, margin, saturated recovery. Then compare it with
+    logged data; do not retune before locking the prediction.'
+  - 'Margin comes from the fitted model or from a small-amplitude loop measurement inside the abort limits, never
+    from raising the gain until the rig oscillates. [project convention: the L7 brief forbids gain-to-oscillation
+    tests, because the growing motion they need is the hazard the stops guard against.]'
+  - This entry fits one session; the full task is a project with several sessions. [The review judged 60 minutes
+    too short; the 60 here is the schema cap.]
+  misconceptions:
+  - Matching a simulation once proves the design.
+  - Firmware stop alone is enough.
+  - If the step looks good, a saturation test can be skipped.
+  worked_example: 'Model k = 150, tau = 0.15 s, theta = 0.03 s; SIMC with tau_c = theta: Kc = 0.016667, tau_I =
+    0.15 s. Prediction: L = exp(-0.03s)/(0.06s), omega_gc = 16.67 rad/s, PM = 61.4 degrees, GM = 3.14, Ms = 1.59.
+    Simulated unit step overshoot 4.1%, peak at 0.142 s, 2% settling 0.182 s, 10-90 rise 0.057 s. A run passes if
+    it lands in the stated bands, then passes the disturbance and saturation tests.'
+  unaided_check: 'On a held-out rig configuration with extra mass or added delay, fit from one step, lock predictions,
+    then pass within bands. Pass: log check on overshoot, settling, margin and saturated recovery; human review
+    of the brief''s checks; no retuning before the lock.'
+  sources:
+  - https://skoge.folk.ntnu.no/publications/2003/tuningPID/README.html.folkmigration
+  - https://docs.px4.io/main/en/config_mc/pid_tuning_guide_multicopter.html
+- key: ctl.pid.simc-tuning
+  description: Tune PI by the SIMC rules from a first-order or integrating model with delay, including half-rule
+    reduction, and state the expected robustness.
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, problem, faded_problem]
+  grader_types: [exact_numeric, measurement_check]
+  phone_suitable: false
+  objective: Make predicted-first tuning a routine procedure.
+  core_ideas:
+  - 'SIMC PI for k*exp(-theta*s)/(tau1*s + 1): Kc = (1/k)*tau1/(tau_c + theta); tau_I = min(tau1, 4*(tau_c + theta)).'
+  - tau_c is the single tuning parameter, and tau_c = theta is the tight setting and a lower limit, which Skogestad
+    notes may be aggressive; increase it for smoother action.
+  - 'Half rule: add half of the largest neglected time constant to theta and half to tau1.'
+  - 'Integrating plant k''*exp(-theta*s)/s with tau_c = theta: Kc*k''*theta = 0.5, tau_I = 8*theta, reported as
+    GM 2.96, PM 46.9 degrees, Ms 1.70; these values were reproduced here by computation.'
+  - Later work modifies tau1 with theta/2 or theta/3 to improve very delay-dominant cases.
+  misconceptions:
+  - SIMC needs a perfect model.
+  - tau_c should be made as small as the rig allows.
+  - Smith predictors are always better than a plain PI on delay; Skogestad's work disputes this.
+  worked_example: 'Integrating arm rate model: k'' = 50, theta = 0.02 s, tau_c = theta. Kc = 1/(50*0.04) = 0.5;
+    tau_I = 0.16 s. Scan gives omega_gc = 25.7 rad/s, PM 46.9 degrees, GM 2.96, Ms 1.70, Mt 1.30, delay margin 1.59
+    theta.'
+  unaided_check: 'G = 2*exp(-0.01s)/((0.2s + 1)(0.04s + 1)). Reduce by half rule, tune PI at tau_c = theta. Expected:
+    tau1 = 0.22 s, theta = 0.03 s, Kc = 1.833, tau_I = 0.22 s.'
+  sources:
+  - https://skoge.folk.ntnu.no/publications/2003/tuningPID/README.html.folkmigration
+  - https://skoge.folk.ntnu.no/publications/2006/skogestad_iecr_smooth-pid/readme.txt
+- key: ctl.pid.discrete-pid-code
+  description: Write a fixed-step discrete PID in C or Python with filtered derivative on measurement, anti-windup,
+    output limits and safe enable with a zeroed integrator, passing hidden tests.
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, faded_problem, debug_case, problem]
+  grader_types: [code_tests]
+  phone_suitable: false
+  objective: Produce a real, tested controller rather than a formula.
+  core_ideas:
+  - Fix the step T; jitter and variable dt change the gains in effect, so run it from a timer.
+  - 'Derivative on measurement, backward Euler: D[k] = a*D[k-1] - b*(y[k] - y[k-1]), with a = Tf/(Tf + T), b = kd/(Tf
+    + T), and Tf = Td/N.'
+  - Compute u from the current I, clamp it, then update I with anti-windup. A fixed order is part of the spec, or
+    the unit test vectors will not match.
+  - 'Enable on the rig: follow the L7 brief. Zero the integrator and ramp the setpoint up from the measured value,
+    so the output starts near zero. Back-solving I to match the last applied output is for bumpless changes of mode
+    or gain while running, and never for re-enabling after a stop or fault.'
+  - Guard against a NaN or missing sensor, and stop safely on one. Keep gains and state in fixed-point or float
+    with clear units.
+  misconceptions:
+  - dt can be read from the clock with no effect on tuning.
+  - Taking D on error is harmless.
+  - An integrator step can be done in any order.
+  worked_example: 'kp = 2, ki = 1, kd = 0.05, N = 10, T = 0.01 s, r = 1, y0 = 0, I0 = D0 = 0. Td = 0.025 s, Tf =
+    0.0025 s, a = 0.2, b = 4. y = 0.1: P 1.8, D -0.4, u = 1.4, then I = 0.009. y = 0.25: P 1.5, D -0.68, u = 0.829,
+    then I = 0.0165. y = 0.4: P 1.2, D -0.736, u = 0.4805.'
+  unaided_check: 'Implement the controller and pass hidden tests for the vector above, a limit test, a NaN input
+    test, a setpoint step with no kick, and a mutated-sign fault. Pass: every test passes, including mutants being
+    caught.'
+  sources:
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+  - https://docs.px4.io/main/en/config_mc/pid_tuning_guide_multicopter.html
+- key: ctl.pid.feedforward-scheduling
+  description: Add gravity or model feedforward to a loop and schedule gains with the operating point, predicting
+    the reduction in integral effort and the change in loop gain.
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, project_step, problem]
+  grader_types: [exact_numeric, measurement_check]
+  phone_suitable: false
+  objective: Use the model before relying on feedback.
+  core_ideas:
+  - Feedforward from the setpoint sits outside the loop, so it cannot change loop stability; a term computed from
+    the measured angle is weak feedback and can.
+  - 'Gravity feedforward on an arm: u_ff = m*g*l*sin(th)/(Kt*N) for a current command. Model error is left to the
+    integrator.'
+  - The same Fig 11.11 PID structure in FBS takes a feedforward input, and it must sit inside the anti-windup calculation.
+  - 'Scheduling: keep loop gain constant by scaling Kc inversely with plant gain, Kc(op) = Kc0*k0/k(op). PX4 uses
+    a thrust model factor for a similar variation across throttle.'
+  - 'Schedule slowly: fast changes of a scheduling variable can break the frozen-point assumption.'
+  misconceptions:
+  - Feedforward never affects stability; a term computed from a measurement is feedback.
+  - Scheduling removes the need for robustness margins.
+  - Integral action alone is as good as feedforward.
+  worked_example: 'm = 0.2 kg, l = 0.15 m, th = 30 degrees: torque 0.14715 N m; Kt = 0.05 N m/A, N = 20, ideal gearbox:
+    u_ff = 0.14715 A. Plant gain falls from 150 at one point to 90 at another: Kc 0.02 becomes 0.02*150/90 = 0.0333.'
+  unaided_check: 'Same arm at 45 degrees: give the hold torque, and how natural frequency changes against 0 degrees.
+    Expected: 0.2081 N m; wn = 6.80 rad/s against 8.09 rad/s.'
+  sources:
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+  - https://docs.px4.io/main/en/config_mc/pid_tuning_guide_multicopter.html
+- key: ctl.pid.delay-budget
+  description: Itemise and measure a loop's delay from sensing to actuation, convert it to phase at crossover, and
+    compare the budget with the delay margin.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, project_step, problem]
+  grader_types: [measurement_check, exact_numeric]
+  phone_suitable: false
+  objective: Account for every millisecond in a real loop.
+  core_ideas:
+  - 'Budget lines: sensor filter, sample hold (about T/2), compute and bus, output update (about T_pwm/2), then
+    actuator lag.'
+  - Phase lost at crossover = 360*f*theta_total degrees; compare with the delay margin, not with PM alone.
+  - PT1 delay is 1/(2*pi*fc), and second-order Butterworth delay is sqrt(2)/(2*pi*fc). PX4 cites about 8, 3.8 and 1.9
+    ms for its 30, 60 and 120 Hz gyro cutoffs, which fit the second-order formula, not PT1.
+  - Measure with a bounded square or chirp on the setpoint, using cross-correlation or the timing of a pin toggle
+    against the sensor edge.
+  - Published rules of thumb for sampling span about 6 to 25 times the closed-loop bandwidth, with no single value,
+    so use the budget instead.
+  misconceptions:
+  - Delay is just the compute time.
+  - A faster loop removes filter delay.
+  - Delays that are small one by one can be ignored together; they add.
+  worked_example: Filter 2.0 ms + sample 0.5 ms (1 kHz) + compute 1.0 ms + output 1.25 ms (400 Hz update) = 4.75
+    ms. At 10 Hz (62.83 rad/s) that is 17.1 degrees. If 45 degrees is the allowed loss, crossover could reach 165
+    rad/s (26.3 Hz).
+  unaided_check: 'On the rig, measure total delay by a bounded step test, and report it against your budget. Pass:
+    measured within the stated band of the budget, with the largest line named. On paper: a 4 ms budget at 15 Hz
+    costs 21.6 degrees.'
+  sources:
+  - https://docs.px4.io/main/en/config_mc/filter_tuning.html
+  - https://en.wikipedia.org/wiki/Zero-order_hold
+- key: ctl.est.complementary-filter
+  description: Implement a complementary filter for tilt, compute its coefficient and crossover, and predict the
+    steady error that a gyro bias causes.
+  est_minutes: 40
+  task_kinds: [retrieval, faded_problem, project_step, worked_example]
+  grader_types: [code_tests, measurement_check]
+  phone_suitable: false
+  objective: Fuse gyro and accelerometer tilt on the L7 logger.
+  core_ideas:
+  - 'Update: th[k] = alpha*(th[k-1] + w*dt) + (1 - alpha)*th_acc, with alpha = tau/(tau + dt); this is exact for
+    backward Euler, and exp(-dt/tau) is a near equivalent.'
+  - 'High-pass on gyro plus low-pass on accelerometer sum to 1 as complex functions. Their magnitudes do not: each
+    is 0.707 at crossover, so they sum to 1.41.'
+  - A constant gyro bias b gives a steady angle error of b*tau.
+  - Higgins shows this filter is a steady-state Kalman filter for a certain class of problems, so the two are related,
+    not rival species.
+  - Accelerometer tilt is valid near rest; arm acceleration or lever-arm terms feed through the low-pass.
+  misconceptions:
+  - The gains add to 1, so the magnitudes do.
+  - Complementary and Kalman filters are unrelated.
+  - 'A larger tau is always better: it reduces accelerometer noise but raises bias error.'
+  worked_example: 'tau = 0.5 s, dt = 0.01 s: alpha = 0.98039 (exp form 0.98020). Crossover 0.318 Hz. Bias 0.5 deg/s
+    gives 0.25 deg of steady error. Check: from th = alpha*(th + b*dt), th = b*tau exactly.'
+  unaided_check: 'Implement the filter, pass hidden tests, and on a logged arm run reach the stated RMS against
+    encoder truth. Also: bias 1 deg/s, error limit 0.2 deg. Expected: tau <= 0.2 s.'
+  sources:
+  - https://allaboutcircuits.com/uploads/articles/A_comparison_of_complementary_and_kalman_filtering.pdf
+  - https://docs.px4.io/main/en/advanced_config/tuning_the_ecl_ekf.html
+- key: ctl.est.gyro-integration-drift
+  description: Predict attitude drift from gyro bias and white noise over a stated time, and say which error source
+    dominates when.
+  est_minutes: 25
+  task_kinds: [worked_example, debug_case, retrieval]
+  grader_types: [multiple_choice, exact_numeric]
+  phone_suitable: true
+  objective: Size drift before it appears in a log.
+  core_ideas:
+  - Bias gives error b*t, linear in time.
+  - White noise of per-sample sigma gives sigma_theta = sigma*sqrt(dt*t), which grows as sqrt(t). Woodman shows
+    this random-walk form.
+  - Bias wander and temperature changes make the rate error itself move, so long-run drift grows faster than the
+    static bias suggests.
+  - Woodman's simulation shows white noise dominating over 60 s on the sensor studied; this depends on the device
+    and on how well bias was removed.
+  - A gyro alone cannot find absolute tilt, so some reference is needed to bound error.
+  misconceptions:
+  - Calibrating bias once stops drift for the whole session.
+  - Noise drift grows linearly in time.
+  - Sampling faster removes noise drift entirely, whatever the noise density.
+  worked_example: Bias 0.05 deg/s over 60 s gives 3.0 deg. Per-sample sigma 0.1 deg/s at 100 Hz gives 0.1*sqrt(0.01*60)
+    = 0.0775 deg. Bias dominates by a factor of 39.
+  unaided_check: 'Residual bias 0.002 deg/s; ARW 0.01 deg/sqrt(s). At what time are the two errors equal? Expected:
+    0.002*t = 0.01*sqrt(t), so t = 25 s; each is 0.05 deg.'
+  sources:
+  - https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-696.pdf
+- key: ctl.est.ekf-literacy
+  description: Explain what an EKF does on a flight stack, including state, prediction, update, innovation gates
+    and delayed fusion, without deriving it.
+  est_minutes: 20
+  task_kinds: [worked_example, retrieval, explain_back]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: true
+  objective: Read estimator documentation and logs with understanding.
+  core_ideas:
+  - An EKF predicts with IMU data and a nonlinear model, then corrects by linearising the measurements about the
+    estimate.
+  - PX4's state list holds attitude quaternion, velocity, position, gyro and accel biases, magnetic field terms,
+    wind and terrain. That is 25 stored numbers but 24 in the covariance, because attitude error has 3 degrees of
+    freedom (EKF2 derivation.py). The docs' 24-state label fits the covariance size.
+  - PX4 runs the EKF on a delayed fusion time horizon and propagates to the present with buffered IMU data through
+    a complementary filter, with delay set by EKF2_DELAY_MAX.
+  - 'Innovation checks: a test ratio compares innovation to its limit, set by a gate in standard deviations. Above
+    1.0 data is rejected; healthy values are below about 0.5 with occasional spikes.'
+  - 'The result is only as good as its models: Kalman sets the blend automatically only given correct Q, R and models.'
+  misconceptions:
+  - An EKF needs no consistency check.
+  - The covariance is the true error.
+  - Kalman blends correctly whatever the noise model.
+  worked_example: 'Innovation 1.2 m/s, variance 0.25 (m/s)^2, gate 5 sigma: normalised 1.2/0.5 = 2.4 sigma; linear
+    ratio 2.4/5 = 0.48, accepted, close to the healthy guide. In PX4, estimator_aid_src logs the squared form, 0.23,
+    and the status getters return the square root of its filtered value, so check which topic you are grading.'
+  unaided_check: 'Explain to a peer why a fused GPS velocity measurement from 200 ms ago is not applied at the present.
+    Pass: rubric checks delayed horizon, buffering, propagation to the present and test-ratio rejection.'
+  sources:
+  - https://docs.px4.io/main/en/advanced_config/tuning_the_ecl_ekf.html
+- key: ctl.est.kalman-1d
+  description: Derive and run a scalar Kalman filter by hand, and compute its steady-state gain and variance from
+    Q and R.
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [exact_numeric, code_tests]
+  phone_suitable: false
+  objective: Build intuition for gain, variance and innovation on one state.
+  core_ideas:
+  - 'For x[k+1] = x[k] + w, z = x + v: predict P- = P + Q; K = P-/(P- + R); x+ = x- + K*(z - x-); P+ = (1 - K)*P-.'
+  - K is minimum-variance among linear estimators when noises are zero-mean, white and of the assumed variance.
+    Gaussianity makes it the full conditional mean.
+  - 'Steady state: P- = (Q + sqrt(Q^2 + 4QR))/2, and K depends only on Q/R.'
+  - Q and R are usually tuning inputs, so a good result depends on honest values and on checking innovations.
+  - A steady scalar KF is a first-order low-pass with pole 1 - K, so its time constant is -dt/ln(1 - K), about dt/K
+    for small K.
+  misconceptions:
+  - Kalman is optimal in practice regardless of model.
+  - Smaller P means a truer estimate; P is the filter's belief.
+  - A larger R always gives a better filter.
+  worked_example: 'Q = 0.01, R = 1, x0 = 0, P0 = 1. z1 = 1.2: P- = 1.01, K = 0.5025, x = 0.6030, P = 0.5025. z2
+    = 0.9: P- = 0.5125, K = 0.3388, innovation 0.2970, x = 0.7036, P = 0.3388. Steady state: P- = 0.10512, K = 0.09512,
+    P+ = 0.09512.'
+  unaided_check: 'Q = 0.04, R = 1. Find steady P-, K and the equivalent time constant for dt = 0.01 s. Expected:
+    P- = 0.2210, K = 0.1810, 0.050 s (dt/K gives 0.055 s).'
+  sources:
+  - https://en.wikipedia.org/wiki/Kalman_filter
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+- key: ctl.est.innovation-checks
+  description: Compute normalised innovation squared, run a chi-square gate and a window consistency test, and diagnose
+    a bad sensor or a mistuned filter from innovation behaviour.
+  est_minutes: 25
+  task_kinds: [retrieval, debug_case, worked_example, problem]
+  grader_types: [multiple_choice, code_tests]
+  phone_suitable: false
+  objective: Use innovations as the filter's self-test.
+  core_ideas:
+  - Innovation nu = z - H*x-, with covariance S = H*P-*H' + R; under a correct model nu is zero-mean, white and
+    has covariance S.
+  - 'NIS = nu''*inv(S)*nu is chi-square with m degrees of freedom. For m = 1: 95% is 3.84, 99% is 6.63.'
+  - 'Window test: mean NIS over N steps should sit in chi2(N)/N bounds; for N = 100, the 95% band is 0.742 to 1.296.'
+  - Autocorrelated innovations mean mis-modelled dynamics. PX4's test ratio uses a related idea, with rejection
+    above 1.0.
+  - A hard gate risks locking out correct data after a real jump, so state a recovery rule.
+  misconceptions:
+  - A smaller NIS means a better filter; it may mean S is inflated by too large a Q or R.
+  - NIS near 1 proves the estimate is right, not just consistent.
+  - A single gate pass means a sensor is healthy.
+  worked_example: 'nu = 1.5, S = 0.25: NIS = 9.0, or 3 sigma, beyond the 99% gate of 6.63, so reject and count.
+    Over 100 steps a mean NIS of 0.35 is below 0.742, suggesting R or Q is too large.'
+  unaided_check: 'Mean NIS over 100 steps is 2.1, and the innovation sign stays positive for long runs. Diagnose.
+    Expected: filter over-confident or biased; check for an unmodelled gyro bias or too small a Q or R. Code test: flag
+    an injected accelerometer fault window within a stated latency.'
+  sources:
+  - https://docs.px4.io/main/en/advanced_config/tuning_the_ecl_ekf.html
+  - https://en.wikipedia.org/wiki/Kalman_filter
+- key: ctl.est.two-state-kalman
+  description: Implement a two-state angle-and-bias Kalman filter, tune Q and R, show NIS consistency, and relate
+    its steady gains to a complementary filter with integral correction.
+  est_minutes: 50
+  task_kinds: [retrieval, faded_problem, project_step, worked_example]
+  grader_types: [code_tests, measurement_check]
+  phone_suitable: false
+  objective: Estimate angle and gyro bias on the rig log, against encoder truth.
+  core_ideas:
+  - State [th, b]; predict th+ = th + (w - b)*dt, b+ = b; F = [[1, -dt], [0, 1]]; H = [1, 0]. The pair (F, H) is
+    observable, so bias is learned from tilt reference.
+  - Q has a term on angle (gyro noise) and a small one on bias (wander); both are per-step values here, so they
+    depend on dt.
+  - Its steady filter is a complementary filter with integral action, as Higgins' class of problems suggests.
+  - Bias is unobservable about an axis with no reference, such as yaw from gravity alone.
+  - Accept only after NIS sits in its band and residual RMS beats the reference on held-out data.
+  misconceptions:
+  - Bias can be estimated from gyro data alone.
+  - A two-state filter needs no accelerometer gating on a moving arm.
+  - Q values transfer unchanged to another sample rate.
+  worked_example: dt = 0.01 s, P0 = diag(1, 0.01), Q = diag(1e-5, 1e-7), R = 0.01, gyro 0.5 rad/s, accel tilt 0.3
+    rad, x0 = 0. P-[0,0] = 1.000011; S = 1.010011; K = [0.99010, -9.9009e-5]. Prediction 0.005, innovation 0.295,
+    so th = 0.29708, b = -2.921e-5. Steady K = [0.03208, -0.00311], which gives filter poles at 0.96889 and 0.99900,
+    time constants of 0.316 s and about 10 s.
+  unaided_check: 'Implement it blind on a log with a bias step and an accelerometer fault window. Pass: code tests;
+    NIS band; fault detected by innovation; RMS against encoder beats the reference.'
+  sources:
+  - https://allaboutcircuits.com/uploads/articles/A_comparison_of_complementary_and_kalman_filtering.pdf
+  - https://en.wikipedia.org/wiki/Kalman_filter
+- key: ctl.est.mahony-madgwick
+  description: Implement and compare Mahony PI and Madgwick gradient attitude filters on IMU data, relating their
+    gains to bandwidth and gyro error.
+  est_minutes: 35
+  task_kinds: [retrieval, faded_problem, worked_example, explain_back]
+  grader_types: [code_tests, multiple_choice, rubric_llm]
+  phone_suitable: false
+  objective: Use the two named non-Kalman attitude filters knowingly.
+  core_ideas:
+  - 'Mahony: error e = sum of k_i*(v_i x v_hat_i); corrected rate = gyro - b + kP*e; bias rate = -kI*e.'
+  - Small-angle error dynamics are s^2 + kP*s + kI, so kP sets speed and kI sets how quickly bias is learned.
+  - 'Madgwick: one gain beta, the gyro error as a quaternion derivative magnitude, beta = sqrt(3/4)*omega_beta;
+    it steps along the normalised gradient, and beta = 0 is pure gyro integration.'
+  - Both use the accelerometer as a gravity reference, so neither gets yaw from an IMU without a magnetometer.
+  - The ahrs Python library defaults are kP = 1, kI = 0.3, and beta 0.033 for IMU or 0.041 with a magnetometer.
+    These are library defaults, not rig-specific advice; start from the gyro noise and tune on logged data.
+  misconceptions:
+  - Madgwick needs no tuning because it has one gain.
+  - These filters give yaw from gravity.
+  - A high gain is always better during motion; it lets arm acceleration into the attitude.
+  worked_example: 'Mahony kP = 1, kI = 0.1: s^2 + s + 0.1 has roots -0.113 and -0.887 /s, so bias converges with
+    about 8.9 s time constant. At error 0.1 rad and dt = 0.01 s, the bias estimate changes by 0.1*0.1*0.01 = 1e-4
+    rad/s per step. Madgwick with omega_beta = 5 deg/s (0.08727 rad/s): beta = 0.0756.'
+  unaided_check: 'Implement both, pass unit tests on a static case with injected bias, and state which removes bias
+    without an added term. Expected: Mahony, through kI; the basic Madgwick IMU update needs an extra gyro-drift
+    term.'
+  sources:
+  - https://ahrs.readthedocs.io/en/latest/filters/mahony.html
+  - https://ahrs.readthedocs.io/en/latest/filters/madgwick.html
+  - https://github.com/Mayitzin/ahrs/blob/master/ahrs/filters/mahony.py (k_P, k_I defaults, read 2026-11-03)
+  - https://github.com/Mayitzin/ahrs/blob/master/ahrs/filters/madgwick.py (gain_imu, gain_marg defaults and beta
+    = sqrt(3/4)*omega_beta, read 2026-11-03)
+- key: ctl.adv.state-feedback-observers
+  description: Place state-feedback and observer poles by hand, apply the separation result, and show by computation
+    what the observer costs in margin.
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, problem, faded_problem]
+  grader_types: [exact_numeric, code_tests]
+  phone_suitable: false
+  objective: Design output feedback on a rig model and measure its robustness cost.
+  core_ideas:
+  - 'Reachability: rank [B, AB, ...] = n allows arbitrary pole placement by u = -Kx. Observability: rank [C; CA;
+    ...] = n allows arbitrary observer poles.'
+  - 'Separation: closed-loop eigenvalues are those of A - BK together with those of A - LC.'
+  - 'Separation gives eigenvalues, not robustness: the loop transfer at the plant input changes when the observer
+    is inserted.'
+  - Slower observer poles reduce noise gain and margin both, so compute Ms at the plant input and do not assume
+    it.
+  - Integral action is added as an extra state for zero error against constant disturbance.
+  misconceptions:
+  - Separation means the observer does not affect robustness.
+  - Faster observer poles are always better; they raise noise gain.
+  - Pole placement also proves the design is robust.
+  worked_example: 'Double integrator, C = [1, 0]. K = [32, 8] gives poles -4 +/- 4j. L = [40, 800]'' gives observer
+    poles -20 +/- 20j. State-feedback loop: PM 65.5 degrees, Ms 1.00. With observer: PM 47.8 degrees, Ms 1.40. With
+    observer poles -6 +/- 6j (L = [12, 72]''): PM 34.1 degrees, Ms 1.98.'
+  unaided_check: 'Double integrator; design K for s^2 + 6s + 25 and L for s^2 + 30s + 625. Expected: K = [25, 6];
+    L = [30, 625]''. Code test: the loop''s computed Ms is checked against a stated value.'
+  sources:
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+- key: ctl.adv.lqr-lqg
+  description: Solve LQR and Kalman gains for a small system, state the LQR margin guarantee and why it disappears
+    with an estimator, and quantify the loss.
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, problem, explain_back]
+  grader_types: [exact_numeric, code_tests, rubric_llm]
+  phone_suitable: false
+  objective: Use LQR and LQG knowing where the guarantee stops.
+  core_ideas:
+  - LQR minimises the integral of x'Qx + u'Ru; K = inv(R)*B'*S, where S solves the algebraic Riccati equation.
+  - With full state, |1 + L(j*w)| >= 1 for single-input LQR, so PM >= 60 degrees and gain may rise without limit
+    or fall to one half. FBS cites the infinite upward margin, and Doyle quotes 60 degrees and 6 dB, which is the
+    downward side.
+  - 'LQG replaces state by a Kalman estimate. Doyle''s 1978 note shows by counterexample that no margin is guaranteed:
+    a two-state SISO example has arbitrarily small gain margin.'
+  - Always compute margins of the actual loop, at the plant input, with the estimator inside.
+  - Loop transfer recovery trades noise for regained margin by speeding up the estimator. Asymptotic recovery needs
+    a minimum-phase plant.
+  misconceptions:
+  - LQG inherits LQR's margins.
+  - Q and R weights have a unique right value.
+  - Optimal means robust.
+  worked_example: 'Double integrator, Q = diag(1, 0), R = 1: K = [1, 1.4142], poles -0.7071 +/- 0.7071j, PM 65.5
+    degrees, Ms 1.00. Kalman with process noise on the input (unit weight) and measurement noise 1: L = [1.4142,
+    1]'', loop PM 32.8 degrees, Ms 2.07. With process noise weight 100: L = [4.472, 10]'', PM 42.0 degrees, Ms 1.60.'
+  unaided_check: 'For Q = diag(100, 0), R = 1 on a double integrator, give K and the state-feedback PM. Expected:
+    K = [10, 4.472]; 65.5 degrees. Code test: reproduce LQG Ms on a hidden model.'
+  sources:
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+  - https://doyle.caltech.edu/images/doyle/6/62/GuaranteedMarginsLQGRegs.pdf
+- key: ctl.adv.system-identification
+  description: Fit ARX or frequency-domain models from rig logs, validate on separate data, and state when closed-loop
+    data will bias the result.
+  est_minutes: 60
+  task_kinds: [retrieval, project_step, worked_example, problem]
+  grader_types: [measurement_check, exact_numeric]
+  phone_suitable: false
+  objective: Quantify model quality with held-out data.
+  core_ideas:
+  - 'ARX: y[k] = a*y[k-1] + b*u[k-1] + e, fitted by least squares on the regressor matrix.'
+  - 'The input must be persistently exciting: rich enough in frequency for the model order. A bounded chirp on a
+    clamped rig is a safe choice only with an output limit too: a lightly damped arm can swing far on a small input
+    near resonance. Stop the chirp and cut drive if the arm passes half its travel to a stop or the firmware rate
+    clamp, start at low amplitude, and sweep slowly near the predicted resonance. [project convention: half the
+    travel to a stop keeps a margin for overshoot after the abort; matches the L7 brief.]'
+  - Validate on data not used for the fit; check residuals for whiteness and for correlation with the input.
+  - Closed-loop data correlates u with noise, biasing many open-loop methods; the prediction-error method can work
+    given enough excitation and a flexible enough model structure, as Linkoping's notes describe.
+  - One-step prediction fit flatters a model; compare free-run simulation fit.
+  misconceptions:
+  - Closed-loop identification is equivalent to open-loop.
+  - A high fit percentage on training data proves a model.
+  - Higher order is always better.
+  worked_example: u = 1, 1, 1, 1, 0, 0, 0 and y = 0, 0.102, 0.189, 0.272, 0.342, 0.311, 0.279, 0.252 at 10 ms. Least
+    squares gives a = 0.9019, b = 0.09931. So DC gain 1.012 and tau = 0.0968 s. On a noise-free held-out pulse test
+    (10 steps on, 10 off) against the true a = 0.9, b = 0.1, free-run fit 1 - |e|/|y - mean(y)| is 98.0%.
+  unaided_check: 'Identify the rig from a chirp, then report simulation fit on held-out data, residual whiteness
+    and model error as a bound. Pass: measurement check against a hidden reference within a stated band.'
+  sources:
+  - https://isy.gitlab-pages.liu.se/rt/assets/TSRT92/closedloop_session.pdf
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+- key: ctl.adv.robustness-limits
+  description: Apply Bode's sensitivity integral and crossover limits from right-half-plane poles, zeros and delay
+    to show what no controller can achieve on a given plant.
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, problem, explain_back]
+  grader_types: [exact_numeric, multiple_choice, rubric_llm]
+  phone_suitable: false
+  objective: State a plant's limit before designing for it.
+  core_ideas:
+  - 'Bode integral: integral from 0 to infinity of ln|S(j*w)| dw = pi*sum(p_k) for right-half-plane poles, given
+    s*L(s) -> 0. So pushing S down in one band pushes it up in another: the waterbed.'
+  - A right-half-plane zero limits omega_gc <= z*tan(phi_ap/2); with phi_ap = pi/3 that is 0.58z, which FBS rounds
+    to 0.6z.
+  - An unstable pole requires omega_gc >= p/tan(phi_ap/2). [The extracted FBS text lost the fraction bar; this form
+    was re-derived from the all-pass (s + p)/(s - p).]
+  - A delay limits omega_gc*theta <= phi_ap in radians.
+  - The waterbed bites because real loops have limited available bandwidth; with unlimited bandwidth the positive
+    area could spread thin.
+  misconceptions:
+  - Better tuning can beat any plant limit.
+  - The waterbed means peak S is fixed.
+  - Limits apply only to unstable plants; delay and zeros limit stable ones too.
+  worked_example: 'p = 2 rad/s: the integral = 6.283. Press |S| = 0.1 on 0-10 rad/s: area -23.03. If the extra area
+    must fit in 10-40 rad/s, mean ln|S| = (6.283 + 23.03)/30 = 0.977, so |S| = 2.66 on average there, against 2.15
+    for p = 0. For z = 20 rad/s and phi_ap = pi/3: omega_gc <= 11.55 rad/s. For p = 2: omega_gc >= 3.46 rad/s.'
+  unaided_check: 'A plant has p = 5 rad/s and z = 20 rad/s. With phi_ap = pi/3 for each, is a design feasible? Expected:
+    need omega_gc >= 8.66 and <= 11.55 rad/s; just feasible, with a narrow window, though the two allowances together
+    would exceed a realistic phase budget, so a design with good margins is doubtful.'
+  sources:
+  - https://www.cds.caltech.edu/~murray/books/AM08/pdf/fbs-public_24Jul2020.pdf
+- key: ctl.adv.error-state-filter
+  description: Implement an error-state filter on quaternions with a 3-vector attitude error, including injection,
+    reset and a clearly stated quaternion convention.
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, faded_problem, problem, project_step]
+  grader_types: [code_tests, measurement_check]
+  phone_suitable: false
+  objective: Estimate 3D attitude on the rig or a simulation of it without a singular covariance.
+  core_ideas:
+  - A unit quaternion has 4 numbers and 3 degrees of freedom, so a 4x4 covariance is singular; estimate a 3-vector
+    small-angle error instead.
+  - 'Small error: dq = (1, dtheta/2), normalised. Update nominal attitude by multiplying with dq and then reset
+    the error to zero.'
+  - The covariance propagates with F = exp(-[w]x*dt) terms and with gyro bias in a 6-state filter; signs depend
+    on convention.
+  - State the convention. Trawny and Roumeliotis use a JPL-style product, unlike Hamilton, so their formulas cannot
+    be pasted into a Hamilton filter.
+  - Solas's notes are a benchmark only, not to be reused, under this project's licence rule.
+  misconceptions:
+  - Adding a correction to a quaternion by plain addition is fine.
+  - A 4x4 quaternion covariance is well-posed.
+  - Local and global error definitions are interchangeable; they change the Jacobians.
+  worked_example: Nominal q = identity, dtheta = (0.02, 0, 0) rad. dq = (1, 0.01, 0, 0), normalised to (0.99995,
+    0.0099995, 0, 0). Recovered angle 2*acos(0.99995) = 0.019999 rad, so the small-angle form is accurate to 3.3e-5
+    relative.
+  unaided_check: 'Implement a 6-state filter (attitude error plus gyro bias) on a simulated rig log with a known
+    bias. Pass: code tests for norm and reset, NIS in band, bias within a stated tolerance, RMS below a stated value
+    against truth.'
+  sources:
+  - https://www.cse.sc.edu/~yiannisr/774/2023/indirect-kalman-filter-for-3d-attitude-estimation.pdf
+- key: ctl.adv.mpc-constraints
+  description: Formulate and solve a constrained finite-horizon MPC for the rig model, compare it with clipped LQR,
+    and test it under added delay and saturation.
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, project_step, problem]
+  grader_types: [code_tests, measurement_check]
+  phone_suitable: false
+  objective: Handle input limits explicitly on the fixed ground rig.
+  core_ideas:
+  - Each step solves min sum(x'Qx + u'Ru) subject to the model and limits, applies the first input, and repeats;
+    this is a QP for a linear model and box limits.
+  - 'With commanded setpoints only: the reference comes from the operator''s script, never from a sensed moving
+    object.'
+  - A terminal cost from the LQR Riccati solution helps stability and shortens the needed horizon. Rawlings, Mayne
+    and Diehl (ch. 2) note that with this cost there is a set of initial states where MPC is optimal for the infinite-horizon
+    constrained problem; outside it, stability needs a further argument such as a terminal constraint.
+  - With only an input limit on a stable plant, clipped LQR is often near MPC; MPC gains most from state limits
+    and previews of a known setpoint.
+  - Solve time adds to the loop delay budget, so measure it. A missed deadline needs a safe fallback.
+  misconceptions:
+  - MPC is robust because it re-solves.
+  - Clipped LQR is the same as MPC in all cases.
+  - A longer horizon is free; it costs compute and thus delay.
+  worked_example: 'x+ = 0.9x + 0.5u, |u| <= 1, stage cost x^2 + 0.1u^2, x0 = 5. N = 1: unconstrained u = -6.43,
+    clipped to -1. N = 2: u = (-1, -1), cost 25.81. At x0 = 1: N = 2 gives u = (-1, -0.514); at x0 = 0.5: (-0.679,
+    -0.142), inside the limits. LQR K = 1.3624 with S = 1.2452; clipped LQR from 5 stays at -1 for six steps, reaching
+    0.314 at step 6.'
+  unaided_check: 'On a simulation of the rig, implement a horizon-N MPC, then compare it with LQR under added delay
+    and saturation, and say which fails first. Pass: hidden tests on QP solution; logged runs within limits; capstone
+    narrative human-checked as part of L2 checks.'
+  sources:
+  - https://sites.engineering.ucsb.edu/~jbraw/mpc/

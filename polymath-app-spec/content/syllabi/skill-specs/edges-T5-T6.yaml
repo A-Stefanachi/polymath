@@ -1,0 +1,390 @@
+# Curated prerequisite edges for pillars T5 (cloud-twin) and T6 (governance).
+# The comment above each skill gives the evidence. min_tier is L1, or L0 where the prerequisite tier_target is L0.
+# module_order is the suggested order inside each pillar: T5 modules, then T6 modules.
+edges:
+  # A pass value needs a unit and a stated magnitude; tolerance thinking helps
+  sys.req.requirements:
+    - {skill: math.alg.units-and-prefixes, strength: hard, min_tier: L1}
+    - {skill: math.prob.measurement-uncertainty, strength: soft, min_tier: L1}
+  # The matrix holds only shall statements
+  sys.req.vv-matrix:
+    - {skill: sys.req.requirements, strength: hard, min_tier: L0}
+  # Example decodes 0xFF9C as signed int16 and fixes field types
+  sys.req.icd-basics:
+    - {skill: sw.c.types-ints, strength: hard, min_tier: L1}
+    - {skill: sys.req.requirements, strength: soft, min_tier: L0}
+    - {skill: net.proto.telemetry-contract, strength: soft, min_tier: L1}
+  # Claim, renewal and revocation act on the mTLS certificate identity; see order_notes
+  sw.cloud.device-provisioning:
+    - {skill: sys.telemetry.secure-uplink, strength: hard, min_tier: L1}
+  # Pipeline wraps build and host tests; flaky-test example is 0.99^20
+  sw.cloud.ci-firmware:
+    - {skill: sw.c.unit-testing, strength: hard, min_tier: L1}
+    - {skill: math.prob.probability-rules, strength: hard, min_tier: L1}
+    - {skill: sw.tools.git-basics, strength: soft, min_tier: L1}
+  # Ships the signed CI artefact; test-then-confirm needs a health-gated reset
+  sw.cloud.ota-rollback:
+    - {skill: sw.cloud.ci-firmware, strength: hard, min_tier: L1}
+    - {skill: sw.rel.watchdog-supervisor, strength: hard, min_tier: L1}
+    - {skill: sw.rel.brownout, strength: soft, min_tier: L1}
+    - {skill: sw.cloud.device-provisioning, strength: soft, min_tier: L1}
+  # Budget spent and detection time come from SLO budget and alerting; see order_notes
+  sw.cloud.incident-response:
+    - {skill: sys.telemetry.replay-alert, strength: hard, min_tier: L1}
+    - {skill: sw.cloud.ota-rollback, strength: soft, min_tier: L1}
+  # Evolves the field, unit and type contract the ICD fixes
+  sys.telemetry.schema-version:
+    - {skill: sys.req.icd-basics, strength: hard, min_tier: L1}
+    - {skill: net.proto.telemetry-contract, strength: soft, min_tier: L1}
+  # Example counts TCP and TLS round trips on a link; clock and topic scope help
+  sys.telemetry.secure-uplink:
+    - {skill: net.proto.ip-and-sockets, strength: hard, min_tier: L0}
+    - {skill: sys.telemetry.mqtt-semantics, strength: soft, min_tier: L1}
+    - {skill: sys.telemetry.time-model, strength: soft, min_tier: L1}
+  # Burn rate is defined on an SLO; the replay job must be safe to rerun
+  sys.telemetry.replay-alert:
+    - {skill: sys.telemetry.data-slos, strength: hard, min_tier: L1}
+    - {skill: sys.telemetry.idempotent-replay, strength: hard, min_tier: L1}
+  # Partition choice turns on event versus receive time and bad clocks
+  sys.telemetry.lakehouse-partition:
+    - {skill: sys.telemetry.time-model, strength: hard, min_tier: L1}
+    - {skill: sys.telemetry.idempotent-replay, strength: soft, min_tier: L1}
+    - {skill: math.alg.estimation, strength: soft, min_tier: L1}
+  # UTC rebuild anchors a monotonic tick counter; reboots split boots
+  sys.telemetry.time-model:
+    - {skill: sw.fw.timers-tick, strength: hard, min_tier: L1}
+    - {skill: sys.telemetry.schema-version, strength: soft, min_tier: L1}
+    - {skill: sw.rel.reset-causes, strength: soft, min_tier: L1}
+  # Natural key is (device, boot, seq); runs pin schema versions and quarantine unknown ones
+  sys.telemetry.idempotent-replay:
+    - {skill: sys.telemetry.time-model, strength: hard, min_tier: L1}
+    - {skill: sys.telemetry.schema-version, strength: hard, min_tier: L1}
+    - {skill: sys.telemetry.mqtt-semantics, strength: soft, min_tier: L1}
+  # An SLO is a measurable target; freshness is event-to-available age
+  sys.telemetry.data-slos:
+    - {skill: sys.req.requirements, strength: hard, min_tier: L0}
+    - {skill: sys.telemetry.time-model, strength: hard, min_tier: L1}
+    - {skill: sys.telemetry.idempotent-replay, strength: soft, min_tier: L1}
+  # Sessions, keep-alive and backlog drain assume packets and link bandwidth
+  sys.telemetry.mqtt-semantics:
+    - {skill: net.proto.ip-and-sockets, strength: hard, min_tier: L0}
+    - {skill: net.proto.telemetry-contract, strength: soft, min_tier: L1}
+  # Extends least-squares fit; residual s is a standard deviation
+  ml.core.linear-regression:
+    - {skill: math.vec.least-squares, strength: hard, min_tier: L1}
+    - {skill: math.prob.variance, strength: hard, min_tier: L1}
+  # Needs fit versus apply on train and test; trailing mean helps
+  ml.core.feature-leakage:
+    - {skill: ml.core.linear-regression, strength: hard, min_tier: L1}
+    - {skill: sw.fw.moving-average, strength: soft, min_tier: L1}
+  # RMSE is a root mean square of errors; no chain to leakage is needed
+  ml.core.metrics-interpret:
+    - {skill: math.prob.variance, strength: hard, min_tier: L1}
+    - {skill: ml.core.linear-regression, strength: soft, min_tier: L1}
+  # Scaled errors, fold-only fitting, and naive and drift forecasts; see order_notes
+  ml.core.rolling-validation:
+    - {skill: ml.core.feature-leakage, strength: hard, min_tier: L1}
+    - {skill: ml.pred.baselines, strength: hard, min_tier: L1}
+  # RC thermal node, then ZOH and Euler discretisation
+  sys.twin.state-model:
+    - {skill: phys.thermal.transients, strength: hard, min_tier: L1}
+    - {skill: ctl.sys.discrete-time, strength: hard, min_tier: L1}
+    - {skill: sys.req.requirements, strength: soft, min_tier: L0}
+  # Fits R and tau of the state model by least squares
+  sys.twin.model-calibration:
+    - {skill: sys.twin.state-model, strength: hard, min_tier: L1}
+    - {skill: ml.core.linear-regression, strength: hard, min_tier: L1}
+    - {skill: ctl.pid.plant-identification, strength: soft, min_tier: L1}
+  # Residual is against a calibrated model; thresholds are in standard deviations
+  sys.twin.residual-alert:
+    - {skill: sys.twin.model-calibration, strength: hard, min_tier: L1}
+  # Spec reuses the T2 Kalman skill on the twin model
+  sys.twin.state-estimation:
+    - {skill: sys.twin.state-model, strength: hard, min_tier: L1}
+    - {skill: ctl.est.kalman-1d, strength: hard, min_tier: L1}
+    - {skill: ctl.est.innovation-checks, strength: soft, min_tier: L1}
+  # Compares E to combined uncertainty on a calibrated model
+  sys.twin.vvuq:
+    - {skill: sys.twin.model-calibration, strength: hard, min_tier: L1}
+    - {skill: math.prob.measurement-uncertainty, strength: hard, min_tier: L1}
+    - {skill: sys.req.vv-matrix, strength: soft, min_tier: L1}
+  # Proposal carries an uncertainty margin inside a validity envelope
+  sys.twin.closed-decision:
+    - {skill: sys.twin.vvuq, strength: hard, min_tier: L1}
+    - {skill: sys.twin.state-estimation, strength: soft, min_tier: L1}
+    - {skill: sys.telemetry.secure-uplink, strength: soft, min_tier: L1}
+    - {skill: elec.dc.power-energy, strength: soft, min_tier: L1}
+  # NIS uses the filter S and nu; false-alarm reasoning comes from the monitor
+  sys.twin.uncertainty-thresholds:
+    - {skill: sys.twin.state-estimation, strength: hard, min_tier: L1}
+    - {skill: sys.twin.residual-alert, strength: hard, min_tier: L1}
+    - {skill: ctl.est.innovation-checks, strength: soft, min_tier: L1}
+  # Example ranks baselines by MAE and MASE
+  ml.pred.baselines:
+    - {skill: ml.core.metrics-interpret, strength: hard, min_tier: L1}
+  # Scored against a trivial baseline; the residual monitor is a natural detector
+  ml.pred.anomaly-evaluation:
+    - {skill: ml.pred.baselines, strength: hard, min_tier: L1}
+    - {skill: sys.twin.residual-alert, strength: soft, min_tier: L1}
+  # Residual of a calibrated model; trap is calibrating across the test period
+  ml.pred.physics-residuals:
+    - {skill: sys.twin.model-calibration, strength: hard, min_tier: L1}
+    - {skill: ml.core.feature-leakage, strength: hard, min_tier: L1}
+    - {skill: ml.pred.baselines, strength: soft, min_tier: L1}
+    - {skill: ml.core.rolling-validation, strength: soft, min_tier: L1}
+  # RUL example is a fitted slope whose uncertainty drives the interval
+  ml.pred.rul-literacy:
+    - {skill: ml.core.linear-regression, strength: hard, min_tier: L1}
+    - {skill: ml.pred.anomaly-evaluation, strength: soft, min_tier: L1}
+  # Acceptance gate is a pass value; pass rates need probability for bounds
+  ml.ops.evals:
+    - {skill: sys.req.requirements, strength: hard, min_tier: L0}
+    - {skill: math.prob.probability-rules, strength: hard, min_tier: L1}
+    - {skill: ml.pred.baselines, strength: soft, min_tier: L1}
+  # Separates drift from performance loss; binned distributions; PSI uses ln
+  ml.ops.monitoring-drift:
+    - {skill: ml.core.metrics-interpret, strength: hard, min_tier: L1}
+    - {skill: math.alg.exp-log, strength: hard, min_tier: L1}
+    - {skill: sw.fw.sensor-calibration, strength: soft, min_tier: L1}
+    - {skill: sys.telemetry.data-slos, strength: soft, min_tier: L1}
+  # Cost estimate and mean-time reasoning; p95 uses ln(20)
+  ml.ops.cost-latency:
+    - {skill: math.alg.estimation, strength: hard, min_tier: L1}
+    - {skill: math.prob.expectation, strength: hard, min_tier: L1}
+    - {skill: math.alg.exp-log, strength: soft, min_tier: L1}
+    - {skill: sys.telemetry.data-slos, strength: soft, min_tier: L1}
+  # Train, holdout and next-day splits; compares feature distributions
+  ml.ops.training-serving-skew:
+    - {skill: ml.core.feature-leakage, strength: hard, min_tier: L1}
+    - {skill: ml.ops.monitoring-drift, strength: hard, min_tier: L1}
+  # Pre-export check and sample-size bound on a stop rule
+  ml.ops.shadow-canary:
+    - {skill: ml.ops.evals, strength: hard, min_tier: L1}
+    - {skill: ml.ops.training-serving-skew, strength: soft, min_tier: L1}
+    - {skill: sw.cloud.ota-rollback, strength: soft, min_tier: L1}
+    - {skill: sw.tools.git-basics, strength: soft, min_tier: L1}
+  # INT8 ranges; accuracy loss must be measured
+  ml.edge.quantization:
+    - {skill: sw.c.types-ints, strength: hard, min_tier: L1}
+    - {skill: ml.core.metrics-interpret, strength: hard, min_tier: L1}
+    - {skill: ml.core.linear-regression, strength: soft, min_tier: L1}
+  # Deploys the quantized model; timing evidence comes from GPIO and analyser
+  ml.edge.deploy:
+    - {skill: ml.edge.quantization, strength: hard, min_tier: L1}
+    - {skill: sw.fw.logic-analyzer, strength: hard, min_tier: L1}
+    - {skill: sw.cloud.ota-rollback, strength: soft, min_tier: L1}
+    - {skill: sw.c.unit-testing, strength: soft, min_tier: L1}
+    - {skill: sw.fw.isr-basics, strength: soft, min_tier: L1}
+  # Arena is met in deploy; flash, RAM and stack split needs the memory model
+  ml.edge.tensor-memory:
+    - {skill: ml.edge.deploy, strength: hard, min_tier: L1}
+  # Schema conformance and semantic checks against the registry
+  ml.llm.structured-outputs:
+    - {skill: sys.telemetry.schema-version, strength: hard, min_tier: L1}
+    - {skill: math.prob.probability-rules, strength: soft, min_tier: L1}
+    - {skill: ml.ops.evals, strength: soft, min_tier: L1}
+  # Labelled query set and gates; nDCG uses log2
+  ml.llm.retrieval-evals:
+    - {skill: ml.ops.evals, strength: hard, min_tier: L1}
+    - {skill: math.alg.exp-log, strength: hard, min_tier: L1}
+    - {skill: ml.llm.structured-outputs, strength: soft, min_tier: L1}
+  # Validates output deterministically before any tool acts
+  ml.llm.prompt-injection:
+    - {skill: ml.llm.structured-outputs, strength: hard, min_tier: L1}
+    - {skill: ml.llm.retrieval-evals, strength: soft, min_tier: L1}
+    - {skill: sys.twin.closed-decision, strength: soft, min_tier: L1}
+  # Eval discipline; pass@k and pass^k are probability
+  ml.llm.agent-evals:
+    - {skill: ml.ops.evals, strength: hard, min_tier: L1}
+    - {skill: ml.llm.prompt-injection, strength: soft, min_tier: L1}
+    - {skill: ml.llm.structured-outputs, strength: soft, min_tier: L1}
+  # Weak gateway: example turns on a repository invite as making available
+  prof.law.export-control-literacy:
+    - {skill: sw.tools.git-basics, strength: hard, min_tier: L1}
+  # Stacks layers on the Annex I and catch-all routes
+  prof.law.de-eu-awareness:
+    - {skill: prof.law.export-control-literacy, strength: hard, min_tier: L0}
+  # Candidate entries across layers; measured parameters against entry text
+  prof.law.classification-workflow:
+    - {skill: prof.law.de-eu-awareness, strength: hard, min_tier: L0}
+    - {skill: elec.meas.datasheet-reading, strength: hard, min_tier: L1}
+  # Triggers are Art 4 knowledge and the four questions
+  prof.law.stop-escalate-drill:
+    - {skill: prof.law.export-control-literacy, strength: hard, min_tier: L0}
+    - {skill: prof.law.classification-workflow, strength: soft, min_tier: L0}
+  # Nullbescheid and listed-goods scope build on the classification file
+  prof.law.german-layer:
+    - {skill: prof.law.classification-workflow, strength: hard, min_tier: L0}
+  # Owners follow AV rules; screening and holds are the drill
+  prof.law.compliance-programme:
+    - {skill: prof.law.german-layer, strength: hard, min_tier: L0}
+    - {skill: prof.law.stop-escalate-drill, strength: hard, min_tier: L0}
+  # Applies candidate entries and needs-data output to a spec
+  def.export.scenarios:
+    - {skill: prof.law.classification-workflow, strength: hard, min_tier: L0}
+  # Repeats list checks at each product level
+  def.export.product-decomposition:
+    - {skill: def.export.scenarios, strength: hard, min_tier: L0}
+  # Skill ends in a hold before access; cloud cases and folder tagging help
+  def.export.tech-data-sharing:
+    - {skill: prof.law.stop-escalate-drill, strength: hard, min_tier: L0}
+    - {skill: prof.law.german-layer, strength: soft, min_tier: L0}
+    - {skill: def.export.product-decomposition, strength: soft, min_tier: L0}
+  # Reversed from placeholder: notes are applied per level, the memo then uses them
+  def.export.general-notes:
+    - {skill: def.export.product-decomposition, strength: hard, min_tier: L0}
+  # Memo must address the General Notes explicitly
+  def.export.classification-memo:
+    - {skill: def.export.general-notes, strength: hard, min_tier: L1}
+    - {skill: def.export.tech-data-sharing, strength: soft, min_tier: L0}
+  # Model must include debug ports and physical access
+  sec.hw.threat-modelling:
+    - {skill: sw.fw.gdb-swd, strength: hard, min_tier: L1}
+  # Boot stages, ROM and the memory map
+  sec.hw.secure-boot-literacy:
+    - {skill: sw.mem.machine-model, strength: hard, min_tier: L0}
+    - {skill: sec.hw.threat-modelling, strength: soft, min_tier: L0}
+    - {skill: sw.cloud.ota-rollback, strength: soft, min_tier: L1}
+  # Dependencies come from the firmware build
+  sec.hw.sbom-basics:
+    - {skill: sw.tools.build-make, strength: hard, min_tier: L1}
+  # Spec names the SBOM as an input to the applied model
+  sec.hw.own-device-model:
+    - {skill: sec.hw.threat-modelling, strength: hard, min_tier: L0}
+    - {skill: sec.hw.sbom-basics, strength: hard, min_tier: L0}
+    - {skill: sec.hw.secure-boot-literacy, strength: soft, min_tier: L0}
+  # Weak: baselines are mapped onto device security properties
+  sec.hw.iot-baselines:
+    - {skill: sec.hw.threat-modelling, strength: hard, min_tier: L0}
+  # Nonce limit is 2^32 against a stated collision probability
+  sec.hw.applied-crypto:
+    - {skill: math.alg.exponents-roots, strength: hard, min_tier: L1}
+    - {skill: math.prob.probability-rules, strength: hard, min_tier: L1}
+    - {skill: sw.c.bitwise-ops, strength: soft, min_tier: L1}
+  # Key hierarchy; signing root, rotation and counter bump
+  sec.hw.key-lifecycle:
+    - {skill: sec.hw.applied-crypto, strength: hard, min_tier: L1}
+    - {skill: sec.hw.secure-boot-literacy, strength: hard, min_tier: L0}
+    - {skill: sw.cloud.device-provisioning, strength: soft, min_tier: L1}
+  # Zones are the outcome of risk assessment against named attackers
+  sec.ot.zones:
+    - {skill: sec.hw.threat-modelling, strength: hard, min_tier: L0}
+  # Path is routed through zones, DMZ and conduits
+  sec.ot.remote-access:
+    - {skill: sec.ot.zones, strength: hard, min_tier: L0}
+  # Targets zone security levels; maps FRs to device features
+  sec.ot.iec62443-product:
+    - {skill: sec.ot.zones, strength: hard, min_tier: L0}
+    - {skill: sec.ot.remote-access, strength: soft, min_tier: L0}
+    - {skill: sec.hw.secure-boot-literacy, strength: soft, min_tier: L0}
+  # Reversed from placeholder: pins commits and hashes
+  prof.integrator.golden-config:
+    - {skill: sw.tools.git-basics, strength: hard, min_tier: L1}
+    - {skill: sec.hw.sbom-basics, strength: soft, min_tier: L0}
+  # A claim needs a configuration ID; spec puts the export checkpoint first
+  prof.integrator.docs:
+    - {skill: prof.integrator.golden-config, strength: hard, min_tier: L1}
+    - {skill: prof.law.export-control-literacy, strength: hard, min_tier: L0}
+    - {skill: sys.req.vv-matrix, strength: soft, min_tier: L1}
+  # Per-unit shares and yield division
+  econ.cost.bom-costing:
+    - {skill: math.alg.ratios-proportions, strength: hard, min_tier: L1}
+    - {skill: math.alg.estimation, strength: soft, min_tier: L1}
+  # Reprices the unit cost by volume
+  econ.cost.volume-scaling:
+    - {skill: econ.cost.bom-costing, strength: hard, min_tier: L1}
+    - {skill: math.alg.linear-functions, strength: soft, min_tier: L1}
+  # Contribution needs recurring unit cost
+  econ.cost.programme-nre:
+    - {skill: econ.cost.bom-costing, strength: hard, min_tier: L1}
+    - {skill: econ.cost.volume-scaling, strength: soft, min_tier: L1}
+  # Unit P&L builds on recurring cost and contribution
+  econ.cost.unit-economics:
+    - {skill: econ.cost.programme-nre, strength: hard, min_tier: L1}
+    - {skill: econ.cost.volume-scaling, strength: soft, min_tier: L1}
+  # Stages turn on soft versus hard tooling and yield
+  econ.cost.evt-dvt-pvt:
+    - {skill: econ.cost.volume-scaling, strength: hard, min_tier: L1}
+    - {skill: sys.req.vv-matrix, strength: soft, min_tier: L1}
+  # Weak gateway: reading EU definitions against product facts
+  prof.data.data-act:
+    - {skill: prof.law.export-control-literacy, strength: hard, min_tier: L0}
+  # Weak: stream-by-stream analysis of connected-product data
+  prof.data.gdpr-telemetry:
+    - {skill: prof.data.data-act, strength: hard, min_tier: L0}
+  # Scoping needs to know what a model infers; the one hard T6-to-T5 edge
+  prof.data.ai-act:
+    - {skill: ml.core.linear-regression, strength: hard, min_tier: L1}
+    - {skill: prof.data.gdpr-telemetry, strength: soft, min_tier: L0}
+  # Art 13 duties centre on a documented risk assessment
+  prof.eu.cra-obligations:
+    - {skill: sec.hw.threat-modelling, strength: hard, min_tier: L0}
+  # Annex I Part II duties; SBOM answers affected versions
+  prof.eu.vulnerability-handling:
+    - {skill: prof.eu.cra-obligations, strength: hard, min_tier: L0}
+    - {skill: sec.hw.sbom-basics, strength: hard, min_tier: L0}
+  # Handover to CRA; EN 18031 restriction drives the Art 17 route
+  prof.eu.ce-radio:
+    - {skill: prof.eu.cra-obligations, strength: hard, min_tier: L0}
+    - {skill: sec.hw.iot-baselines, strength: hard, min_tier: L0}
+  # Same placing-on-market test and mandatory cyber requirements
+  prof.eu.product-liability:
+    - {skill: prof.eu.cra-obligations, strength: hard, min_tier: L0}
+  # Art 14 sits on top of vulnerability handling
+  prof.eu.reporting-drill:
+    - {skill: prof.eu.vulnerability-handling, strength: hard, min_tier: L0}
+    - {skill: sw.cloud.incident-response, strength: soft, min_tier: L1}
+  # Capstone: each law is a row; four hard is deliberate
+  prof.eu.applicability-map:
+    - {skill: prof.eu.ce-radio, strength: hard, min_tier: L0}
+    - {skill: prof.eu.product-liability, strength: hard, min_tier: L0}
+    - {skill: prof.data.ai-act, strength: hard, min_tier: L0}
+    - {skill: prof.data.gdpr-telemetry, strength: hard, min_tier: L0}
+    - {skill: prof.eu.reporting-drill, strength: soft, min_tier: L1}
+order_notes:
+  - from: sys.telemetry.secure-uplink
+    to: sw.cloud.device-provisioning
+    strength: hard
+    reason: "Provisioning issues, renews and revokes the mTLS client certificate, so TLS client authentication and certificate validity come first. Fixed by placing sys.telemetry before sw.cloud."
+  - from: sys.telemetry.replay-alert
+    to: sw.cloud.incident-response
+    strength: hard
+    reason: "The worked example spends an SLO error budget and measures alert delay, both taught in sys.telemetry. Fixed by placing sys.telemetry before sw.cloud."
+  - from: ml.pred.baselines
+    to: ml.core.rolling-validation
+    strength: hard
+    reason: "The example computes naive and drift forecasts, and the description concludes against a naive method. No module order fixes this: ml.pred.baselines needs ml.core.metrics-interpret, so the two modules depend on each other. Either move ml.core.rolling-validation into ml.pred after baselines, or add this pair to module_order_exceptions."
+  - from: prof.data.ai-act
+    to: prof.eu.applicability-map
+    strength: hard
+    reason: "The map has a row for the AI Act. Fixed by placing prof.data before prof.eu."
+  - from: prof.data.gdpr-telemetry
+    to: prof.eu.applicability-map
+    strength: hard
+    reason: "The map has a row for GDPR, and for the Data Act through this skill. Fixed by placing prof.data before prof.eu."
+  - from: def.export.general-notes
+    to: def.export.classification-memo
+    strength: hard
+    reason: "Same module, so no order problem. Recorded because it reverses the placeholder direction: the skill order inside def.export should swap."
+  - from: prof.integrator.golden-config
+    to: prof.integrator.docs
+    strength: hard
+    reason: "Same module, so no order problem. Recorded because it reverses the placeholder direction: the skill order inside prof.integrator should swap."
+module_order:
+  - sys.req
+  - sys.telemetry
+  - sw.cloud
+  - ml.core
+  - sys.twin
+  - ml.pred
+  - ml.ops
+  - ml.edge
+  - ml.llm
+  - prof.law
+  - def.export
+  - sec.hw
+  - sec.ot
+  - prof.integrator
+  - econ.cost
+  - prof.data
+  - prof.eu

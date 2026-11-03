@@ -1,0 +1,355 @@
+# Curated prerequisite edges for pillars T1 (power-motion) and T3 (mechanical).
+# Replaces the auto-chained placeholders in content/mvp-skill-graph.yaml.
+# Authoring input only: not a graph file, sets no status.
+
+edges:
+  # --- T1 pwr.batt
+  pwr.batt.pack-wiring:
+    - {skill: elec.semi.battery-safety, strength: hard, min_tier: L0}
+    - {skill: elec.semi.battery-budget, strength: hard, min_tier: L1}
+    - {skill: elec.dc.loading-effect, strength: hard, min_tier: L1}
+  pwr.batt.charge-storage:
+    - {skill: pwr.batt.pack-wiring, strength: hard, min_tier: L1}
+    - {skill: pwr.batt.cell-formats, strength: soft, min_tier: L1}
+    - {skill: pwr.batt.c-rate-limits, strength: soft, min_tier: L1}
+  pwr.batt.cell-formats:
+    - {skill: elec.semi.battery-budget, strength: hard, min_tier: L1}
+    - {skill: pwr.batt.pack-wiring, strength: soft, min_tier: L1}
+  pwr.batt.c-rate-limits:
+    - {skill: pwr.batt.pack-wiring, strength: hard, min_tier: L1}
+    - {skill: pwr.batt.cell-formats, strength: soft, min_tier: L1}
+  pwr.batt.bms-literacy:
+    - {skill: pwr.batt.cell-formats, strength: hard, min_tier: L1}
+    - {skill: elec.semi.mosfet-switch, strength: soft, min_tier: L1}
+    - {skill: pwr.batt.c-rate-limits, strength: soft, min_tier: L1}
+  pwr.batt.preflight-checklist:
+    - {skill: pwr.batt.pack-wiring, strength: hard, min_tier: L1}
+    - {skill: elec.meas.multimeter, strength: hard, min_tier: L1}
+    - {skill: elec.meas.lab-safety-esd, strength: soft, min_tier: L0}
+  pwr.batt.high-discharge-packs:
+    - {skill: pwr.batt.charge-storage, strength: hard, min_tier: L1}
+    - {skill: pwr.batt.c-rate-limits, strength: hard, min_tier: L1}
+    - {skill: pwr.batt.bms-literacy, strength: hard, min_tier: L1}
+    - {skill: pwr.batt.preflight-checklist, strength: soft, min_tier: L1}
+  pwr.batt.damage-disposal:
+    - {skill: elec.semi.battery-safety, strength: hard, min_tier: L0}
+    - {skill: pwr.batt.preflight-checklist, strength: soft, min_tier: L1}
+  pwr.batt.equivalent-circuit:
+    - {skill: elec.rc.rc-step-response, strength: hard, min_tier: L1}
+    - {skill: pwr.batt.c-rate-limits, strength: hard, min_tier: L1}
+    - {skill: pwr.batt.preflight-checklist, strength: hard, min_tier: L1}
+    - {skill: math.vec.least-squares, strength: soft, min_tier: L1}
+
+  # --- T1 pwr.emc
+  pwr.emc.grounding-harness:
+    - {skill: elec.rc.decoupling-return, strength: hard, min_tier: L1}
+    - {skill: elec.rc.inductor-basics, strength: hard, min_tier: L0}
+    - {skill: elec.dc.kirchhoff-laws, strength: soft, min_tier: L1}
+    - {skill: elec.rc.impedance, strength: soft, min_tier: L1}
+  pwr.emc.motor-noise:
+    - {skill: pwr.emc.grounding-harness, strength: hard, min_tier: L1}
+    - {skill: elec.dig.logic-levels, strength: hard, min_tier: L1}
+    - {skill: elec.semi.inductive-load, strength: soft, min_tier: L1}
+  pwr.emc.connector-current:
+    - {skill: elec.dc.power-energy, strength: hard, min_tier: L1}
+    - {skill: pwr.batt.pack-wiring, strength: soft, min_tier: L1}
+    - {skill: pwr.emc.grounding-harness, strength: soft, min_tier: L1}
+  pwr.emc.dc-link-inductance:
+    - {skill: pwr.emc.grounding-harness, strength: hard, min_tier: L1}
+    - {skill: elec.semi.inductive-load, strength: hard, min_tier: L1}
+    - {skill: pwr.conv.half-bridge-gate-drive, strength: soft, min_tier: L1}
+    - {skill: pwr.emc.probe-validity, strength: soft, min_tier: L1}
+  pwr.emc.probe-validity:
+    - {skill: elec.meas.oscilloscope, strength: hard, min_tier: L1}
+    - {skill: elec.rc.inductor-basics, strength: hard, min_tier: L0}
+    - {skill: elec.rc.impedance, strength: soft, min_tier: L1}
+    - {skill: elec.meas.lab-safety-esd, strength: soft, min_tier: L0}
+
+  # --- T1 phys.thermal
+  phys.thermal.heat-transfer:
+    - {skill: elec.semi.regulator-dissipation, strength: hard, min_tier: L1}
+    - {skill: elec.meas.datasheet-reading, strength: soft, min_tier: L1}
+  phys.thermal.heatsink-sizing:
+    - {skill: phys.thermal.heat-transfer, strength: hard, min_tier: L1}
+  phys.thermal.esc-motor-hotspot:
+    - {skill: phys.thermal.heat-transfer, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.motor-basics, strength: hard, min_tier: L1}
+    - {skill: pwr.conv.mosfet-losses, strength: soft, min_tier: L1}
+    - {skill: pwr.emc.connector-current, strength: soft, min_tier: L1}
+  phys.thermal.transients:
+    - {skill: phys.thermal.heat-transfer, strength: hard, min_tier: L1}
+    - {skill: elec.rc.rc-step-response, strength: hard, min_tier: L1}
+    - {skill: phys.thermal.esc-motor-hotspot, strength: soft, min_tier: L1}
+
+  # --- T1 sw.rel
+  sw.rel.reset-causes:
+    - {skill: sw.mem.memory-mapped-registers, strength: hard, min_tier: L1}
+    - {skill: sw.fw.uart-logging, strength: soft, min_tier: L1}
+  sw.rel.watchdog-supervisor:
+    - {skill: sw.fw.isr-basics, strength: hard, min_tier: L1}
+    - {skill: sw.fsm.nonblocking-timing, strength: hard, min_tier: L1}
+    - {skill: sw.rel.reset-causes, strength: soft, min_tier: L1}
+  sw.rel.brownout:
+    - {skill: sw.rel.reset-causes, strength: hard, min_tier: L1}
+    - {skill: elec.semi.linear-regulator, strength: hard, min_tier: L1}
+    - {skill: elec.rc.capacitor-basics, strength: hard, min_tier: L1}
+    - {skill: sw.fw.adc-scaling, strength: soft, min_tier: L1}
+    - {skill: pwr.emc.connector-current, strength: soft, min_tier: L1}
+  sw.rel.crash-capture:
+    - {skill: sw.rel.reset-causes, strength: hard, min_tier: L1}
+    - {skill: sw.mem.machine-model, strength: hard, min_tier: L0}
+    - {skill: sw.fw.gdb-swd, strength: soft, min_tier: L1}
+    - {skill: sw.rel.watchdog-supervisor, strength: soft, min_tier: L1}
+
+  # --- T1 pwr.conv
+  pwr.conv.balance-principles:
+    - {skill: elec.semi.switching-regulator, strength: hard, min_tier: L0}
+    - {skill: math.calc.integral-meaning, strength: soft, min_tier: L1}
+  pwr.conv.buck-design:
+    - {skill: pwr.conv.balance-principles, strength: hard, min_tier: L1}
+    - {skill: elec.meas.datasheet-reading, strength: soft, min_tier: L1}
+  pwr.conv.mosfet-losses:
+    - {skill: pwr.conv.buck-design, strength: hard, min_tier: L1}
+    - {skill: elec.semi.mosfet-switch, strength: hard, min_tier: L1}
+  pwr.conv.half-bridge-gate-drive:
+    - {skill: pwr.conv.mosfet-losses, strength: hard, min_tier: L1}
+    - {skill: elec.semi.inductive-load, strength: hard, min_tier: L1}
+    - {skill: sw.fw.pwm, strength: soft, min_tier: L1}
+  pwr.conv.dc-link:
+    - {skill: pwr.conv.half-bridge-gate-drive, strength: hard, min_tier: L1}
+    - {skill: elec.rc.rc-time-constant, strength: hard, min_tier: L1}
+    - {skill: pwr.emc.dc-link-inductance, strength: soft, min_tier: L1}
+  pwr.conv.buck-lab:
+    - {skill: pwr.conv.mosfet-losses, strength: hard, min_tier: L1}
+    - {skill: pwr.emc.probe-validity, strength: hard, min_tier: L1}
+    - {skill: math.prob.measurement-uncertainty, strength: hard, min_tier: L1}
+
+  # --- T1 pwr.bldc
+  pwr.bldc.motor-basics:
+    - {skill: math.trig.angles-radians, strength: hard, min_tier: L1}
+    - {skill: elec.dc.power-energy, strength: hard, min_tier: L1}
+    - {skill: pwr.conv.half-bridge-gate-drive, strength: soft, min_tier: L1}
+  pwr.bldc.esc-modes:
+    - {skill: pwr.bldc.motor-basics, strength: hard, min_tier: L1}
+    - {skill: pwr.batt.preflight-checklist, strength: hard, min_tier: L1}
+    - {skill: sw.fw.logic-analyzer, strength: hard, min_tier: L1}
+    - {skill: sw.fw.pwm, strength: soft, min_tier: L1}
+  pwr.bldc.thrust-measurement:
+    - {skill: pwr.bldc.esc-modes, strength: hard, min_tier: L1}
+    - {skill: sw.fw.sensor-calibration, strength: hard, min_tier: L1}
+  pwr.bldc.prop-matching-intro:
+    - {skill: pwr.bldc.motor-basics, strength: hard, min_tier: L1}
+    - {skill: math.alg.exponents-roots, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.thrust-measurement, strength: soft, min_tier: L1}
+  pwr.bldc.motor-model:
+    - {skill: pwr.bldc.prop-matching-intro, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.thrust-measurement, strength: hard, min_tier: L1}
+    - {skill: pwr.emc.connector-current, strength: soft, min_tier: L1}
+    - {skill: math.calc.numerical-methods, strength: soft, min_tier: L1}
+  pwr.bldc.efficiency-map:
+    - {skill: pwr.bldc.thrust-measurement, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.motor-model, strength: soft, min_tier: L1}
+  pwr.bldc.current-sensing-foc:
+    - {skill: pwr.bldc.motor-basics, strength: hard, min_tier: L1}
+    - {skill: pwr.conv.half-bridge-gate-drive, strength: hard, min_tier: L1}
+    - {skill: sw.fw.adc-scaling, strength: hard, min_tier: L1}
+    - {skill: elec.opamp.real-limits, strength: soft, min_tier: L0}
+  pwr.bldc.current-sense-amp:
+    - {skill: elec.opamp.sensor-conditioning, strength: hard, min_tier: L1}
+    - {skill: sw.fw.sensor-calibration, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.current-sensing-foc, strength: soft, min_tier: L1}
+    - {skill: pwr.emc.grounding-harness, strength: soft, min_tier: L1}
+  pwr.bldc.phase-vs-battery-current:
+    - {skill: pwr.bldc.motor-basics, strength: hard, min_tier: L1}
+    - {skill: pwr.conv.dc-link, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.current-sensing-foc, strength: soft, min_tier: L1}
+  pwr.bldc.torque-measurement:
+    - {skill: pwr.bldc.efficiency-map, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.phase-vs-battery-current, strength: soft, min_tier: L1}
+  pwr.bldc.foc-lab:
+    - {skill: pwr.bldc.current-sensing-foc, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.motor-model, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.torque-measurement, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.current-sense-amp, strength: soft, min_tier: L1}
+    - {skill: pwr.bldc.phase-vs-battery-current, strength: soft, min_tier: L1}
+
+  # --- T1 elec.pcb
+  elec.pcb.kicad-schematic-erc:
+    - {skill: elec.meas.datasheet-reading, strength: hard, min_tier: L1}
+    - {skill: elec.semi.linear-regulator, strength: soft, min_tier: L1}
+  elec.pcb.copper-weight:
+    - {skill: pwr.emc.connector-current, strength: hard, min_tier: L1}
+    - {skill: elec.pcb.kicad-schematic-erc, strength: soft, min_tier: L1}
+  elec.pcb.pdb-layout:
+    - {skill: elec.pcb.copper-weight, strength: hard, min_tier: L1}
+    - {skill: elec.pcb.kicad-schematic-erc, strength: hard, min_tier: L1}
+    - {skill: pwr.emc.dc-link-inductance, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.current-sense-amp, strength: soft, min_tier: L1}
+
+  # --- T3 mech.cad
+  mech.cad.parametric-sketch:
+    - {skill: math.trig.right-triangle, strength: hard, min_tier: L1}
+  mech.cad.constraints-dof:
+    - {skill: mech.cad.parametric-sketch, strength: hard, min_tier: L0}
+  mech.cad.extrude-patterns:
+    - {skill: mech.cad.parametric-sketch, strength: hard, min_tier: L0}
+    - {skill: mech.cad.constraints-dof, strength: soft, min_tier: L0}
+  mech.cad.assemblies:
+    - {skill: mech.cad.extrude-patterns, strength: hard, min_tier: L1}
+    - {skill: mech.cad.constraints-dof, strength: soft, min_tier: L0}
+  mech.cad.export-step-stl:
+    - {skill: mech.cad.extrude-patterns, strength: hard, min_tier: L1}
+    - {skill: math.trig.inverse-trig, strength: hard, min_tier: L1}
+    - {skill: mech.cad.assemblies, strength: soft, min_tier: L1}
+  mech.cad.mass-cg-export:
+    - {skill: mech.cad.assemblies, strength: hard, min_tier: L1}
+
+  # --- T3 mech.draw
+  mech.draw.drawings-datums:
+    - {skill: mech.cad.extrude-patterns, strength: hard, min_tier: L1}
+    - {skill: mech.cad.constraints-dof, strength: soft, min_tier: L0}
+  mech.draw.iso-gps:
+    - {skill: mech.draw.drawings-datums, strength: hard, min_tier: L1}
+  mech.draw.fits-iso286:
+    - {skill: mech.draw.drawings-datums, strength: hard, min_tier: L1}
+    - {skill: mech.draw.iso-gps, strength: soft, min_tier: L1}
+
+  # --- T3 mech.struct
+  mech.struct.statics-loads:
+    - {skill: math.vec.vector-basics, strength: hard, min_tier: L1}
+    - {skill: math.alg.systems-2x2, strength: hard, min_tier: L1}
+    - {skill: math.trig.right-triangle, strength: soft, min_tier: L1}
+  mech.struct.stress-strain:
+    - {skill: math.alg.units-and-prefixes, strength: hard, min_tier: L1}
+    - {skill: math.alg.rearrange-formulas, strength: hard, min_tier: L1}
+    - {skill: mech.struct.statics-loads, strength: soft, min_tier: L1}
+  mech.struct.beam-bending:
+    - {skill: mech.struct.statics-loads, strength: hard, min_tier: L1}
+    - {skill: mech.struct.stress-strain, strength: hard, min_tier: L1}
+  mech.struct.fatigue-concentration:
+    - {skill: mech.struct.stress-strain, strength: hard, min_tier: L1}
+    - {skill: mech.struct.beam-bending, strength: soft, min_tier: L1}
+  mech.struct.vibration-modes:
+    - {skill: mech.struct.beam-bending, strength: hard, min_tier: L1}
+    - {skill: math.trig.sinusoids, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.motor-basics, strength: soft, min_tier: L1}
+    - {skill: sw.fw.sampling-rate, strength: soft, min_tier: L1}
+  mech.struct.bolted-joints:
+    - {skill: mech.struct.stress-strain, strength: hard, min_tier: L1}
+    - {skill: mech.struct.statics-loads, strength: soft, min_tier: L1}
+  mech.struct.torsion-sections:
+    - {skill: mech.struct.stress-strain, strength: hard, min_tier: L1}
+    - {skill: mech.struct.statics-loads, strength: hard, min_tier: L1}
+    - {skill: mech.struct.beam-bending, strength: soft, min_tier: L1}
+    - {skill: math.calc.integral-meaning, strength: soft, min_tier: L1}
+  mech.struct.safety-factors:
+    - {skill: mech.struct.statics-loads, strength: hard, min_tier: L1}
+    - {skill: mech.struct.stress-strain, strength: hard, min_tier: L1}
+    - {skill: mech.struct.beam-bending, strength: soft, min_tier: L1}
+    - {skill: mech.struct.vibration-modes, strength: soft, min_tier: L1}
+  mech.struct.fatigue-design:
+    - {skill: mech.struct.fatigue-concentration, strength: hard, min_tier: L1}
+    - {skill: mech.struct.safety-factors, strength: hard, min_tier: L1}
+    - {skill: mech.struct.vibration-modes, strength: soft, min_tier: L1}
+  mech.struct.bolted-joint-design:
+    - {skill: mech.struct.bolted-joints, strength: hard, min_tier: L1}
+    - {skill: mech.struct.fatigue-design, strength: soft, min_tier: L1}
+  mech.struct.flight-fft-compare:
+    - {skill: mech.struct.vibration-modes, strength: hard, min_tier: L1}
+    - {skill: sw.fw.sampling-rate, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.motor-basics, strength: hard, min_tier: L1}
+
+  # --- T3 matl.select
+  matl.select.ashby-indices:
+    - {skill: mech.struct.beam-bending, strength: hard, min_tier: L1}
+    - {skill: math.alg.exponents-roots, strength: hard, min_tier: L1}
+  matl.select.cfrp-plate:
+    - {skill: mech.struct.beam-bending, strength: hard, min_tier: L1}
+    - {skill: matl.select.ashby-indices, strength: soft, min_tier: L1}
+  matl.select.printed-polymers:
+    - {skill: mech.struct.beam-bending, strength: hard, min_tier: L1}
+    - {skill: mech.struct.safety-factors, strength: soft, min_tier: L1}
+    - {skill: matl.select.ashby-indices, strength: soft, min_tier: L1}
+
+  # --- T3 matl.print
+  matl.print.settings:
+    - {skill: mech.cad.export-step-stl, strength: hard, min_tier: L1}
+  matl.print.orientation-strength:
+    - {skill: matl.print.settings, strength: hard, min_tier: L1}
+    - {skill: mech.struct.beam-bending, strength: hard, min_tier: L1}
+    - {skill: matl.select.printed-polymers, strength: soft, min_tier: L1}
+
+  # --- T3 mech.tol
+  mech.tol.fit:
+    - {skill: mech.draw.fits-iso286, strength: hard, min_tier: L1}
+    - {skill: matl.print.settings, strength: soft, min_tier: L1}
+  mech.tol.print-shrink:
+    - {skill: matl.print.settings, strength: hard, min_tier: L1}
+    - {skill: mech.tol.fit, strength: soft, min_tier: L1}
+  mech.tol.fastener-stack:
+    - {skill: mech.struct.bolted-joints, strength: hard, min_tier: L1}
+    - {skill: mech.struct.bolted-joint-design, strength: soft, min_tier: L1}
+  mech.tol.stack-analysis:
+    - {skill: mech.tol.fastener-stack, strength: hard, min_tier: L1}
+    - {skill: math.prob.measurement-uncertainty, strength: hard, min_tier: L1}
+    - {skill: math.prob.averaging-noise, strength: hard, min_tier: L1}
+
+  # --- T3 matl.mfg
+  matl.mfg.pcb-fabrication:
+    - {skill: elec.pcb.copper-weight, strength: hard, min_tier: L1}
+    - {skill: elec.pcb.kicad-schematic-erc, strength: soft, min_tier: L1}
+  matl.mfg.cnc-basics:
+    - {skill: mech.draw.iso-gps, strength: hard, min_tier: L1}
+    - {skill: mech.tol.fit, strength: soft, min_tier: L1}
+    - {skill: matl.select.cfrp-plate, strength: soft, min_tier: L1}
+
+order_notes:
+  - edge: {skill: phys.thermal.esc-motor-hotspot, requires: pwr.bldc.motor-basics, strength: hard}
+    reason: "The skill reads line-to-line winding resistance and locates heat in motor phases, so the motor model must come first. phys.thermal (20) sits before pwr.bldc (23). No T1 skill needs phys.thermal hard, so the suggested order moves it after pwr.bldc."
+  - edge: {skill: phys.thermal.esc-motor-hotspot, requires: pwr.conv.mosfet-losses, strength: soft}
+    reason: "Soft edge to a later module in the current order; resolved by the same move of phys.thermal."
+  - edge: {skill: matl.select.ashby-indices, requires: mech.struct.beam-bending, strength: hard}
+    reason: "The index derivation starts from S = 3EI/L^3 and I = b^4/12. matl.select (35) sits before mech.struct (36). No mech.struct skill needs matl.select hard, so the suggested order swaps them."
+  - edge: {skill: matl.select.printed-polymers, requires: mech.struct.safety-factors, strength: soft}
+    reason: "Soft edge to a later module in the current order; resolved by the same swap of matl.select and mech.struct."
+  - edge: {skill: matl.select.cfrp-plate, requires: mech.struct.beam-bending, strength: hard}
+    reason: "The worked example is tip deflection F L^3 / (3 E I). Resolved by the same swap."
+  - edge: {skill: matl.select.printed-polymers, requires: mech.struct.beam-bending, strength: hard}
+    reason: "The worked example uses bending moment, section modulus and bending stress. Resolved by the same swap."
+  - edge: {skill: mech.tol.print-shrink, requires: matl.print.settings, strength: hard}
+    reason: "The unaided check prints a coupon, and calibration needs a working slicer profile. mech.tol (37) sits before matl.print (39). matl.print needs nothing from mech.tol hard, so the suggested order puts it before mech.tol."
+  - edge: {skill: mech.tol.fit, requires: matl.print.settings, strength: soft}
+    reason: "Soft edge to a later module in the current order; resolved by the same move of matl.print."
+  - edge: {skill: pwr.emc.dc-link-inductance, requires: pwr.conv.half-bridge-gate-drive, strength: soft}
+    reason: "The hot loop runs through a half-bridge, but this stays soft, and later-ordered even after reordering. The spec describes the loop itself and the arithmetic does not need gate-drive design. Making it hard would create a module-level cycle, because pwr.conv.buck-lab needs pwr.emc.probe-validity hard. Add to module_order_exceptions as a soft edge."
+  - edge_not_added: {skill: pwr.bldc.foc-lab, requires: ctl.pid.pid-controller, strength: hard}
+    reason: "The spec says to close the current loop after T2 control skills, which is a true dependency, but T1 may not depend on T2. ctl.pid (30) is also later than pwr.bldc. The spec should either rest on an eval board's prebuilt loop or the lab should move to a post-T2 module. Needs a human decision."
+  - edge_not_added: {skill: mech.struct.flight-fft-compare, requires: sig.freq.fft-log-reading, strength: hard}
+    reason: "Reading a spectrum is T2 and T3 may not depend on T2. sw.fw.sampling-rate (T0) covers aliasing only, not bin width. The spec restates bin width and Nyquist, so the skill can teach them inline."
+  - edge_not_added: {skill: mech.struct.vibration-modes, requires: sig.freq.fft-log-reading, strength: soft}
+    reason: "The tap test reads a spectrum peak. T2, so excluded; see flight-fft-compare."
+  - edge_not_added: {skill: mech.struct.statics-loads, requires: phys.mech.newton-laws, strength: hard}
+    reason: "Equilibrium is a natural Newton dependency, but phys.mech is T2. The skill's core ideas state sum F = 0 and sum M = 0 directly, so T0 vectors and 2x2 systems carry it."
+  - edge_not_added: {skill: mech.cad.mass-cg-export, requires: phys.mech.inertia-torque, strength: soft}
+    reason: "Parallel-axis inertia is T2 material; the spec states the formula directly."
+  - edge_not_added: {skill: elec.pcb.pdb-layout, requires: matl.mfg.pcb-fabrication, strength: soft}
+    reason: "T1 may not depend on T3. The T3 spec records a review proposal to move pcb-fabrication to T1; if that happens, add this edge; no cycle results, since pcb-fabrication needs only elec.pcb.copper-weight hard."
+  - edge_not_added: {skill: pwr.bldc.motor-basics, requires: phys.em.fields-induction, strength: soft}
+    reason: "Back-EMF is an induction idea, but this key is a stub and may not be used. Revisit once it is authored."
+
+# Suggested order inside each pillar: T1 first, then T3. Pillar slots stay where they are.
+module_order:
+  - pwr.batt
+  - pwr.emc
+  - sw.rel
+  - pwr.conv
+  - pwr.bldc
+  - phys.thermal
+  - elec.pcb
+  - mech.cad
+  - mech.draw
+  - mech.struct
+  - matl.select
+  - matl.print
+  - mech.tol
+  - matl.mfg

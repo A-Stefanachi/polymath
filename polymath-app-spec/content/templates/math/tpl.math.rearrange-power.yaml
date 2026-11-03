@@ -1,0 +1,138 @@
+schema_version: 1
+key: tpl.math.rearrange-power
+version: 2
+authoring_status: ready
+skill_key: math.alg.rearrange-formulas
+task_kind: problem
+grader_type: exact_numeric
+difficulty_prior: 0.35
+title: Rearrange P = VI for I
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-01'
+  llm_assistance:
+    used: true
+    roles:
+    - draft_template
+    - hints
+    - misconception_tags
+    model: claude-opus-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts:
+  - phone
+  - desktop
+  est_seconds: 60
+  phone_suitable: true
+  offline_gradable: true
+parameters:
+- name: v
+  type: choice
+  values:
+  - 5
+  - 6
+  - 9
+  - 10
+  - 12
+  - 15
+  - 18
+  - 20
+  - 24
+  - 30
+  - 36
+  - 48
+  description: Supply voltage
+  unit: V
+- name: i
+  type: choice
+  values:
+  - 0.25
+  - 0.5
+  - 0.75
+  - 1.5
+  - 2
+  - 2.5
+  - 3
+  - 4
+  description: Current, chosen first so the division is clean
+  unit: A
+derived:
+- name: p
+  expr: v * i
+constraints: []
+render:
+  stem_md: A load takes ${{p}}\,\mathrm{W}$ from a ${{v}}\,\mathrm{V}$ supply. Rearrange $P = V I$ to find the current $I$.
+  answer_prompt: Enter a value in amps.
+  alt_text: A load takes {{p}} watts from a {{v}} volt supply. Rearrange P equals V times I to find the current I.
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      i_amp: p / v
+  steps:
+  - id: s1
+    text_md: 'Divide both sides of $P = V I$ by $V$: $I = P / V$.'
+  - id: s2
+    text_md: 'Substitute the values: $I = {{p}} / {{v}} = {{i_amp}}\ \mathrm{A}$.'
+answer:
+  kind: numeric
+  value: i_amp
+  unit: A
+  accept_units:
+  - A
+  - mA
+  bare_number_means: A
+  tolerance:
+    rel: 0.02
+    abs: 0.001
+verifiers:
+- id: inverse-solve
+  kind: sympy_solve
+  independence: Solves the original relation V x = P exactly in rational arithmetic instead of evaluating the rearranged division
+    in floating point.
+  spec:
+    unknowns:
+    - x
+    equations:
+    - v * x - p
+    checks:
+    - unknown: x
+      output: i_amp
+  tolerance:
+    rel: 1.0e-09
+- id: dimension
+  kind: pint_dimension
+  independence: Dimensional analysis with pint on the parameter units; it does not check magnitude.
+  spec:
+    checks:
+    - expr: v * i
+      result_unit: W
+- id: window
+  kind: bounds
+  independence: The supply lies between 5 V and 48 V, so the current must lie between these limits; no formula for I is used
+    beyond them.
+  spec:
+    output: i_amp
+    lo: p / 48
+    hi: p / 5
+hints:
+  l1: Which letter has to end up alone on one side?
+  l2: Undo the multiplication that is attached to I by doing the opposite to both sides.
+  l3: 'Divide both sides by the voltage: $I = {{p}}\,\mathrm{W} \, / \, {{v}}\,\mathrm{V}$.'
+misconceptions:
+- tag: mc.inverted-fraction
+  description: Divides V by P, the fraction upside down.
+  wrong_answer_expr: v / p
+  feedback_md: That fraction is upside down. Divide both sides of the equation by V and read what is left.
+- tag: mc.multiplies-instead
+  description: Multiplies P by V instead of dividing.
+  wrong_answer_expr: p * v
+  feedback_md: To undo a multiplication, divide both sides. Multiplying makes the equation harder, not simpler.
+fuzz:
+  samples: 200
+  seed_base: 5000
+  max_rejection_rate: 0.7
+  min_distinct_param_sets: 50

@@ -1,0 +1,338 @@
+# Curated prerequisite edges for pillars T2 (control) and T4 (robo). Authored 2026-11-02.
+# Evidence is each skill's core ideas and worked example in skill-specs/T2.yaml and T4.yaml.
+# Graph-order violations (see order_notes) are kept as hard edges; both disappear under module_order.
+edges:
+  ctl.sys.ode-first-second:
+    - {skill: math.calc.exp-growth-decay, strength: hard, min_tier: L1}
+    - {skill: math.cplx.euler-formula, strength: hard, min_tier: L1}
+    - {skill: elec.rc.rc-step-response, strength: soft, min_tier: L1}
+    - {skill: phys.mech.inertia-torque, strength: soft, min_tier: L1}
+  ctl.sys.eigenvalues-stability:
+    - {skill: ctl.sys.ode-first-second, strength: hard, min_tier: L1}
+    - {skill: math.vec.matrix-vector, strength: hard, min_tier: L1}
+    - {skill: math.vec.det-inverse, strength: hard, min_tier: L1}
+  ctl.sys.laplace-transfer:
+    - {skill: ctl.sys.ode-first-second, strength: hard, min_tier: L1}
+    - {skill: ctl.sys.eigenvalues-stability, strength: soft, min_tier: L1}
+    - {skill: math.calc.definite-integrals, strength: soft, min_tier: L1}
+  ctl.sys.discrete-time:
+    - {skill: ctl.sys.laplace-transfer, strength: hard, min_tier: L1}
+    - {skill: ctl.sys.eigenvalues-stability, strength: hard, min_tier: L1}
+    - {skill: math.calc.numerical-methods, strength: soft, min_tier: L1}
+    - {skill: sw.fw.sampling-rate, strength: soft, min_tier: L1}
+  ctl.sys.linearisation:
+    - {skill: ctl.sys.eigenvalues-stability, strength: hard, min_tier: L1}
+    - {skill: phys.mech.inertia-torque, strength: hard, min_tier: L1}
+  ctl.sys.frequency-response:
+    - {skill: ctl.sys.laplace-transfer, strength: hard, min_tier: L1}
+    - {skill: elec.rc.bode-db, strength: hard, min_tier: L1}
+  ctl.sys.nyquist-criterion:
+    - {skill: ctl.sys.frequency-response, strength: hard, min_tier: L1}
+    - {skill: ctl.sys.eigenvalues-stability, strength: hard, min_tier: L1}
+  ctl.sys.sensitivity-functions:
+    - {skill: ctl.sys.nyquist-criterion, strength: hard, min_tier: L1}
+  ctl.sys.state-space:
+    - {skill: ctl.sys.eigenvalues-stability, strength: hard, min_tier: L1}
+    - {skill: ctl.sys.laplace-transfer, strength: hard, min_tier: L1}
+    - {skill: math.vec.linear-systems, strength: hard, min_tier: L1}
+    - {skill: ctl.sys.linearisation, strength: soft, min_tier: L1}
+  phys.mech.newton-laws:
+    - {skill: math.vec.vector-basics, strength: hard, min_tier: L1}
+    - {skill: math.calc.derivative-meaning, strength: hard, min_tier: L1}
+  phys.mech.forces-body-frame:
+    - {skill: phys.mech.newton-laws, strength: hard, min_tier: L1}
+    - {skill: math.vec.matrix-vector, strength: hard, min_tier: L1}
+  phys.mech.inertia-torque:
+    - {skill: phys.mech.newton-laws, strength: hard, min_tier: L1}
+  phys.mech.euler-rigid-body:
+    - {skill: phys.mech.inertia-torque, strength: hard, min_tier: L1}
+    - {skill: phys.mech.forces-body-frame, strength: hard, min_tier: L1}
+  sig.freq.fourier-intuition:
+    - {skill: math.trig.sinusoid-sum, strength: hard, min_tier: L1}
+    - {skill: elec.rc.bode-db, strength: soft, min_tier: L1}
+  sig.freq.fft-log-reading:
+    - {skill: sig.freq.fourier-intuition, strength: hard, min_tier: L1}
+    - {skill: sw.fw.sampling-rate, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.motor-basics, strength: soft, min_tier: L1}
+  sig.freq.filter-cutoff-choice:
+    - {skill: sw.fw.exponential-filter, strength: hard, min_tier: L1}
+    - {skill: sw.fw.sampling-rate, strength: hard, min_tier: L1}
+    - {skill: elec.rc.bode-db, strength: hard, min_tier: L1}
+    - {skill: sig.freq.fft-log-reading, strength: soft, min_tier: L1}
+  sig.freq.notch-rpm:
+    - {skill: ctl.sys.frequency-response, strength: hard, min_tier: L1}
+    - {skill: sig.freq.fft-log-reading, strength: hard, min_tier: L1}
+    - {skill: sig.freq.filter-cutoff-choice, strength: soft, min_tier: L1}
+  sig.freq.windowing-spectrogram:
+    - {skill: sig.freq.fft-log-reading, strength: hard, min_tier: L1}
+    - {skill: sw.fw.moving-average, strength: hard, min_tier: L1}
+    - {skill: sig.freq.filter-cutoff-choice, strength: soft, min_tier: L1}
+  sig.sampling.nyquist-aliasing:
+    - {skill: sw.fw.sampling-rate, strength: hard, min_tier: L1}
+    - {skill: sig.freq.fourier-intuition, strength: hard, min_tier: L1}
+  sig.sampling.imu-rate-selection:
+    - {skill: sig.sampling.nyquist-aliasing, strength: hard, min_tier: L1}
+    - {skill: elec.rc.bode-db, strength: hard, min_tier: L1}
+    - {skill: sig.freq.filter-cutoff-choice, strength: soft, min_tier: L1}
+    - {skill: elec.meas.datasheet-reading, strength: soft, min_tier: L1}
+  sig.sampling.anti-alias-practice:
+    - {skill: sig.sampling.nyquist-aliasing, strength: hard, min_tier: L1}
+    - {skill: sw.fw.moving-average, strength: hard, min_tier: L1}
+    - {skill: sig.sampling.imu-rate-selection, strength: soft, min_tier: L1}
+  sig.imu.frames:
+    - {skill: math.vec.matrix-vector, strength: hard, min_tier: L1}
+    - {skill: phys.mech.forces-body-frame, strength: soft, min_tier: L1}
+  sig.imu.calibration-two-step:
+    - {skill: sw.fw.sensor-calibration, strength: hard, min_tier: L1}
+    - {skill: sw.fw.i2c-sensor-read, strength: hard, min_tier: L1}
+    - {skill: sig.imu.frames, strength: soft, min_tier: L1}
+  sig.imu.static-test-fixture:
+    - {skill: sig.imu.calibration-two-step, strength: hard, min_tier: L1}
+  sig.imu.quaternions:
+    - {skill: sig.imu.frames, strength: hard, min_tier: L1}
+    - {skill: math.cplx.euler-formula, strength: soft, min_tier: L1}
+  sig.imu.specific-force:
+    - {skill: sig.imu.frames, strength: hard, min_tier: L1}
+    - {skill: phys.mech.forces-body-frame, strength: hard, min_tier: L1}
+  sig.imu.allan-variance:
+    - {skill: math.prob.averaging-noise, strength: hard, min_tier: L1}
+    - {skill: math.alg.exp-log, strength: hard, min_tier: L1}
+    - {skill: sig.imu.calibration-two-step, strength: soft, min_tier: L1}
+    - {skill: sw.fw.uart-logging, strength: soft, min_tier: L1}
+  sig.imu.multi-position-calibration:
+    - {skill: sig.imu.static-test-fixture, strength: hard, min_tier: L1}
+    - {skill: math.vec.linear-systems, strength: hard, min_tier: L1}
+    - {skill: math.vec.least-squares, strength: soft, min_tier: L1}
+    - {skill: sig.imu.specific-force, strength: soft, min_tier: L1}
+  ctl.pid.pid-controller:
+    - {skill: ctl.sys.frequency-response, strength: hard, min_tier: L1}
+    - {skill: math.calc.numerical-methods, strength: hard, min_tier: L1}
+    - {skill: sw.fw.exponential-filter, strength: soft, min_tier: L1}
+  ctl.pid.anti-windup:
+    - {skill: ctl.pid.pid-controller, strength: hard, min_tier: L1}
+  ctl.pid.tuning-step-response:
+    - {skill: ctl.pid.pid-controller, strength: hard, min_tier: L1}
+    - {skill: ctl.pid.plant-identification, strength: soft, min_tier: L1}
+    - {skill: ctl.pid.anti-windup, strength: soft, min_tier: L1}
+  ctl.pid.cascade-intuition:
+    - {skill: ctl.pid.pid-controller, strength: hard, min_tier: L1}
+    - {skill: ctl.pid.margins-delay, strength: hard, min_tier: L1}
+  ctl.pid.plant-identification:
+    - {skill: ctl.sys.laplace-transfer, strength: hard, min_tier: L1}
+    - {skill: sw.fw.uart-logging, strength: soft, min_tier: L1}
+  ctl.pid.margins-delay:
+    - {skill: ctl.sys.sensitivity-functions, strength: hard, min_tier: L1}
+    - {skill: ctl.pid.pid-controller, strength: soft, min_tier: L1}
+  ctl.pid.closed-loop-rig:
+    - {skill: ctl.pid.simc-tuning, strength: hard, min_tier: L1}
+    - {skill: ctl.pid.discrete-pid-code, strength: hard, min_tier: L1}
+    - {skill: pwr.batt.preflight-checklist, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.esc-modes, strength: soft, min_tier: L1}
+    - {skill: sw.fw.uart-logging, strength: soft, min_tier: L1}
+  ctl.pid.simc-tuning:
+    - {skill: ctl.pid.pid-controller, strength: hard, min_tier: L1}
+    - {skill: ctl.pid.plant-identification, strength: hard, min_tier: L1}
+    - {skill: ctl.pid.margins-delay, strength: hard, min_tier: L1}
+  ctl.pid.discrete-pid-code:
+    - {skill: ctl.pid.anti-windup, strength: hard, min_tier: L1}
+    - {skill: ctl.sys.discrete-time, strength: hard, min_tier: L1}
+    - {skill: sw.c.unit-testing, strength: hard, min_tier: L1}
+    - {skill: sw.fw.timers-tick, strength: soft, min_tier: L1}
+  ctl.pid.feedforward-scheduling:
+    - {skill: ctl.sys.linearisation, strength: hard, min_tier: L1}
+    - {skill: ctl.pid.anti-windup, strength: hard, min_tier: L1}
+    - {skill: ctl.pid.simc-tuning, strength: soft, min_tier: L1}
+    - {skill: pwr.bldc.motor-basics, strength: soft, min_tier: L1}
+  ctl.pid.delay-budget:
+    - {skill: ctl.pid.margins-delay, strength: hard, min_tier: L1}
+    - {skill: sig.freq.filter-cutoff-choice, strength: hard, min_tier: L1}
+    - {skill: ctl.sys.discrete-time, strength: hard, min_tier: L1}
+    - {skill: sw.fw.pwm, strength: soft, min_tier: L1}
+  ctl.est.complementary-filter:
+    - {skill: sw.fw.exponential-filter, strength: hard, min_tier: L1}
+    - {skill: sig.imu.specific-force, strength: hard, min_tier: L1}
+    - {skill: ctl.est.gyro-integration-drift, strength: hard, min_tier: L1}
+    - {skill: elec.rc.rc-highpass, strength: soft, min_tier: L1}
+  ctl.est.gyro-integration-drift:
+    - {skill: sig.imu.calibration-two-step, strength: hard, min_tier: L1}
+    - {skill: math.calc.numerical-methods, strength: hard, min_tier: L1}
+  ctl.est.ekf-literacy:
+    - {skill: ctl.est.innovation-checks, strength: hard, min_tier: L1}
+    - {skill: ctl.sys.linearisation, strength: hard, min_tier: L1}
+    - {skill: ctl.est.complementary-filter, strength: soft, min_tier: L1}
+    - {skill: sig.imu.quaternions, strength: soft, min_tier: L1}
+  ctl.est.kalman-1d:
+    - {skill: math.prob.variance, strength: hard, min_tier: L1}
+    - {skill: sw.fw.exponential-filter, strength: soft, min_tier: L1}
+  ctl.est.innovation-checks:
+    - {skill: ctl.est.kalman-1d, strength: hard, min_tier: L1}
+    - {skill: math.vec.matrix-vector, strength: soft, min_tier: L1}
+  ctl.est.two-state-kalman:
+    - {skill: ctl.est.innovation-checks, strength: hard, min_tier: L1}
+    - {skill: ctl.est.complementary-filter, strength: hard, min_tier: L1}
+    - {skill: ctl.sys.state-space, strength: soft, min_tier: L1}
+  ctl.est.mahony-madgwick:
+    - {skill: sig.imu.quaternions, strength: hard, min_tier: L1}
+    - {skill: ctl.est.complementary-filter, strength: hard, min_tier: L1}
+    - {skill: ctl.sys.ode-first-second, strength: hard, min_tier: L1}
+  ctl.adv.state-feedback-observers:
+    - {skill: ctl.sys.state-space, strength: hard, min_tier: L1}
+    - {skill: ctl.sys.sensitivity-functions, strength: hard, min_tier: L1}
+  ctl.adv.lqr-lqg:
+    - {skill: ctl.adv.state-feedback-observers, strength: hard, min_tier: L1}
+    - {skill: ctl.est.two-state-kalman, strength: hard, min_tier: L1}
+  ctl.adv.system-identification:
+    - {skill: math.vec.least-squares, strength: hard, min_tier: L1}
+    - {skill: ctl.sys.discrete-time, strength: hard, min_tier: L1}
+    - {skill: ctl.pid.plant-identification, strength: soft, min_tier: L1}
+    - {skill: ctl.est.innovation-checks, strength: soft, min_tier: L1}
+  ctl.adv.robustness-limits:
+    - {skill: ctl.sys.sensitivity-functions, strength: hard, min_tier: L1}
+    - {skill: math.calc.definite-integrals, strength: hard, min_tier: L1}
+    - {skill: ctl.pid.margins-delay, strength: soft, min_tier: L1}
+  ctl.adv.error-state-filter:
+    - {skill: sig.imu.quaternions, strength: hard, min_tier: L1}
+    - {skill: ctl.est.two-state-kalman, strength: hard, min_tier: L1}
+  ctl.adv.mpc-constraints:
+    - {skill: ctl.adv.lqr-lqg, strength: hard, min_tier: L1}
+    - {skill: ctl.pid.closed-loop-rig, strength: hard, min_tier: L1}
+    - {skill: ctl.pid.delay-budget, strength: soft, min_tier: L1}
+  robo.uav.ops-eu:
+    - {skill: math.alg.units-and-prefixes, strength: hard, min_tier: L1}
+  robo.uav.ops-airspace:
+    - {skill: robo.uav.ops-eu, strength: hard, min_tier: L0}
+  robo.uav.ops-privacy:
+    - {skill: robo.uav.ops-eu, strength: hard, min_tier: L0}
+  robo.uav.ops-legal-route:
+    - {skill: robo.uav.ops-eu, strength: hard, min_tier: L0}
+  robo.uav.ops-germany:
+    - {skill: robo.uav.ops-airspace, strength: hard, min_tier: L0}
+    - {skill: robo.uav.ops-legal-route, strength: soft, min_tier: L1}
+    - {skill: robo.uav.ops-privacy, strength: soft, min_tier: L0}
+  robo.uav.ops-specific-sora:
+    - {skill: robo.uav.ops-legal-route, strength: hard, min_tier: L1}
+  robo.uav.weight-cg-budget:
+    - {skill: mech.struct.statics-loads, strength: hard, min_tier: L1}
+    - {skill: mech.cad.mass-cg-export, strength: soft, min_tier: L1}
+  robo.uav.thrust-margin:
+    - {skill: robo.uav.weight-cg-budget, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.thrust-measurement, strength: hard, min_tier: L1}
+    - {skill: math.alg.quadratics, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.prop-matching-intro, strength: soft, min_tier: L1}
+  robo.uav.propulsion-match:
+    - {skill: pwr.bldc.motor-basics, strength: hard, min_tier: L1}
+    - {skill: pwr.batt.c-rate-limits, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.prop-matching-intro, strength: soft, min_tier: L1}
+    - {skill: pwr.bldc.esc-modes, strength: soft, min_tier: L1}
+    - {skill: robo.uav.thrust-margin, strength: soft, min_tier: L1}
+  robo.uav.momentum-theory:
+    - {skill: robo.uav.thrust-margin, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.prop-matching-intro, strength: hard, min_tier: L1}
+    - {skill: elec.semi.battery-budget, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.efficiency-map, strength: soft, min_tier: L1}
+  robo.uav.mixer-allocation:
+    - {skill: robo.uav.motor-direction, strength: hard, min_tier: L1}
+    - {skill: sig.imu.frames, strength: hard, min_tier: L1}
+    - {skill: math.vec.linear-systems, strength: hard, min_tier: L1}
+    - {skill: robo.uav.thrust-margin, strength: soft, min_tier: L1}
+    - {skill: phys.mech.inertia-torque, strength: soft, min_tier: L1}
+  robo.uav.rotor-limits:
+    - {skill: robo.uav.momentum-theory, strength: hard, min_tier: L1}
+    - {skill: math.trig.inverse-trig, strength: hard, min_tier: L1}
+  robo.uav.motor-direction:
+    - {skill: pwr.bldc.esc-modes, strength: hard, min_tier: L1}
+    - {skill: pwr.bldc.motor-basics, strength: hard, min_tier: L1}
+    - {skill: phys.mech.inertia-torque, strength: soft, min_tier: L1}
+  robo.uav.esc-calibration-quad:
+    - {skill: robo.uav.motor-direction, strength: hard, min_tier: L1}
+  robo.uav.ground-test-props-off:
+    - {skill: robo.uav.motor-direction, strength: hard, min_tier: L1}
+    - {skill: pwr.batt.preflight-checklist, strength: hard, min_tier: L1}
+    - {skill: robo.uav.esc-calibration-quad, strength: soft, min_tier: L1}
+  robo.uav.fc-config:
+    - {skill: robo.uav.ground-test-props-off, strength: hard, min_tier: L1}
+    - {skill: sig.freq.filter-cutoff-choice, strength: hard, min_tier: L1}
+    - {skill: sig.imu.frames, strength: soft, min_tier: L1}
+    - {skill: ctl.pid.tuning-step-response, strength: soft, min_tier: L1}
+    - {skill: sw.tools.git-basics, strength: soft, min_tier: L1}
+  robo.uav.sensor-orientation:
+    - {skill: robo.uav.fc-config, strength: hard, min_tier: L1}
+    - {skill: sig.imu.frames, strength: hard, min_tier: L1}
+  robo.uav.failsafe-basics:
+    - {skill: robo.uav.fc-config, strength: hard, min_tier: L1}
+    - {skill: phys.mech.newton-laws, strength: soft, min_tier: L1}
+  robo.uav.test-cards:
+    - {skill: robo.uav.preflight, strength: hard, min_tier: L1}
+    - {skill: robo.uav.failsafe-basics, strength: hard, min_tier: L1}
+  robo.uav.hazard-analysis:
+    - {skill: robo.uav.test-cards, strength: hard, min_tier: L1}
+    - {skill: robo.uav.ops-legal-route, strength: soft, min_tier: L1}
+  robo.uav.manual-recovery:
+    - {skill: robo.uav.fault-injection, strength: hard, min_tier: L1}
+    - {skill: robo.uav.hazard-analysis, strength: soft, min_tier: L1}
+  robo.uav.test:
+    - {skill: robo.uav.failsafe-basics, strength: hard, min_tier: L1}
+    - {skill: robo.uav.sitl-first, strength: soft, min_tier: L1}
+  robo.uav.mission-geofence:
+    - {skill: robo.uav.failsafe-basics, strength: hard, min_tier: L1}
+    - {skill: sens.meas.gps-error-literacy, strength: hard, min_tier: L1}
+    - {skill: robo.uav.ops-legal-route, strength: soft, min_tier: L1}
+    - {skill: robo.uav.sitl-first, strength: soft, min_tier: L1}
+  robo.uav.preflight:
+    - {skill: robo.uav.ops-germany, strength: hard, min_tier: L1}
+    - {skill: robo.uav.fc-config, strength: hard, min_tier: L1}
+    - {skill: robo.uav.sensor-orientation, strength: soft, min_tier: L1}
+    - {skill: robo.uav.failsafe-basics, strength: soft, min_tier: L1}
+  robo.uav.sitl-first:
+    - {skill: robo.uav.failsafe-basics, strength: hard, min_tier: L1}
+    - {skill: net.proto.ip-and-sockets, strength: soft, min_tier: L0}
+  robo.uav.fault-injection:
+    - {skill: robo.uav.sitl-first, strength: hard, min_tier: L1}
+  robo.uav.log-analysis:
+    - {skill: robo.uav.sitl-first, strength: hard, min_tier: L1}
+    - {skill: sig.freq.fft-log-reading, strength: hard, min_tier: L1}
+    - {skill: ctl.pid.tuning-step-response, strength: soft, min_tier: L1}
+    - {skill: robo.uav.mixer-allocation, strength: soft, min_tier: L1}
+  sens.meas.calibration-uncertainty:
+    - {skill: sw.fw.sensor-calibration, strength: hard, min_tier: L1}
+    - {skill: math.prob.averaging-noise, strength: hard, min_tier: L1}
+  sens.meas.gps-error-literacy:
+    - {skill: math.prob.averaging-noise, strength: hard, min_tier: L1}
+    - {skill: sens.meas.calibration-uncertainty, strength: soft, min_tier: L1}
+  net.proto.ip-and-sockets:
+    - {skill: sw.c.arrays-strings, strength: hard, min_tier: L1}
+    - {skill: sw.fw.uart-logging, strength: soft, min_tier: L1}
+  net.proto.telemetry-contract:
+    - {skill: net.proto.ip-and-sockets, strength: hard, min_tier: L0}
+    - {skill: sw.c.types-ints, strength: hard, min_tier: L1}
+    - {skill: sw.c.structs-enums, strength: soft, min_tier: L1}
+    - {skill: sw.c.unit-testing, strength: soft, min_tier: L1}
+  net.proto.companion-bridge:
+    - {skill: net.proto.telemetry-contract, strength: hard, min_tier: L1}
+    - {skill: robo.uav.fc-config, strength: hard, min_tier: L1}
+    - {skill: sw.fw.uart-framing, strength: hard, min_tier: L1}
+    - {skill: robo.uav.sitl-first, strength: soft, min_tier: L1}
+  rf.basics.link-budget:
+    - {skill: elec.rc.bode-db, strength: hard, min_tier: L1}
+  rf.basics.eu-bands:
+    - {skill: rf.basics.link-budget, strength: hard, min_tier: L0}
+order_notes:
+  - {edge: {skill: ctl.sys.linearisation, requires: phys.mech.inertia-torque, strength: hard}, fix: "phys.mech before ctl.sys", reason: "The spec's arm equation J*th'' = -m*g*l*sin(th) + u, J = m*l^2 and the hold torque are torque balance about a pivot, so linearising the rig needs phys.mech.inertia-torque. Graph order has ctl.sys (25) before phys.mech (26). phys.mech has no ctl prerequisite, so swapping the two is safe."}
+  - {edge: {skill: robo.uav.mission-geofence, requires: sens.meas.gps-error-literacy, strength: hard}, fix: "sens.meas before robo.uav", reason: "The fence budget has a GNSS 95% radius line, and the gps spec says to feed its margin into that budget. Graph order has robo.uav (40) before sens.meas (41). sens.meas has no robo prerequisite, so moving it first is safe."}
+  - "Same-module sequence, not an order error: ctl.pid.closed-loop-rig needs ctl.pid.simc-tuning and ctl.pid.discrete-pid-code, and ctl.pid.cascade-intuition needs ctl.pid.margins-delay, so listing order inside ctl.pid should follow these edges."
+  - "Same-module sequence, not an order error: ctl.est.ekf-literacy needs ctl.est.innovation-checks, and ctl.est.complementary-filter needs ctl.est.gyro-integration-drift, so listing order inside ctl.est should follow these edges."
+  - "Same-module sequence, not an order error: inside robo.uav, spine sub-module robo.uav.flight-test (test-cards) depends on robo.uav.preflight in sub-module robo.uav.test, robo.uav.mixer-allocation (physics) depends on robo.uav.motor-direction (propulsion), and robo.uav.test (matrix) should sit after robo.uav.failsafe-basics. The spine plan sub-module order needs updating to match."
+# Suggested order inside each pillar: T2 first eight entries, then T4. T1 and T3 slots are unchanged.
+module_order:
+  - phys.mech
+  - ctl.sys
+  - sig.freq
+  - sig.sampling
+  - sig.imu
+  - ctl.pid
+  - ctl.est
+  - ctl.adv
+  - sens.meas
+  - robo.uav
+  - net.proto
+  - rf.basics

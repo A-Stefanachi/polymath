@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>User experience — Polymath documentation</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="experience">
+  <a class="skip" href="#main">Skip to content</a>
+  <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+    <div class="main-wrap">
+      <main id="main" class="content">
+        <p class="kicker">Information architecture</p>
+        <h1>User experience</h1>
+        <p class="spec-ref"><a href="../docs/09-ux-and-flows.md">docs/09-ux-and-flows.md</a></p>
+
+        <div class="summary">
+          <h2>Summary</h2>
+          <ul>
+            <li><strong>Today</strong> — duration and context selection (phone, desktop, bench), then session assembly.</li>
+            <li><strong>Session runner</strong> — confidence captured before feedback; no streak-based gamification.</li>
+            <li><strong>iOS</strong> — installable PWA via Safari; micro sessions and offline cache are primary phone workflows.</li>
+            <li><strong>Bench context</strong> — project steps and evidence capture; task kinds filtered by context.</li>
+          </ul>
+        </div>
+
+        <h2>Primary screens (S01–S20)</h2>
+        <div class="grid-2">
+          <article class="card"><h3>Today</h3><p>Due reviews, weekly minute progress, optional checkpoint notice.</p></article>
+          <article class="card"><h3>Session</h3><p>Single-task focus, KaTeX with alternative text, mobile layout constraints.</p></article>
+          <article class="card"><h3>Map and progress</h3><p>Frontier rationale; next competence artifact.</p></article>
+          <article class="card"><h3>Projects</h3><p>Step checklist, evidence upload, verification status.</p></article>
+          <article class="card"><h3>Review inbox</h3><p>FSRS due queue; optional five-minute reviews-only path.</p></article>
+          <article class="card"><h3>Settings</h3><p>Reminders, offline storage, privacy controls (export in later milestones).</p></article>
+        </div>
+
+        <h2>iOS support</h2>
+        <h3>Supported</h3>
+        <ul>
+          <li>Installation to home screen (Safari → Add to Home Screen)</li>
+          <li>Micro sessions, skill map, due list, progress views</li>
+          <li>Offline cached numeric and multiple-choice items (provisional until sync)</li>
+          <li>Camera and file upload for project evidence</li>
+          <li>Minimum 16 px input typography to prevent focus zoom</li>
+        </ul>
+        <h3>Platform constraints</h3>
+        <ul>
+          <li>Web Push requires home-screen installation (iOS 16.4+); verify on device (OA-7).</li>
+          <li>Background Sync is unavailable; synchronization runs on foreground and <code>online</code> events.</li>
+          <li>Extended disuse may evict site storage; outbox flush on visibility change mitigates loss.</li>
+          <li>Code submission, SPICE, and extended tutor sessions target desktop or bench context.</li>
+        </ul>
+
+        <h2>Offline behaviour</h2>
+        <p class="callout tip">
+          When offline, the client displays a persistent banner and stores attempts locally.
+          The server grade is authoritative on reconciliation; mismatches are logged and surfaced to the learner.
+        </p>
+
+        <h2>Accessibility</h2>
+        <p>Target conformance: WCAG 2.2 Level AA on core flows; automated axe checks in Playwright; manual VoiceOver review before beta.</p>
+      </main>
+      <footer class="page-footer">Copy standards and design tokens: doc 09 §10–11.</footer>
+    </div>
+  </div>
+  <script src="assets/nav.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

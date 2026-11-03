@@ -1,0 +1,97 @@
+# Sample 6: spice_compare (RC low-pass cutoff). Grading design is a proposal [P]; no verified source exists for SPICE-based grading.
+schema_version: 1
+key: tpl.elec.rc-lowpass-netlist
+version: 1
+authoring_status: ready
+skill_key: elec.rc.spice-rc
+task_kind: problem
+grader_type: spice_compare
+difficulty_prior: 0.55
+title: Choose R for an RC low-pass cutoff and simulate it
+license: original
+source: original
+provenance:
+  authors: [founder]
+  created: "2026-10-31"
+  llm_assistance: { used: false }
+delivery: { contexts: [desktop], est_seconds: 420, phone_suitable: false, offline_gradable: false }
+parameters:
+  - { name: c, type: choice, unit: F, values: [1.0e-8, 2.2e-8, 4.7e-8, 1.0e-7, 2.2e-7, 4.7e-7], description: Fixed capacitor }
+  - { name: fc, type: choice, unit: Hz, values: [100, 200, 500, 1000, 2000, 5000], description: Target -3 dB frequency }
+derived:
+  - { name: r_ideal, expr: "1 / (2 * pi * fc * c)", unit: ohm }
+constraints:
+  - { id: resistor-window, expr: "r_ideal >= 300 and r_ideal <= 60000", reason: "The required resistance must be a practical value from a typical resistor kit." }
+render:
+  stem_md: |
+    Design a first-order RC low-pass filter with a **-3 dB frequency of {{fc|eng}}** using a fixed
+    capacitor $C_1 = {{c|tex}}$. The input node is `in`, the output node is `out`, and ground is node `0`.
+
+    Edit the resistor value in the netlist below and submit the whole netlist. You may add comment lines.
+    The grader runs its own AC sweep; any analysis directive you write is ignored.
+
+    ```
+    {{skeleton}}
+    ```
+
+    Your cutoff must be within **6 percent** of the target and the low-frequency gain must be 0 dB (within 0.1 dB).
+  answer_prompt: "Paste the full netlist."
+  alt_text: "Write a SPICE netlist for an RC low-pass with capacitor {{c|eng}} between out and ground and a resistor between in and out, so the -3 dB frequency is {{fc|eng}}."
+  figure: { kind: svg_template, template: rc_lowpass_v1, caption_md: "V1 drives R1; C1 to ground; output across C1." }
+solution:
+  generator:
+    method: reference_netlist
+    outputs: { r_ref: "r_ideal", fc_ref: "fc" }
+  steps:
+    - { id: s1, text_md: "The -3 dB frequency of a first-order RC low-pass is $f_c = 1/(2\\pi R C)$." }
+    - { id: s2, text_md: "Solve for $R = 1/(2\\pi f_c C) = {{r_ideal|tex:ohm}}$ and use the nearest standard value." }
+answer:
+  submission: { format: netlist, max_lines: 30 }
+  skeleton: |
+    * RC low-pass: set R1 so that fc = {{fc|spice}} Hz
+    V1 in 0 AC 1
+    R1 in out 1k
+    C1 out 0 {{c|spice}}
+    .end
+  allowed_elements: [R, C, V]
+  required_nodes: [in, out, "0"]
+  fixed_elements: [V1, C1]
+  reference_netlist: |
+    * reference
+    V1 in 0 AC 1
+    R1 in out {{r_ideal|spice}}
+    C1 out 0 {{c|spice}}
+    .end
+  analysis:
+    kind: ac
+    grader_directives:
+      - ".save v(out)"
+      - ".ac dec 40 1 1meg"
+      - ".meas ac fc_3db WHEN vdb(out)=-3.0103 FALL=1"
+      - ".meas ac gain_lf FIND vdb(out) AT=1"
+  checks:
+    - { id: cutoff, kind: ac_cutoff_hz, node: out, expected: fc, tolerance: { rel: 0.06 }, weight: 0.7 }
+    - { id: dc-gain, kind: ac_gain_db_at, node: out, at: "1", expected: "0", tolerance: { abs: 0.1 }, weight: 0.3 }
+  limits: { run_s: 10, memory_mb: 256, max_points: 20000 }
+verifiers:
+  - id: ngspice-vs-formula
+    kind: spice_vs_closed_form
+    independence: "Simulates the reference netlist in ngspice and compares the measured -3 dB frequency with the closed form 1/(2 pi R C); the generator used only the closed form."
+    spec: { measure: fc_3db, closed_form: "1 / (2 * pi * r_ideal * c)", target_output: fc }
+    tolerance: { rel: 0.005 }
+  - id: reference-lint
+    kind: netlist_lint_reference
+    independence: "The reference netlist is run through the same learner-netlist linter as submissions, proving the linter accepts the intended answer."
+    spec: {}
+  - id: resistor-range
+    kind: bounds
+    independence: "Range check on the required resistance against practical values."
+    spec: { output: r_ideal, lo: "300", hi: "60000", strict: false }
+hints:
+  l1: "The capacitor is fixed. Which single resistor value sets the cutoff?"
+  l2: "For a first-order RC low-pass the -3 dB frequency is 1/(2*pi*R*C). Rearrange for R."
+  l3: "R = 1/(2*pi*{{fc|eng}}*{{c|eng}}) = {{r_ideal|eng:ohm}}. Use the nearest E24 value in your netlist and check the cutoff."
+misconceptions:
+  - { tag: mc.rc-cutoff-omitted-2pi, description: "Uses 1/(RC) as a frequency in hertz.", wrong_answer_expr: "1 / (fc * c)", feedback_md: "1/(RC) is in radians per second. Divide by 2 pi for hertz." }
+  - { tag: mc.rc-cutoff-wrong-ground-node, description: "Takes the output across the resistor or leaves the capacitor floating.", feedback_md: "The output node must be the junction of R1 and C1, with C1 to ground." }
+fuzz: { samples: 200, seed_base: 6000, max_rejection_rate: 0.9, min_distinct_param_sets: 20 }

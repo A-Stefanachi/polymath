@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Product overview — Polymath documentation</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="product">
+  <a class="skip" href="#main">Skip to content</a>
+  <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+    <div class="main-wrap">
+      <main id="main" class="content">
+        <p class="kicker">Product requirements</p>
+        <h1>Product overview</h1>
+        <p class="spec-ref">Specification: <a href="../docs/01-PRD.md">docs/01-PRD.md</a></p>
+
+        <div class="summary">
+          <h2>Summary</h2>
+          <ul>
+            <li><strong>Outcome:</strong> tier L1 (working knowledge) for each subject on the curriculum map, starting with math, electronics, and embedded software.</li>
+            <li><strong>Method:</strong> short sessions, produced responses, verified items, FSRS scheduling, frontier selection, and bench projects with evidence.</li>
+            <li><strong>Constraint:</strong> approximately eight hours per week for the founder, including time reserved for learning versus implementation (R-22).</li>
+            <li><strong>Evidence stance:</strong> component learning mechanisms have external support; the full product combination remains to be measured in use.</li>
+          </ul>
+        </div>
+
+        <h2>Problem statement</h2>
+        <div class="grid-4">
+          <article class="card"><h3>Time</h3><p>Working knowledge requires hundreds of hours per subject area; inefficient sessions have high opportunity cost.</p></article>
+          <article class="card"><h3>Illusion of progress</h3><p>Passive media and unguarded assistance can raise aided scores while unaided performance declines.</p></article>
+          <article class="card"><h3>Retention and order</h3><p>Without spacing and prerequisites, review timing and sequencing degrade.</p></article>
+          <article class="card"><h3>Physical skill</h3><p>Hardware competence requires observable bench outcomes, not quiz completion alone.</p></article>
+        </div>
+
+        <h2>Concept refinements (v1.1)</h2>
+        <ol class="flow-steps">
+          <li><strong>Progress artifacts:</strong> display the next named competence artifact and remaining requirements (FR-090, FR-091), not streaks or raw hours.</li>
+          <li><strong>Tutor scope:</strong> item-bound hint ladder and post-attempt review; no persistent cross-item chat (FR-050).</li>
+          <li><strong>Dual context:</strong> phone and desktop share FSRS state with bench workflows; simulation does not replace applied L1 requirements.</li>
+          <li><strong>Project credit:</strong> capped applied credit per contract §7.15; builds do not assign mastery in isolation.</li>
+          <li><strong>Curriculum scope:</strong> the first delivered walk covers the math / elec / embedded slice; the same loop extends to additional nodes over time.</li>
+          <li class="end"><strong>Long-term spine (v1.2):</strong> after first-walk L1, tracks for power, control, mechanical, UAV, cloud twin, and governance—see <a href="spine.html">Capability spine</a> and PRD §1.5.</li>
+        </ol>
+
+        <h2>Personas</h2>
+        <div class="grid-2">
+          <article class="card good">
+            <h3>P1 — Founder learner</h3>
+            <ul>
+              <li>Phone: micro sessions</li>
+              <li>Desktop: focus blocks and development tasks</li>
+              <li>Bench: lab blocks and project evidence</li>
+              <li>Also acts as reviewer and administrator until beta</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>P2 — Beta learner (M5)</h3>
+            <p>Adult learners with five to ten hours per week; same learning loop with consent, export, deletion, and experiment assignment infrastructure.</p>
+          </article>
+        </div>
+
+        <h2>Non-goals (version 1)</h2>
+        <ul>
+          <li>Native mobile applications, VR/AR, or multi-agent tutor orchestration</li>
+          <li>Leaderboards, badges, and social feeds</li>
+          <li>Neurostimulation, sleep cues, or cognitive-enhancement marketing</li>
+          <li>Claims of proven time savings prior to evaluation results</li>
+          <li>Simulation-only paths to tier L1</li>
+        </ul>
+
+        <div class="callout warn">
+          <strong>Open product hypotheses</strong> include daily adherence, FSRS calibration with generated variants, tutor dependence, and evidence verification quality. Milestones FR-110 and FR-111 require instrumentation from early releases.
+        </div>
+      </main>
+      <footer class="page-footer">Functional requirements and acceptance criteria: <a href="../docs/01-PRD.md">01-PRD.md</a> §6–9.</footer>
+    </div>
+  </div>
+  <script src="assets/nav.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

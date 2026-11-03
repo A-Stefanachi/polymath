@@ -1,0 +1,149 @@
+schema_version: 1
+key: tpl.elec.charge-current
+version: 2
+authoring_status: ready
+skill_key: elec.dc.charge-current-voltage
+task_kind: retrieval
+grader_type: exact_numeric
+difficulty_prior: 0.35
+title: Average current from charge and time
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-01'
+  llm_assistance:
+    used: true
+    roles:
+    - draft_template
+    - explanation
+    - distractors
+    - hints
+    - misconception_tags
+    model: claude-opus-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts:
+  - phone
+  - desktop
+  est_seconds: 90
+  phone_suitable: true
+  offline_gradable: true
+parameters:
+- name: q
+  type: float
+  min: 60.0
+  max: 1800.0
+  step: 30.0
+  nonzero: true
+  unit: C
+  description: Charge that passes
+- name: tmin
+  type: choice
+  unit: min
+  values:
+  - 2
+  - 3
+  - 4
+  - 5
+  - 10
+  - 15
+  - 20
+  - 30
+  description: Elapsed time in minutes
+derived:
+- name: ts
+  expr: tmin * 60
+  unit: s
+constraints:
+- id: real-current
+  expr: i >= 0.05 and i <= 3
+  reason: Keeps the current in the range of a small DC supply or charger cable.
+- id: not-near-one
+  expr: abs(i - 1) >= 0.1
+  reason: At 1 A the inverted ratio t/Q gives the same number, so that mistake would go undetected.
+render:
+  stem_md: 'A charger cable carries a steady current. In ${{tmin|int}}\ \mathrm{min}$ a charge of ${{q|int}}\ \mathrm{C}$
+    passes through the cable.
+
+
+    What is the current?
+
+    '
+  answer_prompt: Enter the current with a unit, for example 0.5 A.
+  alt_text: A charge of {{q|int}} coulombs passes through a cable in {{tmin|int}} minutes. Find the current.
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      i: q / ts
+  steps:
+  - id: s1
+    text_md: 'Current uses seconds, so convert the time: $t = {{tmin|int}} \times 60 = {{ts|int}}\ \mathrm{s}$.'
+  - id: s2
+    text_md: 'Current is charge per second: $I = Q/t = {{q|int}}/{{ts|int}} = {{i|tex:A}}$.'
+  explanation_md: One ampere is one coulomb per second, so the time must be in seconds.
+answer:
+  kind: numeric
+  value: i
+  unit: A
+  accept_units:
+  - A
+  - mA
+  bare_number_means: A
+  tolerance:
+    rel: 0.02
+    abs: 0.001
+verifiers:
+- id: charge-balance
+  kind: sympy_solve
+  independence: Solves the defining relation Q = I t for I with exact rationals, with the time written directly from minutes,
+    instead of evaluating the generator's quotient in floating point.
+  spec:
+    unknowns:
+    - ix
+    equations:
+    - ix * tmin * 60 - q
+    checks:
+    - unknown: ix
+      output: i
+  tolerance:
+    rel: 1.0e-09
+- id: dimension
+  kind: pint_dimension
+  independence: Dimensional analysis with pint on the parameter units; it does not check magnitude.
+  spec:
+    checks:
+    - expr: q / tmin
+      result_unit: A
+- id: window
+  kind: bounds
+  independence: Fixed physical range for a small DC charger cable, independent of any formula for the value.
+  spec:
+    output: i
+    lo: '0'
+    hi: '3'
+    strict: false
+hints:
+  l1: The question gives a charge and a time. What does one ampere mean in terms of those two?
+  l2: Current is charge per unit time, measured in coulombs per second. Check the unit of the time you were given.
+  l3: 'Convert the time first: {{tmin|int}} min is {{ts|int}} s. Now relate the charge to that time.'
+misconceptions:
+- tag: mc.current-minutes-not-seconds
+  description: Divides by the time in minutes without converting to seconds.
+  wrong_answer_expr: q / tmin
+  feedback_md: That gives coulombs per minute. An ampere is a coulomb per second, so convert the time first.
+- tag: mc.current-inverted-ratio
+  description: Divides time by charge.
+  wrong_answer_expr: ts / q
+  feedback_md: That ratio is seconds per coulomb. Current is charge divided by time.
+- tag: mc.current-charge-times-time
+  description: Multiplies charge by time.
+  wrong_answer_expr: q * ts
+  feedback_md: 'Charge and time are divided, not multiplied: current is how much charge passes each second.'
+fuzz:
+  samples: 200
+  seed_base: 6000
+  max_rejection_rate: 0.9
+  min_distinct_param_sets: 50

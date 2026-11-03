@@ -1,0 +1,155 @@
+schema_version: 1
+key: tpl.math.order-parens
+version: 2
+authoring_status: ready
+skill_key: math.alg.order-of-operations
+task_kind: problem
+grader_type: multiple_choice
+difficulty_prior: 0.3
+title: Brackets before multiplying
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-01'
+  llm_assistance:
+    used: true
+    roles:
+    - draft_template
+    - hints
+    - misconception_tags
+    - distractors
+    model: claude-opus-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts:
+  - phone
+  - desktop
+  est_seconds: 45
+  phone_suitable: true
+  offline_gradable: true
+parameters:
+- name: a
+  type: int
+  min: 7
+  max: 15
+  description: First number inside the bracket
+- name: b
+  type: int
+  min: 2
+  max: 5
+  description: Number subtracted inside the bracket
+- name: c
+  type: int
+  min: 2
+  max: 6
+  description: Multiplier
+- name: d
+  type: int
+  min: 2
+  max: 12
+  description: Number added at the front
+derived:
+- name: diff
+  expr: a - b
+- name: prod
+  expr: c * diff
+constraints: []
+render:
+  stem_md: Evaluate ${{d|int}} + {{c|int}} \times ({{a|int}} - {{b|int}})$.
+  answer_prompt: Choose the value of the expression.
+  alt_text: Evaluate {{d|int}} plus {{c|int}} times the bracket {{a|int}} minus {{b|int}}.
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      ans: d + c * (a - b)
+  steps:
+  - id: s1
+    text_md: 'Work out the bracket first: ${{a|int}} - {{b|int}} = {{diff|int}}$.'
+  - id: s2
+    text_md: 'Multiply next: ${{c|int}} \times {{diff|int}} = {{prod|int}}$.'
+  - id: s3
+    text_md: 'Add last: ${{d|int}} + {{prod|int}} = {{ans|int}}$.'
+answer:
+  n_shown: 4
+  shuffle: true
+  min_separation_rel: 0.04
+  options:
+  - id: correct
+    correct: true
+    value_expr: ans
+    text_md: ${{value|int}}$
+  - id: ignored
+    correct: false
+    value_expr: d + c * a - b
+    text_md: ${{value|int}}$
+    misconception_tag: mc.parens-ignored
+    feedback_md: This multiplies only the first number in the bracket. The bracket is one value, so finish it before multiplying.
+  - id: ltr
+    correct: false
+    value_expr: (d + c) * (a - b)
+    text_md: ${{value|int}}$
+    misconception_tag: mc.left-to-right
+    feedback_md: This adds before multiplying by working left to right. Multiplication comes before addition.
+  - id: addmult
+    correct: false
+    value_expr: d + c + a - b
+    text_md: ${{value|int}}$
+    misconception_tag: mc.adds-multiplier
+    feedback_md: This adds the multiplier to the bracket. The times sign means multiply.
+  - id: reversed
+    correct: false
+    value_expr: d + c * (b - a)
+    text_md: ${{value|int}}$
+    misconception_tag: mc.bracket-reversed
+    feedback_md: This subtracts inside the bracket in the wrong order. Keep the numbers in the order written.
+verifiers:
+- id: inverse-solve
+  kind: sympy_solve
+  independence: 'Inverts the expression: solves (x - d) / c + b = a exactly, so a wrong generator formula gives a different
+    root.'
+  spec:
+    unknowns:
+    - x
+    equations:
+    - (x - d) / c + b - a
+    checks:
+    - unknown: x
+      output: ans
+  tolerance:
+    rel: 1.0e-09
+- id: options-distinct
+  kind: distinct_options
+  independence: Evaluates every option, checks they are pairwise separated and that the keyed option equals the output the
+    solve confirmed; it checks the options, it does not recompute the answer.
+  spec:
+    correct_output: ans
+  tolerance:
+    rel: 0.01
+- id: window
+  kind: bounds
+  independence: The bracket is at least 2 and below a, so the value lies between these limits whatever formula produced it.
+  spec:
+    output: ans
+    lo: d + 2 * c
+    hi: d + c * a
+hints:
+  l1: Which part of the expression has to be finished before anything else?
+  l2: Brackets come first, then multiplication, then addition.
+  l3: 'Work out the bracket on its own: ${{a|int}} - {{b|int}} = {{diff|int}}$.'
+misconceptions:
+- tag: mc.parens-ignored
+  description: Multiplies only the first term of the bracket, as if the brackets were not there.
+- tag: mc.left-to-right
+  description: Works strictly left to right, adding before multiplying.
+- tag: mc.adds-multiplier
+  description: Adds the number outside the bracket instead of multiplying by it.
+- tag: mc.bracket-reversed
+  description: Subtracts the bracket terms in the wrong order.
+fuzz:
+  samples: 200
+  seed_base: 5000
+  max_rejection_rate: 0.7
+  min_distinct_param_sets: 50

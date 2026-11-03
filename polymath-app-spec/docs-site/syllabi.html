@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pillar syllabi — Polymath documentation</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/syllabi.css">
+</head>
+<body data-page="syllabi">
+  <a class="skip" href="#main">Skip to content</a>
+  <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+    <div class="main-wrap">
+      <main id="main" class="content">
+        <p class="kicker">Curriculum planning</p>
+        <h1>Pillar syllabi (T0–T6)</h1>
+        <p class="lede">
+          Module-level outcomes, evidence paths, checkpoints, and skill tables for the foundation walk and the capability spine.
+          Authoritative markdown lives under <code>content/syllabi/</code>; this page renders it for reading in the browser.
+        </p>
+        <p class="spec-ref">
+          <a href="../content/syllabi/README.md">content/syllabi/README.md</a>,
+          <a href="../docs/05-skill-graph-and-curriculum-spec.md">doc 05</a>,
+          <a href="curriculum.html">Curriculum overview</a>,
+          <a href="spine.html">Capability spine</a>
+        </p>
+
+        <div class="syllabi-toolbar">
+          <div class="tabs" id="syllabus-tabs" role="tablist" aria-label="Pillar"></div>
+          <label for="syllabus-pillar">Pillar</label>
+          <select id="syllabus-pillar" aria-label="Select capability pillar"></select>
+          <label for="syllabus-search">Find</label>
+          <input type="search" id="syllabus-search" class="search syllabus-search" placeholder="Skill or module…" autocomplete="off">
+        </div>
+
+        <p id="syllabus-meta" class="syllabus-meta"></p>
+
+        <p class="note syllabus-hours-note">
+          <strong>Hours:</strong> Pillar tables sum skill <code>est_minutes</code> (contact-time sketch).
+          Wider planning bands in each pillar include projects, rework, and review [P].
+          Spine-only skills not in the MVP graph are listed in
+          <a href="../content/syllabi/spine-planned-skills.yaml">spine-planned-skills.yaml</a>.
+        </p>
+
+        <div class="syllabus-layout">
+          <nav id="syllabus-toc" class="syllabus-toc" aria-label="Modules in this pillar" hidden>
+            <p class="syllabus-toc-title">Jump to module</p>
+            <ul id="syllabus-toc-list"></ul>
+          </nav>
+          <div id="syllabus-panel" class="syllabus-panel" aria-live="polite" aria-busy="true">
+            <p>Loading…</p>
+          </div>
+        </div>
+
+        <div class="callout tip">
+          After graph or plan edits, run
+          <code>python reference/generate_pillar_syllabi.py</code>
+          to refresh markdown, <code>spine-planned-skills.yaml</code>, and the offline bundle
+          (<code>docs-site/assets/syllabi-data.js</code>).
+          T0: <code>foundation-module-plan.yaml</code> · T1–T6: <code>spine-module-plan.yaml</code>.
+        </div>
+      </main>
+      <footer class="page-footer">
+        Syllabi render offline via bundled markdown; open
+        <code>docs-site/syllabi.html</code> directly in the browser.
+      </footer>
+    </div>
+  </div>
+  <script src="assets/nav.js"></script>
+  <script src="assets/app.js"></script>
+  <script src="assets/syllabi-data.js"></script>
+  <script src="assets/syllabi.js"></script>
+</body>
+</html>

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Concept explainer — Polymath documentation</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/explainer.css">
+</head>
+<body data-page="concept">
+  <a class="skip" href="#main">Skip to content</a>
+  <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+    <div class="main-wrap">
+      <main id="main" class="content explainer">
+        <p class="kicker">Plain-language product story · not the app itself</p>
+<section class="hero">
+      <h1>Practice that you can do without hints, then prove it on a real board.</h1>
+      <p class="lede">
+        Polymath is a phone-first practice app for one adult with about
+        <strong>8 hours a week</strong>. The purpose is to take you from
+        near zero to <strong>working knowledge (L1) in each subject</strong>
+        on the map. The first walk is math, electronics and embedded software;
+        the rest of the subjects follow the same loop. Every task asks you
+        to produce an answer. Progress is a <em>working thing</em>, not a streak.
+      </p>
+      <ul class="pills" aria-label="Positioning">
+        <li>Spaced retrieval</li>
+        <li>Graded feedback</li>
+        <li>Guided builds</li>
+        <li>No brain-hacking claims</li>
+      </ul>
+    </section>
+
+    <section id="idea">
+      <h2>The problem in four boxes</h2>
+      <p>Most learning apps fail working adults in the same four ways.</p>
+      <div class="grid-4">
+        <article class="card">
+          <div class="icon" aria-hidden="true">⏱</div>
+          <h3>Time is scarce</h3>
+          <p>Working knowledge of one area is a long haul. Wasted minutes are expensive.</p>
+        </article>
+        <article class="card">
+          <div class="icon" aria-hidden="true">🎭</div>
+          <h3>False progress</h3>
+          <p>Tutorials and unguarded AI raise practice scores while unaided skill falls.</p>
+        </article>
+        <article class="card">
+          <div class="icon" aria-hidden="true">🌫</div>
+          <h3>Forgetting</h3>
+          <p>Without a schedule, skills fade. Without a graph, you hit material too early.</p>
+        </article>
+        <article class="card">
+          <div class="icon" aria-hidden="true">🔌</div>
+          <h3>Hardware is physical</h3>
+          <p>A quiz cannot tell you whether a board works on the bench.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="week">
+      <h2>One person, eight hours, two jobs</h2>
+      <p>
+        You are the only user for a long time. You also <em>build</em> the app.
+        Those hours cannot be spent twice. Learning is reserved first.
+      </p>
+      <div class="split">
+        <div>
+          <h3>A target week</h3>
+          <figure class="bars" aria-label="Hours in a target week">
+            <div class="bar-row"><span>Mon–Thu micro</span><i style="--w:12.5%"></i><b>1.0 h</b></div>
+            <div class="bar-row"><span>Tue + Thu focus</span><i style="--w:25%"></i><b>2.0 h</b></div>
+            <div class="bar-row"><span>Sat lab</span><i style="--w:37.5%"></i><b>3.0 h</b></div>
+            <div class="bar-row"><span>Sun focus + review</span><i style="--w:15.6%"></i><b>1.25 h</b></div>
+          </figure>
+          <p class="note">About 7.5 hours of study in a good week. While building, reserve 2.5 of the 8 for learning; the rest is construction.</p>
+        </div>
+        <div class="diagram" aria-label="How eight hours split">
+          <div class="flow">
+            <div class="flow-node root">8 hours this week</div>
+            <div class="flow-row">
+              <div class="flow-col">
+                <span class="arrow">↓</span>
+                <div class="flow-node">2.5 h learn</div>
+                <span class="arrow">↓</span>
+                <div class="flow-node soft">Anki / app sessions</div>
+              </div>
+              <div class="flow-col">
+                <span class="arrow">↓</span>
+                <div class="flow-node">4.75 h build</div>
+                <span class="arrow">↓</span>
+                <div class="flow-node soft">One backlog task</div>
+              </div>
+              <div class="flow-col">
+                <span class="arrow">↓</span>
+                <div class="flow-node soft">0.75 h slack</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="loop">
+      <h2>How one skill is learned</h2>
+      <p>
+        New skill: see it done, try with fading help, then recall it later the same day.
+        After that the scheduler brings it back before it fades. Reviews use a
+        <strong>fresh variant</strong>, so you remember the method, not the answer.
+      </p>
+      <div class="diagram wide" aria-label="How one skill is learned">
+        <ol class="flow-steps">
+          <li>Skill unlocks when prerequisites are solid</li>
+          <li>Worked example</li>
+          <li>Faded problem</li>
+          <li>Same-day retrieval</li>
+          <li>Later reviews with new numbers each time</li>
+          <li class="choice">Looks mastered? If not, keep reviewing</li>
+          <li>Needs a real applied attempt on the bench</li>
+          <li class="end">L1 · working knowledge</li>
+        </ol>
+      </div>
+      <div class="grid-3">
+        <article class="card">
+          <h3>Micro · 5–20 min</h3>
+          <p>Phone. Reviews and short problems. Starts in about a second when the app is warm.</p>
+        </article>
+        <article class="card">
+          <h3>Focus · 45–120 min</h3>
+          <p>Laptop. Mixed task types. Code and longer problems live here.</p>
+        </article>
+        <article class="card">
+          <h3>Lab · 2–4 h</h3>
+          <p>Bench. Parts list, safety card, then a build you can photograph or log.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="five">
+      <h2>The five rules that make the concept click</h2>
+      <p>
+        These are the v1.1 refinements. They do not add extra build work to the
+        first slice. Tap a rule.
+      </p>
+
+      <div class="tabs" role="tablist" aria-label="Five concept rules">
+        <button role="tab" aria-selected="true" aria-controls="p1" id="t1" data-tab="1">1 · Artifact</button>
+        <button role="tab" aria-selected="false" aria-controls="p2" id="t2" data-tab="2">2 · Tutor</button>
+        <button role="tab" aria-selected="false" aria-controls="p3" id="t3" data-tab="3">3 · Two tracks</button>
+        <button role="tab" aria-selected="false" aria-controls="p4" id="t4" data-tab="4">4 · Credit</button>
+        <button role="tab" aria-selected="false" aria-controls="p5" id="t5" data-tab="5">5 · Map</button>
+      </div>
+
+      <div class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+        <h3>Progress is the next working thing</h3>
+        <p>
+          The home number is not “hours studied” or “nodes complete”.
+          It is the <strong>next competence artifact</strong>: a named build
+          plus the unaided checks still missing.
+        </p>
+        <ol class="ladder">
+          <li class="done"><strong>L0</strong> Blink an LED. Photo or note logged.</li>
+          <li class="now"><strong>Next</strong> Divider / RC filter. Scope trace matches the simulation.</li>
+          <li><strong>Then</strong> Transistor switch and regulator.</li>
+          <li><strong>L1 gate</strong> Skills in that area plus accepted project evidence.</li>
+        </ol>
+        <p class="note">Hour estimates are rough guesses. They are never the progress object.</p>
+      </div>
+
+      <div class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+        <h3>Help is a ladder on this question, not a chatbot</h3>
+        <p>
+          Unguarded ChatGPT raised practice scores and cut unaided exam scores.
+          A safe tutor mostly <em>avoids harm</em>. It is not the product.
+        </p>
+        <div class="split">
+          <div>
+            <p class="label">You try first. Then you climb one rung at a time.</p>
+            <ol class="rungs" id="rungs">
+              <li data-rung="1"><b>1 Nudge</b> A pointer. No content of the answer.</li>
+              <li data-rung="2"><b>2 Concept</b> Which law or idea applies.</li>
+              <li data-rung="3"><b>3 Step</b> The next worked step only.</li>
+              <li data-rung="4"><b>4 Reveal</b> Full solution. This attempt no longer counts.</li>
+            </ol>
+            <button type="button" class="btn" id="rung-next">Show next rung</button>
+            <button type="button" class="btn ghost" id="rung-reset">Reset</button>
+          </div>
+          <div class="diagram" aria-label="Tutor gate">
+            <ol class="flow-steps">
+              <li>Open question</li>
+              <li class="choice">Tried something? If not, write what you tried</li>
+              <li>Rung 1 → 2 → 3</li>
+              <li>Rung 4 reveal · this attempt no longer counts</li>
+              <li class="end">Checkpoints: tutor hidden</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="p3" role="tabpanel" aria-labelledby="t3" hidden>
+        <h3>Same skill, two places</h3>
+        <p>
+          Weekdays you can practise on a phone or laptop. Weekends you measure
+          the same idea on a board. The review schedule is shared.
+          A simulation never replaces the bench attempt required for working knowledge.
+        </p>
+        <div class="diagram wide" aria-label="Same skill on phone and bench">
+          <div class="flow">
+            <div class="flow-node root">One skill · e.g. voltage divider</div>
+            <div class="flow-row">
+              <div class="flow-col">
+                <span class="arrow">↓</span>
+                <div class="flow-node">Phone / laptop</div>
+                <span class="arrow">↓</span>
+                <div class="flow-node soft">Numbers, choices, later a sim link</div>
+              </div>
+              <div class="flow-col">
+                <span class="arrow">↓</span>
+                <div class="flow-node">Bench</div>
+                <span class="arrow">↓</span>
+                <div class="flow-node soft">Predict, then measure</div>
+              </div>
+            </div>
+            <span class="arrow">↓</span>
+            <div class="flow-node">One shared review card</div>
+            <span class="arrow">↓</span>
+            <div class="flow-node end">L1 still needs the bench attempt</div>
+          </div>
+        </div>
+        <p class="note">We will not build our own circuit simulator. A later version may open someone else’s.</p>
+      </div>
+
+      <div class="panel" id="p4" role="tabpanel" aria-labelledby="t4" hidden>
+        <h3>A build is proof of use, not a diploma</h3>
+        <p>
+          When evidence for a step is accepted, that skill gets
+          <strong>applied credit</strong>. That is one of several mastery conditions.
+          A working blink does not mark Ohm’s law mastered by itself.
+        </p>
+        <div class="diagram wide" aria-label="How project credit works">
+          <ol class="flow-steps">
+            <li>Finish a project step</li>
+            <li class="choice">Evidence accepted? If not, credit stays pending</li>
+            <li>L0 credit now</li>
+            <li>Counts as the applied attempt only</li>
+            <li>Still need unaided reviews on different days and variants</li>
+            <li class="end">Then the skill can be mastered · never L2 or L3 from a build</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="panel" id="p5" role="tabpanel" aria-labelledby="t5" hidden>
+        <h3>Working knowledge of each subject — first walk, then the rest</h3>
+        <p>
+          The purpose is <strong>L1 in each subject</strong>: you can complete a guided
+          project in that area and debug it. That is not “top 1%” and not expert depth
+          everywhere. It is working competence, subject by subject.
+        </p>
+        <p>
+          The first walk is math → electronics → embedded, proved by a working
+          sensor-logging board. That is how we start, because one path lets the
+          loop be tested. It is not a smaller ambition. After that path works,
+          the same loop covers the other subjects on the map. One subject can
+          later go deeper (L2).
+        </p>
+        <div class="diagram wide" aria-label="Purpose versus first walk">
+          <div class="scope">
+            <div class="scope-col yes">
+              <h4>Purpose</h4>
+              <p>From 0 to working knowledge (L1) in each subject.</p>
+            </div>
+            <div class="scope-col later">
+              <h4>First walk</h4>
+              <ol class="flow-steps compact">
+                <li>Math essentials</li>
+                <li>Electronics</li>
+                <li>Embedded software</li>
+                <li class="end">Working sensor-logging board</li>
+              </ol>
+            </div>
+            <div class="scope-col no">
+              <h4>Then the map</h4>
+              <p>Signals, control, computing systems, materials, and the other nodes use the same loop. One spine can go to L2.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="honest">
+      <h2>What is proven, and what is a bet</h2>
+      <div class="grid-2">
+        <article class="card good">
+          <h3>Supported in other domains</h3>
+          <ul>
+            <li>Retrieval practice and spacing</li>
+            <li>Worked examples that fade</li>
+            <li>Mixing similar problem types after each is solid</li>
+            <li>Make the learner try before hints</li>
+          </ul>
+        </article>
+        <article class="card warn">
+          <h3>Our combination is unproven</h3>
+          <ul>
+            <li>Skill graph + hardware builds + SPICE grading + tutor</li>
+            <li>So the app logs aided vs unaided scores from the start</li>
+            <li>We do not claim the app makes you faster until those scores say so</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="build">
+      <h2>What we build first</h2>
+      <p>
+        Dates and hours are planning guesses, marked as such in the spec.
+        The point of the picture is the <strong>order</strong>, not the calendar.
+      </p>
+      <div class="diagram wide" aria-label="Build order">
+        <ol class="flow-steps">
+          <li>Phase −1 · Anki + sheets · 4 weeks</li>
+          <li>Lean slice · graph, reviews, numeric grading</li>
+          <li class="choice">Go / no-go after 4 weeks of use</li>
+          <li>Stop or cut → personal tool only</li>
+          <li class="end">Continue → tutor, sandbox, projects, beta, one group at a time</li>
+        </ol>
+      </div>
+      <div class="grid-3">
+        <article class="card">
+          <h3>In the first slice</h3>
+          <p>Sign-in, skill map, spaced reviews, worked example → retrieval, numeric grading, a progress page, a handwritten project log, a guided blink.</p>
+        </article>
+        <article class="card">
+          <h3>After a go decision</h3>
+          <p>Tutor ladder, code and SPICE graders, evidence upload, unaided checkpoints, experiments, then maybe a small beta.</p>
+        </article>
+        <article class="card">
+          <h3>Not in the first slice</h3>
+          <p>Pattern gym as an app feature, a built-in simulator, a study cohort, certificates, leaderboards, “learn everything”.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="claims">
+      <h2>Language we allow, and language we refuse</h2>
+      <div class="grid-2">
+        <blockquote>
+          <p>“Next: blink LED. Evidence not yet logged.”</p>
+          <p>“Try it first. Hints unlock after your first attempt.”</p>
+          <p>“Practice with hints: 92%. Without hints: 71%.”</p>
+        </blockquote>
+        <blockquote class="no">
+          <p>“Learn twice as fast with our AI tutor.”</p>
+          <p>“Unlock your brain’s peak window.”</p>
+          <p>“Reach the top 1% in every discipline.”</p>
+        </blockquote>
+      </div>
+    </section>
+        <p class="spec-ref">Binding rules: <a href="../docs/00-contract.md">00-contract.md</a>, <a href="../docs/01-PRD.md">01-PRD.md</a>. Technical build view: <a href="architecture-explainer.html">Architecture explainer</a>.</p>
+      </main>
+    </div>
+  </div>
+  <script src="assets/nav.js"></script>
+  <script src="assets/app.js"></script>
+  <script src="assets/explainer.js"></script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+schema_version: 1
+key: tpl.math.linear-slope
+version: 2
+authoring_status: ready
+skill_key: math.alg.linear-functions
+task_kind: problem
+grader_type: exact_numeric
+difficulty_prior: 0.3
+title: Slope from two points
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-01'
+  llm_assistance:
+    used: true
+    roles:
+    - draft_template
+    - hints
+    - misconception_tags
+    model: claude-opus-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts:
+  - phone
+  - desktop
+  est_seconds: 60
+  phone_suitable: true
+  offline_gradable: true
+parameters:
+- name: m
+  type: int
+  min: -5
+  max: 6
+  description: Slope, chosen first so the division is clean
+- name: x1
+  type: int
+  min: -6
+  max: 6
+  description: x of the first point
+- name: y1
+  type: int
+  min: -6
+  max: 6
+  description: y of the first point
+- name: dx
+  type: int
+  min: 2
+  max: 6
+  description: Run between the points
+derived:
+- name: x2
+  expr: x1 + dx
+- name: y2
+  expr: y1 + m * dx
+- name: rise
+  expr: y2 - y1
+- name: run
+  expr: x2 - x1
+constraints:
+- id: real-slope
+  expr: abs(m) >= 2
+  reason: Slopes of 0 and 1 hide the difference between rise over run and run over rise.
+render:
+  stem_md: A straight line passes through $({{x1|int}}, {{y1|int}})$ and $({{x2|int}}, {{y2|int}})$. What is its slope?
+  answer_prompt: Enter the slope.
+  alt_text: A straight line passes through the points {{x1|int}}, {{y1|int}} and {{x2|int}}, {{y2|int}}. What is its slope?
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      slope: (y2 - y1) / (x2 - x1)
+  steps:
+  - id: s1
+    text_md: 'Find the rise and the run: rise $= {{y2|int}} - {{y1|paren}} = {{rise|int}}$, run $= {{x2|int}} - {{x1|paren}}
+      = {{run|int}}$.'
+  - id: s2
+    text_md: 'Slope is rise over run: ${{rise|int}} / {{run|int}} = {{slope|int}}$.'
+answer:
+  kind: numeric
+  value: slope
+  unit: dimensionless
+  accept_units:
+  - dimensionless
+  bare_number_means: dimensionless
+  tolerance:
+    rel: 0.0
+    abs: 1.0e-06
+verifiers:
+- id: inverse-solve
+  kind: sympy_solve
+  independence: Solves for the line y = s x + k that passes through both points instead of using the difference quotient.
+  spec:
+    unknowns:
+    - s
+    - k
+    equations:
+    - y1 - (s * x1 + k)
+    - y2 - (s * x2 + k)
+    checks:
+    - unknown: s
+      output: slope
+  tolerance:
+    rel: 1.0e-09
+- id: window
+  kind: bounds
+  independence: The run is at least 2, so the slope must be smaller in size than the rise.
+  spec:
+    output: slope
+    lo: -abs(y2 - y1)
+    hi: abs(y2 - y1)
+    strict: true
+hints:
+  l1: How far up or down does the line go, and how far across, between the two points?
+  l2: Slope is the change in y divided by the change in x, with both changes taken in the same order.
+  l3: 'Find the rise: ${{y2|int}} - {{y1|paren}} = {{rise|int}}$.'
+misconceptions:
+- tag: mc.run-over-rise
+  description: Divides the change in x by the change in y.
+  wrong_answer_expr: (x2 - x1) / (y2 - y1)
+  feedback_md: That is run over rise, the fraction upside down.
+- tag: mc.mixed-point-order
+  description: Subtracts the points in opposite orders on top and bottom.
+  wrong_answer_expr: (y2 - y1) / (x1 - x2)
+  feedback_md: The sign is flipped. Take both differences in the same point order.
+- tag: mc.forgets-run
+  description: Gives the change in y without dividing by the change in x.
+  wrong_answer_expr: y2 - y1
+  feedback_md: That is only the rise. Slope also needs the run.
+fuzz:
+  samples: 200
+  seed_base: 5000
+  max_rejection_rate: 0.7
+  min_distinct_param_sets: 50

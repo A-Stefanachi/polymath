@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grading & tutor — Polymath documentation</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="grading">
+  <a class="skip" href="#main">Skip to content</a>
+  <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+    <div class="main-wrap">
+      <main id="main" class="content">
+        <p class="kicker">Assessment integrity</p>
+        <h1>Grading and tutor policy</h1>
+        <p class="spec-ref">
+          <a href="../docs/08-grading-and-tutor-spec.md">docs/08-grading-and-tutor-spec.md</a>,
+          <a href="../docs/12-security-privacy-compliance.md">docs/12-security-privacy-compliance.md</a> (LLM controls)
+        </p>
+
+        <div class="summary">
+          <h2>Summary</h2>
+          <ul>
+            <li>Deterministic graders evaluate numeric, symbolic, test, and simulation outputs before any model-based judgment.</li>
+            <li>Large language models support rubrics, tagging, drafting, and gated tutoring — not sole pass/fail for executable tasks.</li>
+            <li>Learner code executes only in the sandbox service.</li>
+            <li>Hint levels 0–4 apply; level 4 discloses the reference solution and ends credit for the attempt.</li>
+          </ul>
+        </div>
+
+        <div class="tabs" role="tablist">
+          <button role="tab" aria-selected="true" data-tab="n">Numeric</button>
+          <button role="tab" aria-selected="false" data-tab="s">Symbolic</button>
+          <button role="tab" aria-selected="false" data-tab="c">Code / SPICE</button>
+          <button role="tab" aria-selected="false" data-tab="t">Tutor</button>
+        </div>
+        <div class="panel" role="tabpanel" data-tabpanel="n">
+          <p>TypeScript grading-core in the API tier (and client offline for cached items). Unit tolerance and dimensional analysis. Target p95 latency under two seconds.</p>
+        </div>
+        <div class="panel" role="tabpanel" data-tabpanel="s" hidden>
+          <p>Worker SymPy equivalence with a hard timeout (~1.5 s). Long-running work falls back to the job queue.</p>
+        </div>
+        <div class="panel" role="tabpanel" data-tabpanel="c" hidden>
+          <p>Job handler invokes sandbox runners (compile/test, ngspice, kicad-cli). Output compared to verified reference; network disabled.</p>
+        </div>
+        <div class="panel" role="tabpanel" data-tabpanel="t" hidden>
+          <p>Policy gate requires an attempt before model invocation. Prompt includes item, learner response, and reference; leak filter blocks final answers below level 4. Checkpoints disable the tutor.</p>
+        </div>
+
+        <h2>Grader types</h2>
+        <p class="pills"><code>exact_numeric</code><code>symbolic_equivalence</code><code>multiple_choice</code><code>code_tests</code><code>spice_compare</code><code>rubric_llm</code><code>measurement_check</code><code>human_review</code></p>
+
+        <h2>Item verification gate</h2>
+        <ol class="flow-steps">
+          <li>Author commits template YAML; CI runs lint and generation checks.</li>
+          <li>Independent verification recomputes answers for multiple seeds.</li>
+          <li>Database status must be <code>verified</code> before serve eligibility.</li>
+          <li class="end">Confirmed defects trigger retirement within 48 hours (SM-07).</li>
+        </ol>
+
+        <div class="callout no">
+          A large language model must not be the only authority for numeric correctness or automated test pass/fail.
+        </div>
+      </main>
+      <footer class="page-footer">Test vectors: <code>reference/verifiers/tests/grader_vectors.json</code>.</footer>
+    </div>
+  </div>
+  <script src="assets/nav.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

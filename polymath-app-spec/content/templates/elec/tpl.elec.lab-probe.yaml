@@ -1,0 +1,130 @@
+schema_version: 1
+key: tpl.elec.lab-probe
+concept_static: true
+version: 2
+authoring_status: ready
+skill_key: elec.meas.lab-safety-esd
+task_kind: retrieval
+grader_type: multiple_choice
+difficulty_prior: 0.3
+title: Before probing a powered circuit
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-01'
+  llm_assistance:
+    used: true
+    roles:
+    - draft_template
+    - explanation
+    - distractors
+    - hints
+    - misconception_tags
+    model: claude-opus-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts:
+  - phone
+  - desktop
+  est_seconds: 45
+  phone_suitable: true
+  offline_gradable: true
+parameters: []
+constraints: []
+render:
+  stem_md: 'You want to measure a node on a powered low-voltage breadboard (24 V or less) with a bench oscilloscope probe.
+    What should you do first?
+
+    '
+  alt_text: A question asking what to do first when using a scope probe on a low-voltage breadboard, with four written options.
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      ans: '1'
+      w0: '2'
+      w1: '3'
+      w2: '4'
+      w3: '5'
+  steps:
+  - id: s1
+    text_md: 'Check that the supply is what you expect and within the probe''s rating. This lab stays at low voltage: never
+      probe mains.'
+  - id: s2
+    text_md: A bench scope's ground lead is normally tied to earth through its power cord, so it goes only on the circuit's
+      ground node. Then touch the tip to the node you want to measure.
+  explanation_md: Decide where the ground lead goes before anything else. On a mains-powered scope, a ground lead on the wrong
+    node can create a short.
+answer:
+  n_shown: 4
+  shuffle: true
+  options:
+  - id: correct
+    correct: true
+    value_expr: ans
+    text_md: Confirm the supply voltage and probe rating, then clip the probe ground lead to the circuit's ground node
+  - id: nearest-node
+    correct: false
+    value_expr: w0
+    text_md: Clip the ground lead to whichever node is closest
+    misconception_tag: mc.probe-ground-any-node
+    feedback_md: The scope's ground lead is normally earthed, so on the wrong node it can create a short. Use the circuit's
+      ground node.
+  - id: no-ground
+    correct: false
+    value_expr: w1
+    text_md: Leave the ground lead unconnected and touch only the tip to the node
+    misconception_tag: mc.probe-no-ground
+    feedback_md: A voltage needs a reference. Without the ground lead the reading is unreliable, so connect it to circuit
+      ground first.
+  - id: finger-tip
+    correct: false
+    value_expr: w2
+    text_md: Touch the probe tip with a finger to check that the probe is working
+    misconception_tag: mc.probe-tip-finger
+    feedback_md: Keep fingers away from the metal of the tip while a circuit is on. Check the probe with the scope's calibration
+      output instead.
+  - id: slide-along
+    correct: false
+    value_expr: w3
+    text_md: Slide the tip along the row of pins until the trace looks right
+    misconception_tag: mc.probe-slides-across-pins
+    feedback_md: A tip that slips between pins can short neighbouring nodes. Pick the node first, then place the tip on it.
+verifiers:
+- id: options-distinct
+  kind: distinct_options
+  independence: 'Structural check only: exactly one option is keyed correct and the option labels are distinct. It cannot
+    judge the key, so this item needs G3 sign-off (00a H2).'
+  spec:
+    correct_output: ans
+  tolerance:
+    rel: 0.01
+- id: window
+  kind: bounds
+  independence: Confirms the keyed option label is the one marked correct; a structural check that says nothing about the
+    content.
+  spec:
+    output: ans
+    lo: '0.5'
+    hi: '1.5'
+    strict: false
+hints:
+  l1: A measurement needs two connections. Which one has a fixed place on the circuit?
+  l2: A bench scope's ground lead is usually tied to earth, so where it goes matters more than where the tip goes.
+  l3: First check the supply against what you expect and the probe's rating. Then decide where the ground lead goes.
+misconceptions:
+- tag: mc.probe-ground-any-node
+  description: Treats the ground lead as free to go anywhere.
+- tag: mc.probe-no-ground
+  description: Skips the ground reference.
+- tag: mc.probe-tip-finger
+  description: Tests the probe on the body while the circuit is live.
+- tag: mc.probe-slides-across-pins
+  description: Moves the probe across live pins.
+fuzz:
+  samples: 200
+  seed_base: 7200
+  max_rejection_rate: 0.9
+  min_distinct_param_sets: 1

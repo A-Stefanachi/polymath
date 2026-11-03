@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Polymath — documentation overview</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="home">
+  <a class="skip" href="#main">Skip to content</a>
+  <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+    <div class="main-wrap">
+      <main id="main" class="content">
+        <p class="kicker">Polymath implementation specification · v1.1</p>
+        <h1>Documentation overview</h1>
+        <p class="lede">
+          This site summarizes the Polymath specification package for reading in a browser.
+          The authoritative sources remain the Markdown files under <code>docs/</code> and the machine-readable backlog.
+          Implementation agents should use those sources directly. Pages may be opened locally without a web server.
+        </p>
+
+        <div class="summary">
+          <h2>Summary</h2>
+          <ul>
+            <li><strong>Polymath</strong> is a mobile-first progressive web application for adaptive practice: spaced retrieval (FSRS), a skill graph, execution-based grading, an attempt-first tutor, and bench projects verified by evidence.</li>
+            <li>The stated learning outcome is <strong>working knowledge (tier L1)</strong> in each subject on the curriculum map, beginning with math, electronics, and embedded software.</li>
+            <li>Delivery follows a <strong>lean slice</strong> first (approximately 233 founder-hours of build effort), then deferred groups D1–D9; the <a href="spine.html">capability spine</a> documents long-term tracks (dual-use literacy, defense context, AI, cyber, physical builds) after the first walk.</li>
+            <li>Product copy is limited to evidence-backed claims; neuroscience, neurostimulation, and “top percentile” positioning are out of scope.</li>
+          </ul>
+        </div>
+
+        <h2>Recommended reading paths</h2>
+        <table class="path-table">
+          <thead>
+            <tr><th>Duration</th><th>Audience / intent</th><th>Suggested pages</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>5 minutes</td>
+              <td>Orientation to purpose and loop</td>
+              <td><a href="concept.html">Concept explainer</a> or <a href="product.html">Product overview</a></td>
+            </tr>
+            <tr>
+              <td>30 minutes</td>
+              <td>Steering and prioritization</td>
+              <td><a href="rules.html">Contract</a> → <a href="product.html">Product</a> → <a href="plan.html">Delivery plan</a> → <a href="system.html">Architecture</a> → <a href="learning.html">Learner model</a></td>
+            </tr>
+            <tr>
+              <td>2 hours</td>
+              <td>End-to-end understanding</td>
+              <td>All topics in the navigation, then the <a href="source.html">specification index</a> for detail</td>
+            </tr>
+            <tr>
+              <td>Implementation</td>
+              <td>Executing a backlog task</td>
+              <td><a href="agents.html">Agent workflow</a> and the task references in <a href="source.html">specification index</a></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>Recommended sequence for the founder</h2>
+        <div class="grid-3">
+          <article class="card">
+            <h3>Phase −1</h3>
+            <p>Four-week pre-build validation: spaced practice with Anki, generated problem sheets, and a study log. See <a href="plan.html#phase-minus-one">Delivery plan</a>.</p>
+          </article>
+          <article class="card">
+            <h3>Lean slice</h3>
+            <p>Implement daily study with graph, FSRS, session builder, numeric and symbolic grading, PWA shell, and verified templates. Tutor and sandbox are deferred.</p>
+          </article>
+          <article class="card">
+            <h3>Go / no-go</h3>
+            <p>Scorecard review four weeks after first production use. Extend the product by one deferred group at a time, selected from logged operational pain.</p>
+          </article>
+        </div>
+
+        <h2>Topic index</h2>
+        <ul class="pills">
+          <li><a href="rules.html">Contract &amp; claims</a></li>
+          <li><a href="learning.html">FSRS &amp; mastery</a></li>
+          <li><a href="curriculum.html">Skill graph</a></li>
+          <li><a href="syllabi.html">Pillar syllabi</a></li>
+          <li><a href="grading.html">Grading &amp; tutor</a></li>
+          <li><a href="experience.html">User experience</a></li>
+          <li><a href="content.html">Content pipeline</a></li>
+          <li><a href="security.html">Security</a></li>
+          <li><a href="measure.html">Evaluation</a></li>
+        </ul>
+
+        <div class="callout tip">
+          <strong>Evidence tags</strong> used throughout the specification:
+          <code>[V]</code> verified from source,
+          <code>[R]</code> recalled,
+          <code>[P]</code> proposal or inference.
+          User-facing copy must not state <code>[R]</code> or <code>[P]</code> claims as established fact.
+        </div>
+      </main>
+      <footer class="page-footer">
+        Authoritative contract: <code>docs/00-contract.md</code>.
+        If this overview and the Markdown specification disagree, the Markdown specification prevails.
+      </footer>
+    </div>
+  </div>
+  <script src="assets/nav.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

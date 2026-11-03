@@ -1,0 +1,126 @@
+schema_version: 1
+key: tpl.math.ratios-percent
+version: 2
+authoring_status: ready
+skill_key: math.alg.ratios-proportions
+task_kind: problem
+grader_type: exact_numeric
+difficulty_prior: 0.3
+title: Percent of a value
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-01'
+  llm_assistance:
+    used: true
+    roles:
+    - draft_template
+    - hints
+    - misconception_tags
+    model: claude-opus-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts:
+  - phone
+  - desktop
+  est_seconds: 60
+  phone_suitable: true
+  offline_gradable: true
+parameters:
+- name: p
+  type: choice
+  values:
+  - 5
+  - 15
+  - 20
+  - 25
+  - 30
+  - 35
+  - 40
+  - 45
+  - 60
+  - 70
+  - 75
+  - 80
+  description: Percentage; 10 is left out because n/p and the answer then coincide
+- name: k
+  type: int
+  min: 1
+  max: 20
+  description: Multiplier that sets n to a multiple of 20
+derived:
+- name: n
+  expr: 20 * k
+- name: frac
+  expr: p / 100
+constraints: []
+render:
+  stem_md: What is ${{p|int}}\%$ of ${{n|int}}$?
+  answer_prompt: Enter a number.
+  alt_text: What is {{p|int}} percent of {{n|int}}?
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      ans: n * p / 100
+  steps:
+  - id: s1
+    text_md: 'Write the percentage as a decimal: ${{p|int}}\% = {{p|int}} / 100 = {{frac}}$.'
+  - id: s2
+    text_md: 'Multiply: ${{frac}} \times {{n|int}} = {{ans|int}}$.'
+answer:
+  kind: numeric
+  value: ans
+  unit: dimensionless
+  accept_units:
+  - dimensionless
+  bare_number_means: dimensionless
+  tolerance:
+    rel: 0.0
+    abs: 1.0e-06
+verifiers:
+- id: inverse-solve
+  kind: sympy_solve
+  independence: Solves the proportion x / n = p / 100 for the part exactly instead of multiplying through.
+  spec:
+    unknowns:
+    - x
+    equations:
+    - x / n - p / 100
+    checks:
+    - unknown: x
+      output: ans
+  tolerance:
+    rel: 1.0e-09
+- id: window
+  kind: bounds
+  independence: A percentage below 100 of a positive number must be positive and smaller than that number.
+  spec:
+    output: ans
+    lo: '0'
+    hi: n
+    strict: true
+hints:
+  l1: What does the word percent mean?
+  l2: Percent means out of a hundred, so turn the percentage into a decimal and multiply by the whole.
+  l3: 'Write the percentage as a decimal: ${{p|int}} / 100 = {{frac}}$.'
+misconceptions:
+- tag: mc.stops-at-decimal
+  description: Gives the decimal form of the percentage and stops.
+  wrong_answer_expr: p / 100
+  feedback_md: That is only the percentage as a decimal. It still has to be applied to the whole.
+- tag: mc.forgets-hundred
+  description: Multiplies by the percentage without dividing by 100.
+  wrong_answer_expr: n * p
+  feedback_md: A percentage is out of a hundred, so it cannot be used as a plain multiplier.
+- tag: mc.divides-by-percent
+  description: Divides the whole by the percentage.
+  wrong_answer_expr: n / p
+  feedback_md: Dividing by the percentage is not the same as taking a part of the whole.
+fuzz:
+  samples: 200
+  seed_base: 5000
+  max_rejection_rate: 0.7
+  min_distinct_param_sets: 50

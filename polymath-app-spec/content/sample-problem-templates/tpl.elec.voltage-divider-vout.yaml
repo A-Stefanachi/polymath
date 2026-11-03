@@ -1,0 +1,90 @@
+# Sample 1: exact_numeric with units (voltage divider).
+schema_version: 1
+key: tpl.elec.voltage-divider-vout
+version: 1
+authoring_status: ready
+skill_key: elec.dc.voltage-divider
+task_kind: problem
+grader_type: exact_numeric
+difficulty_prior: 0.35
+title: Unloaded voltage divider output
+license: original
+source: original
+provenance:
+  authors: [founder]
+  created: "2026-10-31"
+  llm_assistance:
+    used: true
+    roles: [hints, misconception_tags]
+    model: claude-sonnet-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts: [phone, desktop]
+  est_seconds: 60
+  phone_suitable: true
+  offline_gradable: true
+parameters:
+  - { name: vin, type: choice, unit: V, values: [3.3, 5, 9, 12, 24], description: Supply voltage }
+  - { name: r1, type: e_series, series: E24, decade_min: 2, decade_max: 4, unit: ohm, description: Top resistor (supply side) }
+  - { name: r2, type: e_series, series: E24, decade_min: 2, decade_max: 4, unit: ohm, description: Bottom resistor (ground side) }
+derived:
+  - { name: iq, expr: "vin / (r1 + r2)", unit: A }
+constraints:
+  - { id: not-equal, expr: "r1 != r2", reason: "Equal resistors make the answer vin/2 and let the learner guess without computing." }
+  - { id: ratio-window, expr: "r2 / (r1 + r2) >= 0.1 and r2 / (r1 + r2) <= 0.9", reason: "Keeps the output between 10 percent and 90 percent of the supply so it is neither near zero nor near the rail." }
+  - { id: swap-separable, expr: "abs(r1 - r2) / (r1 + r2) >= 0.1", reason: "The swapped-resistor wrong answer must differ from the right answer by far more than the tolerance." }
+render:
+  stem_md: |
+    A voltage divider is built from $R_1 = {{r1|tex}}$ (top, connected to the supply) and
+    $R_2 = {{r2|tex}}$ (bottom, connected to ground). The supply is $V_{in} = {{vin|tex}}$.
+    The output is taken from the junction of the two resistors and nothing else is connected to it.
+
+    What is $V_{out}$, the voltage at the junction relative to ground?
+  answer_prompt: "Enter the voltage with a unit, for example 2.5 V. Three significant figures is enough."
+  alt_text: "A supply of {{vin|eng}} feeds R1 of {{r1|eng}} in series with R2 of {{r2|eng}} to ground. The output is the junction between R1 and R2, unloaded. Find the output voltage."
+  figure: { kind: svg_template, template: divider_v1, caption_md: "Unloaded divider." }
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      vout: "vin * r2 / (r1 + r2)"
+  steps:
+    - { id: s1, text_md: "The same current flows through both resistors: $I = V_{in}/(R_1+R_2) = {{iq|tex:A}}$." }
+    - { id: s2, text_md: "$V_{out}$ is the drop across $R_2$: $V_{out} = I R_2 = {{vout|tex:V}}$." }
+  explanation_md: "A divider output is the fraction $R_2/(R_1+R_2)$ of the supply, valid only while the load draws negligible current."
+answer:
+  kind: numeric
+  value: vout
+  unit: V
+  accept_units: [V, mV, kV]
+  bare_number_means: V
+  tolerance: { rel: 0.01, abs: 0.001 }
+verifiers:
+  - id: kcl-exact
+    kind: sympy_solve
+    independence: "Solves Kirchhoff's current law at the output node exactly with rational arithmetic instead of using the divider formula in floating point."
+    spec:
+      unknowns: [vo]
+      equations: ["(vin - vo) / r1 - vo / r2"]
+      checks: [{ unknown: vo, output: vout }]
+    tolerance: { rel: 1.0e-9 }
+  - id: dimension
+    kind: pint_dimension
+    independence: "Dimensional analysis with pint on the parameter units; it does not check magnitude."
+    spec:
+      checks:
+        - { expr: "vin * r2 / (r1 + r2)", result_unit: V }
+        - { expr: "vin / (r1 + r2)", result_unit: A }
+  - id: window
+    kind: bounds
+    independence: "Range check against physical limits, independent of any formula for the value."
+    spec: { output: vout, lo: "0", hi: "vin", strict: true }
+hints:
+  l1: "Nothing else is connected to the output, so the same current flows through both resistors. What is that current?"
+  l2: "In a series pair the voltage divides in proportion to resistance, so the output is the fraction R2/(R1+R2) of the supply."
+  l3: "Series current first: I = Vin/(R1+R2) = {{iq|eng:A}}. The output is the voltage across R2, which is I times R2."
+misconceptions:
+  - { tag: mc.divider-swapped-resistors, description: "Uses R1 instead of R2 in the numerator.", wrong_answer_expr: "vin * r1 / (r1 + r2)", feedback_md: "That is the drop across R1. The output is taken across R2, the resistor to ground." }
+  - { tag: mc.divider-assumes-half, description: "Assumes the output is half the supply regardless of values.", wrong_answer_expr: "vin / 2", feedback_md: "Half only when the resistors are equal. Here they are not." }
+  - { tag: mc.divider-ratio-not-fraction, description: "Uses R2/R1 instead of R2/(R1+R2).", wrong_answer_expr: "vin * r2 / r1", feedback_md: "The fraction has the total resistance R1+R2 in the denominator, not R1 alone." }
+fuzz: { samples: 200, seed_base: 1000, max_rejection_rate: 0.9 }

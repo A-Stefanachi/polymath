@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Architecture explainer — Polymath documentation</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/explainer.css">
+</head>
+<body data-page="arch">
+  <a class="skip" href="#main">Skip to content</a>
+  <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+    <div class="main-wrap">
+      <main id="main" class="content explainer">
+        <p class="kicker">Visual supplement to doc 03 · from docs/03-architecture.md</p>
+<section class="hero">
+      <h1>Four boxes, one database, no extra queue.</h1>
+      <p class="lede">
+        One person builds this with AI agents, about 8 hours a week.
+        So the architecture stays boring: a phone app, a web server,
+        Postgres, and later a worker with a locked-down sandbox.
+        Learner code never runs next to secrets. An LLM never grades a number or a test suite by itself.
+      </p>
+      <ul class="pills">
+        <li>PWA, not native apps</li>
+        <li>Next.js UI + API together</li>
+        <li>Supabase Auth + Postgres + files</li>
+        <li>Fly worker + sandbox later</li>
+      </ul>
+    </section>
+
+    <section id="why">
+      <h2>The constraints that pick the stack</h2>
+      <div class="grid-4">
+        <article class="card">
+          <h3>One builder</h3>
+          <p>Few moving parts. No Kubernetes. The job list lives in Postgres, the database we already have.</p>
+        </article>
+        <article class="card">
+          <h3>Phone first</h3>
+          <p>Installable PWA. A 15-minute session must start from cache and work on a train.</p>
+        </article>
+        <article class="card">
+          <h3>Untrusted code</h3>
+          <p>Learner C, Python and SPICE netlists run in a jail with no keys and no internet.</p>
+        </article>
+        <article class="card">
+          <h3>Honest cost</h3>
+          <p>Founder-funded. LLM spend is capped. Lean hosting is tens of dollars a month, not hundreds.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="boxes">
+      <h2>The system as four boxes</h2>
+      <p>People sit outside. GitHub ships content and deploys. Claude is called only with the question and the answer, never a name or email.</p>
+
+      <div class="hosts">
+        <article class="host">
+          <div class="where">Phone / laptop</div>
+          <div>
+            <h3>Next.js PWA</h3>
+            <p>Screens, service worker, IndexedDB. Answers are saved on the device <em>before</em> they go online, so a dropped signal cannot lose work.</p>
+            <ul>
+              <li>Today, session, map, progress, later projects and tutor</li>
+              <li>Local numeric / multiple-choice check while offline</li>
+              <li>Talks HTTPS to the API</li>
+            </ul>
+          </div>
+        </article>
+        <article class="host">
+          <div class="where">Vercel</div>
+          <div>
+            <h3>UI + API in one app</h3>
+            <p>Route handlers are thin: check login, validate, call a package, return JSON. The brains live in TypeScript packages: scheduler, numeric grader, tutor policy.</p>
+            <ul>
+              <li>Magic-link session from Supabase</li>
+              <li>Only this process writes learner state (mastery, reviews)</li>
+              <li>Privileged database key never reaches the browser</li>
+            </ul>
+          </div>
+        </article>
+        <article class="host">
+          <div class="where">Supabase</div>
+          <div>
+            <h3>Auth, Postgres, file store</h3>
+            <p>System of record. Every table has row-level security. The <code>jobs</code> table is the queue. Photos and exports sit in private buckets.</p>
+            <ul>
+              <li>Email magic link, no password</li>
+              <li>No public write API for learning data</li>
+              <li>Lean slice: founder lives on staging until there is a second user</li>
+            </ul>
+          </div>
+        </article>
+        <article class="host">
+          <div class="where">Fly.io · later</div>
+          <div>
+            <h3>Worker, then sandbox</h3>
+            <p>Python claims jobs: algebra, code tests, SPICE, evidence checks. The sandbox is a second machine with <strong>no secrets</strong>. The worker never executes learner code itself.</p>
+            <ul>
+              <li>Worker can talk to Claude for rubrics, not for Ohm’s law</li>
+              <li>Sandbox: nsjail inside a small VM, no network</li>
+              <li>Results come back; TypeScript still updates mastery</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+
+      <h3>How a request travels</h3>
+      <div class="diagram wide">
+        <div class="pipe" aria-hidden="true">
+          <span class="pipe-box">Phone</span>
+          <span class="pipe-arrow">→</span>
+          <span class="pipe-box">API</span>
+          <span class="pipe-arrow">→</span>
+          <span class="pipe-box on">Postgres</span>
+        </div>
+        <div class="pipe split-down" aria-hidden="true">
+          <span class="pipe-note">numbers stay here</span>
+          <span class="pipe-arrow down">↓ if algebra / code / SPICE</span>
+        </div>
+        <div class="pipe" aria-hidden="true">
+          <span class="pipe-box later">Worker</span>
+          <span class="pipe-arrow">→</span>
+          <span class="pipe-box later mute">Sandbox · no keys</span>
+          <span class="pipe-arrow">→</span>
+          <span class="pipe-box">API writes mastery</span>
+        </div>
+        <p class="note">GitHub pushes content and deploys. Claude sees only the item and the typed answer — never a name or email.</p>
+      </div>
+    </section>
+
+    <section id="grade">
+      <h2>What happens when you submit an answer</h2>
+      <p>Fast things stay in the web app. Slow or dangerous things become a job. Tap a path.</p>
+
+      <div class="tabs" role="tablist" aria-label="Grading paths">
+        <button role="tab" aria-selected="true" aria-controls="g1" id="tg1" data-tab="1">Number</button>
+        <button role="tab" aria-selected="false" aria-controls="g2" id="tg2" data-tab="2">Algebra</button>
+        <button role="tab" aria-selected="false" aria-controls="g3" id="tg3" data-tab="3">Code / SPICE</button>
+        <button role="tab" aria-selected="false" aria-controls="g4" id="tg4" data-tab="4">Tutor</button>
+      </div>
+
+      <div class="panel" id="g1" role="tabpanel" aria-labelledby="tg1">
+        <h3>A number with units — under 2 seconds</h3>
+        <ol class="flow-steps">
+          <li>Phone writes the attempt to a local outbox first</li>
+          <li>API loads the verified answer key (not visible to the learner)</li>
+          <li>Same TypeScript grader as the phone: value, units, tolerance</li>
+          <li>One database transaction: attempt, review log, skill update</li>
+          <li class="end">Phone deletes the outbox row</li>
+        </ol>
+        <p class="note">No worker. No LLM. 26.4 cents and $0.264 are the same answer.</p>
+      </div>
+
+      <div class="panel" id="g2" role="tabpanel" aria-labelledby="tg2" hidden>
+        <h3>An algebraic form — worker, still quick</h3>
+        <ol class="flow-steps">
+          <li>API asks the worker: are these two expressions the same?</li>
+          <li>SymPy runs with a 1.5 s kill switch</li>
+          <li>If the worker is slow, the attempt is stored as pending and a job finishes it</li>
+          <li class="end">Mastery still updates only in TypeScript</li>
+        </ol>
+      </div>
+
+      <div class="panel" id="g3" role="tabpanel" aria-labelledby="tg3" hidden>
+        <h3>Code or a netlist — job + jail</h3>
+        <ol class="flow-steps">
+          <li>API stores the attempt and enqueues a job in the same commit</li>
+          <li>Worker claims the job</li>
+          <li>Sandbox compiles and runs tests, or ngspice, with CPU / memory / time caps and no network</li>
+          <li>Worker compares output to the verified reference</li>
+          <li class="end">Worker calls the API; TypeScript applies the review</li>
+        </ol>
+        <p class="note">Target: done within 20 seconds for most runs. KiCad checks can take longer and only appear for the last board.</p>
+      </div>
+
+      <div class="panel" id="g4" role="tabpanel" aria-labelledby="tg4" hidden>
+        <h3>A hint — after you have tried</h3>
+        <ol class="flow-steps">
+          <li>Policy code checks: is there an attempt? Which rung is allowed?</li>
+          <li>If the gate is shut, a canned line. No model call.</li>
+          <li>Otherwise Claude sees the item, your attempt, and the reference solution. No email, no name.</li>
+          <li>A filter blocks a leaked final answer below rung 4</li>
+          <li class="end">Checkpoints have no tutor button at all</li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="content">
+      <h2>Questions are data in git, not typed into the app</h2>
+      <p>A learner is never served an unverified item. Humans review templates. Machines stamp each generated variant.</p>
+      <div class="diagram wide">
+        <ol class="flow-steps">
+          <li>YAML in git: skills, edges, problem templates, projects</li>
+          <li>Lint: schema, no cycles, licence and source present</li>
+          <li>Verify: generate several seeds, recompute the answer independently</li>
+          <li>Sync into Postgres by key</li>
+          <li class="end">Only <code>verified</code> items can appear in a session</li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="repo">
+      <h2>One repo, sharp walls</h2>
+      <p>TypeScript packages have no database and no network. The sandbox image shares no code and no environment with the worker.</p>
+      <div class="diagram wide">
+        <ul class="tree">
+          <li><b>apps/web</b> <span class="why">screens and thin API routes</span>
+            <ul>
+              <li>src/app · pages</li>
+              <li>src/server/privileged · the only place with the service-role key</li>
+            </ul>
+          </li>
+          <li><b>packages/</b> <span class="why">pure logic, easy to test</span>
+            <ul>
+              <li>scheduler · what to practise next</li>
+              <li>grading-core · numbers and choices</li>
+              <li>tutor-policy · attempt-first, leak filter</li>
+              <li>llm · one client, fake in tests</li>
+            </ul>
+          </li>
+          <li><b>services/</b> <span class="why">later, on Fly</span>
+            <ul>
+              <li>worker · jobs, SymPy, talks to sandbox</li>
+              <li>sandbox-runner · jail, no secrets</li>
+            </ul>
+          </li>
+          <li><b>content/ · prompts/ · supabase/</b> <span class="why">curriculum, tutor text, migrations</span></li>
+        </ul>
+      </div>
+      <h3>Rules CI will fail on</h3>
+      <ul class="rules">
+        <li>UI components cannot import the privileged database client.</li>
+        <li>Packages cannot open a socket or read <code>process.env</code>.</li>
+        <li>Only <code>packages/llm</code> imports the Anthropic SDK.</li>
+        <li>The Python worker cannot write <code>skill_state</code> or the review log.</li>
+      </ul>
+    </section>
+
+    <section id="order">
+      <h2>Build order matches the lean slice</h2>
+      <p>You do not stand up Fly on day one. The first months are the phone, the database, and numeric grading — enough to study every day.</p>
+      <div class="grid-2">
+        <article class="card good">
+          <h3>First (lean slice)</h3>
+          <ul>
+            <li>Repo, CI, claims lint, secrets scan</li>
+            <li>Supabase schema + RLS tests</li>
+            <li>Magic link, session builder, FSRS</li>
+            <li>Numeric / choice / later symbolic grading</li>
+            <li>Progress page, PWA shell, manual project log</li>
+          </ul>
+        </article>
+        <article class="card warn">
+          <h3>After a go decision</h3>
+          <ul>
+            <li>Worker and sandbox (code, SPICE)</li>
+            <li>Tutor ladder</li>
+            <li>Evidence upload and review</li>
+            <li>Checkpoints, experiments, privacy export</li>
+            <li>Production project, then maybe a beta</li>
+          </ul>
+        </article>
+      </div>
+      <p class="note">Monthly money, planning guess: about $15–35 while it is just you; about $45–65 if Vercel Pro is required. A small beta is more like $190–260. Recheck vendor pages before you rely on a number.</p>
+    </section>
+
+    <section id="decisions">
+      <h2>Decisions in one line each</h2>
+      <div class="grid-2">
+        <article class="card"><h3>PWA, not stores</h3><p>One codebase. Native apps are two reviews and two toolchains.</p></article>
+        <article class="card"><h3>UI and API together</h3><p>A second backend would duplicate auth and the scheduler.</p></article>
+        <article class="card"><h3>Supabase</h3><p>Auth, Postgres and files in one project you can actually run alone.</p></article>
+        <article class="card"><h3>Jobs in Postgres</h3><p>The attempt and its job commit together. No lost work, no extra service.</p></article>
+        <article class="card"><h3>Sandbox is mute</h3><p>No database URL, no LLM key, no network. Two isolation layers.</p></article>
+        <article class="card"><h3>Learner state is TypeScript</h3><p>One place for FSRS and mastery. The worker only returns a grade.</p></article>
+      </div>
+    </section>
+        <p class="spec-ref">Full specification: <a href="../docs/03-architecture.md">03-architecture.md</a>. Product story: <a href="concept.html">Concept explainer</a>.</p>
+      </main>
+    </div>
+  </div>
+  <script src="assets/nav.js"></script>
+  <script src="assets/app.js"></script>
+  <script src="assets/explainer.js"></script>
+</body>
+</html>

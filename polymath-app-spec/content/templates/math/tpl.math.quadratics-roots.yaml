@@ -1,0 +1,143 @@
+schema_version: 1
+key: tpl.math.quadratics-roots
+version: 2
+authoring_status: ready
+skill_key: math.alg.quadratics
+task_kind: problem
+grader_type: exact_numeric
+difficulty_prior: 0.45
+title: Roots by factoring
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-01'
+  llm_assistance:
+    used: true
+    roles:
+    - draft_template
+    - hints
+    - misconception_tags
+    model: claude-opus-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts:
+  - phone
+  - desktop
+  est_seconds: 120
+  phone_suitable: true
+  offline_gradable: true
+parameters:
+- name: p
+  type: int
+  min: -8
+  max: 8
+  description: Smaller root, chosen first
+  nonzero: true
+- name: q
+  type: int
+  min: -6
+  max: 9
+  description: Larger root, chosen first
+  nonzero: true
+derived:
+- name: b
+  expr: -(p + q)
+- name: c
+  expr: p * q
+- name: sb
+  expr: '''+'' if b >= 0 else ''-'''
+- name: ab
+  expr: abs(b)
+- name: sc
+  expr: '''+'' if c >= 0 else ''-'''
+- name: ac
+  expr: abs(c)
+- name: sp_
+  expr: '''-'' if p >= 0 else ''+'''
+- name: ap
+  expr: abs(p)
+- name: sq_
+  expr: '''-'' if q >= 0 else ''+'''
+- name: aq
+  expr: abs(q)
+constraints:
+- id: ordered
+  expr: p < q
+  reason: Two different roots are needed for the word larger to mean anything.
+- id: middle-term
+  expr: abs(b) >= 2
+  reason: A zero or unit middle coefficient would render oddly, and p + q = 0 makes the sign-flip mistake hit the answer.
+render:
+  stem_md: The equation $x^2 {{sb}} {{ab|int}}x {{sc}} {{ac|int}} = 0$ has two whole-number roots. What is the larger root?
+  answer_prompt: Enter the larger root.
+  alt_text: The equation x squared {{sb}} {{ab|int}} x {{sc}} {{ac|int}} equals 0 has two whole-number roots. What is the
+    larger root?
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      ans: max(p, q)
+  steps:
+  - id: s1
+    text_md: 'Find two numbers that multiply to ${{c|int}}$ and add to ${{b|int}}$, then factor: $(x {{sp_}} {{ap|int}})(x
+      {{sq_}} {{aq|int}}) = 0$.'
+  - id: s2
+    text_md: Each bracket can be zero, so $x = {{p|int}}$ or $x = {{q|int}}$. The larger root is ${{ans|int}}$.
+answer:
+  kind: numeric
+  value: ans
+  unit: dimensionless
+  accept_units:
+  - dimensionless
+  bare_number_means: dimensionless
+  tolerance:
+    rel: 0.0
+    abs: 1.0e-06
+verifiers:
+- id: quadratic-formula
+  kind: sympy_exact
+  independence: Applies the quadratic formula to the displayed coefficients with exact arithmetic, while the generator reads
+    the roots that were chosen first.
+  spec:
+    checks:
+    - expr: (-b + sqrt(b ** 2 - 4 * c)) / 2
+      output: ans
+- id: substitution
+  kind: bounds
+  independence: Substitutes the keyed answer back into the displayed equation; the left side must be exactly zero.
+  spec:
+    output: ans ** 2 + b * ans + c
+    lo: '0'
+    hi: '0'
+- id: window
+  kind: bounds
+  independence: The larger root lies right of the vertex and inside the Cauchy root bound.
+  spec:
+    output: ans
+    lo: -b / 2
+    hi: 1 + max(abs(b), abs(c))
+    strict: true
+hints:
+  l1: What does it tell you when an expression has to equal zero?
+  l2: Look for two numbers whose product is the constant term and whose sum is the middle coefficient.
+  l3: You need two numbers with product ${{c|int}}$ and sum ${{b|int}}$.
+misconceptions:
+- tag: mc.smaller-root
+  description: Gives the smaller root.
+  wrong_answer_expr: p
+  feedback_md: That is a root, but the other one is larger.
+- tag: mc.flipped-root-signs
+  description: Reads the roots straight from the factors with the signs unchanged.
+  wrong_answer_expr: max(-p, -q)
+  feedback_md: If a bracket is x minus a number, the root is plus that number. Check the signs.
+- tag: mc.sum-as-root
+  description: Gives the sum of the roots.
+  wrong_answer_expr: p + q
+  feedback_md: That is the sum of the two roots, not a root. Factor and set each bracket to zero.
+fuzz:
+  samples: 200
+  seed_base: 5000
+  max_rejection_rate: 0.7
+  min_distinct_param_sets: 50

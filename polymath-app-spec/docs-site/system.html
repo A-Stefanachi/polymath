@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Architecture — Polymath documentation</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="system">
+  <a class="skip" href="#main">Skip to content</a>
+  <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+    <div class="main-wrap">
+      <main id="main" class="content">
+        <p class="kicker">System design</p>
+        <h1>Architecture overview</h1>
+        <p class="spec-ref">
+          <a href="../docs/03-architecture.md">docs/03-architecture.md</a> ·
+          <a href="../docs/architecture-index.md">architecture-index.md</a> ·
+          Supplement: <a href="architecture-explainer.html">Architecture explainer</a>
+        </p>
+
+        <div class="summary">
+          <h2>Summary</h2>
+          <ul>
+            <li><strong>Client:</strong> Next.js PWA with service worker, IndexedDB outbox, and offline pack (later milestones).</li>
+            <li><strong>Application tier:</strong> Next.js route handlers on Vercel; domain logic in shared TypeScript packages.</li>
+            <li><strong>Data tier:</strong> Supabase (auth, PostgreSQL including the <code>jobs</code> queue, storage).</li>
+            <li><strong>Worker tier:</strong> Python on Fly.io for symbolic grading and job handlers; optional sandbox for untrusted execution.</li>
+            <li>Learner state mutations occur only in TypeScript; the worker returns grading results (ADR-009).</li>
+          </ul>
+        </div>
+
+        <h2>Request lifecycle</h2>
+        <ol class="flow-steps">
+          <li>Client persists the attempt to a local outbox before network I/O.</li>
+          <li>API validates JWT, payload, idempotency, and rate limits.</li>
+          <li>Numeric and multiple-choice grades execute in-process with shared grading-core logic.</li>
+          <li>Symbolic, code, and SPICE paths enqueue a <code>jobs</code> row and complete asynchronously.</li>
+          <li class="end">A single transaction updates attempt, review log, and skill state where applicable.</li>
+        </ol>
+
+        <h2>Job queue</h2>
+        <p>
+          PostgreSQL holds the queue; attempt and job rows commit together to prevent orphaned work.
+          Workers claim rows with <code>FOR UPDATE SKIP LOCKED</code>.
+          A future migration may replace the claim mechanism without changing handler contracts.
+        </p>
+
+        <h2>Repository layout</h2>
+        <pre>apps/web          Pages and thin API routes
+packages/*        Scheduler, grading-core, tutor-policy, llm
+services/worker   Python job loop and fast-path graders
+services/sandbox  Isolated execution (no credentials)
+content/          Curriculum YAML
+schemas/          SQL, OpenAPI, JSON Schema</pre>
+
+        <h2>Delivery alignment</h2>
+        <div class="grid-2">
+          <article class="card good"><h3>Lean slice</h3><p>Web application, Supabase, in-process and symbolic grading, PWA baseline. Sandbox introduced in deferred groups.</p></article>
+          <article class="card"><h3>Post go/no-go</h3><p>Sandbox, tutor, automated evidence, offline hardening, production beta infrastructure.</p></article>
+        </div>
+
+        <p><a href="architecture-explainer.html">Architecture explainer</a> — container diagram, grading paths, ADR summaries, and cost notes.</p>
+      </main>
+      <footer class="page-footer">HTTP contract: <a href="../schemas/api.openapi.yaml">schemas/api.openapi.yaml</a>.</footer>
+    </div>
+  </div>
+  <script src="assets/nav.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

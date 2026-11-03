@@ -1,0 +1,1400 @@
+# Skill specifications for pillar T5 (track key cloud-twin). Researched 2 Nov 2026.
+# All numbers in worked examples were computed in Python on that date. Device, price and fleet figures are invented for practice.
+# Items marked UNCERTAIN were not confirmed in a primary source. [P] marks a proposed value, not a sourced one. [J] marks engineering judgement.
+# Pages were read through a fetch tool that summarises, so the wording of sources was not eyeballed line by line.
+# A URL followed by "(snippet)" was seen only in search results. Security content is defensive only.
+# Nothing here claims that an AI method works; every model, detector or agent result is something the learner must measure (NG-07).
+# Non-commercial sources (for example FPP3) are benchmarks only; all wording here is original and no text is reused.
+
+- key: sys.req.requirements
+  description: >-
+    Turn a vague need into a single, numbered shall statement with a measurable pass value, a rationale and a named verification method.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, faded_problem, problem, explain_back]
+  grader_types: [multiple_choice, rubric_llm, human_review]
+  phone_suitable: true
+  objective: >-
+    Write requirements for the L11 telemetry slice that a stranger could pass or fail without asking the author what was meant.
+  core_ideas:
+    - >-
+      Stakeholder expectations are inputs; requirements translate them into design-ready statements. A need says what someone wants to achieve. A requirement says what the product shall do and how well, and it must stay traceable to that need.
+    - >-
+      Word use is part of the contract: shall marks a binding requirement, will states a fact or intent, should marks a goal. One requirement carries one thought, with one subject and one predicate, so it can pass or fail on its own.
+    - >-
+      Unverifiable words such as fast, robust, sufficient, easy, minimise and user-friendly must be replaced by a value with a tolerance and a measurement condition. If a number is not yet known, use a best estimate marked TBR with an owner, a rationale and a date.
+    - >-
+      State what is needed, not how to build it. Naming a protocol or part is legitimate only when it really is a constraint, and then the rationale must say why.
+    - >-
+      Necessity test: ask what the worst outcome would be if the requirement were deleted. If nothing bad follows, it is a want, so remove it or demote it to a goal.
+  misconceptions:
+    - >-
+      A passing test means the requirement was right. Verification shows the product meets what was written; only validation asks whether what was written was what the stakeholder needed.
+    - >-
+      More detail makes a better requirement. Embedded design choices remove options and hide the real need.
+    - >-
+      A value without conditions is testable. A latency figure with no load, link state or measurement window cannot be failed fairly.
+  worked_example: >-
+    Vague: "Telemetry should arrive quickly." Rewrite: "REQ-TEL-012: With the uplink available, the device shall deliver at least 99% of samples to the lakehouse within 60 s of their event time, measured over 24 h. Rationale: the residual alert needs data under one minute old. Verify: test." At a 1 Hz sample rate that is 86,400 samples a day, so at most 864 may be late or missing in the 24 h run. The vague form could not fail; the rewrite fails at the 865th late sample.
+  unaided_check: >-
+    Rewrite "The system shall be secure and reliable and should log errors quickly" into compliant requirements. Pass: at least three separate shall statements, each with one thought, a number or a named observable condition, a rationale and a verification method; none uses secure, reliable or quickly as the pass criterion.
+  sources:
+    - https://www.nasa.gov/reference/appendix-c-how-to-write-a-good-requirement/
+    - https://www.nasa.gov/reference/4-2-technical-requirements-definition/
+
+- key: sys.req.vv-matrix
+  description: >-
+    Build a verification matrix that gives every shall one method, one level and an evidence link, and use it to expose orphan requirements and tests.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem, debug_case]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: true
+  objective: >-
+    Keep a two-way trace from requirement to test and from test to requirement, and tell verification apart from validation.
+  core_ideas:
+    - >-
+      Verification asks whether the product was built right against its stated requirements. Validation asks whether the right product was built for its intended use in its operating environment. A product can pass the first and fail the second.
+    - >-
+      Four methods: analysis (models and calculation, often before hardware exists), demonstration (shows the function works, with little data), inspection (examines features, markings or records), test (controlled conditions, detailed data, most resource-intensive). Pick the cheapest method that really produces evidence for the value stated.
+    - >-
+      The matrix holds only shall statements, each with a unique identifier and its source document. NASA's Table D-1 suggests a minimum set of columns: requirement number, source document, paragraph, shall statement, verification success criteria, verification method, facility or lab, phase, whether it is also an acceptance or preflight check, performing organisation, and results (the documents holding the objective evidence). In this syllabus the phase column plays the role of verification level.
+    - >-
+      Trace in both directions. A requirement with no test is unverified; a test with no requirement is unexplained cost, or a sign of a missing requirement.
+  misconceptions:
+    - >-
+      Demonstration and test are interchangeable. A demonstration shows it happened; a test yields measured values against a limit.
+    - >-
+      Analysis is weaker, so it does not count. It is the right method when a test is impractical, provided the model is itself credible.
+    - >-
+      A filled matrix proves coverage. It proves only that a row exists; the evidence link must lead to a real result from the exact configuration.
+  worked_example: >-
+    L11 has 15 shall statements. Mapping gives 12 with a method and 3 with none, so trace coverage is 12/15 = 80%. Two tests point at no requirement. Rows: REQ-TEL-012 (99% within 60 s): test, cloud slice, replay plus 24 h run. REQ-SEC-003 (each device holds a unique certificate): inspection of the provisioning records, plus test that a second device using the same certificate is refused. REQ-OPS-007 (retention rule stated in the runbook): inspection. REQ-TWN-002 (model error under 2 K across the stated load range): test on a held-out run, not analysis, because the claim is about the real device. Action: three orphan requirements get methods; the two orphan tests either gain a requirement or are deleted.
+  unaided_check: >-
+    Given a 10-row matrix with two planted faults, a requirement verified only by demonstration although it states a numeric tolerance, and a validation claim recorded as verification, find both and correct them. Pass: both found, the first changed to test with a measured value, the second moved to a validation entry that names the stakeholder expectation.
+  sources:
+    - https://www.nasa.gov/reference/5-3-product-verification/
+    - https://www.nasa.gov/reference/appendix-d-requirements-verification-matrix/
+
+- key: sys.req.icd-basics
+  description: >-
+    Write an interface control entry that fixes bytes, units, scaling, ranges, timing and failure behaviour, and trace an integration defect back to the gap.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem, debug_case]
+  grader_types: [multiple_choice, human_review, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Record each interface so both sides can build independently, and change it only through a controlled, versioned approval.
+  core_ideas:
+    - >-
+      An interface control document captures interface information and approved interface change requests, and it sits under configuration management. NASA's page names the IRD, ICD, IDD and ICP as outputs but does not separate IRD from IDD, so do not teach those distinctions from it.
+    - >-
+      Each signal needs name, type, byte order, unit, scale and offset, valid range, rate, staleness limit, value on fault, and owner. Missing any one of these leaves a decision to whoever codes first.
+    - >-
+      Two parties own an interface, so someone must own the agreement. On a solo project the discipline is the same: change the file first, bump the version, then change both sides.
+    - >-
+      Interface defects often pass both unit test suites, because each side is consistent with its own assumption. An end-to-end check with a known value is what catches them.
+  misconceptions:
+    - >-
+      The code is the interface definition. Code shows what one side does today, not what both sides agreed.
+    - >-
+      Units in a variable name are enough. Without scale, signedness and byte order, the same two bytes decode to several plausible numbers.
+  worked_example: >-
+    ICD entry: temp_cdeg, int16, little-endian, unit 0.01 °C, range -4000 to 12500. The bytes on the wire are 0x9C 0xFF. Correct decode: 0xFF9C as signed is -100, so -1.00 °C. A reader that treats it as unsigned gets 65436, or 654.36 °C. A big-endian signed reader gets 0x9CFF = -25345, or -253.45 °C. Both wrong readings are outside the stated range, so a range check in the ICD would have caught them on the first sample.
+  unaided_check: >-
+    The bytes 0x2C 0x01 arrive for a field defined as uint16, little-endian, unit 0.1 V. State the voltage, the value a big-endian reader would report, and the ICD rule that detects it. Expected: 0x012C = 300, so 30.0 V; big-endian gives 0x2C01 = 11265, so 1126.5 V; a valid-range check rejects it.
+  sources:
+    - https://www.nasa.gov/reference/6-3-interface-management/
+
+- key: sw.cloud.device-provisioning
+  description: >-
+    Design a device identity lifecycle from manufacture to decommissioning, with unique keys, a limited claim path, certificate renewal, revocation and a recovery route.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem, explain_back]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: true
+  objective: >-
+    Choose a provisioning flow and defend its blast radius, its offline behaviour and its end-of-life steps.
+  core_ideas:
+    - >-
+      Identity lifecycle stages: manufacture, claim, operate, rotate, revoke, decommission. A design that covers only first connection leaves most of the risk unowned.
+    - >-
+      Per-device credentials limit blast radius: one leaked key means one revocation. A shared credential in every unit means a leak affects the whole fleet, so any shared claim credential must be scoped to provisioning only, and its use monitored.
+    - >-
+      Generating the key on the device and sending a certificate signing request keeps the private key from ever leaving it. Having the cloud generate and deliver the key is simpler but moves the secret through more systems.
+    - >-
+      AWS fleet provisioning is one concrete example: a claim certificate restricted by policy to provisioning topics is exchanged for a permanent certificate, the device then reconnects with it, the ownership token expires after one hour, and a trusted-user temporary claim expires after five minutes. These are vendor facts, not a general standard.
+    - >-
+      Network onboarding (NIST SP 1800-36) means both sides establish trust before credentials are issued, which guards a device from joining a rogue network and a network from admitting a rogue device.
+  misconceptions:
+    - >-
+      Encryption in transit makes a shared key acceptable. TLS protects the channel; it does not tell two units with the same key apart.
+    - >-
+      Revocation is instant. CRL-based revocation takes effect at the next issue, and an offline device checks nothing, so short lifetimes and server-side deny lists matter.
+    - >-
+      Decommissioning means switching off. The identity must be revoked and any stored secrets erased, or a resold unit still authenticates as yours.
+  worked_example: >-
+    A device certificate lasts 90 days and renewal opens at day 60, leaving 30 days of offline tolerance. A unit goes offline from day 55 to day 100. It misses the window and its certificate expired at day 90, so it comes back 10 days past expiry. Fix options: lengthen the lifetime, which weakens revocation; or keep a narrowly scoped recovery credential that can only request a new certificate after an authorisation check. The design must state the maximum offline period it supports, here 30 days after renewal opens, and what happens beyond it.
+  unaided_check: >-
+    A batch of 1,000 units shares one claim private key extracted from a returned unit. State what you disable, what still works, and what you change for the next batch. Pass: disable that claim credential so no new enrolments occur; already provisioned units keep their unique certificates; audit enrolments since the likely leak date; next batch uses per-device or short-lived claim credentials.
+  sources:
+    - https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html
+    - https://csrc.nist.gov/pubs/sp/1800/36/final
+
+- key: sw.cloud.ci-firmware
+  description: >-
+    Set up CI that builds firmware reproducibly, runs host and hardware-rig tests, handles flaky tests honestly and keeps signing keys out of build steps.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, project_step]
+  grader_types: [multiple_choice, human_review, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Produce a pipeline where a green build means tested, traceable firmware, and where a leaked build credential has limited reach.
+  core_ideas:
+    - >-
+      Layer tests by speed: lint and host unit tests on every push, cross-compile and size budget next, a hardware rig last. A pipeline that only compiles says nothing about behaviour on the target.
+    - >-
+      SLSA build levels: L1 means provenance exists, L2 means a hosted platform generates and signs it, L3 means a hardened platform with isolated runs and provenance-signing secrets out of reach of user-defined steps. Text checked against SLSA v1.2, the current version.
+    - >-
+      Secrets: CI credentials should be scoped to the job and expire when it ends; rotate stored ones; check that forks do not inherit them; detect secrets before commit with hooks; log and alert on unusual pipeline changes.
+    - >-
+      Release signing is a separate, gated step on an artefact that already passed tests, not a variable available to every job [J].
+  misconceptions:
+    - >-
+      Retrying a red test until green is harmless. It removes noise but can also hide a real intermittent fault, so retried passes must be logged and counted.
+    - >-
+      Secrets in the CI store are safe from any job. Any step that can read them can leak them, so scope and lifetime still matter.
+    - >-
+      A green rig run on one board proves the fleet. It covers that board, that configuration and that temperature.
+  worked_example: >-
+    A rig suite has 20 independent tests, each with a 1% chance of a false failure. Chance of an all-green run: 0.99^20 = 0.8179, so 18.2% of good builds go red. With one automatic retry per test, the per-test false failure falls to 0.0001 and the suite passes 0.9999^20 = 0.9980 of the time. The gain has a price: a real fault that fires 1 time in 100 is now far likelier to slip through, so the pipeline must report every retried pass and open a task when a test's retry rate rises.
+  unaided_check: >-
+    Review a pipeline file in which the signing key is an environment variable for all jobs, pull requests from forks run the rig job, and there is no size budget. Pass: names all three problems, moves signing to a gated protected job, blocks secrets and hardware on untrusted pull requests, and adds a failing size check, each with a stated reason.
+  sources:
+    - https://slsa.dev/spec/v1.2/build-track-basics
+    - https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html
+
+- key: sw.cloud.ota-rollback
+  description: >-
+    Design a signed A/B update that survives power loss, refuses old images, confirms health before committing and rolls out in stages with a stop rule.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, debug_case, project_step]
+  grader_types: [multiple_choice, measurement_check, human_review]
+  phone_suitable: false
+  objective: >-
+    Prove by fault injection that the device ends healthy or recovers after a power cut, a tampered image and an old signed image.
+  core_ideas:
+    - >-
+      Signing, anti-rollback, recovery and health checking are four separate properties. RFC 9019 requires authenticated, integrity-protected images, says a device must not fail if power or network drops during an update, and uses a manifest sequence number to refuse an older validly signed image.
+    - >-
+      Test-then-confirm: MCUboot's test swap boots the new image and reverts on the next reset unless the running image sets its image-OK flag, normally after a self-test. An image that crashes on boot therefore falls back without human help.
+    - >-
+      Power-fail safety comes from recorded progress: swap status records let the bootloader resume an interrupted swap after reset. Overwrite and direct-xip strategies are simpler to make reset-safe than swapping.
+    - >-
+      Downgrade prevention in MCUboot has two forms: a software version comparison that works only with overwrite-only, and a hardware security counter in trusted non-volatile storage, independent of the version, where an equal value is accepted. Bump the counter when an old image must become unacceptable.
+    - >-
+      NIST SP 800-193 frames the goal as protect, detect, recover. Staged rollout adds a fleet-level stop: expose a small cohort, watch health, halt on a stated trigger.
+  misconceptions:
+    - >-
+      A signed image is a safe image. An old, vulnerable image is also validly signed, which is why anti-rollback exists.
+    - >-
+      Booting proves health. The self-test must exercise what matters, such as reaching the broker, before the image confirms itself.
+    - >-
+      A small cohort catches defects. A rare fault may not appear in it at all, and the cohort size sets the chance of seeing it.
+  worked_example: >-
+    A fleet of 1,000 units gets an image that fails on 2% of devices. Chance that a cohort sees at least one failure: 10 units gives 1 - 0.98^10 = 18.3%; 50 units gives 1 - 0.98^50 = 63.6%. For a 95% chance, n >= ln(0.05)/ln(0.98) = 148.3, so 149 units. Stored counter is 7: an image with counter 6 is refused even though its signature is valid; a counter 7 image is accepted; a counter 8 image, once confirmed, raises the stored value to 8 and retires every counter 7 image.
+  unaided_check: >-
+    Fault plan for a lab: cut power at a random point during update, serve an old signed image, serve an image with one flipped byte. State the expected end state and evidence for each. Pass: first boots old or new image and finishes or reverts; second is refused by counter or sequence check; third fails signature check; each has a device log line, and at least 20 power-cut trials end healthy [project convention: 20 trials fit a lab session; zero failures in 20 only bounds the failure rate below about 14% at 95% confidence (1 - 0.05^(1/20) = 0.139), so treat it as a smoke test, not a reliability proof].
+  sources:
+    - https://docs.mcuboot.com/design.html
+    - https://datatracker.ietf.org/doc/rfc9019/
+
+- key: sw.cloud.incident-response
+  description: >-
+    Run an incident from detection to blameless postmortem, measuring budget spent and writing owned follow-up actions.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem, explain_back]
+  grader_types: [multiple_choice, human_review, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Act in order during an outage, keep a timeline, and turn the event into system changes rather than blame.
+  core_ideas:
+    - >-
+      Define postmortem triggers before anything breaks. Typical triggers: user-visible degradation past a threshold, any data loss, on-call intervention such as a rollback, resolution time past a threshold, or a monitoring failure that forced manual discovery.
+    - >-
+      A blameless postmortem looks for systemic contributing causes and assumes people acted in good faith with what they knew. Required content: record of incident and impact, actions taken, root causes, and follow-ups that prevent recurrence or reduce impact.
+    - >-
+      During an incident, mitigate first and investigate second [J]. Stopping the harm, by rollback or halting a rollout, comes before understanding it. Keep logs and evidence while doing so.
+    - >-
+      NIST SP 800-61 Rev. 3 (April 2025) supersedes Rev. 2 and is a CSF 2.0 Community Profile, so incident response is framed as part of wider risk management. Its Table 1 maps the old phases: Preparation to Govern, Identify and Protect; Detection and Analysis to Detect; Containment, Eradication and Recovery to Respond and Recover; Post-Incident Activity to the Improvement category of Identify, which also feeds the two middle phases.
+    - >-
+      Vulnerability reporting duties for products sold in the EU belong to T6 (CRA). A security incident may start that clock, so the runbook must point to it.
+  misconceptions:
+    - >-
+      Human error is a root cause. It is where the analysis starts; ask why the system allowed it.
+    - >-
+      No user complained, so no postmortem is needed. Silent data loss and monitoring gaps are among the most valuable triggers.
+  worked_example: >-
+    Freshness SLO: 99.5% of 30-day minutes in target. Budget = 0.005 × 43,200 = 216 min. A broker certificate expires at 14:02, the alert fires at 14:12, a rollback of the config finishes at 15:32, so 90 min were out of target, of which 10 was detection time. Budget spent: 90/216 = 41.7%. Follow-ups, each with owner and date: alert on certificate expiry 14 days ahead, add expiry to the rotation runbook, test the fallback. The postmortem names the missing check, not the person who forgot.
+  unaided_check: >-
+    Given a messy incident timeline, produce the postmortem. Pass: correct impact and budget figures, at least one contributing cause in each of detection and prevention, no named blame, and every action has an owner, a date and a way to verify it worked.
+  sources:
+    - https://sre.google/sre-book/postmortem-culture/
+    - https://csrc.nist.gov/pubs/sp/800/61/r3/final
+
+- key: sys.telemetry.schema-version
+  description: >-
+    Evolve a versioned telemetry schema with a compatibility rule that lets cloud readers decode every firmware version still in the field.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, debug_case, project_step]
+  grader_types: [code_tests, rubric_llm, human_review]
+  phone_suitable: false
+  objective: >-
+    Classify a schema change as safe or breaking, choose the compatibility mode, and state the upgrade order.
+  core_ideas:
+    - >-
+      Compatibility is directional. Backward: new readers read old data. Forward: old readers read new data. Full: both. Transitive variants check against all earlier versions, not only the previous one.
+    - >-
+      Device fleets lag, so old firmware writes data for years. The cloud reader must therefore meet backward transitive compatibility, and readers upgrade before writers. On downlink the roles swap: devices are lagging readers, so forward compatibility is what matters [J].
+    - >-
+      Adding or removing an optional field, or one with a default, is fully compatible in Avro and Protobuf. Removing a required field is backward only. Adding a required field is forward only. JSON Schema results depend on open or closed content models.
+    - >-
+      Meaning is part of the schema. Changing a unit or sign convention under the same field name passes a type check and corrupts every analysis [J]. Add a new field instead.
+    - >-
+      Schema version describes the payload; API version describes the endpoint or contract. They change independently, and each record must carry its schema version so replay can decode it years later.
+  misconceptions:
+    - >-
+      A schema must always be backward and forward compatible. That is too absolute; the mode depends on who upgrades first.
+    - >-
+      Registry compatibility checks prove semantic safety. They check shape only.
+    - >-
+      Schema version and API version are the same thing. A new field does not need a new endpoint, and a new endpoint may carry the same payload.
+  worked_example: >-
+    v1 has device_id, seq, temp_c. v2 adds batt_mv with default null. v3 adds motor_a with default null. The fleet runs v1, v2 and v3 at once, so the rule is BACKWARD_TRANSITIVE. Reader upgraded first to v3: a v1 record decodes with batt_mv = null and motor_a = null. Change request: "store temp in millikelvin in temp_c". The type stays numeric and a check may pass, but a value of 25.0 would now mean 25 mK. Rejected. Correct change: add temp_mk with default null, keep writing temp_c until no firmware reader or writer needs it, and record the deprecation date. Rename of temp_c in Avro without an alias is breaking for the same reason as adding a required field: the reader finds no value for the new name in old records.
+  unaided_check: >-
+    Write code tests that fail if a proposed schema cannot read golden payloads from all older versions. Pass: test suite loads one golden record per version, passes for an added defaulted field and for a removed field (a new reader ignores it), fails for an added required field and for a rename with no alias, and a separate old-reader test fails when a required field is removed.
+  sources:
+    - https://docs.confluent.io/platform/current/schema-registry/fundamentals/schema-evolution.html
+
+- key: sys.telemetry.secure-uplink
+  description: >-
+    Design a device-to-cloud uplink with TLS 1.3, mutual certificate authentication and a stated answer to the device clock problem.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem, explain_back]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: true
+  objective: >-
+    Explain what each handshake step proves, and specify the checks and failure behaviour for a small device.
+  core_ideas:
+    - >-
+      In TLS 1.3 the server requests client authentication with CertificateRequest. The client sends its Certificate and then CertificateVerify, a signature over the handshake that proves it holds the private key. Mutual TLS binds the session to a device identity.
+    - >-
+      All TLS 1.3 public-key exchange gives forward secrecy, since static RSA and static Diffie-Hellman are gone. PSK resumption keeps forward secrecy only when combined with (EC)DHE. 0-RTT data is not forward secret and has limited replay protection, so do not use it for anything that changes state [J].
+    - >-
+      NIST SP 800-52r2 requires government systems to support TLS 1.2 with approved suites and TLS 1.3 by 1 January 2024. It is a US federal rule used here as a benchmark, and NIST notes the publication is under review.
+    - >-
+      Certificate validity is a time window (RFC 5280, notBefore to notAfter), so a device must have a usable clock to judge the server's certificate. A device with a reset clock either rejects good certificates or, if the check is skipped, accepts expired ones. Mitigations [J]: keep a persisted floor time from the last good sync, and get time from an authenticated source.
+    - >-
+      Identity is not authorisation. After mTLS the broker must still limit each device to its own topics.
+  misconceptions:
+    - >-
+      TLS means the device is authenticated. Plain TLS authenticates the server only.
+    - >-
+      Skipping expiry checks is a harmless fix for bad clocks. It removes the protection expiry gives; a stated design decision with a floor time is the honest route.
+    - >-
+      A certificate on a device is secret. The certificate is public; the private key is what must be protected.
+  worked_example: >-
+    Cellular link with 400 ms round trip. TCP costs 1 RTT, TLS 1.3 full handshake costs 1 more. The client's Finished and first application data leave at 2 RTT = 800 ms and reach the server at 2.5 RTT = 1,000 ms, excluding signature time on the device. A new connection per sample at 1 Hz would spend the whole second on setup, so keep the session open. Clock: an uncorrected 20 ppm oscillator drifts 20e-6 × 86,400 = 1.728 s a day, or 51.84 s in 30 days, which is small against a 90-day certificate. A reset to 1970 is the real problem: every certificate looks not yet valid.
+  unaided_check: >-
+    Device A connects with a valid certificate and publishes to device B's topic. The broker accepts it. Name the failed control and the fix, and state two other things your uplink review would verify. Pass: authorisation policy missing, restrict topics by certificate identity; others could include server name check, expiry behaviour, protected key storage or a revocation path.
+  sources:
+    - https://www.rfc-editor.org/rfc/rfc8446.txt
+    - https://www.rfc-editor.org/rfc/rfc5280.txt
+
+- key: sys.telemetry.replay-alert
+  description: >-
+    Build a replay job and burn-rate alerts for a small fleet, and prove on replayed history that the alert fires when it should.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, project_step]
+  grader_types: [measurement_check, code_tests]
+  phone_suitable: false
+  objective: >-
+    Compute burn rates and choose alert windows that still work at low traffic, and test them with replay.
+  core_ideas:
+    - >-
+      Burn rate = error ratio / (1 - SLO). Budget used when an alert fires = burn rate × window / SLO period. For a 30-day period the Workbook's table is: page at 14.4 over 1 h with a 5 min short window (2% of budget), page at 6 over 6 h with 30 min (5%), ticket at 1 over 3 d with 6 h (10%).
+    - >-
+      The short window lets an alert clear soon after the fault ends. Without it, a one-hour window keeps firing long after recovery.
+    - >-
+      Burn-rate alerting suits traffic-rich services. At low rates one failure looks like a large burn. Options: synthetic traffic, grouping related services, retries and fallbacks, or a lower SLO or longer window. Synthetic traffic covers only part of real behaviour.
+    - >-
+      Replay is also the test harness for alerts. Feed a recorded fault through the pipeline and assert the alert fires, but route replayed output so it does not page anyone or overwrite live tables [J].
+  misconceptions:
+    - >-
+      Burn-rate alerting beats fixed thresholds everywhere. In a fleet of a few dozen devices each device is a large share of the signal, so the arithmetic must be checked first.
+    - >-
+      An alert that never fired is healthy. It may be broken, so prove it on replay.
+  worked_example: >-
+    SLO 99% over 30 days, fleet of 20 devices, one share each. The 1 h page at burn 14.4 means error ratio 14.4 × 0.01 = 14.4%. One silent device is 1/20 = 5%, burn 5, under both page rules, so it ticket-alerts only. Three silent devices are 15%, burn 15, which pages within the hour. Budget at firing: 14.4 × 1/720 = 2%; 6 × 6/720 = 5%. If the business needs a page for one silent device, this rule cannot deliver it, so add a per-device silence alert rather than lowering the burn threshold.
+  unaided_check: >-
+    Write code that computes burn rates over two windows from a replayed log and asserts the alert fires at a stated minute and clears after recovery. Pass: alert time is within one evaluation step of the expected time, the clean replay produces no alert, and the job writes to a non-live sink.
+  sources:
+    - https://sre.google/workbook/alerting-on-slos/
+    - https://sre.google/workbook/data-processing/
+
+- key: sys.telemetry.lakehouse-partition
+  description: >-
+    Choose a partition and file-size plan for telemetry from volume and query patterns, and estimate storage and scan cost.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [multiple_choice, exact_numeric]
+  phone_suitable: true
+  objective: >-
+    Size ingest, avoid small-file and unbounded-partition problems, and defend the partition column against bad device clocks.
+  core_ideas:
+    - >-
+      Partition on what queries filter by, at a grain that keeps files reasonably large. Device id as a partition column in a growing fleet creates many tiny files; clustering or sorting within a date partition usually serves single-device queries better [J].
+    - >-
+      Device clocks are unreliable, so partitioning physically on raw event time can create junk partitions such as 1970. Window on event time, but partition on receive date or on a validated event date [J].
+    - >-
+      Iceberg's hidden partitioning derives values from a column with a transform such as day(event_time) and applies filters automatically. Hive-style columns depend on writers supplying correct values and on queries adding filters, or every file is scanned. Iceberg can also change the partition scheme without rewriting the table logically, as data grows.
+    - >-
+      Late data rewrites old partitions, so cost and retention models must include backfill, not just the steady daily flow [J].
+  misconceptions:
+    - >-
+      Finer partitions are always faster. Past a point, metadata and small files cost more than the pruning saves.
+    - >-
+      Storage dominates cost. For scanned-bytes pricing, a badly laid-out query can matter more than a year of storage.
+  worked_example: >-
+    200 devices at 1 Hz, 120 bytes a record: 200 × 86,400 × 120 = 2.0736 GB a day. Columnar compression 5:1 [project convention: an assumed practice ratio; real ratios depend on data, encoding and codec, so measure your own] gives 414.72 MB a day. Hourly flush per device means 200 × 24 = 4,800 small files a day; a flush per hour into one date partition gives 24 files of 17.28 MB. One year retained: 414.72 MB × 365 = 151.37 GB, at an assumed $0.023 per GB-month is $3.48 a month. One device's day, with data unsorted, scans the whole 414.72 MB, which at an assumed $5 per TB is $0.0021; sorted by device it scans about 2.07 MB, or $0.00001. All prices are assumptions; use the current price list.
+  unaided_check: >-
+    500 devices, 4 Hz, 80 bytes, 4:1 compression. Give raw and compressed GB a day, and choose a partition with a reason. Expected: 13.824 GB raw, 3.456 GB compressed; date partition from a validated or receive time, sorted or clustered by device, with no device-id partition.
+  sources:
+    - https://iceberg.apache.org/docs/latest/partitioning/
+    - https://www.oreilly.com/radar/the-world-beyond-batch-streaming-101/
+
+- key: sys.telemetry.time-model
+  description: >-
+    Model each record with event, ingest, sequence and boot fields, and rebuild UTC time across reboots with a stated clock-quality flag.
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, faded_problem, problem, debug_case]
+  grader_types: [multiple_choice, code_tests]
+  phone_suitable: false
+  objective: >-
+    Order records correctly when clocks reset, and state how uncertain each timestamp is.
+  core_ideas:
+    - >-
+      Event time is when something happened; processing time is when the system saw it. The gap, called skew, is never zero and varies, and a device offline for hours uploads hours late.
+    - >-
+      Device order comes from (boot_counter, sequence), not wall clock. A monotonic millisecond counter gives spacing within a boot. A boot counter persisted in non-volatile memory separates boots even when both sequence and clock restart.
+    - >-
+      UTC is rebuilt by anchoring: record a sync pair (monotonic, UTC) in each boot, then event_utc = UTC_sync + (mono - mono_sync). Records before the first sync can be back-dated from the first anchor and must be flagged as estimated. A boot with no sync stays unanchored, not guessed.
+    - >-
+      A watermark is an estimate that event time has reached t. Flink's text says late events can still arrive, and waiting longer trades latency for completeness. For many sources you simply cannot know a window is complete, so design for correction.
+    - >-
+      Clock-quality flag values [project convention: three values match the three cases above, anchored, back-dated and unanchored, with no guessed state]: gnss_or_ntp, back_dated, unanchored. Queries for the twin must filter on it.
+  misconceptions:
+    - >-
+      Complete windows exist. A heuristic can only estimate completeness, so late data needs a defined path.
+    - >-
+      Sorting by device timestamp gives true order. After a clock reset, later records can have earlier times.
+    - >-
+      Ingest time is a safe stand-in for event time. It moves a whole outage's backlog into a single spike.
+  worked_example: >-
+    Boot 7 syncs at mono = 12,000 ms with UTC 2026-11-02T10:00:00.000Z. A record at mono = 72,500 ms is 60.5 s later: 10:01:00.500Z, flag gnss_or_ntp. Uncorrected 20 ppm drift over 60.5 s is about 1.21 ms. A record at mono = 2,000 ms is 10 s before the anchor: 09:59:50.000Z, flag back_dated, drift about 0.2 ms. If the device then reboots to boot 8 with no sync, its record with seq 0 is ordered after all of boot 7 by the pair (8, 0), and its UTC stays null and unanchored.
+  unaided_check: >-
+    Given 8 records spanning a reboot with a clock jumped back to 1970, write a function that outputs the correct order and rebuilt UTC with flags. Pass: order follows (boot, seq), no 1970 time survives, unanchored records stay null, and tests pass on hidden cases.
+  sources:
+    - https://www.oreilly.com/radar/the-world-beyond-batch-streaming-101/
+    - https://nightlies.apache.org/flink/flink-docs-stable/docs/concepts/time/
+
+- key: sys.telemetry.idempotent-replay
+  description: >-
+    Write a replay and backfill job that gives identical output across runs and accounts for every input record.
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, faded_problem, problem, debug_case, project_step]
+  grader_types: [code_tests, measurement_check]
+  phone_suitable: false
+  objective: >-
+    Make replay deterministic, with a natural dedupe key, a quarantine path and a reconciliation count.
+  core_ideas:
+    - >-
+      Idempotence means applying a mutation many times gives the same result as once, so reruns do not create duplicates. This often removes the need for exactly-once delivery: at-least-once plus an idempotent sink gives exactly-once effect.
+    - >-
+      Natural key: (device_id, boot_counter, sequence). It is stable across retries and needs no coordination. A hash of the payload catches a conflict where one key arrives with two different bodies.
+    - >-
+      Determinism rules [J]: no wall-clock reads, no random ids, and a total sort before output. Ingest time may be stored, but it must not change derived results. Pin parser and schema versions per run.
+    - >-
+      Two-phase mutation: write proposed changes to temporary storage, validate, then swap. Stale data is generally better than wrong data, so hold publication when validation fails.
+    - >-
+      Reconciliation: received = unique accepted + duplicates dropped + quarantined. Any non-zero gap is a bug, and sequence gaps give a separate count of records never received.
+  misconceptions:
+    - >-
+      Exactly-once delivery is the goal. It is the effect that matters, and the transport usually cannot provide it end to end.
+    - >-
+      Replay is just re-running the code. Without pinned versions and a stable order it produces a different answer.
+    - >-
+      Dropping malformed records is cleaning. It breaks accounting, so quarantine them with a reason.
+  worked_example: >-
+    A replay reads 10,240 records and finds 9,870 unique, 340 exact duplicates and 30 quarantined (unknown schema or key conflict): 9,870 + 340 + 30 = 10,240, so nothing is lost. For device D3, boot 12, the sequence range is 0 to 5,999 but 5,760 distinct values arrived, so 6,000 - 5,760 = 240 records are missing and are reported as a gap, not a replay error. Run the job twice from the same input, sort by (device_id, boot, seq), write canonical bytes and compare SHA-256: the two digests must match.
+  unaided_check: >-
+    Replay a provided log containing duplicates, a 10 minute outage, a clock-resetting reboot and two schema versions. Pass: two runs produce byte-identical output, the reconciliation equation holds exactly, and a mutation test (shuffling input order) leaves output unchanged.
+  sources:
+    - https://sre.google/workbook/data-processing/
+
+- key: sys.telemetry.data-slos
+  description: >-
+    Define freshness, correctness and coverage SLOs for a telemetry pipeline, with denominators drawn from the fleet inventory.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, debug_case]
+  grader_types: [multiple_choice, measurement_check]
+  phone_suitable: false
+  objective: >-
+    Compute the three indicators from logs, including the cases that per-stage checks and received-only counts miss.
+  core_ideas:
+    - >-
+      Freshness: share of data available within a target age, for example 90% within 1 minute and 99% within 10 minutes. Correctness: share of checked records that give the right output, best measured with injected records of known result, or golden data.
+    - >-
+      Coverage: share of expected data actually processed. Naming: the Workbook's Implementing SLOs chapter lists pipeline freshness, correctness and coverage as SLI types, while its example SLO document calls the same idea completeness.
+    - >-
+      End-to-end checks catch what stage checks miss. A field added by one stage and dropped by a later one passes every stage while the user never gets it.
+    - >-
+      The denominator must come from outside the pipeline, such as the device registry. A silent device produces no records, so it cannot lower a ratio calculated on what arrived [J].
+    - >-
+      Correctness must be measured independently of the system that made the data, or a shared bug passes its own check.
+  misconceptions:
+    - >-
+      A silent device is a healthy device. No errors from it is exactly what a dead device looks like.
+    - >-
+      Fresh data is good data. A pipeline can deliver wrong values on time; stale data is generally better than wrong data.
+    - >-
+      Per-stage SLOs add up to an end-to-end SLO. They can all be green while the output is wrong.
+  worked_example: >-
+    50 devices are registered at 1 Hz, so 180,000 samples are expected per hour. 46 devices report, each delivering 99.9% of samples: 46 × 3,596.4 = 165,434.4 samples. Measured on arrivals only, coverage for reporting devices is 99.9%, which looks excellent. Measured against the registry it is 165,434.4/180,000 = 91.908%, which breaches a 99% SLO. The four silent devices are the whole story, and only the inventory denominator shows them.
+  unaided_check: >-
+    From an ingest log and device registry, compute all three indicators for one day and name the worst offender. Pass: values match the answer key within 0.1 point, the denominator uses the registry, and correctness uses planted golden records rather than a pipeline self-report.
+  sources:
+    - https://sre.google/workbook/implementing-slos/
+    - https://sre.google/workbook/slo-document/
+    - https://sre.google/workbook/data-processing/
+
+- key: sys.telemetry.mqtt-semantics
+  description: >-
+    Choose MQTT QoS and session settings, size a store-and-forward buffer, and explain which duplicates and losses each choice allows.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem, debug_case]
+  grader_types: [multiple_choice, measurement_check]
+  phone_suitable: false
+  objective: >-
+    Predict device and broker behaviour across outages and reconnects from the protocol rules.
+  core_ideas:
+    - >-
+      QoS 0 is at most once with no response. QoS 1 is at least once: sender keeps the message until PUBACK, so duplicates are possible. QoS 2 is exactly once between two peers, using PUBLISH, PUBREC, PUBREL, PUBCOMP. All of this is per hop, client to broker and broker to subscriber, not end to end.
+    - >-
+      A duplicate need not look like one: in MQTT 5 a QoS 1 duplicate of an application message may arrive with DUP 0 and a new packet id, and DUP 1 does not prove a copy was seen. Dedupe on a payload key, not on the DUP flag.
+    - >-
+      Redelivery happens on reconnect of a resumed session. In 3.1.1 that is the only time it is required [MQTT-4.4.0-1]. MQTT 5 keeps the same rule under the same id, for a reconnect with Clean Start = 0 and a session present. Clean Start = 1 discards the session, and a Session Expiry Interval of 0 ends it on disconnect, so unacknowledged state is lost.
+    - >-
+      Keep Alive: the server closes the connection if no packet arrives within 1.5 times the value [MQTT-3.1.2-22]. Receive Maximum caps unacknowledged QoS 1 and 2 publishes, default 65,535, and does not cap QoS 0.
+    - >-
+      PUBACK means the broker took ownership, not that data reached storage. A device may delete its buffer only per a stated durability rule [J].
+  misconceptions:
+    - >-
+      QoS 2 gives end-to-end exactly once. It covers one hop and costs extra round trips; dedupe at the sink is simpler.
+    - >-
+      Store and forward means no data loss. A finite buffer overflows, so overflow must be a counted, chosen policy.
+  worked_example: >-
+    20 msg/s of 64 bytes is 1,280 B/s. A 1 MiB buffer (1,048,576 B) lasts 819.2 s, or 13.65 min. A 10 min outage stores 768,000 B, or 12,000 messages. Uplink is 4,000 B/s while live traffic continues, leaving 2,720 B/s for backlog, so draining takes 768,000/2,720 = 282.4 s. An outage over 819.2 s overflows, so drop oldest and increment a counter. Keep Alive 60 s: the broker closes a silent link after 90 s, and that delay, not the outage start, is when it notices.
+  unaided_check: >-
+    From a capture, a device publishes QoS 1 msgs seq 41 to 44, the link drops before PUBACK for 43, and it reconnects with Clean Start 0 and an unexpired session. State what is resent, how the sink behaves, and what would change with Clean Start 1. Expected: unacknowledged messages 43 and 44 are resent in order; the sink dedupes by key; Clean Start 1 discards session state, so the application buffer must resend them itself.
+  sources:
+    - https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html
+    - https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html
+
+- key: ml.core.linear-regression
+  description: >-
+    Fit a linear model by least squares, read its coefficients with units, and use residual checks to judge whether it can be trusted.
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, faded_problem, problem, explain_back]
+  grader_types: [exact_numeric, multiple_choice, code_tests, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Compute slope, intercept, residual spread and a prediction, then diagnose fit problems on telemetry features.
+  core_ideas:
+    - >-
+      Least squares picks parameters that minimise the summed squared residuals. For a line: b = Sxy/Sxx, a = ȳ - b x̄. In matrix form β = (XᵀX)⁻¹Xᵀy, or better a QR solver, which avoids squaring the condition number.
+    - >-
+      Residual standard deviation s = sqrt(SSE/(n - p)), with p parameters, estimates the noise level. Slope and intercept estimates are correlated unless the mean of x is zero.
+    - >-
+      Error assumptions: zero mean, no autocorrelation, independent of predictors. Normality with constant variance helps prediction intervals but is not essential. Autocorrelated residuals mean information is left in the data.
+    - >-
+      Telemetry samples are highly autocorrelated, so 10,000 samples at 1 Hz may hold few independent facts, and naive standard errors come out too small [J].
+    - >-
+      A coefficient is an association within the training regime, not a causal effect, unless the design supports that claim. Predict outside the x range only with a physical reason.
+  misconceptions:
+    - >-
+      High R² means a good model. Trending series get high R² from shared trends alone, and it says nothing about prediction on new data.
+    - >-
+      Good training fit predicts well. Only later, held-out data can show that.
+    - >-
+      A coefficient of 2 means changing x causes y to double. Regression shows association unless the experiment was designed otherwise.
+  worked_example: >-
+    Temperature rise y (K) against dissipated power x (W): x = 0, 5, 10, 15, 20; y = 0.4, 5.6, 9.9, 15.2, 20.4. x̄ = 10, ȳ = 10.3, Sxx = 250, Sxy = 248. Slope b = 0.992 K/W, intercept a = 10.3 - 9.92 = 0.38 K. Residuals: 0.02, 0.26, -0.40, -0.06, 0.18; SSE = 0.264; s = sqrt(0.264/3) = 0.297 K. R² = 0.9989. At 12 W: 0.38 + 0.992 × 12 = 12.284 K. The 0.38 K intercept should be 0 physically, so check the sensor offset.
+  unaided_check: >-
+    For x = 1, 2, 3, 4 and y = 2.1, 3.9, 6.2, 7.8, compute b, a and SSE, then predict y at x = 5. Expected: b = 1.94, a = 0.15, SSE = 0.082, prediction 9.85. Pass within 0.01.
+  sources:
+    - https://www.itl.nist.gov/div898/handbook/pmd/section4/pmd431.htm
+    - https://otexts.com/fpp3/regression-intro.html
+
+- key: ml.core.feature-leakage
+  description: >-
+    Find target, future-window and preprocessing leaks in a time-series pipeline, and fix each so features use only data available at prediction time.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem, debug_case]
+  grader_types: [multiple_choice, code_tests]
+  phone_suitable: true
+  objective: >-
+    Audit a pipeline for leaks using one rule: at forecast time, could this value have been known?
+  core_ideas:
+    - >-
+      Leakage is using information unavailable at prediction time, which inflates scores. Split first, then fit every transformer only on training data, and apply the fitted transform to test data. This covers scalers, imputers, PCA and feature selection.
+    - >-
+      Random splits leak on time series, because neighbouring samples are nearly copies. Split on time, and add a gap at least as long as the longest feature window plus horizon [J].
+    - >-
+      Feature windows leak quietly: a centred rolling mean at t uses future samples. For horizon h, every feature must be computable from data up to t - h relative to the target.
+    - >-
+      Target proxies leak too: a label-derived field, such as a fault flag written by a later technician visit, or a post-event status, may perfectly predict the label and be absent in production.
+    - >-
+      Data from one unit in both train and test leaks unit identity, so hold out whole runs or devices when the claim is about new runs or devices [J].
+  misconceptions:
+    - >-
+      Leakage is only random splitting. Scaler fits, windows and joined tables also leak.
+    - >-
+      A surprisingly high score is good news. Treat it as a bug report first.
+  worked_example: >-
+    Training has 800 samples with mean 40.0, test has 200 with mean 50.0. A scaler fitted on all data uses (800 × 40 + 200 × 50)/1000 = 42.0, not the correct 40.0, so 2.0 of drift information from the test period entered training. Second leak: a 61-sample centred mean at t uses samples up to t + 30; replace with a trailing mean ending at t - h. Third leak: a maintenance_flag column filled in after a repair. For a 10-sample horizon it is unknown at forecast time, so delete it. After fixes the score is expected to fall; that fall is the honest estimate.
+  unaided_check: >-
+    A pipeline has three planted leaks. Find them, fix the code and rerun. Pass: all three named with the rule each breaks, code tests show no future index is used by any feature, and the report gives the before and after scores without claiming a causal cause.
+  sources:
+    - https://scikit-learn.org/stable/common_pitfalls.html
+    - https://developers.google.com/machine-learning/guides/rules-of-ml
+
+- key: ml.core.metrics-interpret
+  description: >-
+    Compute and read MAE, RMSE, MAPE and scaled errors, choosing a metric that fits the units and the cost of large mistakes.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: >-
+    Pick the right error measure for an ops alert and explain why a number does or does not mean the model is useful.
+  core_ideas:
+    - >-
+      MAE = mean(|e|). RMSE = sqrt(mean(e²)). Both carry the data's units, so they cannot compare series in different units. RMSE is at least MAE, and a large gap between them signals rare large errors.
+    - >-
+      MAPE = mean(|100 e/y|). It is undefined at y = 0, huge near 0, and needs a meaningful zero, so it is not meaningful for Celsius or Fahrenheit.
+    - >-
+      MASE scales MAE by the mean absolute naive difference on training data; RMSSE does the same for squared errors. Below 1 means better than the in-sample naive one-step forecast on average; a multi-step forecast can be good and still score above 1.
+    - >-
+      An error must be judged against the alert margin [J]. An RMSE of 3 K is fine for a 30 K margin and useless for a 2 K margin.
+  misconceptions:
+    - >-
+      A low RMSE means a useful model. Compare it to a baseline and to the decision margin.
+    - >-
+      MAPE is unit-free so it is universal. Change °C to K and it changes by two orders of magnitude.
+  worked_example: >-
+    Errors 2, -1, 0, 4, -5 °C: MAE = 12/5 = 2.4; RMSE = sqrt(46/5) = 3.033. Change the -5 to -15: MAE 4.4, RMSE sqrt(246/5) = 7.014, so RMSE more than doubles while MAE rises 83%. MAPE trap: y = 2 °C and forecast 3 °C gives 50%. The same pair is 35.6 and 37.4 °F, or 5.06%, and 275.15 and 276.15 K, or 0.36%. One physical error gives three percentages, so MAPE is meaningless here.
+  unaided_check: >-
+    Errors are 1, -1, 2, -2 and training mean absolute naive step is 2.5. Give MAE, RMSE and MASE, and say whether this beats naive. Expected: MAE 1.5, RMSE 1.581, MASE 0.6; yes in this one-step sense, on this test window only.
+  sources:
+    - https://otexts.com/fpp3/accuracy.html
+
+- key: ml.core.rolling-validation
+  description: >-
+    Evaluate forecasts on a rolling origin with scaled errors, and conclude honestly when a model does not beat a naive method.
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, faded_problem, problem, project_step]
+  grader_types: [exact_numeric, code_tests, human_review]
+  phone_suitable: false
+  objective: >-
+    Build expanding or sliding folds with no future data, and report horizon-specific error.
+  core_ideas:
+    - >-
+      Each test point is forecast using only earlier data; the origin then moves forward and errors are averaged. The earliest points are not test points, since very small training sets give poor forecasts.
+    - >-
+      Refit or re-scale per fold: every preprocessing step and the MASE denominator use that fold's training data alone.
+    - >-
+      Accuracy depends on horizon, so report by h. A one-step result says little about a 60-step alert. For h-step evaluation, the test point at origin T is T + h.
+    - >-
+      Cross-validated error is usually worse than in-sample residual error, because the fit has seen those residuals. That gap is the point of the method.
+    - >-
+      Few folds mean high variance, and folds overlap, so do not treat a small gap as a real win. If no model clears the baseline, say no model is justified.
+  misconceptions:
+    - >-
+      k-fold shuffling works on time series. It trains on the future.
+    - >-
+      Tuning on the rolling folds then reporting them gives an unbiased score. Keep a final untouched period [J].
+  worked_example: >-
+    y = 20, 21, 23, 22, 25, 27, 26, 29, 31, 30, one-step forecasts, origins T = 6 to 9. Naive errors: -1, 3, 2, -1. Denominators D (mean |Δy| on training): 1.8, 1.667, 1.857, 1.875. Scaled: 0.556, 1.8, 1.077, 0.533, so MASE = 0.991. Drift forecasts 28.4, 27, 30.286, 32.375 give errors -2.4, 2, 0.714, -2.375, scaled 1.333, 1.2, 0.385, 1.267, so MASE = 1.046. MAE 1.75 against 1.87. Drift does not beat naive here, and 4 folds cannot separate them. Report: no case for the drift model on this series.
+  unaided_check: >-
+    Write a rolling-origin evaluator and run it on a provided series with a hidden look-ahead trap in the feature code. Pass: code tests prove no index at or after the target is used, MASE matches the key to 3 decimals, and the report states MASE below 1 or that no model is justified.
+  sources:
+    - https://otexts.com/fpp3/tscv.html
+    - https://otexts.com/fpp3/accuracy.html
+
+- key: sys.twin.state-model
+  description: >-
+    Write a physical state model of a subsystem, discretise it for a chosen sample time, and state its assumptions and regime of validity.
+  est_minutes: 50
+  task_kinds: [retrieval, worked_example, faded_problem, problem, project_step]
+  grader_types: [multiple_choice, exact_numeric, human_review]
+  phone_suitable: false
+  objective: >-
+    Go from an energy balance to a discrete predictor, and say what would make it wrong.
+  core_ideas:
+    - >-
+      A digital twin in the National Academies sense is more than a model or a dashboard: it mirrors a system, updates from its data, predicts beyond that data and supports decisions, with bidirectional interaction as a central feature. A one-way model with an alert is a shadow, not a twin.
+    - >-
+      First-order thermal node: C dT/dt = P - (T - Ta)/R. Steady state T∞ = Ta + PR. Time constant τ = RC. Response to a power step: T(t) = T∞ + (T0 - T∞)e^(-t/τ).
+    - >-
+      Exact discretisation with zero-order hold: T[k+1] - Ta = a(T[k] - Ta) + bP, with a = e^(-Δt/τ) and b = R(1 - a). Forward Euler uses a = 1 - Δt/τ and goes unstable above Δt = 2τ.
+    - >-
+      Lumping needs a small Biot number, so that temperature inside the body is nearly uniform. MIT's unified engineering notes derive the lumped transient: with a small Biot number the body is treated as one temperature, the time constant is ρVc/(hA), and the response decays exponentially (section 18.3).
+    - >-
+      Every model has a regime: state the load, ambient, airflow and time-scale limits. Convection is not constant, so R changes with airflow and temperature.
+  misconceptions:
+    - >-
+      A twin is a 3D model or a live dashboard. Neither necessarily has a predictive state model or a return path.
+    - >-
+      More states are always better. Extra states need extra data to identify them, or they become guesses.
+  worked_example: >-
+    C = 120 J/K, R = 2.5 K/W, P = 8 W, Ta = 25 °C. T∞ = 25 + 8 × 2.5 = 45 °C. τ = 300 s. At t = 300 s from 25 °C: 25 + 20(1 - e^-1) = 37.64 °C. With Δt = 10 s: exact a = e^(-1/30) = 0.96722, b × P = 8 × 2.5 × 0.03278 = 0.6557 K; Euler a = 0.96667, increment 0.6667 K. After one step: exact 25.6557 °C, Euler 25.6667 °C. Euler is stable up to Δt = 600 s, but accuracy is lost long before that.
+  unaided_check: >-
+    C = 50 J/K, R = 4 K/W, Ta = 20 °C, P = 5 W, start at 20 °C. Give T∞, τ, T at t = 400 s and the exact a for Δt = 20 s. Expected: 40 °C, 200 s, 37.29 °C, a = 0.90484.
+  sources:
+    - https://www.nationalacademies.org/read/26894/chapter/2
+    - https://web.mit.edu/16.unified/www/FALL/thermodynamics/notes/node128.html
+
+- key: sys.twin.model-calibration
+  description: >-
+    Calibrate model parameters from a bench run, check identifiability, and report error on a different load profile that was not used to fit.
+  est_minutes: 50
+  task_kinds: [retrieval, worked_example, faded_problem, problem, project_step]
+  grader_types: [measurement_check, exact_numeric]
+  phone_suitable: false
+  objective: >-
+    Estimate parameters with uncertainty and separate calibration runs from validation runs by operating condition.
+  core_ideas:
+    - >-
+      Identifiability: data can only determine what it excites. A step response shows gain and τ; only with known power does gain yield R, and then C = τ/R. A short run that never nears steady state cannot separate them.
+    - >-
+      Least squares fits parameters by minimising residuals; a nonlinear model needs iteration, and a linearised log-fit weights late, noisy points too heavily, so use it for a starting value [J].
+    - >-
+      Calibrate and validate on different conditions: different load shape, level and ideally ambient. A fit to one run validated on the same run shows only that optimisers work.
+    - >-
+      Record provenance: model version, parameter set, calibration run ids, sensor calibration, valid range. Parameters drift, and a drift can be ageing rather than fault, so the twin must log each recalibration.
+  misconceptions:
+    - >-
+      A well-fitted calibration is validated. Fit quality is not predictive skill.
+    - >-
+      Parameters are physical truths. Fitted values soak up sensor bias and unmodelled effects, so they are only as good as their regime.
+  worked_example: >-
+    A 10 W step from ambient settles at a rise of 30 K, so R = 3.0 K/W. Measured rises: 6.6, 11.9, 19.0, 25.9 K at 60, 120, 240, 480 s. Fit ln(1 - ΔT/30) = -t/τ through the origin: slope -0.0041557 per second, τ = 240.6 s, C = τ/R = 80.2 J/K. Validation on a different profile: 5 W from Ta = 22 °C predicts at 240 s 22 + 15(1 - e^(-240/240.6)) = 31.47 °C. Suppose the sensor reads 30.27 °C: residual -1.20 K, or 8% of the 15 K rise. That is large against an assumed 0.3 K sensor uncertainty, which suggests R changes with load, so narrow the stated regime or extend the model. Do not refit on this run and call it validated.
+  unaided_check: >-
+    Calibrate on one logged thermal or battery run, predict a held-out run before seeing it with stated intervals, then compare. Pass: parameters with uncertainty, RMSE on held-out run, stated coverage of the intervals, and a named regime where the model should not be used.
+  sources:
+    - https://www.itl.nist.gov/div898/handbook/pmd/section4/pmd431.htm
+    - https://www.nationalacademies.org/read/26894/chapter/10
+
+- key: sys.twin.residual-alert
+  description: >-
+    Build a residual monitor with persistence or CUSUM logic, and report detection delay and false alarms on clean and faulted runs.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, faded_problem, problem, debug_case, project_step]
+  grader_types: [measurement_check, code_tests]
+  phone_suitable: false
+  objective: >-
+    Turn a noisy residual into an alert, and separate model error, sensor fault and real plant fault.
+  core_ideas:
+    - >-
+      Residual r = measured - predicted. It is never zero, even with no fault, since noise and model error remain. Alert logic therefore tests a shift against a stated noise level.
+    - >-
+      A single-sample threshold at 1 Hz fires often. A two-sided 3 standard deviation test has p = 0.0027, or 233 expected false alarms a day from Gaussian white noise alone.
+    - >-
+      CUSUM accumulates small shifts: S = max(0, S + r - k), alarm when S > h. NIST's rule of thumb is k at half the shift to detect, and h about 4 to 5 in standard deviation units. It beats a single-sample rule for small shifts. NIST's chart example differs slightly from its own stated formula for h, so treat the rule of thumb as a starting point and test it.
+    - >-
+      A residual has at least three causes: fault in the plant, fault in a sensor, or model error outside regime. A second sensor or a physical invariant helps separate them.
+    - >-
+      Real residuals are autocorrelated, so independence formulas underestimate false alarms. Measure false alarm rate on clean runs.
+  misconceptions:
+    - >-
+      A residual means a fault. It may be the model that is wrong.
+    - >-
+      Debouncing has no cost. Each consecutive-sample rule adds delay.
+    - >-
+      Testing on the calibration run shows the alert works. Grade on a blind injected fault and separate clean runs.
+  worked_example: >-
+    Residual noise s = 0.4 K, shift to detect 0.8 K. k = 0.4 (half the shift) and h = 1.8 K, which is 4.5 standard deviations, inside NIST's suggested 4 to 5. Residuals: 0.2, -0.3, 0.4, 0.9, 1.1, 0.8, 1.2, 1.0. S: 0, 0, 0, 0.5, 1.2, 1.6, 2.4, 3.0. S first exceeds h at sample 7, so that is the alarm. If the shift began at sample 4, delay is 3 samples. A plain 3 standard deviation rule (1.2 K threshold) would not fire on any of these samples, since 1.2 is not above 1.2. Three same-sign exceedances of 3 standard deviations in a row would give about 0.0004 false alarms a day if independent, which real residuals are not.
+  unaided_check: >-
+    Tune an alert on a clean run and a labelled fault, then run it on an unseen log. Pass: alert fires on the blind injected fault, reported latency and false alarm rate match log-derived values, and the report states which alternative causes were ruled out.
+  sources:
+    - https://www.itl.nist.gov/div898/handbook/pmc/section3/pmc323.htm
+
+- key: sys.twin.state-estimation
+  description: >-
+    Run a Kalman filter on a twin's state, tune Q and R from data, and use innovations to check the filter is consistent.
+  est_minutes: 50
+  task_kinds: [retrieval, worked_example, faded_problem, problem, debug_case, project_step]
+  grader_types: [code_tests, measurement_check]
+  phone_suitable: false
+  objective: >-
+    Update the twin's state from noisy telemetry and explain each term in the predict and update steps.
+  core_ideas:
+    - >-
+      Scalar model: x[k] = a x[k-1] + b u + w, z = c x + v, with variances Q and R. Predict: x⁻ = a x + b u; P⁻ = a²P + Q. Update: S = c²P⁻ + R; K = P⁻c/S; x = x⁻ + K(z - c x⁻); P = (1 - Kc)P⁻.
+    - >-
+      Q says how much the model is distrusted, R how much the sensor is. Raising Q or lowering R raises K, so the filter follows data more closely. The ratio matters more than either value alone for a steady gain.
+    - >-
+      Innovation ν = z - c x⁻ has variance S if the model and noises are right. It should be white and zero-mean. A drift in it means model error, not bad luck.
+    - >-
+      This reuses the T2 Kalman skill, but its role differs: here the filter gives the twin a state and a covariance, which later sets uncertainty-based thresholds.
+    - >-
+      These match the predict and update equations (5) to (10) in Chen, Heckman and Julier (arXiv:1807.08855), written there in matrix form; for a scalar, P = P⁻ - K S K equals (1 - Kc)P⁻.
+  misconceptions:
+    - >-
+      A low P means the filter is right. P comes from the assumed Q and R, so a wrong model can be confidently wrong.
+    - >-
+      Filtering removes faults. A filter with high gain follows a sensor fault, so it can hide the residual you wanted.
+  worked_example: >-
+    a = 0.96, b = 1, u = 1.5, Q = 0.01, R = 0.25, c = 1, x = 30, P = 4. Step 1, z = 31.0: x⁻ = 30.3, P⁻ = 3.6964, S = 3.9464, K = 0.93665, ν = 0.7, x = 30.9557, P = 0.23416. Step 2, z = 31.6: x⁻ = 31.2174, P⁻ = 0.22580, S = 0.47580, K = 0.47457, ν = 0.38257, x = 31.3990, P = 0.11864. Steady state: K = 0.15378, P⁻ = 0.04543, S = 0.29543. The early high gain is the large initial uncertainty washing out.
+  unaided_check: >-
+    Implement the filter and run it on a replayed log with a known sensor variance. Pass: hidden tests match state and covariance to 4 decimals on a golden vector, innovation mean is within 2 standard errors of zero on a clean run, and a mis-set Q is diagnosed from the innovation sequence.
+  sources:
+    - https://researchportal.tuni.fi/en/publications/online-tests-of-kalman-filter-consistency/
+    - https://arxiv.org/pdf/1807.08855
+
+- key: sys.twin.vvuq
+  description: >-
+    Plan verification, validation and uncertainty quantification for a twin, and state its validity limits and how they are kept current.
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, problem, explain_back, project_step]
+  grader_types: [multiple_choice, rubric_llm, human_review]
+  phone_suitable: false
+  objective: >-
+    Write a VVUQ plan that says what evidence supports which use, and what the evidence does not show.
+  core_ideas:
+    - >-
+      Verification checks that the code solves the model correctly. Validation checks that the model matches reality for the intended use. Uncertainty quantification states how far to trust each prediction. The National Academies treat these as essential to a trustworthy twin.
+    - >-
+      VVUQ is continuing work: it must keep pace with changes in the physical system, model, data and task. A validation report goes stale as the device ages or the task changes.
+    - >-
+      Validation comparison: E = S - D, where S is simulation and D measurement. When the three error sources are independent, compare |E| to a combined validation uncertainty u_val = sqrt(u_num² + u_input² + u_D²). This is the procedure the Lisbon CFD workshop adapted from ASME V&V 20 (equations 1 to 3); the full standard also treats correlated sources, and uses standard uncertainties so that any coverage level can be chosen.
+    - >-
+      NASA-STD-7009B (2024, Appendix E) scores credibility in two groups. Capability factors: data pedigree, verification, validation, development technical review, and development process and product management. Results factors: use assessment, input pedigree, uncertainty characterisation, results robustness, use or analysis technical review, and use process and product management. The older Rev. A list also had use history and people qualifications. The aim is to tell the decision maker how credible a result is.
+    - >-
+      Extrapolation beyond the calibration range is an open research problem in the report, so state a validity envelope and flag any prediction outside it.
+  misconceptions:
+    - >-
+      Validated means correct. It means supported for a stated use, range and evidence level.
+    - >-
+      Verification and validation are one activity. A perfectly coded model can still be the wrong model.
+    - >-
+      VVUQ is a one-time gate. Twins change, so it recurs.
+  worked_example: >-
+    Hot-spot temperature: S = 62.4 °C, D = 61.2 °C, so E = 1.2 K. u_num = 0.1 K, u_input = 0.5 K, u_D = 0.4 K. u_val = sqrt(0.01 + 0.25 + 0.16) = 0.648 K. With coverage factor 2 the band is 1.296 K. |E| = 1.2 K is inside it, so this comparison gives no evidence of model error beyond the stated uncertainty. It does not prove the model right, and it covers one operating point only. If input uncertainty fell to 0.2 K, u_val would be 0.458 K, the band 0.917 K, and the same E would be significant.
+  unaided_check: >-
+    Write a one-page VVUQ plan for the L11 twin. Pass: separate verification and validation activities with evidence, a numeric uncertainty budget, a validity envelope, recurrence triggers such as firmware or sensor change, and at least one statement of what the evidence does not support. Human sign-off is required.
+  sources:
+    - https://www.nationalacademies.org/read/26894/chapter/10
+    - https://standards.nasa.gov/sites/default/files/standards/NASA/B/1/NASA-STD-7009B-Final-3-5-2024.pdf
+    - https://maretec.tecnico.ulisboa.pt/~maretec.daemon/html_files/VV2010_files/ValidationProcedure.pdf
+
+- key: sys.twin.closed-decision
+  description: >-
+    Close the loop safely by having the twin propose a limit change, with human approval, an audit record, an expiry and a fallback.
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, problem, explain_back, project_step]
+  grader_types: [measurement_check, human_review]
+  phone_suitable: false
+  objective: >-
+    Compute a proposed limit with margin from model uncertainty, and run it through an approval flow that fails safe.
+  core_ideas:
+    - >-
+      The report's bidirectional link can run through a human: data updates the model, and the model informs a change in the physical system. Decisions may be automated, human or shared, and without that return path the artefact should be called a calibrated shadow.
+    - >-
+      Decisions trade risk, performance, cost and time, and uncertainty must reach the decision maker clearly. Show the proposal with its margin and evidence, not just a number.
+    - >-
+      Safety envelope [J]: firmware keeps a hard limit that the cloud cannot exceed. The twin may only tighten, or relax within a pre-approved band; the device enforces this locally.
+    - >-
+      Approval record [J]: who, when, model and parameter version, input window, proposed value, expiry. A relaxation that expires reverts to the default. A tightening stays in force until a human relaxes it with evidence, and a lost link keeps the safer value.
+    - >-
+      Downlink needs its own authentication and replay protection, or the path becomes a new attack surface. Scope for T6.
+  misconceptions:
+    - >-
+      Human approval makes it safe. An approver with no margin, evidence or time is a rubber stamp.
+    - >-
+      Closing the loop is what makes it a twin regardless of validation. A loop driven by an unvalidated model simply adds risk.
+  worked_example: >-
+    Motor winding: Rw = 0.02 Ω, Ta = 30 °C, limit 80 °C, I = 30 A, so heat = 0.02 × 900 = 18 W. Calibrated R = 2 K/W gives T∞ = 66 °C. The twin now estimates R = 3 K/W, for example from a clogged vent, so T∞ = 84 °C, over the limit. Max current without margin: sqrt(50/(3 × 0.02)) = 28.87 A. With a 4 K margin from uncertainty: sqrt(46/0.06) = 27.69 A. Propose 27 A, round down, predicted T∞ = 73.74 °C. Assumes Rw is constant, which understates heat as copper warms. Human approves with an expiry of 24 h and a rule to inspect the vent. Because this proposal tightens the limit, the safe default on timeout or lost link is 27 A, not 30 A: at 30 A the model predicts 84 °C against an 80 °C limit. Going back to 30 A is a relaxation, so it needs an explicit approval with evidence, such as the cleared vent and a fresh estimate of R.
+  unaided_check: >-
+    On the L11 setup, inject a fault that shifts the twin's estimate, then carry a proposal through approval to a device change. Pass: log shows the proposal, margin, approver, device acknowledgement, expiry and revert; a rejected proposal changes nothing; the device refuses a value outside its hard band.
+  sources:
+    - https://www.nationalacademies.org/read/26894/chapter/2
+    - https://www.nationalacademies.org/read/26894/chapter/10
+
+- key: sys.twin.uncertainty-thresholds
+  description: >-
+    Set residual thresholds from the filter's covariance with chi-square bounds, choosing the level from a target false alarm rate.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, faded_problem, problem, project_step]
+  grader_types: [exact_numeric, measurement_check]
+  phone_suitable: false
+  objective: >-
+    Replace a hand-set threshold with an NIS test, and check consistency online with a moving window.
+  core_ideas:
+    - >-
+      NIS = νᵀS⁻¹ν. For a correct linear Gaussian filter with an m-dimensional measurement it follows chi-square with m degrees of freedom, so the threshold comes from a false alarm probability, and it automatically widens when uncertainty rises.
+    - >-
+      Single-sample bounds for m = 1: 3.841 at 95%, 6.635 at 99%, 10.828 at 99.9%. For m = 2 at 99%: 9.210.
+    - >-
+      Window test: if the innovations are white, as a correct filter makes them, the sum of N NIS values follows chi-square with Nm degrees of freedom. With N = 20, m = 1, the two-sided 95% range of the mean NIS is 0.480 to 1.708. A mean below it means an over-cautious filter; above it, an overconfident one or a fault.
+    - >-
+      Convert to operations: false alarms per hour = α × sample rate × 3600. The NIS test needs no truth data and works online, so it is suited to live use (Piché 2016). Chen, Heckman and Julier state the chi-square property of NIS (equation 19) and the white-innovation condition (equation 15); the bounds above were recomputed from the chi-square quantiles.
+    - >-
+      The result depends on Gaussian, white innovations. Validate the actual false alarm rate on clean runs and report that, not the nominal one.
+  misconceptions:
+    - >-
+      A 99% threshold means 1% total false alarms. It is 1% per sample, so at 1 Hz that is 36 per hour.
+    - >-
+      Once set, a threshold is final. If Q or R changes, S and the behaviour change too.
+  worked_example: >-
+    ν = 0.9, S = 0.25: NIS = 0.81/0.25 = 3.24, under 3.841, so no alarm at 95%. Target: at most 1 false alarm a day at 1 Hz, so α = 1/86,400 = 1.157e-5, and the chi-square(1) threshold is 19.23. A 99.9% level at 1 Hz gives 0.001 × 3,600 = 3.6 alarms an hour, too many for paging. Window of 20 with mean NIS 2.1 is above 1.708, so the filter is inconsistent even though single samples might not alarm.
+  unaided_check: >-
+    For a 2-dimensional measurement at 10 Hz with a target of one false alarm per 24 h, give α and the threshold, then state the measured rate on a provided clean log. Expected: α = 1.157e-6, threshold 27.34 (chi-square 2 dof, -2 ln α); measured rate from the log within the key, with the gap from nominal explained.
+  sources:
+    - https://researchportal.tuni.fi/en/publications/online-tests-of-kalman-filter-consistency/
+    - https://arxiv.org/pdf/1807.08855
+
+- key: ml.pred.baselines
+  description: >-
+    Compute mean, naive, drift and seasonal baselines for telemetry, and require any model or detector to beat them before it is reported.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: >-
+    Set the bar first, then report a candidate's result relative to it.
+  core_ideas:
+    - >-
+      Forecast formulas: mean ŷ = ȳ; naive ŷ = y_T; seasonal naive uses the last value of that season; drift ŷ = y_T + h(y_T - y_1)/(T - 1). A new method that does not beat these is not worth considering.
+    - >-
+      Naive is optimal for a random walk. Telemetry sampled quickly is often close to one, so a naive one-step forecast is hard to beat at short horizons [J].
+    - >-
+      Google's Rule 1 says launching without ML is fine. A simple threshold or heuristic is the first production candidate and sets the baseline for anomaly detection too [J on the extension to detectors].
+    - >-
+      Naive prediction interval width grows with sqrt(h), which is a quick honesty check on long-horizon claims.
+  misconceptions:
+    - >-
+      A baseline is a formality. It often wins, and reporting that is a valid result.
+    - >-
+      Beating the mean is enough. The mean is usually the weakest benchmark for a trending series.
+  worked_example: >-
+    Train 50, 52, 51, 53, 55, 54; test 56, 55, 57. Mean forecast 52.5: MAE 3.5. Naive 54: errors 2, 1, 3, MAE 2.0. Drift slope (54 - 50)/5 = 0.8: forecasts 54.8, 55.6, 56.4, MAE 0.8. D = 1.6, so MASE is 2.1875, 1.25 and 0.5. A candidate with MAE 1.1 beats mean and naive, but it loses to drift, so on this test it is not justified.
+  unaided_check: >-
+    Train 10, 12, 11, 13; test 14, 12. Give mean, naive and drift MAE. Expected: mean forecast 11.5 gives MAE 1.5; naive forecast 13 gives MAE 1.0; drift slope 1 gives forecasts 14 and 15, errors 0 and 3, MAE 1.5. Naive wins.
+  sources:
+    - https://otexts.com/fpp3/simple-methods.html
+    - https://developers.google.com/machine-learning/guides/rules-of-ml
+
+- key: ml.pred.anomaly-evaluation
+  description: >-
+    Score a detector with event-level precision, recall, delay and false alarms per hour, without point adjustment and against a trivial baseline.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, debug_case]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: >-
+    Report what an operator would see, and say so plainly when the baseline wins.
+  core_ideas:
+    - >-
+      Point adjustment marks a whole anomaly as detected if any point in it is flagged. Kim et al. show this can overstate results so much that a random score can look state of the art.
+    - >-
+      Wu and Keogh argue that many examples in popular benchmarks (Yahoo, Numenta, NASA) have at least one of four flaws, and that much apparent progress may be illusory. So a good benchmark score is not evidence of a good detector.
+    - >-
+      Report event-level recall (events caught over events), precision on alerts, detection delay and false alarms per hour of clean operation. Define matching before running.
+    - >-
+      Include no-fault runs and separate bench from field data [J]. False alarm rate needs hours of clean data; a few minutes tells you nothing.
+    - >-
+      Anomaly detection says now looks wrong. Prognosis says when it will fail. They need different labels and metrics.
+  misconceptions:
+    - >-
+      F1 with point adjustment is the field standard, so it is fine. Standard does not make it valid.
+    - >-
+      A detector with higher recall is better. An operator who gets four false pages a day stops reading them.
+  worked_example: >-
+    Point adjustment: a 100-point event with one flagged point has point recall 1/100 = 0.01, adjusted recall 1.00. Event scoring on a blind log with 5 events and 40 h of clean data: 12 alerts, 8 fall inside 4 events, 4 fall in clean data. Alert precision 8/12 = 0.667, event recall 4/5 = 0.80, F1 = 0.727, false alarms 4/40 = 0.1 per hour. Delays 12, 30, 45, 300 s: median 37.5 s, so one slow catch hides in a good median. A threshold baseline with recall 0.80 and 0.05 per hour would beat this detector, and the report must say so.
+  unaided_check: >-
+    Run a detector and a trivial baseline on a blind labelled log. Pass: event-level precision, recall and delay match the key, no point adjustment is used, clean-run false alarm rate is given, and the winner is stated even if it is the baseline.
+  sources:
+    - https://arxiv.org/abs/2109.05257
+    - https://arxiv.org/abs/2009.13807
+
+- key: ml.pred.physics-residuals
+  description: >-
+    Use physics-model residuals as features or as a correction target, without leaking the test period, and compare against physics alone.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, debug_case, project_step]
+  grader_types: [measurement_check, exact_numeric]
+  phone_suitable: false
+  objective: >-
+    Combine a calibrated model with data, and prove the combination adds value on held-out logs.
+  core_ideas:
+    - >-
+      Google's Rule 7 is to turn heuristics into features rather than discard them. A physics prediction is such a heuristic, and it can remove load-driven variation so that faults stand out; measure that on your data.
+    - >-
+      Two patterns: use r as an input to a detector, or train a data model on the target y - ŷ_phys, and output ŷ_phys + correction. The second falls back on the physics value if the correction is near zero, which must still be tested.
+    - >-
+      Leakage trap: a physics model calibrated on the whole dataset leaks the test period into the residual feature. Calibrate within each training fold.
+    - >-
+      A data correction can learn away the very fault you want to see, if fault data sits in training unlabelled.
+  misconceptions:
+    - >-
+      Raw temperature is the best fault feature. It mainly reports load.
+    - >-
+      A hybrid is automatically better. It must beat both physics alone and the baseline on the same held-out data.
+  worked_example: >-
+    Measured 60, 72, 55 °C, physics 58, 70, 49 °C. Physics-only MAE = (2 + 2 + 6)/3 = 3.333. A correction of +1.5 °C learned on training gives residuals 0.5, 0.5, 4.5, so MAE 1.833. Third sample stands out in the corrected residual: 4.5 K against 0.5 K. Raw limit 70 °C would have alarmed on the healthy 72 °C high-load sample and missed the 55 °C sample. So raw threshold gives one false alarm and one miss, and the residual separates them.
+  unaided_check: >-
+    On a provided log, compare raw-threshold, physics-residual and hybrid detection. Pass: fold-safe calibration verified, event-level scores from logs match the key, and the report states if the hybrid adds nothing.
+  sources:
+    - https://developers.google.com/machine-learning/guides/rules-of-ml
+
+- key: ml.pred.rul-literacy
+  description: >-
+    Read a remaining useful life claim critically, checking failure definition, data basis, interval and alpha-lambda performance.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, explain_back]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Decide whether a prognostic number can be trusted, without building a prognostic model.
+  core_ideas:
+    - >-
+      RUL needs a defined end of life, a degradation variable, and data that reaches that end. Without run-to-failure or a validated degradation model, an RUL number has no credible anchor.
+    - >-
+      Saxena et al.'s metrics: prognostic horizon (when predictions first meet the accuracy bound), alpha-lambda performance (binary: does the prediction fall within an alpha band at time λ), relative accuracy and convergence. Beta adds how much probability mass must fall inside the band (Saxena et al. 2009, sections 3 to 3.5).
+    - >-
+      A point RUL hides most of the information. Slope uncertainty maps to a wide, skewed interval, since RUL depends on 1/slope.
+    - >-
+      Stay at literacy here. The guide's gap on battery or motor prognostic sources remains open, so this skill does not teach a specific method.
+  misconceptions:
+    - >-
+      An RUL estimate exists because the software prints one. Check what data backs it.
+    - >-
+      Anomaly detection is prognosis. Knowing something is off is not knowing when it fails.
+  worked_example: >-
+    Capacity is 94% at cycle 300, end of life is 80%, and fade is 0.02% a cycle. Point RUL = 14/0.02 = 700 cycles. Slope 0.016 to 0.024 gives RUL 875 down to 583: not symmetric. If true RUL later proves to be 600, then an alpha = 0.2 band is ±120, or 480 to 720, and 700 lies inside it with error 16.7%, so it passes at that time. Yet true RUL is known only after failure, so this check needs run-to-failure data.
+  unaided_check: >-
+    A vendor states "predicts failure 30 days ahead" with no data. Write the four questions you would ask. Pass: end-of-life definition, number of run-to-failure units, interval and metric at stated times, and conditions covered.
+  sources:
+    - https://github.com/nasa/prognosticsmetricslibrary
+    - https://ntrs.nasa.gov/api/citations/20100023445/downloads/20100023445.pdf
+
+- key: ml.ops.evals
+  description: >-
+    Build an eval suite with a labelled dataset, acceptance thresholds and confidence bounds, and gate a release on it.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, project_step]
+  grader_types: [multiple_choice, rubric_llm, human_review]
+  phone_suitable: false
+  objective: >-
+    Define success before building, and report an interval rather than a single pass rate.
+  core_ideas:
+    - >-
+      OpenAI's guide orders the process: objective, dataset, metrics, run and compare, then continuous evaluation. Anti-patterns are generic metrics alone, data unlike production, judging by impression, delaying evals, and unchecked automated scores.
+    - >-
+      Automated graders, including LLM judges, need calibration against human labels before scaling. Project rule: rubric grades are not mastery-eligible until calibrated, and an LLM never decides numeric or code correctness.
+    - >-
+      Mine logs for real cases. Data from production failures is often worth more than synthetic data.
+    - >-
+      Thresholds need sample sizes. A pass rate from n trials has an interval, so a release gate should test the lower bound or a stated risk.
+    - >-
+      Slice results. A strong overall score can hide a weak subgroup such as one device type or firmware.
+  misconceptions:
+    - >-
+      Pass rate 92% on 50 cases means the system is at least 90%. The interval reaches down to 81%.
+    - >-
+      An eval suite is finished at launch. It grows with each failure.
+  worked_example: >-
+    Gate: at least 90% correct. Result 46/50 = 0.92. The Wilson 95% interval is 0.812 to 0.968, so the lower bound does not clear 0.90. With 184/200 the rate is still 0.92, interval 0.874 to 0.950. To clear 0.90 at an observed 0.92, about 865 cases are needed. So a stricter gate on small data is an illusion: either accept a stated risk, or use a smaller sample to catch regressions only.
+  unaided_check: >-
+    Write an eval report for a provided model with thresholds set before seeing results. Pass: named dataset with provenance, metric definitions, confidence intervals, one slice breakdown, a release decision, and no causal or efficacy claim beyond what was measured.
+  sources:
+    - https://developers.openai.com/api/docs/guides/evaluation-best-practices
+    - https://developers.google.com/machine-learning/guides/rules-of-ml
+
+- key: ml.ops.monitoring-drift
+  description: >-
+    Monitor feature and prediction drift with stated distance measures, and tell drift, sensor recalibration and real performance loss apart.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem, debug_case]
+  grader_types: [multiple_choice, measurement_check]
+  phone_suitable: true
+  objective: >-
+    Compute a distance between two distributions and decide what evidence an alert actually gives.
+  core_ideas:
+    - >-
+      TFDV measures drift between consecutive spans with L-infinity distance for categorical features and approximate Jensen-Shannon divergence for numeric ones. The threshold is set iteratively using domain knowledge.
+    - >-
+      Types of shift: covariate (P(X) changes, P(Y|X) stays), concept (P(Y|X) changes), label or prior (P(Y) changes, P(X|Y) stays). Huyen's article on distribution shifts gives these definitions.
+    - >-
+      KS statistic D is the maximum gap between empirical distributions. Its critical values need fully specified distributions and it is most sensitive near the centre. On huge samples a trivial shift becomes significant, so use effect size, not only a p-value.
+    - >-
+      Population Stability Index = sum((c - r) ln(c/r)) across bins. The 0.1 and 0.25 action levels are a rule of thumb. Yurdakul's thesis notes they are used without reference to Type I or Type II error rates, so their meaning changes with sample size.
+    - >-
+      Google's silent-failure rule: stale tables and shifting feature coverage degrade models with no error, so track statistics. Measuring real performance needs delayed labels.
+  misconceptions:
+    - >-
+      A drift alert means accuracy fell. It means inputs changed; only labels show the effect on performance.
+    - >-
+      No drift means the model is fine. Concept shift can occur with identical inputs.
+    - >-
+      Every drift is the world changing. A sensor recalibration moves features too, and that needs a pipeline fix.
+  worked_example: >-
+    Reference bins 0.10, 0.20, 0.40, 0.20, 0.10; current 0.05, 0.15, 0.35, 0.25, 0.20. L-infinity = 0.10 (the last bin). PSI = 0.03466 + 0.01438 + 0.00668 + 0.01116 + 0.06931 = 0.13619, or about 0.136. Jensen-Shannon divergence (base 2) = 0.0242. By convention PSI 0.136 is moderate. Next step: did all devices shift at one firmware or calibration date? If so, it is a recalibration. Otherwise, check delayed labels before retraining.
+  unaided_check: >-
+    A temperature feature shifts by +3 K across all units on the day a firmware update ships, and the model's error is flat. Diagnose and state the action. Expected: likely a sensor or scaling change rather than world drift; verify with an independent sensor and firmware dates; fix the pipeline or recalibrate; no retraining until cause is known.
+  sources:
+    - https://www.tensorflow.org/tfx/guide/tfdv
+    - https://www.itl.nist.gov/div898/handbook/eda/section3/eda35g.htm
+    - https://huyenchip.com/2022/02/07/data-distribution-shifts-and-monitoring.html
+    - https://scholarworks.wmich.edu/dissertations/3208/
+
+- key: ml.ops.cost-latency
+  description: >-
+    Compare batch and streaming inference on cost and latency, using Little's law, utilisation and tail percentiles.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [multiple_choice, exact_numeric]
+  phone_suitable: true
+  objective: >-
+    Size a serving option from numbers, and name the point where latency rises sharply.
+  core_ideas:
+    - >-
+      Static inference precomputes predictions, which controls cost and allows checks before serving, but it serves only cached results. Dynamic inference handles any input as it arrives, but it is compute intensive and latency sensitive.
+    - >-
+      Little's law: L = λW. Under stationarity it holds whatever the number of servers, queue discipline or distributions (Little and Graves 2008), and it gives concurrency from rate and time.
+    - >-
+      Systems slow well before 100% utilisation. In an M/M/1 queue mean time W = 1/(μ - λ), and the p95 is ln(20) × W. Real servers differ, so measure, but the knee is real.
+    - >-
+      Report tail percentiles via bucketed histograms. Averages hide a slow tail, and the four golden signals are latency, traffic, errors and saturation.
+    - >-
+      Fix the decision latency first. If an alert may be 60 min late, streaming may buy nothing [J].
+  misconceptions:
+    - >-
+      Average latency is what users feel. A 100 ms mean can hide 1% of requests taking seconds.
+    - >-
+      Streaming is more modern, so it is better. It costs more to run and monitor unless the latency is needed.
+  worked_example: >-
+    200 devices, one inference a minute: 8.64 million a month, at 1 ms each is 2.4 CPU-hours. Always-on service at an assumed $0.10 per hour: 730 × 0.10 = $73 a month, worst delay seconds. Hourly batch with 2 min start-up: 720 × 2 min = 24 h plus 2.4 h = 26.4 h, or $2.64, worst delay about 60 min. Queueing: μ = 4/s. λ = 3/s gives ρ = 0.75, W = 1 s, p95 = 3.00 s. λ = 3.6/s gives ρ = 0.90, W = 2.5 s, p95 = 7.49 s. So 20% more traffic gives 2.5 times the latency.
+  unaided_check: >-
+    A service takes 250 ms per request at 20 requests a second. How many are in flight, and is 8 workers enough? Expected: L = 5; utilisation 5/8 = 62.5%, acceptable at the mean, then check p99 under real bursts before accepting.
+  sources:
+    - https://developers.google.com/machine-learning/crash-course/production-ml-systems/static-vs-dynamic-inference
+    - https://sre.google/sre-book/monitoring-distributed-systems/
+    - https://doi.org/10.1007/978-0-387-73699-0_5
+
+- key: ml.ops.training-serving-skew
+  description: >-
+    Locate training-serving skew by decomposing performance gaps, compare logged serving features to training, and spot feedback loops.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, debug_case]
+  grader_types: [multiple_choice, measurement_check]
+  phone_suitable: false
+  objective: >-
+    Diagnose a degraded model by working from Rule 37's gaps, and ship a rollback decision with evidence.
+  core_ideas:
+    - >-
+      Skew is a gap between performance in training and in serving. Causes: pipeline differences, data changing between training and serving, and feedback loops from the model to its own data.
+    - >-
+      Rule 37 splits the gap into three: training to holdout (some gap is normal), holdout to next day (a big drop suggests time-sensitive features), next day to live (any gap usually means an engineering error).
+    - >-
+      Rule 29: log features at serving time and train from those logs. Rule 31: joined tables change, so snapshot or log them. Rule 32: reuse code across pipelines.
+    - >-
+      Feedback loops: a model that suppresses alerts removes the labels showing it was wrong. Sculley et al. list hidden feedback loops and undeclared consumers as ML risk factors; only the abstract was read. Rule 34 suggests holding out a little traffic to keep clean data.
+  misconceptions:
+    - >-
+      Retraining fixes skew. If the pipelines differ, new training data will not close that gap.
+    - >-
+      Same model file means same behaviour. Preprocessing is part of the model.
+  worked_example: >-
+    AUC: training 0.92, holdout 0.90, next-day 0.88, live 0.80. Gaps: 0.02, 0.02, 0.08. The largest, next-day to live, points to engineering. Compare logged serving features to the training pipeline on the same records: serving supplies °F for one feature, training °C. A unit mismatch moves 25 °C to 77. Decision: roll back to the last version, fix the feature, add a test comparing both pipelines on golden records. Do not retrain to mask it.
+  unaided_check: >-
+    Given a degraded model and logs, locate the cause among skew, recalibration and drift, then write a rollback decision with evidence. Pass: cause named from the logs, one rival cause ruled out with data, rollback or hold decision stated, and a regression test proposed.
+  sources:
+    - https://developers.google.com/machine-learning/guides/rules-of-ml
+    - https://papers.nips.cc/paper/5656-hidden-technical-debt-in-machine-learning-systems
+
+- key: ml.ops.shadow-canary
+  description: >-
+    Version a model with its data and code, run it in shadow, then canary it against a control with a stated stop rule.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, project_step]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: >-
+    Plan a rollout where any prediction traces to an exact version, and where exposure and sample size are justified.
+  core_ideas:
+    - >-
+      A model version is a triple at least: code, data and weights, plus preprocessing and config [J]. Without it, rollback and audit cannot be exact.
+    - >-
+      Shadow runs the new model on live inputs without acting on its output, which tests serving, load and input handling but not the effect of acting on predictions [J]. Amazon SageMaker's shadow tests are one example: a copy of live requests goes to the shadow variant, and only the production variant's responses reach the caller.
+    - >-
+      A canary is a partial, time-limited rollout followed by an evaluation. Compare canary and control at the same time, because before and after comparisons pick up time effects. Prefer a short list of user-related signals.
+    - >-
+      Exposure bounds harm: budget used scales with traffic share × error rate × time. Metric windows must fit within the canary's length.
+    - >-
+      Rule 9: check models on held-out data before export, and if in doubt do not export.
+  misconceptions:
+    - >-
+      A clean canary proves safety. Zero failures in n only bounds the rate at about 3/n.
+    - >-
+      Shadow results predict live impact. In shadow, the model's outputs change nothing, so feedback effects stay invisible.
+  worked_example: >-
+    Release fails 20% of requests. Full rollout: 20% error. At 5% traffic: 0.05 × 0.20 = 1% overall. Sample size: zero failures in 300 trials gives a 95% upper bound of 1 - 0.05^(1/300) = 0.99%, near the rule of three at 3/300 = 1%. In 50 trials it is 5.8%. A small device fleet may take days to reach 300 relevant events, so the canary duration follows from event rate, not from the calendar.
+  unaided_check: >-
+    Plan a canary for a model used by 40 devices with 5 relevant events per device per day, wanting to rule out a 2% failure rate at 95% confidence. Expected: about 3/0.02 = 150 clean events (exact 149); with 8 devices, 40 events a day, so about 4 days; include a control group, stop rule and version record.
+  sources:
+    - https://sre.google/workbook/canarying-releases/
+    - https://developers.google.com/machine-learning/guides/rules-of-ml
+    - https://docs.aws.amazon.com/sagemaker/latest/dg/shadow-tests.html
+
+- key: ml.edge.quantization
+  description: >-
+    Compute INT8 scale and zero point by hand, explain symmetric and per-axis choices, and measure accuracy loss after conversion.
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [exact_numeric, multiple_choice, code_tests]
+  phone_suitable: false
+  objective: >-
+    Quantize values by hand and predict where integer inference loses accuracy.
+  core_ideas:
+    - >-
+      Affine mapping: real = scale × (q - zero_point). Zero must be exactly representable. Maximum rounding error inside the range is scale/2.
+    - >-
+      LiteRT INT8 spec: weights are symmetric, zero point 0, range -127 to 127, per-axis or per-tensor. Activations are asymmetric, range -128 to 127, per-tensor. Bias is int32 with zero point 0 and scale = input scale × weight scale.
+    - >-
+      Conv2D uses per-axis weight scales on dimension 0, depthwise on dimension 3. Separate scales help when channel ranges differ widely.
+    - >-
+      Representative calibration sets activation ranges. A range set from clean bench data may clip real field data, and one outlier stretches the scale, losing resolution for typical values [J].
+    - >-
+      Quantization-aware training may recover accuracy: Jacob et al. co-design a training procedure to preserve accuracy after quantization. Gains vary by model, so measure, do not assume. The affine form above is from the LiteRT spec.
+  misconceptions:
+    - >-
+      INT8 is always faster. It helps only where the target and kernels make it so; measure on the device.
+    - >-
+      Host accuracy after conversion equals on-device accuracy. Sensor preprocessing can differ.
+  worked_example: >-
+    Activation range -1.0 to 3.0. Scale = 4/255 = 0.015686. Zero point = round(-128 + 1/0.015686) = round(-64.25) = -64. Encode 1.5: 1.5/0.015686 = 95.625, rounds to 96, plus -64 gives q = 32. Decode: 96 × 0.015686 = 1.50588, error 0.00588, under scale/2 = 0.00784. Representable range: -1.00392 to 2.99608. Weight max magnitude 0.8: scale 0.8/127 = 0.0062992; weight 0.5 maps to q = 79, decoding to 0.49764. Bias scale = 0.015686 × 0.0062992 = 9.881e-5.
+  unaided_check: >-
+    Range 0 to 6.0, INT8 activation. Give scale, zero point, q for 2.5 and decoded value. Expected: scale 0.023529, zero point -128, q = -22 (106 - 128), decoded 2.49412.
+  sources:
+    - https://developers.google.com/edge/litert/models/quantization_spec
+    - https://arxiv.org/abs/1712.05877
+
+- key: ml.edge.deploy
+  description: >-
+    Deploy a quantized model to a microcontroller, prove worst-case timing with hardware, and check on-device outputs against host vectors.
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, problem, debug_case, project_step]
+  grader_types: [code_tests, measurement_check]
+  phone_suitable: false
+  objective: >-
+    Meet a stated RAM, flash and deadline budget on real hardware, and report accuracy from the device.
+  core_ideas:
+    - >-
+      First ask if the inference belongs at the edge at all: link cost, latency, privacy, power and update path decide this [J].
+    - >-
+      TFLite Micro is interpreter based, takes one fixed arena, and allows no allocation during invocation. An OpResolver links only needed kernels, which saves flash. Reported overhead is low but model dependent: under 0.1% for a long model and 3 to 4% for a short one.
+    - >-
+      Timing evidence: measure with a cycle counter or GPIO and a logic analyser under worst inputs and with interrupts live. Measured maximum is a sample, not a proven bound, so add margin and say so.
+    - >-
+      Golden vectors: run the same quantized inputs on host and device, and compare outputs. Differences show kernel or preprocessing mismatch before any accuracy test.
+    - >-
+      A model is an OTA payload: version it, sign it, and tie it to the matching preprocessing and firmware.
+  misconceptions:
+    - >-
+      Average latency satisfies a deadline. The deadline is met or missed on the worst case.
+    - >-
+      If it fits in flash, it runs. RAM, timing and operator support are separate limits.
+  worked_example: >-
+    Cortex-M at 64 MHz, deadline 33 ms = 2,112,000 cycles. 10,000 runs give a maximum of 1,900,000 cycles = 29.69 ms. With a 20% margin [project convention: a measured maximum is a sample, not a bound, so keep headroom for untested paths and interrupts], 35.63 ms exceeds 33 ms. So the measured value passes, but the design fails the margin rule; the maximum allowed is 27.5 ms. Options: smaller model, lower sensor rate or faster clock. Cycle counter wrap at 64 MHz: 2^32/64e6 = 67.1 s, safe for per-inference deltas. The DWT cycle counter (CYCCNT) is 32 bits and optional: check the NOCYCCNT bit in DWT_CTRL. Cortex-M0 and M0+ have no CYCCNT, so use a hardware timer or GPIO there.
+  unaided_check: >-
+    Deploy the provided model under a stated budget. Pass: flash and RAM from map file and arena report within budget, worst-case timing from hardware log under load, device outputs match host golden vectors within 1 LSB, and accuracy reported from on-device data.
+  sources:
+    - https://arxiv.org/html/2010.08678
+    - https://developers.google.com/edge/litert/models/quantization_spec
+    - https://github.com/ARM-software/CMSIS_6/blob/main/CMSIS/Core/Include/core_cm4.h
+
+- key: ml.edge.tensor-memory
+  description: >-
+    Estimate peak tensor memory from tensor lifetimes, and split a RAM budget into arena, persistent data, stack and application use.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: >-
+    Predict whether a model fits before flashing it, and find which layer sets the peak.
+  core_ideas:
+    - >-
+      Flash holds weights, code and constants. RAM holds activations, scratch and bookkeeping. INT8 weights need about a quarter of float32 flash.
+    - >-
+      Peak activation memory is the largest total of tensors live at one time, not the sum of all tensors. A planner sorts buffers by size and reuses space when lifetimes do not overlap.
+    - >-
+      TFLite Micro's arena has three sections. The head holds the shared, non-persistent tensor buffers laid out by the memory planner. A temporary section for scoped scratch starts at the end of the head. The tail holds persistent allocations and grows towards the head. Allocation fails when they would cross. Tensor arena is TFLite Micro vocabulary, not a universal term.
+    - >-
+      Residual connections stretch lifetimes, so they raise peak memory even with no new parameters. Find the true arena size with RecordingMicroInterpreter and PrintAllocations(), or by trial, since persistent allocations are added on top.
+  misconceptions:
+    - >-
+      Model size equals RAM use. A tiny flash size can have a big activation peak.
+    - >-
+      Summing tensors gives the arena. It overestimates a chain and hides lifetime effects.
+  worked_example: >-
+    Chain tensors A 1,024, B 4,096, C 2,048, D 1,024 bytes. Layer live sets: A+B = 5,120, B+C = 6,144, C+D = 3,072. Peak 6,144 against a sum of 8,192. Add a skip from A into the last layer: A+B+C = 7,168, A+C+D = 4,096, A+B = 5,120, so peak 7,168. Arena for the chain with scratch 512 B and persistent 1,800 B [project convention: illustrative figures; read the real ones from the recording interpreter]: 6,144 + 512 + 1,800 = 8,456 B. On 16 KiB RAM, 16,384 - 8,456 = 7,928 B stays for stack and application. 12,000 INT8 weights take 12,000 B of flash, against 48,000 B as float32.
+  unaided_check: >-
+    Chain tensors 2,000, 8,000, 6,000, 3,000 bytes, then a skip from the 2,000 tensor into the final layer. Give both peaks. Expected: chain peak 14,000 (8,000 + 6,000); with skip 16,000 (2,000 + 8,000 + 6,000).
+  sources:
+    - https://arxiv.org/html/2010.08678
+    - https://github.com/tensorflow/tflite-micro/blob/main/docs/memory_management.md
+
+- key: ml.llm.structured-outputs
+  description: >-
+    Get schema-conforming LLM output, handle refusal and truncation, and validate meaning with deterministic checks.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem, debug_case, project_step]
+  grader_types: [code_tests, multiple_choice, human_review]
+  phone_suitable: false
+  objective: >-
+    Treat model output as untrusted input, with parsing, semantic validation and bounded retries in application code.
+  core_ideas:
+    - >-
+      Schema conformance is about shape, not truth. A well-typed field can still hold a wrong or invented value, so check content in application code.
+    - >-
+      Check the stop reason before parsing. Anthropic's docs note that a refusal returns HTTP 200, may not match the schema and is billed; max_tokens may truncate output. Provider details change, so check the current docs.
+    - >-
+      Some JSON Schema constraints, such as numeric minimum or string length, are not accepted directly by that API, and SDK helpers move them to client-side validation. So range checks stay in your code.
+    - >-
+      Semantic checks use trusted data: device id exists in the registry, timestamp within the log's span, quoted log line really occurs in the source.
+    - >-
+      Retries are bounded and logged. A retry loop with no cap is an unbounded consumption risk, per OWASP's list.
+  misconceptions:
+    - >-
+      Valid JSON means valid data. It means parsable.
+    - >-
+      Asking the model to be accurate replaces validation. Prompts are not guarantees.
+  worked_example: >-
+    Output: {"device_id": "D7", "fault": "overtemp", "peak_c": 412.0, "line": 8812}. Schema passes. Checks: D7 is in the registry, line 8812 exists, but it shows 41.2 and the sensor range ends at 125, so the value is rejected, and the record is flagged rather than stored. Retry cost: failure rate 5% independent, at most 3 attempts: expected attempts 1 + 0.05 + 0.0025 = 1.0525; chance all fail 0.05^3 = 0.000125. Real failures are often correlated, as the same input fails again, so a fallback path is still required.
+  unaided_check: >-
+    Write an extractor that wraps a fake LLM client returning good output, truncated JSON, a refusal and a well-typed invented device id. Pass: code tests show all four are handled correctly, nothing invalid reaches storage, and retry count is bounded.
+  sources:
+    - https://platform.claude.com/docs/en/build-with-claude/structured-outputs
+    - https://genai.owasp.org/llmrisk/llm01-prompt-injection/
+
+- key: ml.llm.retrieval-evals
+  description: >-
+    Evaluate retrieval separately from generation with precision, recall, reciprocal rank and nDCG on a labelled query set.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, debug_case]
+  grader_types: [rubric_llm, exact_numeric]
+  phone_suitable: false
+  objective: >-
+    Compute ranking metrics by hand and decide which stage caused a bad answer.
+  core_ideas:
+    - >-
+      Split failure into retrieval (the needed passage was not found) and generation (it was found, and the answer is still wrong). A single end-to-end score cannot say which to fix.
+    - >-
+      Precision@k = relevant in top k / k. Recall@k = relevant in top k / all relevant. Reciprocal rank = 1 / rank of the first relevant item. AP averages precision at each relevant rank, counting unretrieved relevant items as 0.
+    - >-
+      nDCG@k = DCG/IDCG, DCG = sum(rel_i / log2(i + 1)). It rewards relevant items near the top and allows graded relevance.
+    - >-
+      Build the query set from real logged questions, with human labels. Include queries that should return nothing, or the system learns to answer everything [J].
+    - >-
+      Retrieved text is untrusted. Vector and embedding weaknesses appear in OWASP's 2025 list, so retrieval evals and injection tests are both needed.
+  misconceptions:
+    - >-
+      A good answer means retrieval worked. The model may have answered from memory.
+    - >-
+      More retrieved chunks are safer. They add noise, cost and injection surface.
+  worked_example: >-
+    Top 5 relevance 1, 0, 1, 0, 0, with 4 relevant items overall. Precision@5 = 0.40, recall@5 = 0.50, RR = 1.0, AP = (1/1 + 2/3)/4 = 0.4167. DCG = 1 + 1/log2(4) = 1.5. IDCG with 4 relevant = 1 + 0.6309 + 0.5 + 0.4307 = 2.5616. nDCG@5 = 0.5856. If the answer was wrong and the supporting chunk was rank 1, the fault is in generation; if the needed chunk was among the 2 missed items, it is in retrieval.
+  unaided_check: >-
+    Relevance at ranks 1 to 4 is 0, 1, 1, 0, with 3 relevant overall. Give precision@4, recall@4, RR, AP and nDCG@4. Expected: 0.50, 0.667, 0.50, (1/2 + 2/3)/3 = 0.389, DCG = 0.6309 + 0.5 = 1.1309, IDCG = 2.1309, nDCG = 0.531.
+  sources:
+    - https://github.com/usnistgov/trec_eval/blob/main/m_map.c
+    - https://scikit-learn.org/stable/modules/model_evaluation.html#normalized-discounted-cumulative-gain
+    - https://developers.openai.com/api/docs/guides/evaluation-best-practices
+
+- key: ml.llm.prompt-injection
+  description: >-
+    Design an LLM feature so that injected text cannot cause an unauthorised action, using deterministic controls and least privilege.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem, debug_case, explain_back]
+  grader_types: [multiple_choice, code_tests, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Assume the model can be manipulated, then limit what a manipulated model can do. Defensive design only.
+  core_ideas:
+    - >-
+      Direct injection arrives in the user's prompt; indirect injection sits in content the model reads, such as a log line, file or web page. A jailbreak is a form of injection aimed at the model's safety rules.
+    - >-
+      NCSC argues the SQL injection analogy misleads: parameterised queries separate data from instructions, but an LLM has no equivalent separation. Injection may never be fully solved, so reduce likelihood and impact, and accept residual risk or do not use an LLM.
+    - >-
+      Treat the model as a confusable deputy. Content from an untrusted source carries only that source's privileges, and deterministic non-LLM controls limit tools and APIs.
+    - >-
+      OWASP LLM01:2025 lists: constrain role, validate output formats, filter input and output, least privilege with credentials kept in code, human approval for high-risk actions, separate and label untrusted content, adversarial testing. No method is guaranteed.
+    - >-
+      Deny-lists of phrases are weak, as text can be rephrased. Labelling untrusted data helps but it is not a boundary. Log inputs, outputs and tool calls, since failed calls can reveal probing.
+  misconceptions:
+    - >-
+      Injection can be filtered away. Filters reduce some attacks; they are not a security boundary.
+    - >-
+      A strong system prompt stops it. The system prompt is also just text to the model.
+    - >-
+      Passing a red-team set shows it is safe. Tests find failures; only design limits impact.
+  worked_example: >-
+    Agent reads L11 logs with one write tool, set_alert_ack. Log lines are attacker-influenced. Design: the agent's run has privileges of the log's source, so the tool gateway, written in ordinary code, refuses any call unless a signed-in human's approval token for that exact alert id is present, and the tool cannot touch limits. A planted log instruction may still change the model's text, but the state stays unchanged. Evidence: 0 unauthorised outcomes in 50 trials only bounds the rate at 5.8% (95%, exact), so the claim rests on the gateway test, which must pass every time regardless of model output.
+  unaided_check: >-
+    Given an agent design with a shared admin token and a keyword filter, redesign it. Pass: token removed from the model's reach, per-action authorisation in code, human approval on the write, untrusted content labelled, code test proving the write is refused when the model requests it with no approval. No attack strings are required or graded.
+  sources:
+    - https://www.ncsc.gov.uk/blog-post/prompt-injection-is-not-sql-injection
+    - https://genai.owasp.org/llmrisk/llm01-prompt-injection/
+
+- key: ml.llm.agent-evals
+  description: >-
+    Build an agent eval with tasks, repeated trials and outcome graders, covering both over-triggering and under-triggering.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, project_step]
+  grader_types: [rubric_llm, human_review, code_tests]
+  phone_suitable: false
+  objective: >-
+    Measure an agent's outcomes over repeated trials, and separate capability tests from regression tests.
+  core_ideas:
+    - >-
+      Vocabulary from Anthropic's guide: a task is a test case, a trial one attempt, a grader the scoring logic, the transcript the full record, and the outcome the final environment state. Check the state, not the agent's claim.
+    - >-
+      Capability evals start with low pass rates and probe what is not yet possible. Regression evals should sit near 100%. Mature capability cases graduate into regression.
+    - >-
+      Start with about 20 to 50 tasks from real failures. Outputs vary, so run several trials: pass@k is at least one success in k, and pass^k is success in all k.
+    - >-
+      Grade outcomes rather than paths, since a rigid step list punishes valid routes. Test both directions: cases where a tool should be used and cases where it should not.
+    - >-
+      Code graders are objective but brittle, model graders flexible but need calibration, and human graders are the reference but slow. Rubric grades are not mastery-eligible until calibrated.
+  misconceptions:
+    - >-
+      One passing run shows the agent works. Runs vary, so a single trial tells you little.
+    - >-
+      Reading the agent's final message is grading. It may claim something that did not happen.
+  worked_example: >-
+    Per-trial success p = 0.8, k = 3, assuming independence: pass@3 = 1 - 0.2^3 = 0.992, pass^3 = 0.8^3 = 0.512. The same agent looks excellent or poor by choice of metric. A human-supervised tool may use the first, an unattended one the second. At p = 0.5: 0.875 and 0.125. Trials on one task are often correlated, so measure instead of trusting the formula. Grader for an alert-ack agent: query the alert table for the expected state, and check no other row changed.
+  unaided_check: >-
+    Build an eval for the L11 log agent with at least 20 tasks, including tasks where it should refuse or do nothing. Pass: outcome graders check final state, at least 5 trials per task, pass rates and intervals reported, a regression set separate from capability cases, and human calibration of any model grader.
+  sources:
+    - https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents

@@ -1,0 +1,137 @@
+schema_version: 1
+key: tpl.elec.ohms-law-v
+version: 2
+authoring_status: ready
+skill_key: elec.dc.ohms-law
+task_kind: problem
+grader_type: exact_numeric
+difficulty_prior: 0.35
+title: Voltage across a resistor
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-01'
+  llm_assistance:
+    used: true
+    roles:
+    - draft_template
+    - explanation
+    - distractors
+    - hints
+    - misconception_tags
+    model: claude-opus-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts:
+  - phone
+  - desktop
+  est_seconds: 90
+  phone_suitable: true
+  offline_gradable: true
+parameters:
+- name: r
+  type: e_series
+  series: E24
+  decade_min: 2
+  decade_max: 3
+  unit: ohm
+  description: Resistance
+- name: i
+  type: float
+  min: 0.001
+  max: 0.05
+  step: 0.001
+  nonzero: true
+  unit: A
+  description: Current through the resistor
+constraints:
+- id: real-voltage
+  expr: r * i >= 0.5 and r * i <= 24
+  reason: Keeps the voltage within a bench supply range of at most 24 V.
+- id: real-power
+  expr: i * i * r <= 1
+  reason: Dissipation stays at most 1 W, so a real resistor could carry this current.
+render:
+  stem_md: 'A current of $I = {{i|tex}}$ flows through a resistor of $R = {{r|tex}}$.
+
+
+    What is the voltage across the resistor?
+
+    '
+  answer_prompt: Enter the voltage with a unit, for example 2.5 V.
+  alt_text: A current of {{i|eng}} flows through a resistor of {{r|eng}}. Find the voltage across it.
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      v: i * r
+  steps:
+  - id: s1
+    text_md: 'Write the current in amperes: $I = {{i|fixed:3}}\ \mathrm{A}$.'
+  - id: s2
+    text_md: 'Multiply by the resistance: $V = IR = {{i|fixed:3}} \times {{r|int}} = {{v|tex:V}}$.'
+  explanation_md: With current in amperes and resistance in ohms, the product is in volts.
+answer:
+  kind: numeric
+  value: v
+  unit: V
+  accept_units:
+  - V
+  - mV
+  bare_number_means: V
+  tolerance:
+    rel: 0.02
+    abs: 0.001
+verifiers:
+- id: current-inverted
+  kind: sympy_solve
+  independence: 'Inverts the law: finds the voltage that drives the given current through R from I = V/R, using exact rationals.'
+  spec:
+    unknowns:
+    - vx
+    equations:
+    - vx / r - i
+    checks:
+    - unknown: vx
+      output: v
+  tolerance:
+    rel: 1.0e-09
+- id: dimension
+  kind: pint_dimension
+  independence: Dimensional analysis with pint on the parameter units; it does not check magnitude.
+  spec:
+    checks:
+    - expr: i * r
+      result_unit: V
+- id: window
+  kind: bounds
+  independence: Fixed bench supply limit of 24 V, independent of any formula for the value.
+  spec:
+    output: v
+    lo: '0'
+    hi: '24'
+    strict: false
+hints:
+  l1: You know what flows through the resistor and how much it opposes that flow. What are you asked to find?
+  l2: Ohm's law links voltage, current and resistance. Put the current in amperes before you use it.
+  l3: 'First write the current in amperes: I = {{i|fixed:3}} A. Then use it with the resistance.'
+misconceptions:
+- tag: mc.ohm-milliamps-as-amps
+  description: Uses the number of milliamperes as if it were amperes.
+  wrong_answer_expr: 1000 * i * r
+  feedback_md: The current is in milliamperes. Convert it to amperes before multiplying by ohms.
+- tag: mc.ohm-divides-r-by-i
+  description: Divides resistance by current.
+  wrong_answer_expr: r / i
+  feedback_md: Voltage is current times resistance, not resistance divided by current.
+- tag: mc.ohm-divides-i-by-r
+  description: Divides current by resistance.
+  wrong_answer_expr: i / r
+  feedback_md: Voltage is current times resistance, not current divided by resistance.
+fuzz:
+  samples: 200
+  seed_base: 6100
+  max_rejection_rate: 0.9
+  min_distinct_param_sets: 50

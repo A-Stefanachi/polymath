@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Content pipeline — Polymath documentation</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="content">
+  <a class="skip" href="#main">Skip to content</a>
+  <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+    <div class="main-wrap">
+      <main id="main" class="content">
+        <p class="kicker">Curriculum as code</p>
+        <h1>Content pipeline and verification</h1>
+        <p class="spec-ref">
+          <a href="../docs/07-content-pipeline-and-verification-spec.md">docs/07-content-pipeline-and-verification-spec.md</a>,
+          <a href="../docs/content-authoring-runbook.md">Content authoring runbook</a>,
+          <a href="../docs/content-population-roadmap.md">Population roadmap</a>,
+          <a href="../content/lean-skill-slice.yaml">lean-skill-slice.yaml</a>,
+          <a href="../content/REVIEW-LOG.md">REVIEW-LOG.md</a>,
+          <a href="../content/sample-problem-templates/">sample-problem-templates/</a>,
+          <a href="../content/templates/">content/templates/</a> (lean pool),
+          <a href="../content/lean-template-manifest.yaml">lean-template-manifest.yaml</a>,
+          <a href="../content/safety/">content/safety/</a>
+        </p>
+
+        <div class="summary">
+          <h2>Summary</h2>
+          <ul>
+            <li>Skills, templates, and projects are version-controlled YAML, not CMS entries.</li>
+            <li>Continuous integration validates schema, licensing, and graph consistency.</li>
+            <li>Verification regenerates items and independently recomputes expected answers.</li>
+            <li><code>content:sync</code> upserts verified content into PostgreSQL; runtime serves only verified items.</li>
+          </ul>
+        </div>
+
+        <h2>Pipeline stages</h2>
+        <ol class="flow-steps">
+          <li>Authors edit files under <code>content/</code>.</li>
+          <li>Validators check graph, template schema, and claims policy.</li>
+          <li>Generation produces item instances and <code>verification_report</code> artifacts.</li>
+          <li>Human review resolves <code>needs_human_review</code> statuses where required.</li>
+          <li>Deployment workflow synchronizes approved content to the target database.</li>
+          <li class="end">Application layer selects items by identifier; unverified statuses are excluded.</li>
+        </ol>
+
+        <h2>Template identifiers</h2>
+        <p>Format: <code>tpl.{node}.{slug}</code> (example: <code>tpl.elec.voltage-divider-vout</code>). Each template declares task kind, grader type, parametric body, licence, and source metadata.</p>
+
+        <h2>Authoring and population (lean slice)</h2>
+        <ul>
+          <li>G0–G3 workflow and LLM rules: <a href="../docs/content-authoring-runbook.md">content-authoring-runbook.md</a></li>
+          <li>Template counts and BL-0067 skill list: <a href="../docs/content-population-roadmap.md">content-population-roadmap.md</a></li>
+          <li>Locked slice keys: <a href="../content/lean-skill-slice.yaml">content/lean-skill-slice.yaml</a> (<code>python3 reference/validate_lean_slice.py</code>)</li>
+          <li>Founder G3 and hand-solve log: <a href="../content/REVIEW-LOG.md">content/REVIEW-LOG.md</a></li>
+          <li>Lean pool: edit by hand → verify → <code>g3_review.py</code>, one template at a time (see runbook)</li>
+        </ul>
+
+        <h2>Prompt assets</h2>
+        <p>Tutor, rubric, and drafting prompts reside in <code>content/prompts/</code> and are referenced by identifier from <code>LlmClient</code> implementations.</p>
+
+        <div class="callout warn">
+          Model-assisted drafts require verification because error rates prior to independent checks are material; the serve gate exists to enforce quality, not to bypass it.
+        </div>
+      </main>
+      <footer class="page-footer">Schema: <a href="../schemas/problem-template.schema.json">schemas/problem-template.schema.json</a>.</footer>
+    </div>
+  </div>
+  <script src="assets/nav.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

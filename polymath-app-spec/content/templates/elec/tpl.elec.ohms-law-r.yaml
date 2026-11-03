@@ -1,0 +1,140 @@
+schema_version: 1
+key: tpl.elec.ohms-law-r
+version: 2
+authoring_status: ready
+skill_key: elec.dc.ohms-law
+task_kind: problem
+grader_type: exact_numeric
+difficulty_prior: 0.35
+title: Resistance from voltage and current
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-01'
+  llm_assistance:
+    used: true
+    roles:
+    - draft_template
+    - explanation
+    - distractors
+    - hints
+    - misconception_tags
+    model: claude-opus-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts:
+  - phone
+  - desktop
+  est_seconds: 90
+  phone_suitable: true
+  offline_gradable: true
+parameters:
+- name: v
+  type: choice
+  unit: V
+  values:
+  - 3.3
+  - 5
+  - 9
+  - 12
+  - 24
+  description: Voltage across the resistor
+- name: i
+  type: float
+  min: 0.001
+  max: 0.1
+  step: 0.001
+  nonzero: true
+  unit: A
+  description: Measured current
+constraints:
+- id: real-resistor
+  expr: v / i >= 100 and v / i <= 10000
+  reason: Keeps the answer between 100 ohm and 10 kohm, a common range for bench resistors.
+- id: real-power
+  expr: v * i <= 1
+  reason: Dissipation stays at most 1 W, so a real resistor could carry this current.
+render:
+  stem_md: 'A resistor connected across ${{v|tex}}$ draws a measured current of ${{i|tex}}$.
+
+
+    What is its resistance?
+
+    '
+  answer_prompt: Enter the resistance with a unit, for example 470 ohm or 2.2 kohm.
+  alt_text: A resistor across {{v|eng}} draws {{i|eng}}. Find its resistance.
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      r_ohm: v / i
+  steps:
+  - id: s1
+    text_md: 'Write the current in amperes: $I = {{i|fixed:3}}\ \mathrm{A}$.'
+  - id: s2
+    text_md: 'Rearrange Ohm''s law: $R = V/I = {{r_ohm|tex:ohm}}$.'
+  explanation_md: Volts divided by amperes gives ohms, so milliamperes must be converted first.
+answer:
+  kind: numeric
+  value: r_ohm
+  unit: ohm
+  accept_units:
+  - ohm
+  - kohm
+  bare_number_means: ohm
+  tolerance:
+    rel: 0.02
+    abs: 0.01
+verifiers:
+- id: forward-law
+  kind: sympy_solve
+  independence: Solves the forward law I R = V for R with exact rationals instead of evaluating the generator's quotient.
+  spec:
+    unknowns:
+    - rx
+    equations:
+    - i * rx - v
+    checks:
+    - unknown: rx
+      output: r_ohm
+  tolerance:
+    rel: 1.0e-09
+- id: dimension
+  kind: pint_dimension
+  independence: Dimensional analysis with pint on the parameter units; it does not check magnitude.
+  spec:
+    checks:
+    - expr: v / i
+      result_unit: ohm
+- id: window
+  kind: bounds
+  independence: Fixed range of the bench resistors this item is about, independent of any formula for the value.
+  spec:
+    output: r_ohm
+    lo: '100'
+    hi: '10000'
+    strict: false
+hints:
+  l1: You have a voltage and a current. Which quantity is left to find?
+  l2: Rearrange Ohm's law for resistance, and put the current in amperes first.
+  l3: 'First write the current in amperes: I = {{i|fixed:3}} A. Then use it with the voltage.'
+misconceptions:
+- tag: mc.ohm-milliamps-as-amps
+  description: Uses the number of milliamperes as if it were amperes.
+  wrong_answer_expr: v / (1000 * i)
+  feedback_md: The current is in milliamperes. Convert it to amperes before dividing.
+- tag: mc.ohm-multiplies-v-by-i
+  description: Multiplies voltage by current.
+  wrong_answer_expr: v * i
+  feedback_md: Voltage times current is power. Resistance is voltage divided by current.
+- tag: mc.ohm-inverted-ratio
+  description: Divides current by voltage.
+  wrong_answer_expr: i / v
+  feedback_md: That ratio is upside down. Resistance is voltage divided by current.
+fuzz:
+  samples: 200
+  seed_base: 6200
+  max_rejection_rate: 0.9
+  min_distinct_param_sets: 50

@@ -1,0 +1,105 @@
+# Polymath capability tracks — long-term spine (planning only).
+# Not loaded by content:sync in v1. Companions: docs/15-cyber-physical-capability-spine.md,
+# content/syllabi/pillar-*.md (human-readable syllabi per track).
+version: "1.0"
+status: planning
+default_vehicle: multirotor
+default_ops_region: EU
+
+tracks:
+  - key: foundation
+    title: Foundation (first walk)
+    order: 0
+    nodes: [math, elec, sw]
+    ladder_levels: [L0, L1, L2, L3, L4, L5]
+    ship_with: v1_mvp
+    competence_artifact: "Capstone sensor path (L3–L5) + first-walk unaided checkpoints"
+
+  - key: power-motion
+    title: Power and motion
+    order: 1
+    nodes: [pwr, elec]
+    ladder_levels: [L6]
+    prerequisite_tracks: [foundation]
+    promote_stubs:
+      - elec.semi.battery-safety
+      - phys.thermal.heat-transfer
+    new_modules_hint: [pwr.batt.li-ion-safe, pwr.bldc.esc, pwr.emc.practical]
+
+  - key: control
+    title: Control and estimation
+    order: 2
+    nodes: [ctl, sig, phys]
+    ladder_levels: [L7]
+    prerequisite_tracks: [foundation, power-motion]
+    promote_stubs:
+      - ctl.pid.pid-controller
+      - sig.freq.fourier-intuition
+      - sig.sampling.nyquist-aliasing
+      - phys.mech.newton-laws
+
+  - key: mechanical
+    title: Mechanical design
+    order: 3
+    nodes: [mech, matl]
+    ladder_levels: [L9]
+    prerequisite_tracks: [foundation]
+    promote_stubs:
+      - mech.cad.parametric-sketch
+      - matl.mfg.pcb-fabrication
+    grading_note: "CAD via manifest checklist + human review; no FEA auto-grade in first track ship"
+
+  - key: robo
+    title: UAV integration
+    order: 4
+    nodes: [robo, sens, net, rf]
+    ladder_levels: [L8, L12]
+    prerequisite_tracks: [control, mechanical, power-motion]
+    sequencing_note: "T3 modules are required before L8. The L9 build fits the L8 stack, so it comes after L8."
+    promote_stubs:
+      - sens.meas.calibration-uncertainty
+      - net.proto.ip-and-sockets
+      - rf.basics.link-budget
+    new_modules_hint: [robo.uav.physics, robo.uav.propulsion, robo.uav.ops-eu, robo.uav.test]
+
+  - key: cloud-twin
+    title: Cloud twin (edge to lakehouse)
+    order: 5
+    nodes: [sys, ml, sw]
+    ladder_levels: [L11]
+    prerequisite_tracks: [foundation, robo]
+    promote_stubs:
+      - sys.req.requirements
+      - ml.core.linear-regression
+      - ml.edge.quantization
+    competence_artifact: "Accepted L11 telemetry with replayable schema and a validated twin with one human-approved decision"
+
+  - key: governance
+    title: Governance (dual-use, defense context, security)
+    order: 6
+    nodes: [def, prof, sec, econ]
+    ladder_levels: []
+    prerequisite_tracks: [foundation]
+    parallel_ok: true
+    promote_stubs:
+      - prof.law.export-control-literacy
+      - sec.hw.threat-modelling
+      - econ.cost.bom-costing
+    content_boundary: "Literacy and integration only; no weapon, munitions or EW enablement"
+
+founder_goals:
+  - id: G-F1
+    label: Build dual-use technology
+    tracks: [governance, foundation, robo, cloud-twin]
+  - id: G-F2
+    label: Work on defense tech
+    tracks: [governance, cloud-twin, control]
+  - id: G-F3
+    label: Work on AI projects
+    tracks: [cloud-twin, foundation]
+  - id: G-F4
+    label: Work on cybersecurity projects
+    tracks: [governance, cloud-twin, foundation]
+  - id: G-F5
+    label: Build real things in the real world
+    tracks: [foundation, power-motion, mechanical, robo]

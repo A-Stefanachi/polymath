@@ -1,0 +1,212 @@
+schema_version: 1
+key: tpl.elec.thevenin-model
+version: 2
+authoring_status: ready
+skill_key: elec.dc.thevenin-norton
+task_kind: problem
+grader_type: exact_numeric
+difficulty_prior: 0.3
+title: Load current from a Thevenin equivalent
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-01'
+  llm_assistance:
+    used: true
+    roles:
+    - draft_template
+    - explanation
+    - distractors
+    - hints
+    - misconception_tags
+    model: claude-opus-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts:
+  - phone
+  - desktop
+  est_seconds: 150
+  phone_suitable: true
+  offline_gradable: true
+parameters:
+- name: vs
+  type: choice
+  unit: V
+  values:
+  - 3.3
+  - 5
+  - 9
+  - 12
+  - 24
+  description: Source voltage
+- name: r1
+  type: e_series
+  series: E12
+  decade_min: 2
+  decade_max: 3
+  unit: ohm
+  description: Series resistor
+- name: r2
+  type: e_series
+  series: E12
+  decade_min: 2
+  decade_max: 3
+  unit: ohm
+  description: Shunt resistor
+- name: rl
+  type: e_series
+  series: E12
+  decade_min: 2
+  decade_max: 3
+  unit: ohm
+  description: Load resistor
+derived:
+- name: vth
+  expr: vs * r2 / (r1 + r2)
+  unit: V
+- name: rth
+  expr: r1 * r2 / (r1 + r2)
+  unit: ohm
+- name: w_series
+  expr: vth / (r1 + r2 + rl)
+  unit: A
+- name: w_direct
+  expr: vth / rl
+  unit: A
+- name: w_vs
+  expr: vs / (rth + rl)
+  unit: A
+constraints:
+- id: different
+  expr: r1 != r2
+  reason: Equal resistors make the open-circuit voltage exactly half the source, which can be guessed.
+- id: real-current
+  expr: vth / (rth + rl) >= 0.001
+  reason: Keeps the load current at 1 mA or more, easy to read on a bench meter.
+- id: real-power
+  expr: max((vs - rl * vth / (rth + rl)) ** 2 / r1, (rl * vth / (rth + rl)) ** 2 / r2, (rl * vth / (rth + rl)) ** 2 / rl)
+    <= 1
+  reason: Each resistor dissipates at most 1 W, so real parts could be used.
+- id: wrong-answers-separate
+  expr: min(abs(w_series * (rth + rl) / vth - 1), abs(w_direct * (rth + rl) / vth - 1), abs(w_vs * (rth + rl) / vth - 1))
+    >= 0.05
+  reason: Each listed mistake must fall outside the tolerance so it can be tagged.
+render:
+  stem_md: 'A source $V_S = {{vs|tex}}$ feeds $R_1 = {{r1|tex}}$ in series to node A. $R_2 = {{r2|tex}}$ connects node A to
+    ground (node B). A load $R_L = {{rl|tex}}$ connects A to B.
+
+
+    Replace everything except the load with its Thevenin equivalent, then find the current through $R_L$.
+
+    '
+  answer_prompt: Enter the current with a unit, for example 12 mA.
+  alt_text: A {{vs|eng}} source feeds R1 of {{r1|eng}} to node A. R2 of {{r2|eng}} joins A to ground. A load of {{rl|eng}}
+    joins A to ground. Find the load current using a Thevenin equivalent.
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      il: vth / (rth + rl)
+  steps:
+  - id: s1
+    text_md: Remove the load. The open-circuit voltage at A is $V_{th} = V_S\frac{R_2}{R_1+R_2} = {{vth|tex:V}}$.
+  - id: s2
+    text_md: 'Set the source to zero (a short). Looking in from A, $R_1$ and $R_2$ are in parallel: $R_{th} = {{rth|tex:ohm}}$.'
+  - id: s3
+    text_md: 'Reconnect the load across the equivalent: $I_L = \frac{V_{th}}{R_{th}+R_L} = {{il|tex:A}}$.'
+  explanation_md: Any linear two-terminal network behaves as one voltage in series with one resistance, so the load calculation
+    becomes a single series loop.
+answer:
+  kind: numeric
+  value: il
+  unit: A
+  accept_units:
+  - A
+  - mA
+  bare_number_means: A
+  tolerance:
+    rel: 0.01
+    abs: 1.0e-06
+verifiers:
+- id: full-circuit-nodal
+  kind: sympy_solve
+  independence: 'Skips the equivalent entirely: solves KCL at node A of the original circuit with the load attached, then
+    reads the load current.'
+  spec:
+    unknowns:
+    - vx
+    - ix
+    equations:
+    - (vs - vx) / r1 - vx / r2 - vx / rl
+    - ix * rl - vx
+    checks:
+    - unknown: ix
+      output: il
+  tolerance:
+    rel: 1.0e-09
+- id: open-circuit-kcl
+  kind: sympy_solve
+  independence: Finds the open-circuit voltage from KCL at A instead of the divider formula.
+  spec:
+    unknowns:
+    - vo
+    equations:
+    - (vs - vo) / r1 - vo / r2
+    checks:
+    - unknown: vo
+      output: vth
+  tolerance:
+    rel: 1.0e-09
+- id: test-source
+  kind: sympy_solve
+  independence: Finds the Thevenin resistance by injecting 1 A into A with the source zeroed and solving for the node voltage.
+  spec:
+    unknowns:
+    - vt
+    equations:
+    - 1 - vt / r1 - vt / r2
+    checks:
+    - unknown: vt
+      output: rth
+  tolerance:
+    rel: 1.0e-09
+- id: dimension
+  kind: pint_dimension
+  independence: Dimensional analysis with pint on the parameter units; it does not check magnitude.
+  spec:
+    checks:
+    - expr: vs * r2 / (r1 * r2 + rl * (r1 + r2))
+      result_unit: A
+- id: window
+  kind: bounds
+  independence: 'Physical limit: the load current cannot reach the short-circuit current of the source through R1.'
+  spec:
+    output: il
+    lo: '0'
+    hi: vs / r1
+    strict: true
+hints:
+  l1: Two things define a Thevenin equivalent. What are they, and what do you do with the load while you find them?
+  l2: Remove the load for the open-circuit voltage. Zero the source for the resistance seen from the load terminals. Then
+    the circuit is one series loop.
+  l3: 'First remove the load: the open-circuit voltage at A is the divider output, Vth = {{vth|eng:V}}. Next find the resistance.'
+misconceptions:
+- tag: mc.thevenin-r-series
+  description: Adds R1 and R2 for the Thevenin resistance instead of combining them in parallel.
+  wrong_answer_expr: w_series
+  feedback_md: With the source shorted, R1 and R2 both run from A to ground, so they are in parallel seen from the load.
+- tag: mc.thevenin-omits-rth
+  description: Applies the Thevenin voltage directly across the load.
+  wrong_answer_expr: w_direct
+  feedback_md: The equivalent has a series resistance, and the load current flows through it too.
+- tag: mc.thevenin-uses-source
+  description: Uses the source voltage instead of the open-circuit voltage.
+  wrong_answer_expr: w_vs
+  feedback_md: The Thevenin voltage is the voltage at the terminals with the load removed, not the source voltage.
+fuzz:
+  samples: 200
+  seed_base: 6700
+  max_rejection_rate: 0.9
+  min_distinct_param_sets: 50

@@ -1,0 +1,1798 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://polymath.example/schemas/problem-template.schema.json",
+  "title": "Polymath item template file",
+  "description": "One authored item template (content/templates/**/*.yaml). Loaded into item_templates by content:sync; `body` (jsonb) is this document minus the columns hoisted out (key, skill_key, task_kind, grader_type, difficulty_prior, version, pool, interleave, reference_time_s, mastery_eligible). Expressions are strings in the restricted expression language defined in docs/07 section 3.3 (no attribute access, no calls except the allowlist).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "key",
+    "version",
+    "authoring_status",
+    "skill_key",
+    "task_kind",
+    "grader_type",
+    "difficulty_prior",
+    "title",
+    "license",
+    "source",
+    "provenance",
+    "delivery",
+    "parameters",
+    "render",
+    "solution",
+    "answer",
+    "verifiers",
+    "hints",
+    "misconceptions",
+    "fuzz"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "key": {
+      "type": "string",
+      "pattern": "^tpl\\.[a-z]+\\.[a-z0-9-]+$"
+    },
+    "concept_static": {
+      "type": "boolean",
+      "description": "Definition or rule item with one fixed question (00a H2). Fuzz cannot check its key, so G3 sign-off is mandatory and it counts as neither a fresh variant nor constructed response."
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Increment on any change that can alter a rendered item or its answer. Served items pin (template_key, version)."
+    },
+    "authoring_status": {
+      "enum": [
+        "draft",
+        "ready",
+        "retired"
+      ],
+      "description": "draft = not synced for serving. ready = author asserts lint and fuzz should pass; content:sync sets item_templates.status to needs_human_review until a matching provenance.review block exists, then to verified. retired = never served. The value `verified` is deliberately not allowed in a file: only the pipeline may produce it."
+    },
+    "skill_key": {
+      "type": "string",
+      "pattern": "^[a-z]+\\.[a-z0-9-]+\\.[a-z0-9-]+$"
+    },
+    "task_kind": {
+      "enum": [
+        "retrieval",
+        "worked_example",
+        "faded_problem",
+        "problem",
+        "perceptual_drill",
+        "explain_back",
+        "debug_case",
+        "project_step",
+        "diagnostic",
+        "checkpoint"
+      ]
+    },
+    "grader_type": {
+      "enum": [
+        "exact_numeric",
+        "symbolic_equivalence",
+        "multiple_choice",
+        "code_tests",
+        "spice_compare",
+        "drc_erc",
+        "rubric_llm",
+        "measurement_check",
+        "human_review"
+      ]
+    },
+    "difficulty_prior": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "exclusiveMaximum": 1,
+      "description": "Float in (0,1): 0 trivial, 1 very hard, for a learner who has just finished the worked example of the skill (00a D3). Converted to an item Elo by 06 as 1500 + 400*log10(d/(1-d)); replaced by calibrated items.difficulty_est after enough attempts."
+    },
+    "pool": {
+      "enum": ["practice", "assessment", "transfer"],
+      "default": "practice",
+      "description": "Hoisted into item_templates.pool (00a section C). Assessment and transfer templates are never served in practice."
+    },
+    "interleave": {
+      "type": "boolean",
+      "default": true,
+      "description": "Hoisted into item_templates.interleave: false excludes the template from interleaved sets."
+    },
+    "reference_time_s": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Hoisted into item_templates.reference_time_s: reference response time for perceptual drills."
+    },
+    "mastery_eligible": {
+      "type": "boolean",
+      "default": true,
+      "description": "Hoisted into item_templates.mastery_eligible (00a B4). Must be false for rubric_llm templates whose rubric calibration set has not been approved (doc 08 section 2.8)."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 120
+    },
+    "license": {
+      "enum": [
+        "original",
+        "CC0-1.0",
+        "CC-BY-4.0",
+        "MIT",
+        "licensed-commercial"
+      ],
+      "description": "Only licences that permit commercial reuse. CC-BY-NC-*, CC-BY-SA-* and unknown are rejected by lint."
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Where the idea or text came from, e.g. 'original' or a citation. Never a copied problem statement."
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contexts",
+        "est_seconds",
+        "phone_suitable"
+      ],
+      "properties": {
+        "contexts": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "phone",
+              "desktop",
+              "bench"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "est_seconds": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 3600
+        },
+        "phone_suitable": {
+          "type": "boolean"
+        },
+        "offline_gradable": {
+          "type": "boolean",
+          "description": "true only for exact_numeric and multiple_choice items whose answer spec can be checked client-side (contract 7.10)."
+        }
+      }
+    },
+    "parameters": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/parameter"
+      },
+      "minItems": 0
+    },
+    "derived": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "expr"
+        ],
+        "properties": {
+          "name": {
+            "$ref": "#/$defs/identifier"
+          },
+          "expr": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "description": "Boolean expressions over parameters and derived values. A draw violating any constraint is rejected and resampled (docs/07 section 4.2).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "expr",
+          "reason"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "expr": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 5
+          }
+        }
+      }
+    },
+    "render": {
+      "$ref": "#/$defs/render"
+    },
+    "solution": {
+      "$ref": "#/$defs/solution"
+    },
+    "answer": {
+      "type": "object"
+    },
+    "verifiers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/verifier"
+      }
+    },
+    "hints": {
+      "$ref": "#/$defs/hints"
+    },
+    "misconceptions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/misconception"
+      }
+    },
+    "fuzz": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "samples",
+        "seed_base"
+      ],
+      "properties": {
+        "samples": {
+          "type": "integer",
+          "minimum": 200,
+          "maximum": 10000
+        },
+        "seed_base": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_rejection_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.95,
+          "default": 0.5
+        },
+        "min_distinct_param_sets": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "grader_type": {
+            "const": "exact_numeric"
+          }
+        },
+        "required": [
+          "grader_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "answer": {
+            "$ref": "#/$defs/answer_exact_numeric"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "grader_type": {
+            "const": "symbolic_equivalence"
+          }
+        },
+        "required": [
+          "grader_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "answer": {
+            "$ref": "#/$defs/answer_symbolic"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "grader_type": {
+            "const": "multiple_choice"
+          }
+        },
+        "required": [
+          "grader_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "answer": {
+            "$ref": "#/$defs/answer_multiple_choice"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "grader_type": {
+            "const": "code_tests"
+          }
+        },
+        "required": [
+          "grader_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "answer": {
+            "$ref": "#/$defs/answer_code_tests"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "grader_type": {
+            "const": "spice_compare"
+          }
+        },
+        "required": [
+          "grader_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "answer": {
+            "$ref": "#/$defs/answer_spice_compare"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "grader_type": {
+            "const": "drc_erc"
+          }
+        },
+        "required": [
+          "grader_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "answer": {
+            "$ref": "#/$defs/answer_drc_erc"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "grader_type": {
+            "const": "measurement_check"
+          }
+        },
+        "required": [
+          "grader_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "answer": {
+            "$ref": "#/$defs/answer_measurement_check"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "grader_type": {
+            "const": "rubric_llm"
+          }
+        },
+        "required": [
+          "grader_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "answer": {
+            "$ref": "#/$defs/answer_rubric_llm"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "grader_type": {
+            "const": "human_review"
+          }
+        },
+        "required": [
+          "grader_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "answer": {
+            "$ref": "#/$defs/answer_human_review"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "authoring_status": {
+            "const": "ready"
+          }
+        },
+        "required": [
+          "authoring_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "hints": {
+            "required": [
+              "l1",
+              "l2",
+              "l3"
+            ]
+          },
+          "verifiers": {
+            "minItems": 2
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "task_kind": {
+            "const": "perceptual_drill"
+          }
+        },
+        "required": [
+          "task_kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "grader_type": {
+            "enum": [
+              "multiple_choice",
+              "exact_numeric"
+            ]
+          },
+          "delivery": {
+            "properties": {
+              "est_seconds": {
+                "maximum": 60
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "expr": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 400
+    },
+    "tolerance": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "rel": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.5
+        },
+        "abs": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "description": "Accept when |x - ref| <= max(abs, rel*|ref|)."
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authors",
+        "created",
+        "llm_assistance"
+      ],
+      "properties": {
+        "authors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "created": {
+          "type": "string",
+          "format": "date"
+        },
+        "llm_assistance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "used"
+          ],
+          "properties": {
+            "used": {
+              "type": "boolean"
+            },
+            "roles": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "draft_template",
+                  "explanation",
+                  "distractors",
+                  "hints",
+                  "misconception_tags",
+                  "difficulty_prior"
+                ]
+              }
+            },
+            "model": {
+              "type": "string"
+            },
+            "prompt_version": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+_v[0-9]+$"
+            }
+          },
+          "if": {
+            "properties": {
+              "used": {
+                "const": true
+              }
+            },
+            "required": [
+              "used"
+            ]
+          },
+          "then": {
+            "required": [
+              "roles",
+              "model",
+              "prompt_version"
+            ]
+          }
+        },
+        "review": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reviewer",
+            "date",
+            "template_sha256",
+            "checklist_version"
+          ],
+          "properties": {
+            "reviewer": {
+              "type": "string"
+            },
+            "date": {
+              "type": "string",
+              "format": "date"
+            },
+            "template_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$",
+              "description": "Hash of the canonical template body at review time; a mismatch invalidates the review."
+            },
+            "checklist_version": {
+              "type": "string"
+            },
+            "notes": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "parameter": {
+      "type": "object",
+      "required": [
+        "name",
+        "type"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/identifier"
+        },
+        "type": {
+          "enum": [
+            "int",
+            "float",
+            "choice",
+            "e_series",
+            "bool"
+          ]
+        },
+        "unit": {
+          "type": "string",
+          "description": "pint unit string; values are stored in SI base for the unit's dimension."
+        },
+        "description": {
+          "type": "string"
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "step": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "nonzero": {
+          "type": "boolean"
+        },
+        "values": {
+          "type": "array",
+          "minItems": 2
+        },
+        "series": {
+          "enum": [
+            "E6",
+            "E12",
+            "E24",
+            "E96"
+          ]
+        },
+        "decade_min": {
+          "type": "integer"
+        },
+        "decade_max": {
+          "type": "integer"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "int"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "min",
+              "max"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "float"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "min",
+              "max",
+              "step"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "choice"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "values"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "e_series"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "series",
+              "decade_min",
+              "decade_max",
+              "unit"
+            ]
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "render": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stem_md",
+        "alt_text"
+      ],
+      "properties": {
+        "stem_md": {
+          "type": "string",
+          "minLength": 5,
+          "description": "Markdown with KaTeX ($...$, $$...$$) and {{name|filter}} placeholders. Filters: eng, tex, sig:N, fixed:N, int, cplx, tex_cplx, raw."
+        },
+        "answer_prompt": {
+          "type": "string"
+        },
+        "alt_text": {
+          "type": "string",
+          "minLength": 5,
+          "description": "Plain-text alternative for the whole stem including any figure (WCAG 2.2 AA)."
+        },
+        "figure": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "none",
+                "svg_template",
+                "table",
+                "scope_trace"
+              ]
+            },
+            "template": {
+              "type": "string"
+            },
+            "caption_md": {
+              "type": "string"
+            }
+          }
+        },
+        "reading_table": {
+          "type": "array",
+          "description": "Rows shown as a small table (used by perceptual drills).",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "label",
+              "value_expr",
+              "format"
+            ],
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "value_expr": {
+                "$ref": "#/$defs/expr"
+              },
+              "format": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "time_limit_s": {
+          "type": "integer",
+          "minimum": 3,
+          "maximum": 120
+        }
+      }
+    },
+    "solution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generator",
+        "steps"
+      ],
+      "properties": {
+        "generator": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "method"
+          ],
+          "properties": {
+            "method": {
+              "enum": [
+                "closed_form",
+                "fault_table",
+                "reference_code",
+                "reference_netlist",
+                "rubric_reference"
+              ]
+            },
+            "outputs": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/$defs/expr"
+              }
+            },
+            "tables": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/$defs/expr"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "text_md"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "text_md": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "explanation_md": {
+          "type": "string"
+        }
+      }
+    },
+    "verifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "independence"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "kind": {
+          "enum": [
+            "sympy_solve",
+            "sympy_exact",
+            "sympy_diff_vs_numeric",
+            "polar_vs_rectangular",
+            "pint_dimension",
+            "bounds",
+            "distinct_options",
+            "option_values_recomputed",
+            "fault_uniqueness",
+            "reference_code_passes",
+            "mutants_fail",
+            "model_vs_reference_code",
+            "spice_vs_closed_form",
+            "netlist_lint_reference",
+            "golden_vectors"
+          ]
+        },
+        "independence": {
+          "type": "string",
+          "minLength": 10,
+          "description": "One sentence saying how this check differs from the generator's method. Lint rejects a verifier with the same expression text as the generator."
+        },
+        "spec": {
+          "type": "object"
+        },
+        "tolerance": {
+          "$ref": "#/$defs/tolerance"
+        }
+      }
+    },
+    "hints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "l1": {
+          "type": "string",
+          "description": "Level 1 nudge: re-direct attention, no method named."
+        },
+        "l2": {
+          "type": "string",
+          "description": "Level 2 conceptual hint: names the principle or relationship, no numbers from this item."
+        },
+        "l3": {
+          "type": "string",
+          "description": "Level 3 worked step: performs the first step of the solution with this item's numbers; never the final answer."
+        },
+        "l4": {
+          "type": "string",
+          "description": "Level 4 reveal. If omitted, solution.steps are shown."
+        }
+      }
+    },
+    "misconception": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tag",
+        "description"
+      ],
+      "properties": {
+        "tag": {
+          "type": "string",
+          "pattern": "^mc\\.[a-z0-9-]+$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 5
+        },
+        "wrong_answer_expr": {
+          "$ref": "#/$defs/expr"
+        },
+        "feedback_md": {
+          "type": "string"
+        }
+      }
+    },
+    "answer_exact_numeric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "tolerance"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "numeric",
+            "complex"
+          ]
+        },
+        "value": {
+          "$ref": "#/$defs/expr"
+        },
+        "re": {
+          "$ref": "#/$defs/expr"
+        },
+        "im": {
+          "$ref": "#/$defs/expr"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "accept_units": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "bare_number_means": {
+          "type": "string",
+          "description": "Unit assumed when the learner types a bare number."
+        },
+        "tolerance": {
+          "$ref": "#/$defs/tolerance"
+        },
+        "complex_format": {
+          "enum": [
+            "rectangular",
+            "polar"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "numeric"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "value"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "complex"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "re",
+              "im"
+            ]
+          }
+        }
+      ]
+    },
+    "answer_symbolic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "variables",
+        "reference",
+        "sample_domain"
+      ],
+      "properties": {
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "minItems": 1
+        },
+        "reference": {
+          "type": "string",
+          "description": "SymPy-syntax expression (restricted language) built from variables and parameters."
+        },
+        "sample_domain": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "forbid_functions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "form": {
+          "enum": [
+            "any",
+            "expanded",
+            "factored"
+          ]
+        },
+        "numeric_rel_tol": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 0.001
+        }
+      }
+    },
+    "answer_multiple_choice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "options",
+        "n_shown",
+        "shuffle"
+      ],
+      "properties": {
+        "n_shown": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 6
+        },
+        "shuffle": {
+          "type": "boolean"
+        },
+        "min_separation_rel": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Every pair of options must differ numerically by at least this relative amount (when value_expr is present)."
+        },
+        "options": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "text_md"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9_-]+$"
+              },
+              "text_md": {
+                "type": "string",
+                "description": "May contain {{value|filter}} meaning this option's value_expr."
+              },
+              "correct": {
+                "type": "boolean"
+              },
+              "value_expr": {
+                "$ref": "#/$defs/expr"
+              },
+              "misconception_tag": {
+                "type": "string",
+                "pattern": "^mc\\.[a-z0-9-]+$",
+                "description": "Required for every option that can be wrong. For fault drills the tag names the class of the chosen option."
+              },
+              "feedback_md": {
+                "type": "string"
+              },
+              "correct_when": {
+                "$ref": "#/$defs/expr",
+                "description": "Boolean expression, used instead of `correct` when the right option depends on the item (e.g. perceptual drills)."
+              }
+            },
+            "if": {
+              "properties": {
+                "correct": {
+                  "const": false
+                }
+              },
+              "required": [
+                "correct"
+              ]
+            },
+            "then": {
+              "required": [
+                "misconception_tag",
+                "feedback_md"
+              ]
+            },
+            "anyOf": [
+              {
+                "required": [
+                  "correct"
+                ]
+              },
+              {
+                "required": [
+                  "correct_when"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "answer_code_tests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "language",
+        "entry",
+        "starter_code",
+        "reference_solution",
+        "compile",
+        "limits",
+        "tests",
+        "mutants"
+      ],
+      "properties": {
+        "language": {
+          "enum": [
+            "c"
+          ]
+        },
+        "entry": {
+          "type": "string",
+          "description": "Function(s) under test, for the prompt and for harness symbol checks."
+        },
+        "header": {
+          "type": "string",
+          "description": "Declarations the learner must not change (typedefs, prototypes). Prepended to the learner file."
+        },
+        "starter_code": {
+          "type": "string"
+        },
+        "reference_solution": {
+          "type": "string"
+        },
+        "reference_model_py": {
+          "type": "string",
+          "description": "Executable specification in Python defining model(params, input_str) -> output_str. Trusted code (reviewed in git), run only inside the worker."
+        },
+        "compile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "std",
+            "flags"
+          ],
+          "properties": {
+            "std": {
+              "enum": [
+                "c11",
+                "c17"
+              ]
+            },
+            "flags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "forbid_includes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "compile_s",
+            "run_s",
+            "memory_mb",
+            "output_kb"
+          ],
+          "properties": {
+            "compile_s": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 30
+            },
+            "run_s": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            },
+            "memory_mb": {
+              "type": "integer",
+              "minimum": 16,
+              "maximum": 512
+            },
+            "output_kb": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1024
+            }
+          }
+        },
+        "tests": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "visible",
+            "hidden",
+            "golden"
+          ],
+          "properties": {
+            "visible": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/code_case"
+              }
+            },
+            "hidden": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/code_case"
+              },
+              "minItems": 3
+            },
+            "golden": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/golden_case"
+              },
+              "minItems": 2,
+              "description": "Hand-computed (input, params, expected) vectors that pin the reference model; a template is rejected if the model disagrees with a golden vector."
+            }
+          }
+        },
+        "mutants": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "description",
+              "source"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "code_case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "input",
+        "purpose"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "input": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "misconception_tag": {
+          "type": "string",
+          "pattern": "^mc\\.[a-z0-9-]+$"
+        }
+      }
+    },
+    "golden_case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "params",
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "params": {
+          "type": "object"
+        },
+        "input": {
+          "type": "string"
+        },
+        "expected": {
+          "type": "string"
+        }
+      }
+    },
+    "answer_spice_compare": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "submission",
+        "skeleton",
+        "allowed_elements",
+        "required_nodes",
+        "reference_netlist",
+        "analysis",
+        "checks",
+        "limits"
+      ],
+      "properties": {
+        "submission": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "format"
+          ],
+          "properties": {
+            "format": {
+              "enum": [
+                "netlist"
+              ]
+            },
+            "max_lines": {
+              "type": "integer",
+              "maximum": 200
+            }
+          }
+        },
+        "skeleton": {
+          "type": "string"
+        },
+        "allowed_elements": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[RCLVIDQMXEFGHBK]$"
+          },
+          "minItems": 1
+        },
+        "required_nodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "fixed_elements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Element names the learner may not change in value (e.g. the source)."
+        },
+        "reference_netlist": {
+          "type": "string"
+        },
+        "analysis": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "grader_directives"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "ac",
+                "dc_op",
+                "tran"
+              ]
+            },
+            "grader_directives": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            }
+          }
+        },
+        "checks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "expected",
+              "tolerance"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "ac_cutoff_hz",
+                  "ac_gain_db_at",
+                  "dc_node_v",
+                  "tran_value_at",
+                  "tran_rise_time"
+                ]
+              },
+              "node": {
+                "type": "string"
+              },
+              "at": {
+                "$ref": "#/$defs/expr"
+              },
+              "expected": {
+                "$ref": "#/$defs/expr"
+              },
+              "tolerance": {
+                "$ref": "#/$defs/tolerance"
+              },
+              "weight": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "run_s",
+            "memory_mb",
+            "max_points"
+          ],
+          "properties": {
+            "run_s": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20
+            },
+            "memory_mb": {
+              "type": "integer"
+            },
+            "max_points": {
+              "type": "integer",
+              "maximum": 100000
+            }
+          }
+        }
+      }
+    },
+    "answer_drc_erc": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "allowed_warning_types",
+        "must_pass_severity",
+        "limits"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "erc",
+            "drc"
+          ]
+        },
+        "allowed_warning_types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "must_pass_severity": {
+          "enum": [
+            "error",
+            "warning"
+          ]
+        },
+        "required_checks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "run_s",
+            "memory_mb"
+          ],
+          "properties": {
+            "run_s": {
+              "type": "integer",
+              "maximum": 60
+            },
+            "memory_mb": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "answer_measurement_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capture_format",
+        "features"
+      ],
+      "properties": {
+        "capture_format": {
+          "enum": [
+            "csv_time_voltage",
+            "serial_log",
+            "logic_analyzer_csv"
+          ]
+        },
+        "nonce_required": {
+          "type": "boolean"
+        },
+        "features": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "expected",
+              "tolerance"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "rise_time_10_90",
+                  "cutoff_hz_3db",
+                  "vpp",
+                  "dc_mean",
+                  "frequency_hz",
+                  "duty_cycle",
+                  "time_constant"
+                ]
+              },
+              "channel": {
+                "type": "string"
+              },
+              "expected": {
+                "$ref": "#/$defs/expr"
+              },
+              "tolerance": {
+                "$ref": "#/$defs/tolerance"
+              }
+            }
+          }
+        }
+      }
+    },
+    "answer_rubric_llm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rubric",
+        "reference_solution_md",
+        "prompt_version",
+        "min_agreement"
+      ],
+      "properties": {
+        "rubric": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "criterion",
+              "points",
+              "levels"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "criterion": {
+                "type": "string"
+              },
+              "points": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "levels": {
+                "type": "array",
+                "minItems": 2,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "points",
+                    "descriptor"
+                  ],
+                  "properties": {
+                    "points": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "descriptor": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "reference_solution_md": {
+          "type": "string"
+        },
+        "prompt_version": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+_v[0-9]+$"
+        },
+        "min_agreement": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "calibration_set_id": {
+          "type": "string"
+        },
+        "escalate_if_borderline": {
+          "type": "boolean"
+        }
+      }
+    },
+    "answer_human_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instructions_md",
+        "checklist"
+      ],
+      "properties": {
+        "instructions_md": {
+          "type": "string"
+        },
+        "checklist": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        }
+      }
+    }
+  }
+}

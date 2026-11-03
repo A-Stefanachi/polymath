@@ -1,0 +1,180 @@
+schema_version: 1
+key: tpl.elec.schematic-series
+version: 2
+authoring_status: ready
+skill_key: elec.meas.schematic-reading
+task_kind: retrieval
+grader_type: exact_numeric
+difficulty_prior: 0.3
+title: Trace the series path on a schematic
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-01'
+  llm_assistance:
+    used: true
+    roles:
+    - draft_template
+    - explanation
+    - distractors
+    - hints
+    - misconception_tags
+    model: claude-opus-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts:
+  - phone
+  - desktop
+  est_seconds: 90
+  phone_suitable: true
+  offline_gradable: true
+parameters:
+- name: r1
+  type: e_series
+  series: E12
+  decade_min: 2
+  decade_max: 3
+  unit: ohm
+  description: Resistor from VIN to N1
+- name: r2
+  type: e_series
+  series: E12
+  decade_min: 2
+  decade_max: 3
+  unit: ohm
+  description: Resistor from N1 to N2
+- name: r3
+  type: e_series
+  series: E12
+  decade_min: 2
+  decade_max: 3
+  unit: ohm
+  description: Resistor from N2 to GND
+- name: r4
+  type: e_series
+  series: E12
+  decade_min: 2
+  decade_max: 3
+  unit: ohm
+  description: Resistor from a path net to an open test pad
+- name: stub
+  type: choice
+  values:
+  - N1
+  - N2
+  description: Net that the dead-end resistor R4 hangs from
+constraints:
+- id: r4-matters
+  expr: r4 >= 0.05 * (r1 + r2 + r3)
+  reason: If R4 is tiny, wrongly including it would fall within the tolerance.
+- id: r2-matters
+  expr: r2 >= 0.05 * (r1 + r2 + r3)
+  reason: If R2 is tiny, skipping it would fall within the tolerance.
+- id: distinct-path
+  expr: r1 != r3
+  reason: Different values make it clearer which part of the path a wrong answer used.
+render:
+  stem_md: 'Reading a schematic, you trace these connections:
+
+
+    - R1 ({{r1|eng}}) between nets VIN and N1
+
+    - R2 ({{r2|eng}}) between nets N1 and N2
+
+    - R3 ({{r3|eng}}) between nets N2 and GND
+
+    - R4 ({{r4|eng}}) between net {{stub|raw}} and TP1
+
+
+    TP1 is a test pad with nothing else connected.
+
+
+    What is the resistance from VIN to GND?
+
+    '
+  answer_prompt: Enter the resistance with a unit, for example 1.5 kohm.
+  alt_text: Four resistors listed by net. R1, R2 and R3 run in a chain from VIN through N1 and N2 to GND. R4 runs from {{stub|raw}}
+    to an open test pad. Find the resistance from VIN to GND.
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      rt: r1 + r2 + r3
+  steps:
+  - id: s1
+    text_md: 'Trace the nets from VIN to GND: R1, R2 and R3 form the only path. TP1 connects to nothing else, so R4 is a dead
+      end and carries no current.'
+  - id: s2
+    text_md: 'The path elements share the same current, so they are in series: $R = R_1 + R_2 + R_3 = {{rt|tex:ohm}}$.'
+  explanation_md: Connection, not position on the page, decides which parts are in the path. A branch with an open end carries
+    no current.
+answer:
+  kind: numeric
+  value: rt
+  unit: ohm
+  accept_units:
+  - ohm
+  - kohm
+  bare_number_means: ohm
+  tolerance:
+    rel: 0.02
+    abs: 0.01
+verifiers:
+- id: nodal-drive
+  kind: sympy_solve
+  independence: Injects 1 A at VIN and solves KCL at the nets of the traced path; the VIN voltage then equals the resistance,
+    without adding the resistors.
+  spec:
+    unknowns:
+    - vin
+    - n1
+    - n2
+    equations:
+    - 1 - (vin - n1) / r1
+    - (vin - n1) / r1 - (n1 - n2) / r2
+    - (n1 - n2) / r2 - n2 / r3
+    checks:
+    - unknown: vin
+      output: rt
+  tolerance:
+    rel: 1.0e-09
+- id: dimension
+  kind: pint_dimension
+  independence: Dimensional analysis with pint on the parameter units; it does not check magnitude.
+  spec:
+    checks:
+    - expr: r1 + r2 + r3
+      result_unit: ohm
+- id: window
+  kind: bounds
+  independence: 'Physical limits: a series path exceeds its largest part, and the dead-end R4 must not be counted.'
+  spec:
+    output: rt
+    lo: max(r1, r2, r3)
+    hi: r1 + r2 + r3 + r4
+    strict: true
+hints:
+  l1: Put your finger on VIN and follow the nets to GND. Which parts does the current pass through?
+  l2: A resistor with one end on an open net carries no current. Parts on a single path with no branch carrying current are
+    in series.
+  l3: 'First trace the path: VIN to N1 through R1, N1 to N2 through R2, N2 to GND through R3. Now decide what R4 does.'
+misconceptions:
+- tag: mc.schematic-counts-dead-end
+  description: Includes a resistor that goes to an open net.
+  wrong_answer_expr: r1 + r2 + r3 + r4
+  feedback_md: R4 goes to a pad with nothing else connected, so no current flows through it.
+- tag: mc.schematic-skips-middle
+  description: Follows the outer resistors and misses the middle of the chain.
+  wrong_answer_expr: r1 + r3
+  feedback_md: R2 joins N1 to N2, so it is part of the path. Trace each net in turn.
+- tag: mc.schematic-parallel-listing
+  description: Treats a list of resistors as parallel.
+  wrong_answer_expr: 1 / (1 / r1 + 1 / r2 + 1 / r3)
+  feedback_md: These parts form a chain through one path, so their resistances add.
+fuzz:
+  samples: 200
+  seed_base: 6900
+  max_rejection_rate: 0.9
+  min_distinct_param_sets: 50

@@ -1,0 +1,74 @@
+# Phased hardware buying guide — planning only (not content:sync in v1).
+# Companion: docs/17-hardware-tools-and-bom.md
+version: "1.1"
+status: planning
+currency: EUR
+price_basis: DE_retail_incl_19pct_mwst
+price_status: unverified_estimate
+as_of: "2026-11-01"
+usd_crossref_doc: docs/10-build-projects-and-verification-spec.md
+
+phases:
+  - key: A
+    title: Bench foundation
+    ladder_levels: [L0, L1, L2, L3, L4, L5]
+    authoritative_bom: docs/10-build-projects-and-verification-spec.md#51-starter-kit-by-category-all-projects
+    central_eur: 665
+    band_eur: [465, 980]
+    first_bench_central_eur: [480, 650]
+    buy_first:
+      - Digital multimeter CAT II+
+      - Oscilloscope 50 MHz class with 10x probes
+      - Raspberry Pi Pico 2
+      - Breadboard and jumper kit
+      - Resistor and capacitor assortments
+    buy_before_l4:
+      - name: SWD debug probe
+        central_eur: 15
+        band_eur: [10, 20]
+        price_status: unverified_estimate
+        note: "[P] Raspberry Pi Debug Probe class, or a spare Pico running debugprobe firmware; not in central_eur, which tracks the doc 10 catalog"
+
+  - key: B
+    title: Power and motion bench
+    ladder_levels: [L6]
+    prerequisite_skills: [elec.semi.battery-safety]
+    central_eur_addon: [170, 400]
+    categories: [bldc_motor, esc, lipo_pack_and_charger, lipo_storage, thrust_or_current_measurement, high_gauge_wire]
+
+  - key: C
+    title: IMU ground logger
+    ladder_levels: [L7]
+    central_eur_addon: [30, 180]
+    categories: [imu_breakout_or_fc, bench_mount]
+
+  - key: D
+    title: Kit quad integration
+    ladder_levels: [L8, L12]
+    central_eur_addon: [400, 850]
+    categories: [frame_motors_esc_fc, radio_tx_rx, lipo_spares, gps, field_tools]
+    default_vehicle: multirotor
+
+  - key: E
+    title: Mechanical fabrication
+    ladder_levels: [L9]
+    central_eur_addon: [55, 750]
+    categories: [cad_software, fdm_printer_or_makerspace, filament, metric_drivers]
+
+  - key: F
+    title: Compute edge and field V&V
+    ladder_levels: [L10, L11, L12, L13]
+    central_eur_addon: [115, 450]
+    categories: [four_layer_pcb_fab, companion_computer, crash_spares, golden_vehicle_labelling]
+
+planning_total_all_phases:
+  central_eur: [1450, 3200]
+  realistic_multi_year_central_eur: [1700, 2500]
+  note: "DE incl. 19% MwSt [P]; deduplicate instruments and FC — see doc 17 section 11"
+
+suggested_retailers_de:
+  - Reichelt
+  - Conrad
+  - BerryBase
+  - Amazon.de
+  - EU PCB fabs (JLCPCB EU option, Eurocircuits)

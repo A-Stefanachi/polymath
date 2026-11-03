@@ -1,0 +1,127 @@
+schema_version: 1
+key: tpl.elec.lab-esd
+concept_static: true
+version: 2
+authoring_status: ready
+skill_key: elec.meas.lab-safety-esd
+task_kind: retrieval
+grader_type: multiple_choice
+difficulty_prior: 0.3
+title: Handling a static-sensitive part
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-01'
+  llm_assistance:
+    used: true
+    roles:
+    - draft_template
+    - explanation
+    - distractors
+    - hints
+    - misconception_tags
+    model: claude-opus-5-5
+    prompt_version: template_assist_v1
+delivery:
+  contexts:
+  - phone
+  - desktop
+  est_seconds: 45
+  phone_suitable: true
+  offline_gradable: true
+parameters: []
+constraints: []
+render:
+  stem_md: 'You are about to take a bare MOSFET out of its antistatic bag and fit it to an unpowered board. What should you
+    do?
+
+    '
+  alt_text: A question asking how to handle a static-sensitive MOSFET, with four written options.
+solution:
+  generator:
+    method: closed_form
+    outputs:
+      ans: '1'
+      w0: '2'
+      w1: '3'
+      w2: '4'
+      w3: '5'
+  steps:
+  - id: s1
+    text_md: Static from your body can damage a MOSFET gate, even when you feel no shock.
+  - id: s2
+    text_md: An ESD strap and mat bring you and the part to the same potential; the resistor in the strap limits current,
+      so never bypass it.
+  explanation_md: Treat static-sensitive parts as at risk until you have equalised potential. Damage may not show until later.
+answer:
+  n_shown: 4
+  shuffle: true
+  options:
+  - id: correct
+    correct: true
+    value_expr: ans
+    text_md: Wear an ESD wrist strap with its built-in resistor, clipped to the bench ESD ground point, and work on an ESD
+      mat
+  - id: no-spark
+    correct: false
+    value_expr: w0
+    text_md: Handle it as normal, since a part is only harmed if you feel a spark
+    misconception_tag: mc.esd-no-feel-no-harm
+    feedback_md: Static well below what you can feel can still damage a gate. Use a strap and mat.
+  - id: gate-lead
+    correct: false
+    value_expr: w1
+    text_md: Hold it by the gate lead so that the other leads stay clean
+    misconception_tag: mc.esd-touch-pins
+    feedback_md: The gate is the most sensitive pin. Avoid touching leads, and use a strap and mat.
+  - id: plastic-tray
+    correct: false
+    value_expr: w2
+    text_md: Rest it on an ordinary plastic tray while you prepare the board
+    misconception_tag: mc.esd-plastic-surface
+    feedback_md: Ordinary plastic can hold a static charge. Keep the part in its bag or on an ESD mat.
+  - id: wool-sleeve
+    correct: false
+    value_expr: w3
+    text_md: Wipe it on your sleeve first to remove any dust from the leads
+    misconception_tag: mc.esd-rubbing-clothing
+    feedback_md: Rubbing on clothing can build up charge on the part. Leave it in its bag until a grounded strap and mat are
+      in use.
+verifiers:
+- id: options-distinct
+  kind: distinct_options
+  independence: 'Structural check only: exactly one option is keyed correct and the option labels are distinct. It cannot
+    judge the key, so this item needs G3 sign-off (00a H2).'
+  spec:
+    correct_output: ans
+  tolerance:
+    rel: 0.01
+- id: window
+  kind: bounds
+  independence: Confirms the keyed option label is the one marked correct; a structural check that says nothing about the
+    content.
+  spec:
+    output: ans
+    lo: '0.5'
+    hi: '1.5'
+    strict: false
+hints:
+  l1: What can build up on your body and discharge into a part without you noticing?
+  l2: The aim is to keep you, the work surface and the part at the same potential.
+  l3: First consider where charge on your body could go. It needs a safe, controlled path before you touch the part.
+misconceptions:
+- tag: mc.esd-no-feel-no-harm
+  description: Believes that static is harmless unless felt.
+- tag: mc.esd-touch-pins
+  description: Handles a sensitive part by its pins.
+- tag: mc.esd-plastic-surface
+  description: Assumes that any insulator is a safe surface.
+- tag: mc.esd-rubbing-clothing
+  description: Rubs a sensitive part on clothing.
+fuzz:
+  samples: 200
+  seed_base: 7100
+  max_rejection_rate: 0.9
+  min_distinct_param_sets: 1

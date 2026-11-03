@@ -1,0 +1,1195 @@
+# Skill specifications for pillar T6 (track key governance). Researched 2 Nov 2026.
+# Literacy only, not legal advice. Classification and legal conclusions stay with counsel.
+# EU law was read in Official Journal or consolidated PDFs from the Publications Office, because EUR-Lex returned empty pages to scripts. Source lines give the route.
+# Items marked UNCERTAIN were not confirmed in a primary source. [project convention: reason] marks a course value or practice with no external source (it replaced the older [P] tag on 3 Nov 2026).
+# Numbers in the economics entries are invented teaching figures; rules of thumb are labelled as such.
+# Annex I of Regulation 2021/821 was read in the consolidated text of 21 Sep 2026. A further delegated regulation of 14 Sep 2026, C(2026)6323, was not in the OJ on 3 Nov 2026 (Publications Office index current to 30 Oct 2026). Re-check every quoted entry before publishing.
+# Human-review research pass of 3 Nov 2026: see reviews/human-review-T6-2026-11-03.md.
+
+# ---------- prof.law ----------
+
+- key: prof.law.export-control-literacy
+  description: >-
+    Recognise when a shipment, file transfer, remote access or support call may be a controlled export, and name the four questions that decide whether to escalate.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem, explain_back]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: true
+  objective: >-
+    Spot export triggers in everyday engineering work under Regulation 2021/821, and hand them to counsel instead of concluding.
+  core_ideas:
+    - >-
+      Export is wider than shipping. Art 2(2)(d) of Regulation 2021/821 covers electronic transmission of software or technology out of the Union, making it available electronically to persons outside the Union, and oral transmission over a voice medium.
+    - >-
+      The exporter (Art 2(3)) is whoever holds the contract with the third-country consignee and can decide on sending. With no contract, it is whoever holds that power. For software and technology it is whoever decides to transmit or make available.
+    - >-
+      Listing is only one route. Art 3(1) requires authorisation for Annex I items. Art 4 catch-all reaches unlisted items for WMD and missile use, for military end-use in an arms-embargoed destination, or as parts for illegally exported military-list items. Art 5 covers cyber-surveillance, and Arts 9 and 10 cover national lists.
+    - >-
+      BAFA frames the check as four questions: what is supplied, to which country, to whom, and for what purpose. All four can change the answer for the same item.
+    - >-
+      Annex I technology is controlled when required for development, production or use of a listed good (General Technology Note). Minimum installation, operation, maintenance and repair information for authorised or uncontrolled goods, public-domain information and basic research are carved out.
+  misconceptions:
+    - A civil product needs no export check. Dual-use lists are written around technical parameters, not around the seller's intent.
+    - Only physical shipments count. An email, a shared repository or a phone call can be an export.
+    - An unlisted item is always free. Art 4 can bind unlisted items when the exporter knows of, or is told of, a critical use. § 9 AWV adds a narrow German rule for unlisted goods meant for a nuclear facility in nine named countries, and § 9(4) extends the Art 5(2) cyber-surveillance duty.
+  worked_example: >-
+    A founder in Germany emails flight-control tuning notes to a contractor in Serbia and invites them to the private repository. Answer: two possible electronic exports (transmission, and making available), so the founder is a potential exporter under Art 2(3)(b). What is required: identify whether the notes are technology for a listed good, then run country, person and use. Whether a licence is needed is for counsel; the correct action now is to pause access and ask.
+  unaided_check: >-
+    Given six one-line scenarios (a parcel, a git invite, a voice call, a trade-show brochure, a server migration, a support email to a customer in an embargoed state), mark which may be an export and name the Art 2 limb. Pass: 6 of 6 correct, and no scenario is answered with a licence conclusion.
+  sources:
+    - http://publications.europa.eu/resource/cellar/14ce2965-b119-11f1-b9e5-01aa75ed71a1.0002.03/DOC_1 (consolidated text of 21 Sep 2026, a documentation tool)
+    - https://www.bafa.de/SharedDocs/Downloads/DE/Aussenwirtschaft/afk_merkblatt_exportkontrolle_bafa.pdf?__blob=publicationFile&v=3
+
+- key: prof.law.de-eu-awareness
+  description: >-
+    Explain how EU dual-use rules, national lists, the German Ausfuhrliste and sanctions stack, and check all layers before an export from Germany.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, explain_back]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: true
+  objective: >-
+    Name each legal layer for a German exporter, what it controls and where its current text is published.
+  core_ideas:
+    - >-
+      Regulation 2021/821 applies directly. Its Annex I was replaced by Delegated Regulation 2025/2003 (in force 15 Nov 2025, correction 9 Feb 2026). Regulation 2026/1405 corrects other language versions, not the English one. A further act of 14 Sep 2026, C(2026)6323, was not yet in the OJ on 3 Nov 2026, and BAFA expects it to take effect from Nov 2026. The English text is BAFA's stated reference version.
+    - >-
+      National additions are allowed: Art 9 lets a Member State add lists for public security or human rights, and Art 10 can extend another state's list when the exporter is informed. So Annex I alone is never the whole check.
+    - >-
+      Germany adds the Ausfuhrliste, annex to the AWV. Part I Section A covers weapons, munitions and military equipment; Section B holds national dual-use goods, the 900 entries. BAFA states the current list took effect on 17 Oct 2026 (23rd AWV amendment, BGBl. 2026 I Nr. 300). Germany also has a narrow national catch-all: § 9 AWV covers unlisted goods for a nuclear facility in nine named countries, applies only outside Arts 4 and 10, and exempts orders up to EUR 5,000 except software and technology.
+    - >-
+      Sanctions are a separate layer. EU regulations apply directly, can bind goods that are on no control list, and can reach services, payments and listed persons. For Iran and Russia, BAFA warns that even concluding a contract can require authorisation.
+    - >-
+      Intra-EU transfers are mostly free but not entirely: Art 11 and Annex IV require authorisation for a small set, and Art 11(9) requires commercial documents for Annex I items to say they are controlled if exported from the Union.
+  misconceptions:
+    - The newest Annex I settles it for a German exporter. The Ausfuhrliste and sanctions must also be checked.
+    - Moving goods inside the EU can never need a licence. Annex IV items and some Art 11(2) cases do.
+    - The customs tariff number decides the question. BAFA says a tariff number is usually not a conclusive test, because lists turn on technical properties.
+  worked_example: >-
+    A Munich firm plans to sell a sensor to a customer in Turkey. Layers to check in order: Annex I of 2021/821 (current version), Ausfuhrliste Part I A and B, Art 4 and 5 plus § 9 AWV for critical use, then sanctions on the country and the named parties. Answer: four layers, with a dated source for each, and no conclusion until all are checked.
+  unaided_check: >-
+    From memory, draw the layer stack for an export from Germany and state for each layer who publishes it and one thing it can catch that the layer above misses. Pass: Annex I, national list, catch-all and sanctions all present, each with one correct example.
+  sources:
+    - https://www.bafa.de/DE/Aussenwirtschaft/Ausfuhrkontrolle/Gueterlisten/gueterlisten_node.html
+    - http://publications.europa.eu/resource/cellar/14ce2965-b119-11f1-b9e5-01aa75ed71a1.0002.03/DOC_1 (consolidated text of 21 Sep 2026, a documentation tool)
+    - https://www.gesetze-im-internet.de/awv_2013/__9.html (§ 9 AWV, text including the amendment of 14 Oct 2026)
+
+- key: prof.law.classification-workflow
+  description: >-
+    Run the classification process with counsel, from parameters and evidence to a recorded decision, without stating a legal conclusion yourself.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, faded_problem, explain_back]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: true
+  objective: >-
+    Prepare the technical file that lets counsel or BAFA decide, and know which BAFA instrument answers which question.
+  core_ideas:
+    - >-
+      Steps: describe the item, measure parameters against entry text, list candidate entries in Annex I and Ausfuhrliste Part I, record what is unknown, then hand over. The exporter owns the check: BAFA says each exporter must do it before every export.
+    - >-
+      The Umschlüsselungsverzeichnis is a pointer, not an answer. BAFA calls it an aid for the exporter's own check, IHK Aachen calls it non-binding, and BAFA notes it still reflects Annex I as amended by 2023/996, older than the current text.
+    - >-
+      Auskunft zur Güterliste (AzG) is goods-based: it says named goods are not in Annex I or Ausfuhrliste Part I, in the version then valid. It is not a licence, says nothing about a specific export, and checks no embargo or use-based duties. It is issued chiefly as evidence for customs under § 14(1) AWV, lasts one year with online extensions, and lapses once a list change catches a named good.
+    - >-
+      Nullbescheid is transaction-based: a binding finding that this export, at that date, is neither banned nor licensable, on the documents filed. It needs a formal application with order documents, technical documentation and an end-use statement, and it does not transfer to other or future exports.
+    - >-
+      A Sonstige Auskunft answers a question. BAFA's Merkblatt (section 12) calls only the Nullbescheid legally binding and says nothing on the Auskunft's force, so treat it as information, not a decision you can rely on; if you need certainty for one export, apply for a Nullbescheid. Applications go through ELAN-K2.
+  misconceptions:
+    - The classification table is binding. It is not, and it can be out of date.
+    - An AzG clears every shipment of that good. It covers list status only, not end use, sanctions or a particular customer.
+    - Engineers decide classification. Engineers supply parameters; the exporter, advised by counsel, decides and records.
+  worked_example: >-
+    A team has a customer order for one gateway to Brazil and a customs query about list status. Answer: an AzG suits the repeated list-status question, and a Nullbescheid suits a doubt about this specific export. The file holds the datasheet, measured values against each candidate entry, and the unknowns. The team sends it to counsel to choose the route.
+  unaided_check: >-
+    Build a table comparing the Umschlüsselungsverzeichnis, AzG, Nullbescheid and Sonstige Auskunft on four rows: what it answers, who issues it, whether it binds, and whether it transfers to a later export. Pass: every cell correct against Merkblatt sections 2.5 and 12, with the binding cell for Sonstige Auskunft marked as not stated there.
+  sources:
+    - https://www.bafa.de/SharedDocs/Downloads/DE/Aussenwirtschaft/afk_merkblatt_exportkontrolle_bafa.pdf?__blob=publicationFile&v=3
+    - https://www.bafa.de/DE/Aussenwirtschaft/Ausfuhrkontrolle/Gueterlisten/gueterlisten_node.html
+
+- key: prof.law.stop-escalate-drill
+  description: >-
+    Within 30 minutes of a warning sign, write the hold decision and a note to counsel listing facts, unknowns and what stays frozen.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, problem, project_step]
+  grader_types: [multiple_choice, rubric_llm, human_review]
+  phone_suitable: false
+  objective: >-
+    Stop a transaction on a credible trigger, preserve records and escalate, without judging the legal outcome.
+  core_ideas:
+    - >-
+      Recommendation 2019/1318 Annex 2 groups red flags into four categories: your products, end use and end user, shipment, and finance and contract conditions. It was read on the official OJ text, is non-binding, and cites the old Regulation 428/2009, so do not carry its article numbers across. See legal-source-check.md.
+    - >-
+      The triggers below come from the law, not that annex. Under Art 4(1) of 2021/821 BAFA can inform the exporter of a critical use. Under Art 4(2) an exporter who knows of one must notify. Arts 5(2) and 8(2) do the same for cyber-surveillance and technical assistance.
+    - >-
+      BAFA reads knowledge broadly: it exists where the exporter knows of sources it could use without special effort, and obvious indications may not be deliberately ignored. After notifying, no export may take place until BAFA decides.
+    - >-
+      A hold note has three lists: facts known with source and time, known unknowns, and what is frozen (shipments, repository access, calls, firmware releases, payments). It states no conclusion on legality.
+    - >-
+      Keep records and do not coach the other side. Never suggest rewording an end use, splitting an order or changing a consignee to clear a hold; that is the evasion this course excludes. Art 27 requires export records for at least five years from the end of the calendar year of export.
+    - >-
+      Drill cues by Annex 2 category, in this course's wording. Your product: a prototype with few buyers at home; a spec ahead of established rivals; a one-off change to a standard unit that makes you ask what it is for. End use and end user: a first-time buyer with a thin or contradictory trail; a reseller or free-zone address named as end user; a defence or state-lab tie behind a civil story; a buyer who cannot talk about how the unit performs; far more capability than the job needs; phone or postal details that sit abroad or have moved there; an empty website; reluctance over an end-use statement or routine questions; a reason that does not fit their business. Shipment: odd packing or labelling, or refusal of normal delivery terms, sealing or signed receipt. Finance and contract: an inflated price, full prepayment or instant cash; money from a third party on a different route from the goods; no interest in installation, training or maintenance; a restricted or out-of-place site; heavy secrecy over destination or specification; huge or zero spares. One cue is enough for vigilance, and it is a prompt to hold and ask, not a finding.
+  misconceptions:
+    - A hold means the deal is illegal. It means the facts are not yet good enough to proceed.
+    - Ask the customer to rephrase the end use. Changing paperwork to remove a concern makes the concern worse and is excluded here.
+    - Silence protects you. Under Art 4(2) knowledge of a critical use creates a duty to notify.
+  worked_example: >-
+    Fictional case: a new buyer asks for 40 telemetry radios, and an email mentions a military end user in a country the founder is unsure about. Hold note: FACTS, order mail of 3 Nov, 40 units, end-user phrase quoted. UNKNOWNS, embargo status of the country, identity of the end user, list status of the radio. FROZEN, shipment, quote, firmware support, repository guest access. ACTION, counsel by end of day. Answer: stop and escalate; do not assess legality yourself.
+  unaided_check: >-
+    Timed 30 minutes on an unseen scenario. Pass by human review: hold decision stated first; facts separated from guesses; at least three unknowns; every outbound channel listed as frozen; no legal conclusion; no suggestion to alter the transaction.
+  sources:
+    - https://publications.europa.eu/resource/celex/32019H1318.ENG
+    - http://publications.europa.eu/resource/cellar/14ce2965-b119-11f1-b9e5-01aa75ed71a1.0002.03/DOC_1 (consolidated text of 21 Sep 2026, a documentation tool)
+    - https://www.bafa.de/SharedDocs/Downloads/DE/Aussenwirtschaft/afk_merkblatt_exportkontrolle_bafa.pdf?__blob=publicationFile&v=3
+
+- key: prof.law.german-layer
+  description: >-
+    Explain who must act as Ausfuhrverantwortlicher, which BAFA forms apply, and how Nullbescheid and cloud rules work in German practice.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, debug_case, explain_back]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Apply BAFA's Ausfuhrverantwortlicher rules to a small company and recognise when to stop and call counsel on war-weapons questions.
+  core_ideas:
+    - >-
+      An Ausfuhrverantwortlicher (AV) must be named when licence applications for listed goods await decision, meaning Ausfuhrliste Part I A, the 900 entries of Part I B, and Annex I of 2021/821. Without a valid naming, BAFA cannot grant an otherwise approvable application.
+    - >-
+      The AV must sit on the legally representative body: Vorstand, Geschäftsführer or representative partner. A Prokurist cannot serve, and no deputy exists. The AV is personally responsible, organises internal control and cannot delegate overall responsibility. Sole traders can prove status by trade registration.
+    - >-
+      Paperwork: form AV1 names the person, signed by hand and filed as PDF; it holds until revoked. AV2 delegates signing, generally valid two years if issued on or after 1 Sep 2023. Originals are kept five years. The basis is the Grundsätze of 25 July 2001 with changes in 2020 and 2023.
+    - >-
+      Reliability ties licensing to organisation: § 8(2) AWG lets BAFA condition licences on applicant reliability, and that also applies to a Nullbescheid. BAFA's Merkblatt, 10th edition (Nov 2024), is the practical text but states it is not legally binding.
+    - >-
+      Cloud (Merkblatt 11.3): moving listed technology to a third-country server is an export. So is giving access from a third country, wherever the server sits, and access creates the duty even if nobody logs in. War weapons fall under the KrWaffKontrG, with the federal economics ministry as authority (BMWK in the Merkblatt, since renamed BMWE): stop and call counsel.
+  misconceptions:
+    - The export compliance officer can be the AV. A non-board employee cannot; the Exportkontrollbeauftragte handles daily work, not the AV role.
+    - Hosting in Germany solves the cloud question. Access rights from a third country can be an export whatever the server location.
+    - A Nullbescheid from last year covers this year's repeat order. It covers only the concrete export assessed.
+  worked_example: >-
+    A two-founder GmbH with one Geschäftsführer and one Prokurist needs a licence for an Annex I item. Answer: only the Geschäftsführer can be AV. The Prokurist may sign applications only under a valid AV2. The AV signs AV1 by hand, attaches a recent register extract and emails the PDF. With no co-representative, there is no second signatory.
+  unaided_check: >-
+    Debug this plan: "our CTO, a Prokurist, is AV, with the COO as deputy; repository stays on a Frankfurt server, so contractors in India are fine; last year's Nullbescheid covers the order." Pass: all three errors named with the correct rule, and the contractor point is sent to counsel rather than resolved.
+  sources:
+    - https://www.bafa.de/DE/Aussenwirtschaft/Ausfuhrkontrolle/Antragsstellung/Ausfuhrverantwortlicher/ausfuhrverantwortlicher_node.html
+    - https://www.bafa.de/SharedDocs/Downloads/DE/Aussenwirtschaft/afk_merkblatt_exportkontrolle_bafa.pdf?__blob=publicationFile&v=3
+
+- key: prof.law.compliance-programme
+  description: >-
+    Scale the seven core elements of an internal compliance programme to a one-person company, with a named owner, record and review date for each.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, project_step]
+  grader_types: [multiple_choice, human_review, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Write a proportionate, dated, one-page programme that a reviewer could test against what actually happened.
+  core_ideas:
+    - >-
+      Recommendation 2019/1318 is non-binding and cited the old Regulation 428/2009. Its seven elements are management commitment, organisation and resources, training, transaction screening, performance review and audits, record keeping, and physical and information security.
+    - >-
+      Recommendation 2019/1318 Annex 2 groups red flags into four categories: your products, end use and end user, shipment, and finance and contract conditions. It was read on the official OJ text, is non-binding, and cites the old Regulation 428/2009, so do not carry its article numbers across. See legal-source-check.md.
+    - >-
+      BAFA says there is no model ICP: requirements follow from a risk analysis by size, business and customers. Exporters of listed goods, or goods open to critical use, are expected to run one, derived from reliability under § 8(2) AWG.
+    - >-
+      An ICP is formally needed for some licences: Art 12(4) of 2021/821 says global authorisation holders must generally maintain one. Art 27 requires export records for at least five years from the end of the calendar year of export.
+    - >-
+      One person cannot separate duties, so independence comes from outside: counsel reviews a sample yearly [project convention: nobody can audit their own work, and yearly is the least this course accepts; the Recommendation sets no frequency]. Information security links to the repository: access lists, export-tagged folders and a log of who can read what.
+  misconceptions:
+    - A one-person firm is too small for a programme. Duties attach to the export, not to headcount, though the programme can be short.
+    - Copy a large company's template. BAFA says no model exists, and an unused procedure is worse than a short one that is followed.
+    - The ICP replaces a licence or the check itself. It organises the check.
+  worked_example: >-
+    Fictional one-founder drone-parts firm. Commitment: signed policy page. Organisation: founder as owner, named outside counsel. Training: one export module a year, logged. Screening: four questions plus a sanctions check on every order, stored per order. Review: counsel samples five orders each January. Records: five-year retention folder. Security: repository roles reviewed quarterly. Answer: seven lines, each with an owner, an artefact and a date.
+  unaided_check: >-
+    Write the programme for your own company on one page. Pass by human review: all seven elements present; each has an artefact that would exist if it were followed; retention meets Art 27; red-flag section covers the four Annex 2 categories, tailored to the business.
+  sources:
+    - https://publications.europa.eu/resource/celex/32019H1318.ENG
+    - https://www.bafa.de/SharedDocs/Downloads/DE/Aussenwirtschaft/afk_merkblatt_exportkontrolle_bafa.pdf?__blob=publicationFile&v=3
+
+# ---------- def.export ----------
+
+- key: def.export.scenarios
+  description: >-
+    From a fictional civil product spec, identify candidate Annex I entries, the parameters still needing data, and what cannot be concluded without counsel.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: true
+  objective: >-
+    Read entry text against a spec, and be rewarded for correct uncertainty rather than a confident answer.
+  core_ideas:
+    - >-
+      9A012.a catches UAVs designed to fly outside the operator's direct natural vision with either endurance of 1 hour or more, or endurance from 30 minutes to under 1 hour combined with design for take-off and stable controlled flight in gusts of at least 46.3 km/h (25 knots).
+    - >-
+      Endurance is computed for ISA sea-level conditions (ISO 2533:1975) in zero wind, not from a field log. Natural vision means unaided sight, corrective lenses allowed.
+    - >-
+      9A112 catches UAVs not specified in 9A012 that are capable of a range of 300 km, or that have autonomous or beyond-direct-vision control together with an aerosol dispensing system above 20 litres, fitted or designed for. These entries are read here only as list literacy.
+    - >-
+      The test is design intent plus parameters. Lacking a parameter, the correct output is "needs data", not "not controlled". Category 7 and Category 5 can be separately relevant to subsystems.
+    - >-
+      Entries change. Quoted text is from the consolidated version of 21 Sep 2026. The Commission's change note for the act of 14 Sep 2026 lists only an editorial change in 9A012.a Technical Note 2 and nothing for 9A112; compare against the act once published.
+  misconceptions:
+    - A 30-minute drone is out of scope. At exactly 30 minutes with 25-knot gust design it can meet 9A012.a.1 if designed for flight beyond natural vision.
+    - Measured endurance on a calm day is the number. The note fixes the conditions of calculation.
+    - Dual-use and munitions lists are the same thing. They are separate lists with different authorities and consequences.
+  worked_example: >-
+    Fictional inspection UAV: endurance 34 min (ISA, zero wind), datasheet says "BVLOS capable", gust rating not stated. Candidate: 9A012.a.1. Endurance limb met on these figures (34 min is between 30 and 60). Design for flight outside natural vision looks met. Missing: designed gust capability against 46.3 km/h. Answer: candidate entry, one parameter needing data, conclusion for counsel.
+  unaided_check: >-
+    Given a new fictional spec with one omitted parameter, list candidate entries, parameters needing data, and what cannot be concluded. Pass: names the entry, names the gap, gives no classification verdict. A confident "controlled" or "not controlled" fails.
+  sources:
+    - http://publications.europa.eu/resource/cellar/14ce2965-b119-11f1-b9e5-01aa75ed71a1.0002.03/DOC_1 (consolidated text of 21 Sep 2026, a documentation tool)
+    - https://www.bafa.de/DE/Aussenwirtschaft/Ausfuhrkontrolle/Gueterlisten/gueterlisten_node.html
+
+- key: def.export.product-decomposition
+  description: >-
+    Break a product into items, software and technology for list checks, apply General Note 2 correctly, and separate legitimate design review from structuring.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, explain_back]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: true
+  objective: >-
+    Produce a decomposition table for counsel and state General Note 2 accurately.
+  core_ideas:
+    - >-
+      Check at each level: the finished good, components, software and technology. A list entry can bite on any level, and technology has its own entries.
+    - >-
+      General Note 2 keeps controls from being defeated by exporting an uncontrolled good that contains controlled components, where a component is the principal element and can feasibly be removed or used elsewhere. Principal element is judged on quantity, value, know-how and other special circumstances.
+    - >-
+      So one controlled subassembly does not automatically pull in the whole product, and it is not automatically harmless either. The note is a fact-specific test for counsel, and this corrects the earlier course wording.
+    - >-
+      Confusable set design-choice-vs-structuring. An early design change reviewed with counsel for an engineering reason is legitimate. Splitting items, shipments or documents in order to sidestep a control is excluded content here and is never taught.
+  misconceptions:
+    - One controlled chip makes the whole product controlled. General Note 2 sets a principal-element and feasibility test.
+    - Selling a product as parts avoids the list. Separating it to escape a control is what the note exists to stop, and it is not a technique this course teaches.
+    - Software rides along with the hardware. Software and technology are checked in their own right.
+  worked_example: >-
+    A survey payload holds a commercial camera, a compute module, a controlled-candidate inertial unit and a custom enclosure. Table columns: item, function, value share, removability, candidate entry, data needed. Inertial unit row: high know-how share, unit is removable by four screws, candidate 7A entry, parameters needed. Answer: flag General Note 2 as an open question for counsel with these facts; do not decide principal element yourself.
+  unaided_check: >-
+    Classify eight statements as design-choice or structuring, and rewrite General Note 2 in your own words. Pass: 8 of 8, and the rewrite includes principal element, the removal or other-use condition and the factors.
+  sources:
+    - http://publications.europa.eu/resource/cellar/14ce2965-b119-11f1-b9e5-01aa75ed71a1.0002.03/DOC_1 (consolidated text of 21 Sep 2026, a documentation tool)
+
+- key: def.export.tech-data-sharing
+  description: >-
+    Identify when sharing design files, repositories, cloud access or technical help may be a controlled transfer, and stop before access is granted.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: true
+  objective: >-
+    Screen everyday collaboration channels for export triggers and record the decision to pause.
+  core_ideas:
+    - >-
+      The duty arises from the possibility of access. BAFA says making software or technology available on an intranet or the internet can be licensable if access from third countries becomes possible, even if nobody ever opens it.
+    - >-
+      BAFA's cloud cases (Merkblatt 11.3): access from a third country to listed technology on an EU server is an export by making available. A server move to another Member State is a transfer. A move to a third-country server is an export. Access inside Germany may be technical assistance.
+    - >-
+      SaaS (Merkblatt 11.4): placing listed software on a third-country server is an export, and granting access can be one even without download. Art 8 covers technical assistance on Annex I items when the provider knows or is told of an Art 4(1) use.
+    - >-
+      Carve-outs are narrow. Public-domain and basic-research exemptions apply to listed-goods licensing only, and BAFA warns Art 4 can still apply. Minimum install, operate, maintain and repair data is carved out for authorised or uncontrolled goods.
+    - >-
+      Recommendation 2019/1318 Annex 2 groups red flags into four categories: your products, end use and end user, shipment, and finance and contract conditions. It was read on the official OJ text, is non-binding, and cites the old Regulation 428/2009, so do not carry its article numbers across. See legal-source-check.md.
+  misconceptions:
+    - It only counts if someone downloads the file. The possibility of access can already be enough.
+    - Publishing it on GitHub makes it public-domain and safe. Publishing is itself a release decision for counsel when technology may be listed.
+    - An NDA authorises the transfer. A contract is not an export licence.
+  worked_example: >-
+    A contract firm in Bangalore asks for read access to a private repository with radio firmware and the CAD pack. Answer: pause before granting. Tag folders by possible list status, identify exporter and recipient, list what access would expose, and ask counsel. If the content is listed technology, granting access is an export by making available, whether or not they clone it.
+  unaided_check: >-
+    Audit a sample access list of ten accounts, some outside the EU, against ten folders with tags. Pass: every third-country account with reach into a possibly listed folder flagged for hold, with the channel named and no legal conclusion stated.
+  sources:
+    - https://publications.europa.eu/resource/celex/32019H1318.ENG
+    - https://www.bafa.de/SharedDocs/Downloads/DE/Aussenwirtschaft/afk_merkblatt_exportkontrolle_bafa.pdf?__blob=publicationFile&v=3
+    - http://publications.europa.eu/resource/cellar/14ce2965-b119-11f1-b9e5-01aa75ed71a1.0002.03/DOC_1 (consolidated text of 21 Sep 2026, a documentation tool)
+
+- key: def.export.classification-memo
+  description: >-
+    Write a classification memo on your own design against current Annex I, covering 9A012, 5A002 and the General Notes, ending in questions for counsel.
+  est_minutes: 60
+  task_kinds: [retrieval, worked_example, project_step, problem]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: >-
+    Produce a dated technical memo that counsel can act on, with evidence for every parameter and no legal conclusion.
+  core_ideas:
+    - >-
+      A memo is a technical input, not a decision. It records list version and date, item description, intended and foreseeable use, parameters with evidence, candidate entries, reasons for dismissing others, and open questions.
+    - >-
+      Cite the version. Annex I was replaced by 2025/2003, corrected on 9 Feb 2026, and the act of 14 Sep 2026 was awaiting OJ publication on 3 Nov 2026. A memo without a list date expires silently.
+    - >-
+      Structure it by level: the system (9A012, 9A112), sensors and navigation (Categories 6 and 7), comms and crypto (5A001, 5A002), then software (D entries) and technology (E entries), then Ausfuhrliste Part I.
+    - >-
+      Address the notes explicitly: General Note 2 for incorporated items, the General Technology Note for your drawings, and for Category 5 Part 2 the fact that entries a and c of the General Software Note do not release that software and the Cryptography Note governs.
+    - >-
+      Do not reverse-engineer the result. A memo may record a design parameter; it may not tune claims or datasheet wording to fall under a threshold. Design choices go to counsel.
+  misconceptions:
+    - A good memo says "not controlled". A good memo tells counsel exactly what is known and unknown.
+    - A datasheet is evidence enough. Parameters need the test or calculation behind them, under the conditions the entry states.
+    - The memo lasts for the product's life. It is valid for one design revision and one list version.
+  worked_example: >-
+    Memo header for a fictional L4 sensor board: Annex I as consolidated on 21 Sep 2026, checked 2 Nov 2026, design rev C. Row: LoRa link with AES-128 payload encryption. Candidate 5A002.a. Key length 128 is above the 56-bit symmetric threshold. Question for counsel: does the function qualify as cryptography for data confidentiality, and does any Note 2 or Note 3 exclusion apply given a B2B sales model? Answer: open question, not a conclusion.
+  unaided_check: >-
+    Submit the memo for your own device. Pass by human review: list version and date stated; every parameter has evidence; 9A012 or a reasoned not-applicable, 5A002 and General Notes each addressed; at least three questions for counsel; no classification verdict.
+  sources:
+    - http://publications.europa.eu/resource/cellar/14ce2965-b119-11f1-b9e5-01aa75ed71a1.0002.03/DOC_1 (consolidated text of 21 Sep 2026, a documentation tool)
+    - https://www.bafa.de/DE/Aussenwirtschaft/Ausfuhrkontrolle/Gueterlisten/gueterlisten_node.html
+
+- key: def.export.general-notes
+  description: >-
+    Apply the General Technology Note, General Software Note, Cryptography Note and the 5A002 function tests to a product description and name what remains for counsel.
+  est_minutes: 40
+  task_kinds: [retrieval, worked_example, faded_problem, debug_case]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Read Category 5 Part 2 in the right order and avoid the two errors, TLS means controlled and TLS means free.
+  core_ideas:
+    - >-
+      Order of reading for 5A002.a: is it cryptography for data confidentiality; does it use a described security algorithm; does it fall in a.1 to a.4; does a note release it? The definition excludes authentication, digital signature, data integrity, non-repudiation, DRM and certain other listed functions.
+    - >-
+      Described security algorithm thresholds: symmetric key above 56 bits excluding parity; factorisation above 512 bits; finite-field discrete log above 512 bits; other-group discrete log such as elliptic curve above 112 bits; certain post-quantum schemes also listed.
+    - >-
+      5A002.a covers (1) items whose primary function is information security, (2) digital communication or networking systems, (3) computers and other information storage or processing items, and (4) items where crypto supports a secondary function and is performed by incorporated equipment that would itself be controlled.
+    - >-
+      Note 3, the Cryptography Note, releases items that are sold to the public from stock through retail channels, with cryptography users cannot easily change, installable without substantial supplier support, and with details available to authorities on request. The note to it adds that the item must interest a wide range of buyers, with price and main functions available before purchase without consulting the vendor. The text does not use the words mass market.
+    - >-
+      Entries a (retail software) and c (minimum object code) of the General Software Note do not release Category 5 Part 2 software; entry b, public domain, carries no such bar. Note 2 to 5A002.a lists exclusions, including routers, switches and gateways limited to OAM (h) and items for a connected civil industry application (j), such as endpoints limited to non-arbitrary sensor data. Each condition must be met, so take the exact text to counsel.
+  misconceptions:
+    - Any TLS means controlled. Authentication-only functions are outside the definition, and notes may release an item.
+    - Open-source TLS library means free. Publication status and product status are separate questions, and the item still needs review.
+    - Mass-market is the test. The text in force sets conditions on sale, modification and support, and those are what to check.
+  worked_example: >-
+    A telemetry gateway uses TLS 1.3 with AES-256 for customer data and sold through integrators only. Reasoning: confidentiality function, yes; algorithm 256 above 56 bits, yes; a.2 or a.3 candidate, yes. Note 3 looks hard to meet because price and functions are not public, and Note 2 exclusions need checking. Answer: candidate 5A002.a with Note 2 and Note 3 as questions for counsel. A signing-only bootloader on the same device is outside the definition.
+  unaided_check: >-
+    Six crypto uses are given (firmware signature check, AES-GCM payload, HMAC on telemetry, disk encryption, Wi-Fi WPA3, activation-locked encryption). For each, state whether it is within cryptography for data confidentiality and the next step. Pass: 6 of 6, with notes cited and no final classification.
+  sources:
+    - http://publications.europa.eu/resource/cellar/14ce2965-b119-11f1-b9e5-01aa75ed71a1.0002.03/DOC_1 (consolidated text of 21 Sep 2026, a documentation tool)
+
+# ---------- sec.hw ----------
+
+- key: sec.hw.threat-modelling
+  description: >-
+    Threat model a device using the four questions and EMB3D's properties-to-threats workflow, ending in mitigations, ranked risks and verification tests.
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, faded_problem, explain_back]
+  grader_types: [rubric_llm, human_review, multiple_choice]
+  phone_suitable: false
+  objective: >-
+    Apply a repeatable defensive method, including the "did we do a good job" check, to an embedded device.
+  core_ideas:
+    - >-
+      Shostack's frame has four questions: what are we working on, what can go wrong, what are we going to do about it, did we do a good job. The fourth makes the model testable rather than a document.
+    - >-
+      MITRE EMB3D (v2.0.2, June 2026) links device properties to threats and mitigations. The workflow is identify properties, map them to threats, and evaluate each threat as vulnerable or mitigated. IDs look like PID-, TID- and MID-.
+    - >-
+      EMB3D threat categories are hardware, system software, application software and networking. Mitigation maturity is foundational, intermediate or leading, which gives a sequencing order.
+    - >-
+      Device models must include debug ports, physical access, boot and update chains, recovery and supply chain. A threat is what could happen; a vulnerability is a specific weakness that lets it.
+    - >-
+      CRA Art 13(2) to (4) requires a documented cybersecurity risk assessment kept up to date during the support period, so the model is a living record, placed in the technical documentation.
+  misconceptions:
+    - A threat model is a one-time document. It must track design and vulnerability changes.
+    - Encryption gives integrity. Plain encryption does not; integrity needs authentication.
+    - A secure element is mandatory. It is one mitigation. CRA Annex IV lists such devices as critical products, which concerns their makers, not automatically every product using one (judgement; check with counsel).
+  worked_example: >-
+    Device: LoRa sensor with SWD header, OTA updates, a cloud API. Properties: debug port, bootloader, update client, radio stack. Threat classes: debug access, unsigned firmware, rollback, key extraction. Decision: disable debug in production and test that it is really locked; require signed updates and test rejection of an unsigned image. Answer: each top risk has an owner and a pass or fail test that can be run.
+  unaided_check: >-
+    For a supplied device description, list five assets, three trust boundaries and the top three risks with EMB3D category, mitigation and a test. Pass: all include a physical or debug threat and a recovery path, and no exploit steps appear.
+  sources:
+    - https://emb3d.mitre.org/
+    - https://github.com/adamshostack/4QuestionFrame
+
+- key: sec.hw.secure-boot-literacy
+  description: >-
+    Explain the chain of trust, image signing, anti-rollback and recovery, and state what secure boot does and does not protect against.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, explain_back]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: true
+  objective: >-
+    Describe a verified boot chain at design-review depth and tie it to protection, detection and recovery.
+  core_ideas:
+    - >-
+      Each stage verifies the next before running it, starting from an immutable root (ROM or locked key hash). A signature check gives authenticity and integrity, not confidentiality.
+    - >-
+      NIST SP 800-193 (May 2018) gives three resiliency principles: protect firmware from unauthorised change, detect changes that occur, and recover securely after attack. A device needs all three; a device that detects but cannot recover is bricked.
+    - >-
+      Anti-rollback stops a valid but old, vulnerable image from being re-installed, usually with a monotonic counter in fuses or protected storage. Signature checking alone does not prevent it.
+    - >-
+      The private signing key stays off the device, ideally in an HSM, with a verified public key or its hash on the device. The chain is only as strong as debug lock and key handling.
+    - >-
+      Legal link: CRA Annex I Part I (2) requires a secure update path, automatic security updates enabled by default where applicable, and a clear opt-out. Boot managers are a Class I category in Annex III, a class for products whose core function is that, not for every device with a bootloader (Art 7(1)).
+  misconceptions:
+    - Secure boot encrypts firmware. It verifies it; encryption is a separate choice.
+    - A signed image is safe forever. Without anti-rollback an old signed version remains installable.
+    - Secure boot stops runtime attacks. It only proves what started.
+  worked_example: >-
+    An update with version 7 is signed correctly, while the device runs version 9 and has counter 9. Expected behaviour: verify signature, pass; compare version, 7 is below 9, reject; stay on 9 and log. Answer: rejection is correct, and a passing test proves anti-rollback, not just signature checking.
+  unaided_check: >-
+    Draw the boot chain of your target MCU and say what happens at each failure: bad signature, old version, corrupted slot, power loss mid-update. Pass: all four handled with a named recovery path, and root of trust identified.
+  sources:
+    - https://csrc.nist.gov/pubs/sp/800/193/final
+    - http://publications.europa.eu/resource/cellar/21b7d4eb-a6e2-11ef-85f0-01aa75ed71a1.0006.01/DOC_1 (OJ L, 2024/2847)
+
+- key: sec.hw.sbom-basics
+  description: >-
+    Generate a machine-readable SBOM for firmware, use it to answer whether a new vulnerability affects you, and state what the CRA requires of it.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, project_step]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: >-
+    Treat the SBOM as an operational tool for vulnerability handling, not a filing exercise.
+  core_ideas:
+    - >-
+      CRA Annex I Part II (1) requires a software bill of materials in a commonly used machine-readable format, covering at least the top-level dependencies. Art 3(39) defines an SBOM as a formal record of components and supply-chain relationships.
+    - >-
+      No duty to publish. Annex II makes giving the SBOM to users optional, and Annex VII lists it in technical documentation available to authorities on reasoned request.
+    - >-
+      Art 13(5) requires due diligence when integrating third-party components, including open source, and Art 13(6) requires reporting a vulnerability found in a component to its maintainer and remediating it.
+    - >-
+      Fields: CISA and partners replaced the NTIA 2021 minimum elements with the 2026 Minimum Elements (29 July 2026), adding hash, licence, tool name and generation context, and asking for transitive dependencies with no minimum depth. This is guidance, not EU law. Two formats are published standards: CycloneDX (Ecma ECMA-424, 2nd edition Dec 2025) and SPDX (ISO/IEC 5962:2021). The CRA names no format.
+    - >-
+      Art 13(24) lets the Commission specify format and elements by implementing act. A Publications Office title search on 2 Nov 2026 found none. Binary-only vendor blobs and RTOS configurations are the common firmware gaps.
+  misconceptions:
+    - The SBOM must be published. The CRA does not require that.
+    - An SBOM proves the product is secure. It is an inventory; exploitability needs analysis, for which VEX-style statements exist.
+    - Free open-source components carry no duties for me. Integrating them is covered by Art 13(5) due diligence.
+  worked_example: >-
+    A CVE appears in mbedTLS 3.5.0. Query SBOMs of three firmware releases: rel A has 3.5.0, rel B has 3.6.2, rel C has it only as a transitive dependency of a vendor SDK and shows nothing at top level. Answer: A affected if the vulnerable path is used, B not by version, C unknown, which shows why top-level only is a minimum, not a safe depth.
+  unaided_check: >-
+    Generate an SBOM for your firmware build and answer a supplied CVE query within ten minutes. Pass by human review: file is machine-readable, components have versions, and the answer states the affected releases plus any unknowns.
+  sources:
+    - http://publications.europa.eu/resource/cellar/21b7d4eb-a6e2-11ef-85f0-01aa75ed71a1.0006.01/DOC_1 (OJ L, 2024/2847)
+    - https://www.cisa.gov/resources-tools/resources/2026-minimum-elements-software-bill-materials-sbom
+    - https://ecma-international.org/publications-and-standards/standards/ecma-424/
+    - https://spdx.dev/about/overview/ (SPDX as ISO/IEC 5962:2021)
+
+- key: sec.hw.own-device-model
+  description: >-
+    Threat model your own L4 or L11 device, map it to EMB3D, and run a verification test for each top risk, then face an independent review.
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, project_step]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: >-
+    Turn a threat model into run tests on real hardware or a real deployment, with evidence.
+  core_ideas:
+    - >-
+      Inputs are the real artefacts: schematic, boot flow, update process, network ports, cloud identities, SBOM. A model built from memory misses what the device really exposes.
+    - >-
+      Map properties through EMB3D's Properties Mapper and record each threat as mitigated, vulnerable or not applicable, with a reason. "Not applicable" needs evidence.
+    - >-
+      Verification is the fourth question made concrete: each top risk has a test, run on the actual build, with date and result. Tests are defensive checks of your own device, such as confirming debug lock or update rejection.
+    - >-
+      An independent reviewer looks for the biggest miss. The finding goes back into the model; a review that finds nothing is a weak signal, not a pass.
+    - >-
+      The output feeds the CRA risk assessment under Art 13(3) and (4), including justification where an Annex I requirement is treated as not applicable.
+  misconceptions:
+    - Running a tool is a test of the model. A tool result counts only when tied to a named risk.
+    - More threats means a better model. Ranking and verification matter more than length.
+    - I reviewed it myself. Independent review is part of the task.
+  worked_example: >-
+    Top risk on an L4 board: firmware extraction over debug. Mitigation: readout protection level set at provisioning. Test: on a production-configured board, attach the debugger and confirm that memory read is refused, then record tool version, board serial and result. Answer: risk closed for that build only, reopened on any provisioning change.
+  unaided_check: >-
+    Submit model, EMB3D mapping and test log. Pass by human review: every top risk has a test that was run with evidence, and the independent reviewer's highest-risk finding is recorded with a disposition.
+  sources:
+    - https://emb3d.mitre.org/
+    - https://github.com/adamshostack/4QuestionFrame
+
+- key: sec.hw.iot-baselines
+  description: >-
+    Map a wireless product to EN 18031 and EN 303 645, and spot when an EN 18031 restriction removes the presumption of conformity.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, debug_case]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: >-
+    Choose the right baseline and predict when self-declaration under RED fails.
+  core_ideas:
+    - >-
+      Delegated Regulation 2022/30 activated RED Art 3(3)(d), (e) and (f) for network harm, personal data and fraud, applying from 1 Aug 2025. EN 18031-1, -2 and -3 are the harmonised standards, one part per article point.
+    - >-
+      They are cited with restrictions in Decision 2025/138. Where a user may skip setting a password (clauses 6.2.5.1 and 6.2.5.2), no presumption arises under any part. EN 18031-2 also restricts access-control clauses 6.1.3 to 6.1.6 for toys and childcare equipment, and EN 18031-3 gives no presumption on the secure-update criteria of clause 6.3.2.4.
+    - >-
+      No full presumption matters because RED Art 17(4) then requires EU-type examination or full quality assurance for Art 3(3): internal production control alone is not enough.
+    - >-
+      ETSI EN 303 645 (V3.1.3, Sept 2024, free from ETSI) is a consumer IoT baseline in 13 provision groups (5.1 to 5.13), plus data-protection provisions (clause 6). It is not the RED harmonised route. Provision 5.1-1: outside factory default state, passwords are unique per device or user-defined.
+    - >-
+      The EN 18031 clause numbers above come from Decision 2025/138 in the OJ. The EN 18031 texts are sold by national standards bodies, so buy the part you claim before relying on its detail. RED cyber is being replaced: Delegated Regulation 2026/339 repeals 2022/30 with effect from 11 Dec 2027, when the CRA applies in full.
+  misconceptions:
+    - EN 303 645 compliance gives RED presumption. Only the cited EN 18031 parts can, and only within their restrictions.
+    - EN 18031 is always self-declared. A restriction can force a notified body route.
+    - RED cyber can be ignored because the CRA is coming. It applies now for products placed on the market until the repeal.
+  worked_example: >-
+    A Wi-Fi gateway ships with a factory password and a skippable "set password" step. Result: the restriction bites on EN 18031-1, so no presumption of conformity with Art 3(3)(d). Options: remove the skip so the user must set one, then re-assess, or use a notified body under Annex III or IV. Answer: fix the design; confirm the route with counsel.
+  unaided_check: >-
+    For a device description, list which EN 18031 parts apply, one restriction that bites, and the resulting Art 17 route. Pass: correct parts, the restriction identified, and the route named with Art 17(3) or (4).
+  sources:
+    - http://publications.europa.eu/resource/cellar/16a8f500-deab-11ef-be2a-01aa75ed71a1.0006.01/DOC_1 (OJ L, 2025/138)
+    - https://www.etsi.org/deliver/etsi_en/303600_303699/303645/03.01.03_60/en_303645v030103p.pdf (ETSI EN 303 645 V3.1.3, provision 5.1-1)
+    - http://publications.europa.eu/resource/cellar/d8611ecc-4364-11f1-8095-01aa75ed71a1.0006.01/DOC_1 (OJ L, 2026/339)
+    - http://publications.europa.eu/resource/cellar/1b79e176-e181-11e3-8cd4-01aa75ed71a1.0006.03/DOC_1 (OJ L 153, 22.5.2014)
+
+- key: sec.hw.applied-crypto
+  description: >-
+    Choose an AEAD and nonce scheme for a device fleet, calculate nonce limits, and derive separate keys with HKDF using a vetted library.
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [multiple_choice, code_tests, exact_numeric]
+  phone_suitable: false
+  objective: >-
+    Design nonce handling and a key hierarchy that survive reboots and fleet scale.
+  core_ideas:
+    - >-
+      AEAD takes key, nonce, plaintext and associated data, and gives confidentiality plus integrity (RFC 5116). Associated data is authenticated but not encrypted, so headers and device IDs go there.
+    - >-
+      Nonce uniqueness per key is a hard requirement. For AES-GCM a repeat reveals the XOR of plaintexts and exposes the internal hash key, breaking integrity for everything under that key (RFC 5116 section 5.1.1). Only the consequence is taught here, not any procedure.
+    - >-
+      SP 800-38D (2007, revision announced in 2024) requires that a key and IV repeat on distinct inputs have probability at most 2^-32. Unless using only 96-bit deterministic IVs, invocations per key may not exceed 2^32. It recommends 96-bit IVs and suggests a 32-bit fixed field plus 64-bit invocation field.
+    - >-
+      Reboots are the embedded trap. RFC 5116 says to persist the nonce state in non-volatile storage, ideally checkpointed ahead of use, and shared keys need per-device fields. A counter in RAM repeats after reset.
+    - >-
+      Key hierarchy: one root key, derived keys per purpose. HKDF (RFC 5869) extracts then expands, with info binding each output to a context, so encryption, MAC and per-device keys differ. Use vetted libraries; never write your own cipher.
+  misconceptions:
+    - Encryption gives integrity. Only authenticated modes do.
+    - A random nonce is always safer than a counter. Random 96-bit IVs bring the 2^32 limit and need a good RNG, which small devices can lack.
+    - One long-lived key for the fleet is simpler and fine. It multiplies nonce risk and makes one extraction a fleet compromise.
+  worked_example: >-
+    1,000 devices send a message every 10 s for 5 years. Per device: 5 x 365 x 24 x 3600 / 10 = 15,768,000 messages. A shared key with random IVs gives 1.5768 x 10^10 messages, above 2^32 (4,294,967,296), so it is not allowed. Per-device keys give 1.5768 x 10^7 per key, well inside the limit. With a persisted counter the limit is not the concern; a 32-bit counter at this rate lasts about 1,362 years. Answer: per-device keys from HKDF, with a persisted fixed-plus-counter nonce.
+  unaided_check: >-
+    Implement in a test harness, using a vetted library, an AEAD wrapper that derives per-purpose keys with HKDF, persists its nonce counter and refuses to encrypt if state cannot be saved. Pass: code_tests show unique nonces across a simulated reboot, tamper rejection of ciphertext and associated data, and limit calculations exact.
+  sources:
+    - https://www.rfc-editor.org/rfc/rfc5116
+    - https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf
+
+- key: sec.hw.key-lifecycle
+  description: >-
+    Plan keys from provisioning through rotation, revocation and destruction at end of life, using NIST key states, for a device fleet.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, faded_problem]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: >-
+    Write a key table that says, for every key, where it lives, how it is replaced, and what happens when it is lost.
+  core_ideas:
+    - >-
+      SP 800-57 Part 1 Rev 5 (May 2020) gives key states: pre-activation, active, suspended, deactivated, compromised, destroyed. Rev 6 is an initial public draft from Dec 2025. States are viewed from the system, and transitions should be recorded.
+    - >-
+      Phases: pre-operational, operational and post-operational, ending in destruction. Post-operational keys may still process old data, which is why decryption keys can outlive encryption use. In the active state a key can be protect only, process only or both.
+    - >-
+      Provisioning decides a fleet's fate. Per-device identity keys generated on the device, or injected in a controlled factory step, limit one extraction to one unit. Record who could see the key.
+    - >-
+      Rotation needs a tested path on deployed units, revocation needs a list or short-lived certificates, and the signing root needs an offline ceremony and a successor plan. A root with no replacement path is a design defect.
+    - >-
+      End of life links to law: CRA Annex II requires secure decommissioning information including removing user data, and Annex I Part I requires secure permanent removal of data. Security updates must remain available at least 10 years after issue or for the remaining support period if longer (Art 13(9)).
+  misconceptions:
+    - Rotate means re-flash in the factory. A rotation that needs physical return does not scale; plan it on day one.
+    - Deleted means destroyed. Copies in backups and flash wear-levelling areas also count.
+    - Compromise is a rare edge case. It is a planned state with a procedure.
+  worked_example: >-
+    Key table row: firmware signing key. Location HSM, offline. State active protect-only; public hash on device in pre-operational step. Rotation: new key signed by old, then counter bump. Compromise: move to compromised, publish advisory, ship update that trusts successor. End of life: private key deactivated, then destroyed; public key stays on devices for verification. Answer: every row has location, state path, rotation and compromise action.
+  unaided_check: >-
+    Fill a key table for your device with at least four key types. Pass by human review: all six states considered; a recovery path for loss of each key; a stated end-of-life action; no key shared across the fleet without a written reason.
+  sources:
+    - https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-57pt1r5.pdf
+    - http://publications.europa.eu/resource/cellar/21b7d4eb-a6e2-11ef-85f0-01aa75ed71a1.0006.01/DOC_1 (OJ L, 2024/2847)
+
+# ---------- sec.ot ----------
+
+- key: sec.ot.zones
+  description: >-
+    Separate the Purdue reference model from risk-based zones and conduits, and place device, edge and cloud into zones with a written rationale.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, faded_problem]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: true
+  objective: >-
+    Draw a defensible zone and conduit diagram and say why each boundary exists.
+  core_ideas:
+    - >-
+      Purdue is a functional reference model of levels. Zones and conduits are the outcome of risk assessment in IEC 62443-3-2, and they use those functional levels as an input.
+    - >-
+      ISA defines a zone as a grouping of logical or physical assets by risk or other criteria, such as criticality, function, location, access or owner. A conduit is a logical grouping of communication channels with common security requirements that connects two or more zones. Wording follows ISA's free Quick Start Guide; 62443-3-2 itself is sold, so buy it before claiming conformance.
+    - >-
+      Security levels express the attacker a zone is designed against: SL1 casual or coincidental, SL2 simple means and low motivation, SL3 sophisticated means with moderate resources and IACS-specific skills, SL4 sophisticated means with extended resources and high motivation (ISA Quick Start Guide, Table 3).
+    - >-
+      NIST SP 800-82 Rev 3 (Sept 2023) is the free reference. An initial public draft of Rev 4 is open for comment until 30 Nov 2026, so check it before publishing.
+    - >-
+      Safety and security interact (judgement): an emergency stop or a patch window is a safety issue as well as a security one, and legacy devices often cannot be patched, so the boundary must compensate.
+  misconceptions:
+    - Purdue levels are zones. Levels are a reference; zones come from risk.
+    - An air gap equals secure. Laptops, USB sticks and vendor links cross it.
+    - One flat VLAN per site is a zone model. Zones need different requirements and controlled conduits.
+  worked_example: >-
+    Field sensors, an edge gateway, a site historian, a cloud lakehouse and a vendor laptop. Zones: field control, site operations, DMZ, cloud, vendor access. Conduits: sensor to gateway, gateway to DMZ broker, DMZ to cloud (outbound only), vendor to DMZ jump host. Answer: no direct path from cloud or vendor to field, with the reason written next to each conduit.
+  unaided_check: >-
+    Draw zones and conduits for L11 with risk rationale. Pass by human review: every asset is in a zone, every flow is in a conduit, each has a stated requirement, and Purdue is used as a reference only.
+  sources:
+    - https://isagca.org/hubfs/2023%20ISA%20Website%20Redesigns/ISAGCA/PDFs/ISAGCA%20Quick%20Start%20Guide%20FINAL.pdf (ISA, section Zones and Conduits, Table 3)
+    - https://csrc.nist.gov/pubs/sp/800/82/r3/final
+
+- key: sec.ot.remote-access
+  description: >-
+    Design a remote-maintenance path with jump host, session control and approval, and defend it against a compromised vendor account.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: true
+  objective: >-
+    Explain why identity checks alone are not enough, and specify what to add.
+  core_ideas:
+    - >-
+      VPN and MFA establish who connected, not what they did to the process. Remote access needs control of the session as well.
+    - >-
+      SANS State of ICS/OT Security 2025 figures, as SANS summarises its own survey (blog of 5 Jan 2026; the full report sits behind a sign-up form): 22% reported an ICS/OT incident in the year, half of those starting through external connectivity. Only 23% mandate jump-host brokering, 13% fully record sessions and 8% require real-time approval. Survey data, not a law or a standard.
+    - >-
+      Pattern: broker sessions through a jump host in a DMZ, with no direct route to the control zone, per-user named accounts, time-boxed approval by a site owner, protocol-aware restriction where possible, and recorded sessions.
+    - >-
+      Cloud portals and OEM services are remote access too: they can have their own authentication and bypass the VPN. Keep a complete inventory of access points. The same survey found 31% lack one.
+    - >-
+      For an export-relevant product, remote maintenance access from a third country may itself raise export questions (Merkblatt 8.1 and 11.3). Check with counsel.
+  misconceptions:
+    - A VPN solves remote access. It extends the network; it does not control behaviour.
+    - MFA stops a compromised vendor. A stolen session or an insider passes MFA.
+    - Remote access is only IT's concern. It reaches physical processes, so the site owner approves it.
+  worked_example: >-
+    Scenario: the vendor's laptop has malware and a valid credential. With a flat VPN, it reaches the PLC directly. With the jump host path, it reaches only a broker, needs a time-boxed approval, works on a limited protocol set and is recorded. Answer: blast radius falls from all devices to one approved, observed session; revocation closes it.
+  unaided_check: >-
+    Given a supplied compromise scenario, state three controls on your path that limit it and one thing that still gets through. Pass: controls are specific and placed in zones, and the residual risk is stated honestly.
+  sources:
+    - https://sans.org/blog/why-vpn-mfa-is-not-enough-ot-evidence-sans-state-icsot-security-report
+
+- key: sec.ot.iec62443-product
+  description: >-
+    Explain what IEC 62443-4-1 and 4-2 ask of a product builder, including the seven foundational requirements, and what a claim to them must show.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, explain_back]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: >-
+    Distinguish process, component and system requirements, and avoid unearned certification claims.
+  core_ideas:
+    - >-
+      3-2 is system risk assessment, 3-3 is system requirements, 4-1 is the supplier's secure development process, and 4-2 is component technical requirements. A product builder works mostly in 4-1 and 4-2.
+    - >-
+      4-1 covers requirements management, secure design, coding guidelines, implementation, verification and validation, defect and patch management, and end of life, with maturity levels. ISA names suppliers of control systems and component products as its principal audience; integrators and asset owners work mainly in 3-2 and 3-3.
+    - >-
+      4-2 extends system requirements into component requirements for four component types: software application, embedded device, host device and network device.
+    - >-
+      The seven foundational requirements: identification and authentication control, use control, system integrity, data confidentiality, restricted data flow, timely response to events, and resource availability.
+    - >-
+      These summaries follow ISA's free Quick Start Guide; the standards are sold, so a claim needs the purchased text. CRA Art 27(1) gives a presumption of conformity only for harmonised standards whose references are published in the OJ, and none had been published under the CRA by 30 Oct 2026, so no 62443 part gives a CRA presumption today. Re-check the OJ before publishing.
+  misconceptions:
+    - Following 4-2 means the product makes a site secure. Site security also depends on zones and operations.
+    - Security level is a property of a box alone. It is a capability that must be matched with a target for a zone.
+    - We can call the product 62443 compliant after reading a summary. A claim needs the standard, evidence and possibly certification.
+  worked_example: >-
+    Your gateway must meet a customer's SL2 zone target. Map features to FR rows: named accounts (FR1), roles (FR2), signed updates (FR3), TLS (FR4), port filtering (FR5), syslog (FR6), rate limits (FR7). Mark gaps. Answer: a gap table to take to the customer, not a compliance claim.
+  unaided_check: >-
+    Map your device's features to the seven FRs and list the 4-1 process evidence you could show today. Pass by human review: all seven FRs covered, gaps stated, and no claim of certification or compliance.
+  sources:
+    - https://isagca.org/hubfs/2023%20ISA%20Website%20Redesigns/ISAGCA/PDFs/ISAGCA%20Quick%20Start%20Guide%20FINAL.pdf (ISA, sections Foundational Requirements and Component Requirements)
+    - http://publications.europa.eu/resource/cellar/21b7d4eb-a6e2-11ef-85f0-01aa75ed71a1.0006.01/DOC_1 (OJ L, 2024/2847, Art 27(1))
+
+# ---------- prof.integrator ----------
+
+- key: prof.integrator.docs
+  description: >-
+    Build an integrator evidence pack where each claim traces to a test, a configuration and its limits of validity, and reproduce any claim on request.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, project_step, explain_back]
+  grader_types: [multiple_choice, rubric_llm, human_review]
+  phone_suitable: false
+  objective: >-
+    Make a short pack that survives a sceptical reviewer.
+  core_ideas:
+    - >-
+      Structure each claim as claim, method, configuration, result, limits. A claim without configuration ID is unverifiable.
+    - >-
+      Include what the test does not show [project convention: a stated limit stops a reader from stretching a result past its conditions]. Stated limits of validity, such as temperature range or sample size, raise credibility and reduce misuse.
+    - >-
+      Add a known-issues list and a TRL justification with evidence, not an adjective [project convention: a reviewer can test evidence but not an adjective]. Keep verification and validation distinct, as NASA SE Handbook (SP-2016-6105 Rev2) section 2.4 does: verification proves the product meets each requirement, validation shows it does its intended job in its intended environment.
+    - >-
+      Check export before sending: an evidence pack can itself contain controlled technology (judgement), so the export checkpoint precedes this module.
+  misconceptions:
+    - More pages make a better pack. A traceable short pack beats a long one.
+    - Only passing tests belong in it. Failures and limits are what an integrator needs most.
+    - The pack is safe to email because it is only a report. Technical content can be technology for export purposes.
+  worked_example: >-
+    Claim: 22 min hover endurance. Evidence entry: test T-014, config GC-2026-03, battery lot and date, 25 C, 0 wind indoors, n=3, range 21.2 to 22.4 min. Limits: not valid in cold or with payload. Answer: anyone can repeat it, and they know where it stops being true.
+  unaided_check: >-
+    A reviewer picks any claim in your pack. Pass by human review: you locate the evidence and reproduce it from the exact configuration within one hour.
+  sources:
+    - https://www.nasa.gov/wp-content/uploads/2018/09/nasa_systems_engineering_handbook_0.pdf (NASA SP-2016-6105 Rev2, section 2.4)
+
+- key: prof.integrator.golden-config
+  description: >-
+    Keep a golden configuration log that pins hardware, firmware, parameters and tools so any test result can be tied to one exact build.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, project_step, debug_case]
+  grader_types: [multiple_choice, human_review, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Record a baseline, control changes against it, and detect drift.
+  core_ideas:
+    - >-
+      A baseline is an agreed, frozen description of a configuration; changes are made against it, not around it. NASA SE Handbook section 6.5 treats configuration management as its own process, applied over the life cycle to give visibility into and control of changes, and section 2.4 notes that approved configuration documentation sets the baseline.
+    - >-
+      Record hardware revision, serial, firmware commit, build hash, parameter file hash, calibration file, tool versions and SBOM reference. Hashes prove identity; names do not.
+    - >-
+      Every test refers to a configuration ID. A changed parameter gives a new ID, even if it seems trivial [project convention: small untracked changes are the usual cause of results that cannot be repeated].
+    - >-
+      The same log supports CRA duties: serial or type identification (Art 13(15)) and retained technical documentation for at least 10 years or the support period if longer (Art 13(13)).
+  misconceptions:
+    - Git is enough. Git does not record the board revision, calibration or parameters loaded on the vehicle.
+    - A small tweak needs no new ID. Most hard-to-reproduce results come from those.
+    - Golden means never changes. It means changes are deliberate and traceable.
+  worked_example: >-
+    Two runs differ by 8% in current draw. The log shows the same firmware commit but a different parameter hash. A diff reveals a changed loop limit. Answer: the runs are two configurations, so the earlier evidence claim stays attached to the old ID and the new result gets its own test entry.
+  unaided_check: >-
+    From your log, rebuild the exact configuration behind a test from at least two weeks ago, and show matching hashes. Pass by human review: hashes match and every field is present.
+  sources:
+    - https://www.nasa.gov/wp-content/uploads/2018/09/nasa_systems_engineering_handbook_0.pdf (NASA SP-2016-6105 Rev2, sections 2.4 and 6.5)
+    - http://publications.europa.eu/resource/cellar/21b7d4eb-a6e2-11ef-85f0-01aa75ed71a1.0006.01/DOC_1 (OJ L, 2024/2847)
+
+# ---------- econ.cost ----------
+
+- key: econ.cost.bom-costing
+  description: >-
+    Build a fully loaded unit build cost from parts, assembly, test and yield at a stated volume, and show why BOM alone understates it.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: false
+  objective: >-
+    Calculate cost per good unit with volume-specific assumptions stated.
+  core_ideas:
+    - >-
+      Cost per good unit = (parts + assembly + test + setup per unit) / yield. All inputs are at one stated volume, and quotes differ by volume.
+    - >-
+      Setup and stencil costs are fixed per run, so they fall per unit as the run grows. They are not a percentage of parts.
+    - >-
+      Yield divides; it is not subtracted. 98% yield adds 1/0.98 - 1 = 2.04%, not 2.00%.
+    - >-
+      BOM is a weak proxy for total cost. One vendor source puts it at 20 to 35% of per-unit cost at scale (via review, snippet); treat that as a rule of thumb.
+  misconceptions:
+    - BOM times a multiple equals price. Price comes from channel, margin and costs, not a factor.
+    - Unit cost is one number. It exists only for a stated volume.
+    - Assembly cost is negligible. At low volume, setup can exceed some parts.
+  worked_example: >-
+    At 1,000 units: MCU 3.20 + power IC 1.10 + sensors 6.40 + connector 0.90 + 120 passives at 0.01 (1.20) + PCB 2.30 = 15.10. Assembly 130 placements at 0.015 = 1.95. Setup 300 / 1,000 = 0.30. Test 0.80. Subtotal 18.15. Yield 98%: 18.15 / 0.98 = 18.52. Answer: 18.52 per good unit.
+  unaided_check: >-
+    Given a five-line BOM, placement rate, setup fee, test cost and 95% yield at 500 units, compute cost per good unit. Pass: exact_numeric within 0.01.
+  sources:
+    - https://instrumental.com/wp-content/uploads/2020/10/EVT-DVT-PVT-Whitepaper.pdf (build stages only; no cost source found, the cost arithmetic here is original)
+
+- key: econ.cost.volume-scaling
+  description: >-
+    Compute how price breaks, MOQs and tooling change unit cost and cash at 100, 1k and 10k units, including the print-to-mould crossover.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [exact_numeric, multiple_choice]
+  phone_suitable: true
+  objective: >-
+    Separate unit cost from cash outlay, and calculate volume crossovers.
+  core_ideas:
+    - >-
+      Price breaks are steps, not a smooth curve. Cost can sit flat, then drop at a break, and an order just above a break can cost less in total than one just below.
+    - >-
+      MOQ turns a low unit price into cash exposure. The cost per unit used is outlay divided by units used, unless leftovers will be consumed later.
+    - >-
+      Crossover volume = tooling cost / (unit cost saved). Below it the process with lower tooling wins.
+    - >-
+      All figures here are teaching numbers. No authoritative text was found, so real quotes replace them.
+  misconceptions:
+    - Costs fall smoothly with volume. They fall in steps tied to quotes, tooling and MOQs.
+    - A low reel price means a cheap design. A reel you cannot use ties up cash.
+    - Tooling cost is sunk, so ignore it. It decides the crossover volume before you commit.
+  worked_example: >-
+    MOQ: reel of 2,500 at 0.40 = 1,000 outlay; a 1,000-unit build uses 1,000 parts, so 1.00 each if the rest stay unused, against the 0.40 list. Crossover: tool 8,000, moulded part 0.90 against printed 6.50, saving 5.60. 8,000 / 5.60 = 1,428.6. Answer: mould from 1,429 units.
+  unaided_check: >-
+    Given a quote table for 100, 1k and 10k, a 5,000 MOQ part, and a tool price, compute unit cost and cash outlay at each volume, and the crossover. Pass: all within 1%, and the crossover rounded up to a whole unit.
+  sources:
+    - https://instrumental.com/wp-content/uploads/2020/10/EVT-DVT-PVT-Whitepaper.pdf (build stages only; no cost source found, the cost arithmetic here is original)
+
+- key: econ.cost.programme-nre
+  description: >-
+    Separate NRE from recurring cost and calculate breakeven volume, including compliance and certification as one-off costs.
+  est_minutes: 20
+  task_kinds: [retrieval, worked_example, problem]
+  grader_types: [multiple_choice, exact_numeric]
+  phone_suitable: true
+  objective: >-
+    Decide whether a programme pays back at realistic volume.
+  core_ideas:
+    - >-
+      NRE is one-off: design, tools, certification, test fixtures, compliance work. Recurring cost repeats per unit. Contribution per unit = net price - recurring cost.
+    - >-
+      Breakeven volume = NRE / contribution. If planned volume is below it, the programme loses money however good the unit margin looks.
+    - >-
+      NRE does not vanish after it is spent: it is sunk for the next decision, but it still had to be recovered for the programme to pay.
+    - >-
+      Compliance recurs too: a CRA support period of normally at least five years (Art 13(8)) carries ongoing cost that an NRE-only view misses (judgement).
+  misconceptions:
+    - NRE is sunk, so ignore it. It is sunk only for future choices, not for judging the programme.
+    - Unit margin shows profitability. Volume against NRE decides it.
+    - Compliance is one fee at launch. Vulnerability handling continues across the support period.
+  worked_example: >-
+    NRE 60,000. Net price 180, recurring cost 120, so contribution 60. Breakeven 60,000 / 60 = 1,000 units. At a planned 500 units, NRE is 120 per unit, giving 240 total cost against 180. Answer: needs 1,000 units, so 500 loses 30,000.
+  unaided_check: >-
+    Given NRE, net price, recurring cost and a five-year support cost per year, compute breakeven with and without the support cost. Pass: exact_numeric, and you state which you would plan on and why.
+  sources:
+    - http://publications.europa.eu/resource/cellar/21b7d4eb-a6e2-11ef-85f0-01aa75ed71a1.0006.01/DOC_1 (OJ L, 2024/2847)
+
+- key: econ.cost.unit-economics
+  description: >-
+    Build a unit P&L with landed cost, channel margin, yield and warranty reserve, then find gross margin and peak cash for a production run.
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, faded_problem, problem]
+  grader_types: [exact_numeric, human_review]
+  phone_suitable: false
+  objective: >-
+    Walk from list price to contribution and show cash timing, not just margin.
+  core_ideas:
+    - >-
+      Landed cost = ex-works + freight + insurance + duty. Duty is usually charged on the customs value including freight. Rates here are teaching values.
+    - >-
+      Price walk: list price less channel margin gives net revenue. Margin is a share of net revenue, not of list price.
+    - >-
+      Warranty reserve, returns and spares are real costs, set aside at sale.
+    - >-
+      Cash precedes revenue. Peak cash need comes from deposits and build cost before customers pay. Cash gap in days = inventory days + receivable days - payable days.
+    - >-
+      FX and second-source risk belong as scenarios. No authoritative text was found; sources are vendor blogs or rules of thumb.
+  misconceptions:
+    - Profit means cash. A profitable build can run out of cash before it ships.
+    - Margin on list price is the margin. The channel takes its share first.
+    - Yield loss is free because scrap is cheap. Scrap carries all the added cost so far.
+  worked_example: >-
+    Ex-works 80, freight 4, duty 3.5% of 84 = 2.94, landed 86.94. Yield 96%: 86.94 / 0.96 = 90.56. List 250, channel 30%, net 175. Warranty 3% of net = 5.25. Gross contribution 175 - 90.56 - 5.25 = 79.19, so 45.25% of net. Build of 1,000: 90,562.50 paid before the first receipt. Answer: 45.25% margin, peak cash about 90.6k before overheads.
+  unaided_check: >-
+    From supplied quotes, build a model for 100, 1k and 10k units with price, margin and peak cash, then change one design choice. Pass by human review and exact_numeric: figures reconcile and the sensitivity is explained.
+  sources:
+    - https://instrumental.com/wp-content/uploads/2020/10/EVT-DVT-PVT-Whitepaper.pdf (build stages only; no cost source found, the cost arithmetic here is original)
+
+- key: econ.cost.evt-dvt-pvt
+  description: >-
+    State the purpose, inputs and exit criteria of EVT, DVT and PVT, and detect a build that mixes one stage's parts with another's exit criteria.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, debug_case]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: >-
+    Plan builds as gates with entry conditions, and scale quantities honestly for a small hardware firm.
+  core_ideas:
+    - >-
+      EVT is the first merge of looks-like and works-like with production-intent materials and processes, which may be soft tooled. Purpose: select the design and find its issues. Instrumental says 3D-printed parts mean it is not EVT, and gives 100 to 1000 units as typical.
+    - >-
+      DVT is one production-worthy configuration from hard tools on a line following production procedures. Purpose: verify yields and qualify first hard tools. Typical 300 to 2000. Side configurations of 20 units mean you are really at a second EVT.
+    - >-
+      PVT verifies mass-production yields at production speed, with units intended for sale. Typical 1K to 20K. Exit: mass-production yields at target rate.
+    - >-
+      Instrumental warns against "XVT": entering a build with EVT parts and trying to finish with DVT exit criteria. Its quantities suit consumer electronics; scale them down and state the reason for a small drone or sensor firm (judgement).
+  misconceptions:
+    - The labels are just build numbers. Each is a gate with exit criteria.
+    - A printed enclosure can be EVT. Instrumental's definition says it cannot, because the point is intended process.
+    - PVT is for proving the design. The design should already be proven; PVT proves the line.
+  worked_example: >-
+    A team plans 50 units with printed housings, soft-tooled board, and wants to claim DVT reliability results. Finding: parts are below EVT in Instrumental's definition, and the results cannot show production yield. Answer: call it a prototype build, set EVT criteria, and do not report DVT exit.
+  unaided_check: >-
+    Write entry and exit criteria for your next build and label it. Pass by human review: stage is justified by parts and process, not by date, and one risk of XVT is checked.
+  sources:
+    - https://instrumental.com/wp-content/uploads/2020/10/EVT-DVT-PVT-Whitepaper.pdf
+
+# ---------- prof.eu ----------
+
+- key: prof.eu.cra-obligations
+  description: >-
+    Decide whether the Cyber Resilience Act applies to a product, classify it as default, important or critical, and list the manufacturer duties and dates.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, faded_problem, debug_case]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Scope a product under Regulation 2024/2847, including exclusions and conformity routes, with dated citations.
+  core_ideas:
+    - >-
+      Scope (Art 2(1)): products with digital elements made available on the market with a direct or indirect, logical or physical data connection. Exclusions: medical devices, vehicle type-approval, marine equipment, products certified under 2018/1139 (aviation), and products developed or modified exclusively for national security or defence.
+    - >-
+      Dates (Art 71): in force 10 Dec 2024; Chapter IV from 11 June 2026; Art 14 reporting from 11 Sept 2026; full application 11 Dec 2027. Art 69(2) covers older products only if substantially modified after that date, but Art 69(3) applies Art 14 to all products already on the market.
+    - >-
+      Placing on the market is the first making available, and that means supply in a commercial activity, paid or free (Art 3(21), (22)). Art 4 lets non-compliant prototypes appear at trade fairs with a visible notice, and unfinished software be offered for limited testing.
+    - >-
+      Class follows core functionality (Art 7(1)). Default: Module A self-assessment. Class I: Module A only with harmonised standards or certification fully applied, otherwise B+C or H. Class II: B+C, H or certification. Annex IV critical: EU scheme where required, otherwise a Class II route (Art 32).
+    - >-
+      Duties (Art 13): Annex I design, risk assessment, due diligence on components, a support period of at least five years unless expected use is shorter (13(8)), and documents kept for 10 years or the support period if longer. Fines: EUR 15m or 2.5%, 10m or 2%, 5m or 1% (Art 64). Art 64(10), read with its corrigendum of 2 July 2025, spares micro and small firms for missing the 24-hour deadline only.
+  misconceptions:
+    - CE means certified. Most products self-declare under Module A.
+    - The CRA starts in 2027. Reporting has been live since 11 Sept 2026, including for products already on sale.
+    - Defence-adjacent means exempt. The exclusion needs exclusive national security or defence development or modification. Nor is a civil drone out because it flies: Art 2(3) excludes only products certified under Regulation 2018/1139, and recital 27 ties that to the certification process. An open-category drone with a data link is not certified that way, so on the text it is in scope; confirm a specific product with counsel.
+  worked_example: >-
+    An LTE telemetry gateway is sold to industrial customers from 2028. In scope: yes, a data connection. Excluded: no. Core function: telemetry, though a router-like role needs checking against Annex III and Regulation 2025/2392 (technical descriptions). If default, Module A. Support: five years unless expected use is shorter. Answer: default or Class I is the question to settle, with counsel. An MCU with security functions in it is Class I for its maker, not for this gateway by that fact alone (Art 7(1)).
+  unaided_check: >-
+    For three devices (dual-use drone gateway, security MCU, smart-home alarm hub), state in-scope status, class, conformity route and the applicable dates. Pass: all correct with articles cited, and each uncertain point routed to counsel.
+  sources:
+    - http://publications.europa.eu/resource/cellar/2d4a6388-ce5f-11f0-8da2-01aa75ed71a1.0006.01/DOC_1 (OJ L, 2025/2392)
+    - http://publications.europa.eu/resource/cellar/21b7d4eb-a6e2-11ef-85f0-01aa75ed71a1.0006.01/DOC_1 (OJ L, 2024/2847)
+    - https://www.enisa.europa.eu/news/the-cra-single-reporting-platform-is-launched
+
+- key: prof.eu.vulnerability-handling
+  description: >-
+    Set up vulnerability handling under CRA Annex I Part II, including coordinated disclosure, SBOM use, free security updates and a single contact.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, project_step]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: >-
+    Write the minimal process a small manufacturer needs, and separate it from Art 14 reporting.
+  core_ideas:
+    - >-
+      Annex I Part II has eight points: component identification with SBOM, timely remediation, regular testing, public disclosure after a fix, a coordinated disclosure policy, information sharing with a contact address, secure update distribution, and free, timely updates with advisories.
+    - >-
+      Annex II requires a single point of contact for reports and a place to find the disclosure policy. Art 13(16) and (17) cover contact details and the single point of contact.
+    - >-
+      Art 13(7) requires recording relevant vulnerability information in proportion to risk and updating the risk assessment. Art 13(6) sends component findings to the maintainer.
+    - >-
+      Updates must have a secure path, with automatic updates on by default where applicable, a clear opt-out, and temporary postponement (Annex I Part I (2)(c)). Security updates stay available at least 10 years after issue, or the rest of the support period if longer (Art 13(9)).
+    - >-
+      This is continuous work, and Art 14 sits on top of it only for actively exploited vulnerabilities and severe incidents. Art 15 allows voluntary reports.
+  misconceptions:
+    - Every vulnerability must be reported to ENISA. Art 14 is for actively exploited ones and severe incidents.
+    - Security updates can be sold. Annex I Part II requires them free, with advisories.
+    - A security mailbox is enough. A policy, triage and records are needed.
+  worked_example: >-
+    A researcher emails a report that the update client skips certificate checks. Process: acknowledge; log in the vulnerability register; check SBOM and affected versions; update the risk assessment; fix; advise users; credit by policy. No evidence of exploitation, so Art 14 is not triggered yet. Answer: handled under Part II, with a watch for exploitation that would start the clock.
+  unaided_check: >-
+    Write a one-page process for your product. Pass by human review: all eight Part II points mapped to an action and an owner, the contact published, and Art 14 triggers separated.
+  sources:
+    - http://publications.europa.eu/resource/cellar/21b7d4eb-a6e2-11ef-85f0-01aa75ed71a1.0006.01/DOC_1 (OJ L, 2024/2847)
+
+- key: prof.eu.ce-radio
+  description: >-
+    Map a wireless product to RED essential requirements and conformity routes, and explain how the RED cyber rules hand over to the CRA.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, debug_case]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Choose a RED route, and name what still needs a specialist.
+  core_ideas:
+    - >-
+      RED 2014/53 covers products that intentionally emit or receive radio waves. Art 3(1)(a) covers health and safety with no voltage limit, 3(1)(b) EMC, and 3(2) spectrum use. Art 1 excludes radio equipment used exclusively for public security, defence or State security.
+    - >-
+      Route (Art 17): for 3(1) you may use internal production control. For 3(2) and 3(3) internal control is available only when harmonised standards are fully applied; otherwise Annex III or IV is required (17(4)).
+    - >-
+      Cyber: 2022/30 has applied Art 3(3)(d), (e) and (f) since 1 Aug 2025. Delegated Regulation 2026/339 repeals it with effect from 11 Dec 2027, when the CRA fully applies.
+    - >-
+      The manufacturer keeps technical documentation and the declaration for 10 years (Art 10(4)), and the CE marking may be under 5 mm where needed (Art 19(2)).
+    - >-
+      NOT RESEARCHED: EMC Directive detail, batteries, WEEE, RoHS, Annex I RED exclusions and the Blue Guide text. Do not teach those from this entry.
+  misconceptions:
+    - CE means a lab certified it. Most is manufacturer declaration, unless a route needs a notified body.
+    - Buying a pre-certified radio module finishes the job. The Commission's RED Guide treats an RF module as radio equipment whose maker assesses the risks visible before integration and gives instructions that keep it compliant, without prejudice to new duties on integration (section 1.7.4.11). A module fixed permanently inside an electrical product makes the whole a single product under the RED (section 1.7.4.1), so the final maker assesses the combination, using the module's evidence and following its instructions.
+    - RED cyber ended with the CRA in 2024. It stays until 11 Dec 2027.
+  worked_example: >-
+    A LoRa tracker with an EN 18031 restriction biting on password handling. Art 3(1), (2): harmonised standards, internal control. Art 3(3)(d): standard not fully applied, so Art 17(4) needs Annex III or IV. Answer: notified body for that requirement, or fix the design so the standard applies in full; confirm with counsel.
+  unaided_check: >-
+    Debug this plan: "Module certified, so no test; EN 18031 with a skippable password, so we self-declare; keep files for five years." Pass: all three errors named with Art 17 and Art 10(4).
+  sources:
+    - http://publications.europa.eu/resource/cellar/d8611ecc-4364-11f1-8095-01aa75ed71a1.0006.01/DOC_1 (OJ L, 2026/339)
+    - http://publications.europa.eu/resource/cellar/1b79e176-e181-11e3-8cd4-01aa75ed71a1.0006.03/DOC_1 (OJ L 153, 22.5.2014)
+    - https://ec.europa.eu/docsroom/documents/33162?locale=en (Commission Guide to the RED, current edition replacing the 2017 and 2018 versions; sections 1.7.4.1 and 1.7.4.11; non-binding)
+
+- key: prof.eu.product-liability
+  description: >-
+    Explain how Directive 2024/2853 makes software a product, what damage and defects count, and who is liable under the new rules, which apply to products placed on the market from 9 Dec 2026.
+  est_minutes: 25
+  task_kinds: [retrieval, worked_example, explain_back]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    State the new strict-liability exposure for a connected hardware and software maker.
+  core_ideas:
+    - >-
+      Product now includes software and digital manufacturing files (Art 4). Art 2(1) says it applies to products placed on the market or put into service after 9 Dec 2026, but Art 21 repeals the old Directive 85/374 from 9 Dec 2026 and keeps it only for products placed before that date (also recital 63). Germany resolves the one-day gap: the 1989 act stays for products placed up to and including 8 Dec 2026 (§ 23), and the new act is in force from 9 Dec 2026. So treat 9 Dec 2026 as the first day of the new rules. Free open-source software outside commercial activity is excluded (Art 2(2)).
+    - >-
+      Damage: death, injury including recognised psychological harm, property, and destruction or corruption of non-professional data (Art 6). The defective product itself and property used only professionally are excluded.
+    - >-
+      Defect (Art 7) considers foreseeable use, ability to learn, interconnection and safety-relevant cybersecurity requirements. Art 10 gives presumptions, including non-compliance with mandatory safety rules, and Art 9 allows evidence disclosure.
+    - >-
+      Control extends exposure: the defence that a defect arose after placing on the market (Art 11(1)(c)) does not apply to defects from software, related services, missing safety updates or substantial modifications within the manufacturer's control (Art 11(2)).
+    - >-
+      Time: claims within three years of knowledge (Art 16), expiry after 10 years, or 25 for latent injury (Art 17). Liability cannot be contractually excluded (Art 15). Germany's act of 22 Oct 2026 is BGBl. 2026 I Nr. 321 (published 27 Oct 2026), and its Article 1, the new ProdHaftG, enters into force on 9 Dec 2026 (Art 17(1)). The enacted text has no liability cap.
+  misconceptions:
+    - Software is not a product. Under the new directive it is.
+    - A contract clause caps my exposure to injured people. Art 15 forbids that.
+    - After launch my liability is fixed. Updates and missing updates under your control remain relevant.
+  worked_example: >-
+    A consumer drone gets an OTA update in 2027 that causes a crash into a parked car and destroys the owner's stored survey files. Answer: if the drone falls under the new rules, software is a product; car damage counts; the drone itself does not; non-professional data counts. An update within the manufacturer's control blocks the later-defect defence under Art 11(2). Facts go to counsel.
+  unaided_check: >-
+    For four harms, state whether Art 6 covers them and give two exposures from Arts 9 to 11. Pass: all four correct, and limitation periods stated exactly.
+  sources:
+    - https://www.recht.bund.de/bgbl/1/2026/321/regelungstext.pdf?__blob=publicationFile&v=1
+    - http://publications.europa.eu/resource/cellar/10bdc8d8-a54e-11ef-85f0-01aa75ed71a1.0006.01/DOC_1 (OJ L, 2024/2853)
+    - https://hlc.com/en/publications/germany-adopts-new-product-liability-regime
+
+- key: prof.eu.reporting-drill
+  description: >-
+    Run a timed CRA Art 14 drill on a simulated exploited vulnerability, meeting the 24 hour, 72 hour and 14 day reports through the single platform.
+  est_minutes: 35
+  task_kinds: [retrieval, worked_example, problem, project_step]
+  grader_types: [human_review, exact_numeric]
+  phone_suitable: false
+  objective: >-
+    Compute each deadline, draft each notice and name who receives it.
+  core_ideas:
+    - >-
+      Actively exploited vulnerability (Art 14(1), (2)): early warning within 24 hours of awareness, notification within 72 hours, final report no later than 14 days after a fix or mitigation is available.
+    - >-
+      Severe incident (Art 14(3), (4)): 24 hours, 72 hours, then a final report within one month of the incident notification. Art 14(5) sets the severity test: it affects or could affect protection of sensitive or important data or functions, or leads or could lead to malicious code.
+    - >-
+      Actively exploited means reliable evidence that a malicious actor exploited it without permission (Art 3(42)). Reports go through ENISA's single reporting platform to the CSIRT coordinator where the manufacturer has its main establishment (Art 14(7)), and ENISA gets it too.
+    - >-
+      Live since 11 Sept 2026, and Art 69(3) includes products placed earlier. Stewards of open source start on 11 Dec 2027 (ENISA). Users must be told, in machine-readable form where appropriate (Art 14(8)).
+    - >-
+      Regulation 1182/71 (OJ L 124, 8.6.1971) sets the counting rules: the hour of the event is not counted (Art 3(1)), hour periods run through weekends and holidays (Art 3(3)), and a period in days that ends on a Saturday, Sunday or holiday runs to the end of the next working day (Art 3(4)). Its Art 1 names Council and Commission acts, while the CRA is a Parliament and Council act, so plan to the earlier clock time and confirm the counting with counsel. GDPR Art 33 may separately require notice within 72 hours if personal data is breached.
+  misconceptions:
+    - The clock starts when you have confirmed everything. It starts at awareness, so the early warning is deliberately short on detail.
+    - Reports go to the national authority by email. They go through the single platform.
+    - Micro firms have no duty to report. Art 64(10) removes the fine for missing the 24-hour deadline only, not the duty.
+  worked_example: >-
+    Aware Mon 16 Nov 2026 at 14:30 of exploitation of your gateway. Early warning by Tue 17 Nov 14:30. Notification by Thu 19 Nov 14:30. Patch available Wed 25 Nov. Final report by 9 Dec 2026. Answer: three deadlines, one single platform, plus user notice.
+  unaided_check: >-
+    Timed drill on an unseen scenario, with no prior warning. Pass by human review: deadlines exact, correct route, all three drafts within simulated time, known unknowns stated in the early warning, nothing submitted to the live platform.
+  sources:
+    - http://publications.europa.eu/resource/cellar/21b7d4eb-a6e2-11ef-85f0-01aa75ed71a1.0006.01/DOC_1 (OJ L, 2024/2847)
+    - https://www.enisa.europa.eu/news/the-cra-single-reporting-platform-is-launched
+    - http://publications.europa.eu/resource/cellar/062fba91-9703-427a-8b77-f7fe0bcbd8b4.0008.01/DOC_1 (OJ L 124, 8.6.1971, Regulation 1182/71)
+
+- key: prof.eu.applicability-map
+  description: >-
+    Produce an applicability map for your own device showing which laws apply, why, from when, by which conformity route, and with what evidence.
+  est_minutes: 45
+  task_kinds: [retrieval, worked_example, project_step]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: >-
+    Create one page that names each law, its trigger and date, and lists questions for counsel.
+  core_ideas:
+    - >-
+      Rows: CRA, RED and 2022/30, Product Liability Directive, Data Act, GDPR, AI Act, export controls, and UAS rules (the skill sits in T4, robo.uav.ops-eu). Batteries, WEEE and EMC detail were not researched and need their own source.
+    - >-
+      Each row has trigger fact, in or out, date, route and evidence file. "Out" also needs a reason, because exclusions are narrow: exclusively defence, not defence-adjacent.
+    - >-
+      Key dates: Data Act Art 3(1) design duty for products placed after 12 Sept 2026; CRA Art 14 from 11 Sept 2026, rest 11 Dec 2027; RED cyber repeal 11 Dec 2027; PLD for products placed from 9 Dec 2026 (Art 21; German act § 23); AI Act high-risk 2 Dec 2027 and 2 Aug 2028.
+    - >-
+      Every date must cite an Official Journal source, and the learner re-checks it at submission. C(2026) 5252 of 27 July 2026 is the Commission's non-binding CRA guidance, useful for scope, support period and core functionality.
+  misconceptions:
+    - One law covers it all. Several apply at once and on different dates.
+    - A prototype is outside everything. Export rules, for instance, apply to prototypes.
+    - The map is a legal opinion. It is an engineer's input to counsel.
+  worked_example: >-
+    Row for L11 gateway, CRA: trigger, data connection and EU sale; in; date, reporting now, full 11 Dec 2027; route, Module A if default, class to confirm; evidence, risk assessment, SBOM, test reports. Row for AI Act: anomaly model, likely not Annex III, question for counsel. Answer: a row per law, with no blank "why" cell.
+  unaided_check: >-
+    Submit the map, a 72-hour reporting drill result, and a counsel question list. Pass by human review: every date cited to an OJ reference, every "out" justified, at least five questions for counsel.
+  sources:
+    - https://digital-strategy.ec.europa.eu/en/library/commission-publishes-new-guidance-support-timely-cyber-resilience-act-implementation
+    - http://publications.europa.eu/resource/cellar/21b7d4eb-a6e2-11ef-85f0-01aa75ed71a1.0006.01/DOC_1 (OJ L, 2024/2847)
+    - http://publications.europa.eu/resource/cellar/ef51c6ab-a06c-11ee-b164-01aa75ed71a1.0006.01/DOC_1 (OJ L, 2023/2854)
+
+# ---------- prof.data ----------
+
+- key: prof.data.data-act
+  description: >-
+    Scope the Data Act for a connected product, including small-enterprise exclusions, readily available data, user access and the September 2026 design duty.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, faded_problem]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Work out whether Chapter II binds you and what your data design must do.
+  core_ideas:
+    - >-
+      A connected product generates or collects data about its use or environment and can communicate it, with a primary function other than storing or transmitting data for others (Art 2). Related services are digital services linked so that the product's functions depend on them.
+    - >-
+      Art 3(1): product data accessible by default, free, machine-readable and directly where feasible. It applies to products and services placed on the market after 12 Sept 2026 (Art 50). The rest applied from 12 Sept 2025. Art 3(2) requires pre-contract information on data type, volume and frequency.
+    - >-
+      Art 7 excludes Chapter II data from micro and small enterprises, unless they have a partner or linked enterprise that is not micro or small, or are subcontracted to make the product. Medium firms are covered for under one year, and for a product's first year on the market. Under Recommendation 2003/361 a small enterprise has under 50 staff and turnover or balance sheet up to EUR 10m; a micro has under 10 and up to EUR 2m.
+    - >-
+      Scope of data is raw and pre-processed data readily available to the holder; inferred or derived data is out (Commission). The holder may use non-personal data only with a contract with the user (Commission page).
+    - >-
+      Limits: Art 4(6) to (8) protect trade secrets through agreed measures and allow refusal in narrow cases. Art 4(10) bars using the data for a competing product. GDPR still applies where the data is personal. Penalties are national (Art 40).
+  misconceptions:
+    - Art 7 means a startup can ignore the Act forever. It ends with size or a linked larger partner, and Art 3 design choices are hard to retrofit.
+    - All data is in scope. Derived results and analytics generally are not.
+    - The manufacturer owns the data. The Act gives users access rights and limits holder use.
+  worked_example: >-
+    A 12-person firm with EUR 3m turnover sells a telemetry gateway after 12 Sept 2026, with a cloud dashboard. It has no large partner. Art 7 likely excludes Chapter II for now. If a large investor takes a stake that makes it a partner or linked enterprise, or the firm is subcontracted to build for a larger firm, the exclusion can end. Answer: scoped out today, with a design that exports raw data anyway [project convention: Art 3 design is hard to retrofit and the exclusion ends with growth or a large partner]; linkage for counsel.
+  unaided_check: >-
+    From a device data inventory, mark each stream as product data, derived or excluded, state Art 7 status and give the Art 3(2) notice. Pass: all streams correct, and Art 7 conditions cited.
+  sources:
+    - http://publications.europa.eu/resource/cellar/ef51c6ab-a06c-11ee-b164-01aa75ed71a1.0006.01/DOC_1 (OJ L, 2023/2854)
+    - https://digital-strategy.ec.europa.eu/en/factpages/data-act-explained
+
+- key: prof.data.gdpr-telemetry
+  description: >-
+    Identify personal data in device telemetry and location logs, name the controller and legal basis, and set retention and access for each stream.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, project_step]
+  grader_types: [multiple_choice, human_review]
+  phone_suitable: false
+  objective: >-
+    Annotate a telemetry inventory under GDPR.
+  core_ideas:
+    - >-
+      Personal data is any information relating to an identified or identifiable person (Art 4(1)), directly or through identifiers. A device ID or location trace linked to an account or operator can qualify. Pseudonymised data is still personal if it can be re-attributed with additional information (Art 4(5)).
+    - >-
+      Controller decides purposes and means (Art 4(7)); processor acts for it (Art 4(8)) under a contract (Art 28). A cloud provider is normally processor. A founder running a dashboard for customers may be either, so map it per stream.
+    - >-
+      Each purpose needs one of six bases (Art 6(1)). Art 5 sets purpose limitation, minimisation, storage limitation and accountability, and Art 25 requires protective defaults. Set a retention period for each stream, not "forever".
+    - >-
+      Small firm relief is thin: the Art 30(5) record exemption for under 250 people falls away where processing is not occasional, and continuous telemetry rarely is (judgement). A pending amendment (COM(2025) 501, procedure 2025/0130(COD)) would change this; it was agreed between the institutions but not adopted or in the OJ on 3 Nov 2026, so teach the text in force and re-check before publishing. Art 35 requires a DPIA for likely high-risk processing, and Art 33 sets 72 hours for notifiable breaches.
+    - >-
+      Connected devices also meet ePrivacy: the EDPB reads Art 5(3) broadly for connected vehicles (Guidelines 01/2020, v2.0 of 9 March 2021, seen as snippets only). Whether this carries to your device is a question for counsel. Rights: Arts 15, 17 and 20.
+  misconceptions:
+    - Machine data is not personal. It becomes personal when it can be linked to a person.
+    - Hashing an ID anonymises it. Hashing is usually pseudonymisation.
+    - We are too small for GDPR. Only some record duties are size-based.
+  worked_example: >-
+    Streams: motor current (no link to a person, on its own), GPS trace (linked to operator account, personal), pilot login (personal), crash video (personal if people are visible). Action for GPS trace: purpose fault analysis; basis to confirm with counsel; retention 90 days [project convention: a teaching value; Art 5(1)(e) sets no number, so the learner justifies their own period]; truncate coordinates in analytics. Answer: three of four streams are personal, each with basis, retention and access.
+  unaided_check: >-
+    Annotate L11's inventory for owner, personal data, access route, retention and export-controlled content. Pass by human review: every stream classified, each personal stream has purpose, retention and basis or a question for counsel.
+  sources:
+    - http://publications.europa.eu/resource/cellar/3e485e15-11bd-11e6-ba9a-01aa75ed71a1.0006.01/DOC_1 (OJ L 119, 4.5.2016)
+
+- key: prof.data.ai-act
+  description: >-
+    Scope the AI Act for a product with embedded models, including the exclusive-defence limit, high-risk routes and amended dates, and map risk work to NIST AI RMF.
+  est_minutes: 30
+  task_kinds: [retrieval, worked_example, faded_problem]
+  grader_types: [multiple_choice, rubric_llm]
+  phone_suitable: false
+  objective: >-
+    Decide whether a model is an AI system, its risk route, and which dates apply after the Omnibus.
+  core_ideas:
+    - >-
+      An AI system is a machine-based system with varying autonomy that infers outputs such as predictions, content, recommendations or decisions (Art 3(1)). Art 2(3) excludes systems used exclusively for military, defence or national security. Dual-use is not automatically out. Art 2(8) excludes pre-market development, but not real-world testing.
+    - >-
+      High-risk has two routes. Art 6(1): safety component of, or itself, a product under Annex I legislation that needs third-party conformity assessment. Art 6(2): Annex III areas such as critical infrastructure and biometrics. Art 6(3) gives a derogation for no significant risk; profiling stays high-risk.
+    - >-
+      As amended by Regulation 2026/1744 (OJ 24.7.2026, in force 27 July 2026): Annex III duties from 2 Dec 2027, Annex I duties from 2 Aug 2028. Prohibitions have applied since 2 Feb 2025, and new points (ba), (bb) apply from 2 Dec 2026.
+    - >-
+      Art 4 now reads as a duty on providers and deployers to take measures to support staff AI literacy, with no fixed level. Art 50 sets transparency duties. Systems placed before 2 Aug 2026 meet Art 50(2) by 2 Dec 2026 (Art 111(4)). Fines: EUR 35m or 7%, 15m or 3%, 7.5m or 1%, the lower figure for SMEs (Art 99).
+    - >-
+      NIST AI RMF 1.0 (Jan 2023) has functions GOVERN, MAP, MEASURE and MANAGE, is voluntary, and NIST says it is being revised. It is a working method, not EU compliance. Annex I Section A holds radio equipment. Section B holds civil aviation and, since Regulation 2026/1744 moved it, machinery; for Section B products the amended Art 2(2) applies only Art 6(1), 60a and 102 to 112, and the AI duties reach machinery through the Machinery Regulation from 2 Aug 2028. A machine with a radio is checked on both lists: whether the RED makes the whole machine radio equipment, and whether the RED then needs third-party assessment (Art 6(1)(b)), is a question for counsel.
+  misconceptions:
+    - All AI is high-risk. Most embedded anomaly models are not, though it needs checking.
+    - A dual-use product is excluded as defence. Only exclusive military, defence or national security use is.
+    - Original 2026 dates still apply. High-risk dates moved; check Art 113 as amended.
+  worked_example: >-
+    An anomaly detector on a telemetry gateway flags motor wear to a human. Is it an AI system? Likely, as it infers outputs. Annex III: no, unless it is a safety component in critical infrastructure. Art 6(1): it is not a safety component and no third-party route applies, on these facts. Answer: not high-risk on these facts, Art 4 literacy applies; record reasons, and confirm with counsel. If it instead stops a machine as a safety function, re-assess.
+  unaided_check: >-
+    For three models (vision for a civil drone, spam filter, safety cut-off in a radio-equipped machine), give Art 3 status, risk route, applicable date and one NIST function each. Pass: all routes justified, Art 2(3) correctly limited, dates per Art 113 as amended.
+  sources:
+    - http://publications.europa.eu/resource/cellar/dc8116a1-3fe6-11ef-865a-01aa75ed71a1.0006.01/DOC_1 (OJ L, 2024/1689, base text)
+    - http://publications.europa.eu/resource/cellar/b459c07f-86fb-11f1-bf5e-01aa75ed71a1.0006.01/DOC_1 (OJ L, 2026/1744, amending act)
+    - https://www.nist.gov/itl/ai-risk-management-framework
