@@ -6,6 +6,8 @@ export const PACKAGE_NAME = "@polymath/shared-types" as const;
 export type { Database, Json, Tables, TablesInsert, TablesUpdate, Enums } from "./database.gen.ts";
 export { Constants } from "./database.gen.ts";
 export type { paths, components, operations } from "./api.gen.ts";
+export { EVENT_COMMON_KEYS, EVENT_NAMES, EVENT_PROP_KEYS } from "./events.gen.ts";
+export type { EventName } from "./events.gen.ts";
 
 import type { components, operations } from "./api.gen.ts";
 

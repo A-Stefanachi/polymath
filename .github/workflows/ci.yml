@@ -35,6 +35,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: generated API types are committed and current (BL-0010)
         run: pnpm gen:api-types && git diff --exit-code packages/shared-types apps/web/src/lib/api/openapi.gen.ts
+      - name: generated event catalogue is committed and current (BL-0024)
+        run: pnpm gen:events && git diff --exit-code packages/shared-types
       - run: pnpm -w lint
       - run: pnpm lint:boundaries
       - run: pnpm claims:lint
