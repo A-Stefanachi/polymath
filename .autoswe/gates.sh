@@ -650,6 +650,10 @@ t_gitleaks() { printf '%s\0' "$@" | matcher gitleaks gitleaks .gitleaksignore ea
 t_gitleaks_full() { printf '.\0' | matcher gitleaks gitleaks .gitleaksignore root -- gitleaks dir @NOIGNORE@ --no-banner --redact --config .gitleaks.toml --exit-code 0 --report-format json --report-path @REPORT@ @TARGET@; }
 file_gate gitleaks '(^(.*/)?[^/]*$)' gitleaks - 0 0 t_gitleaks t_gitleaks_full
 
+# --- db-diff-reference (test) ---
+t_db_diff_reference() { python3 -B tools/db/diff_reference.py; }
+repo_gate db-diff-reference python3 - 0 0 t_db_diff_reference -
+
 # --- js-test (test) ---
 t_js_test() { pnpm -w test; }
 repo_gate js-test pnpm - 0 0 t_js_test -

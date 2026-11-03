@@ -175,6 +175,18 @@
       "configured": false
     },
     {
+      "name": "db-diff-reference",
+      "category": "test",
+      "scope": "repo",
+      "check": "python3 -B tools/db/diff_reference.py",
+      "requires": "python3",
+      "globs": [
+        "supabase/migrations/**",
+        "polymath-app-spec/schemas/schema.sql",
+        "tools/db/**"
+      ]
+    },
+    {
       "name": "js-test",
       "category": "test",
       "globs": [
