@@ -10,6 +10,7 @@ Direct dependencies and their licences (CLAUDE.md section 5). Transitive depende
 | `@types/react` | 19.3.0 | MIT |
 | `@types/react-dom` | 19.3.0 | MIT |
 | `class-variance-authority` | 0.7.1 | Apache-2.0 |
+| `dependency-cruiser` | 18.6.0 | MIT |
 | `clsx` | 2.1.1 | MIT |
 | `eslint` | 9.39.5 | MIT |
 | `eslint-config-next` | 16.4.4 | MIT |

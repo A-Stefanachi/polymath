@@ -13,7 +13,8 @@
     "polymath-app-spec/**",
     "pnpm-lock.yaml",
     "**/next-env.d.ts",
-    ".next/**"
+    ".next/**",
+    "tools/boundaries/fixtures/**"
   ],
   "tools": [
     {
@@ -92,6 +93,20 @@
       "check": "pnpm -w typecheck",
       "requires": "pnpm",
       "scope": "repo"
+    },
+    {
+      "name": "boundaries",
+      "category": "lint",
+      "scope": "repo",
+      "check": "pnpm -s lint:boundaries",
+      "requires": "pnpm",
+      "globs": [
+        "apps/web/src/**",
+        "packages/*/src/**",
+        "services/**/*.py",
+        "services/**/*.sql",
+        "tools/boundaries/**"
+      ]
     },
     {
       "name": "bandit",

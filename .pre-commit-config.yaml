@@ -47,6 +47,16 @@ repos:
         files: '(^(.*/)?[^/]*\.ts$)|(^(.*/)?[^/]*\.tsx$)'
         pass_filenames: false
         require_serial: true
+      - id: boundaries
+        name: boundaries
+        entry: "bash .autoswe/gates.sh --hook boundaries"
+        language: system
+        files: >-
+          (?x)(^apps/web/src/.*$)|(^packages/[^/]*/src/.*$)|
+          (^services/(.*/)?[^/]*\.py$)|(^services/(.*/)?[^/]*\.sql$)|
+          (^tools/boundaries/.*$)
+        pass_filenames: false
+        require_serial: true
       - id: bandit
         name: bandit
         entry: "bash .autoswe/gates.sh --hook bandit"

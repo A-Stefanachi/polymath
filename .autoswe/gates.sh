@@ -180,7 +180,7 @@ tree_hash() {
   rm -f "$tmp"
   return "$rc"
 }
-EXCLUDE_RE='(^node_modules/.*$)|(^\.venv/.*$)|(^venv/.*$)|(^vendor/.*$)|(^dist/.*$)|(^build/.*$)|(^\.autoswe/.*$)|(^specs/[^/]*/tasks\.json$)|(^(.*/)?[^/]*\.min\.js$)|(^polymath-app-spec/.*$)|(^(.*/)?pnpm-lock\.yaml$)|(^(.*/)?next-env\.d\.ts$)|(^\.next/.*$)'
+EXCLUDE_RE='(^node_modules/.*$)|(^\.venv/.*$)|(^venv/.*$)|(^vendor/.*$)|(^dist/.*$)|(^build/.*$)|(^\.autoswe/.*$)|(^specs/[^/]*/tasks\.json$)|(^(.*/)?[^/]*\.min\.js$)|(^polymath-app-spec/.*$)|(^(.*/)?pnpm-lock\.yaml$)|(^(.*/)?next-env\.d\.ts$)|(^\.next/.*$)|(^tools/boundaries/fixtures/.*$)'
 ARG_BUDGET=60000
 CACHE_IGNORE=('specs/**/*.md' '.autoswe/logs/**' .autoswe/state.json .autoswe/STOP .autoswe/STEER.md '.claude/agent-memory/**')
 CACHE_KEY=autoswe-gates-3
@@ -632,6 +632,10 @@ file_gate shellcheck '(^(.*/)?[^/]*\.sh$)' shellcheck - 0 0 t_shellcheck -
 # --- tsc (types) ---
 t_tsc() { pnpm -w typecheck; }
 repo_gate tsc pnpm - 0 0 t_tsc -
+
+# --- boundaries (lint) ---
+t_boundaries() { pnpm -s lint:boundaries; }
+repo_gate boundaries pnpm - 0 0 t_boundaries -
 
 # --- bandit (security) ---
 t_bandit() { printf '%s\0' "$@" | matcher bandit bandit .autoswe/baselines/bandit.json batch -- bandit -q -f json -ll -ii @TARGETS@; }
