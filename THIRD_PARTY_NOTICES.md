@@ -9,6 +9,8 @@ Direct dependencies and their licences (CLAUDE.md section 5). Transitive depende
 | `@types/node` | 24.19.2 | MIT |
 | `@types/react` | 19.3.0 | MIT |
 | `@types/react-dom` | 19.3.0 | MIT |
+| `ajv` | 8.20.0 | MIT |
+| `ajv-formats` | 3.0.1 | MIT |
 | `class-variance-authority` | 0.7.1 | Apache-2.0 |
 | `dependency-cruiser` | 18.6.0 | MIT |
 | `clsx` | 2.1.1 | MIT |
@@ -26,6 +28,7 @@ Direct dependencies and their licences (CLAUDE.md section 5). Transitive depende
 | `typescript` | 6.0.3 | Apache-2.0 |
 | `typescript-eslint` | 8.72.1 | MIT |
 | `vitest` | 5.1.0 | MIT |
+| `yaml` | 2.9.1 | ISC |
 
 ## Worker (Python, `services/worker/uv.lock`)
 

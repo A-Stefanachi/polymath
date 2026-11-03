@@ -149,3 +149,7 @@ jobs:
         run: pnpm test:db
       - name: generated DB types are committed and current (BL-0010)
         run: pnpm gen:db-types && git diff --exit-code packages/shared-types
+      - name: content-schema key regexes equal the DB check constraints (BL-0013)
+        run: pnpm --filter @polymath/content-schema test
+        env:
+          REQUIRE_DB: "1"
