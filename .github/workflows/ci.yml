@@ -81,6 +81,10 @@ jobs:
           uvx ruff@0.16.9 format --check services tools --extend-exclude tools/boundaries/fixtures
       - name: pytest (each service)
         run: bash tools/ci/service-tests.sh
+      - name: docker build services/worker (BL-0014)
+        run: docker build --build-arg GIT_SHA="${GITHUB_SHA}" -t polymath-worker:ci services/worker
+      - name: worker image runs as non-root with ngspice
+        run: docker run --rm polymath-worker:ci sh -c 'test "$(id -un)" = worker && command -v ngspice && python -c "import polymath_worker.main"'
 
   # BL-0195: every specification-package validator, as one required check. It runs on every push
   # rather than only when docs/, content/, schemas/, backlog/ or reference/ change: a required
