@@ -1026,6 +1026,32 @@ begin
   return (p_cost - v_tokens) / p_refill_per_s;
 end $$;
 
+-- Worker heartbeat (doc 03 sections 8.4 and 8.6; migration 20261103000100_worker_heartbeat): the worker
+-- overwrites one row every 5 minutes; GET /health reports its age (worker_heartbeat_age_s). Internal only.
+create table app_private.worker_heartbeat (
+  id          boolean primary key default true check (id),   -- exactly one row
+  worker_id   text not null check (char_length(worker_id) between 1 and 128),
+  git_sha     text check (git_sha is null or char_length(git_sha) <= 64),
+  beat_at     timestamptz not null default now()
+);
+alter table app_private.worker_heartbeat enable row level security;   -- no policies: deny-all for every non-owner role
+revoke all on app_private.worker_heartbeat from public, anon, authenticated, service_role;
+grant select on app_private.worker_heartbeat to service_role;   -- writes go through record_worker_heartbeat only
+
+create or replace function app_private.record_worker_heartbeat(p_worker_id text, p_git_sha text default null)
+returns timestamptz language sql security definer set search_path = public, pg_temp as $$
+  insert into app_private.worker_heartbeat as h (id, worker_id, git_sha, beat_at)
+  values (true, p_worker_id, p_git_sha, now())
+  on conflict (id) do update
+    set worker_id = excluded.worker_id, git_sha = excluded.git_sha, beat_at = excluded.beat_at
+  returning h.beat_at;
+$$;
+
+create or replace function app_private.worker_heartbeat_age_s()
+returns integer language sql stable security definer set search_path = public, pg_temp as $$
+  select floor(extract(epoch from (now() - beat_at)))::integer from app_private.worker_heartbeat where id;
+$$;
+
 -- Strict-unaided attempts (00a B1, doc 11): graded, max_hint_level = 0 and no tutor panel opened for the item
 -- before the attempt was submitted. A tutor_threads row is created when the panel is first opened (even if no
 -- message is sent), so thread existence is the panel-opened signal. Internal only: not exposed by the API,
@@ -1464,6 +1490,9 @@ create policy llm_calls_select_own on public.llm_calls for select to authenticat
 -- ---------------------------------------------------------------------
 alter default privileges in schema public revoke all on tables from anon, authenticated;
 alter default privileges in schema public revoke all on functions from anon, authenticated, public;
+-- The schema-level entry above cannot remove PostgreSQL's built-in EXECUTE for PUBLIC on new functions; this global
+-- entry for the migration role does (migration 20261103000000_default_privileges_functions, ST-RLS-19).
+alter default privileges for role postgres revoke execute on functions from public;
 
 revoke all on all tables in schema public from anon, authenticated;
 -- authenticated is named because Supabase grants function EXECUTE to it directly, not through PUBLIC
@@ -1529,6 +1558,8 @@ revoke all on all functions in schema app_private from public, anon, authenticat
 grant all on app_private.rate_limits to service_role;
 grant select on app_private.v_attempts_strict_unaided to service_role;
 grant execute on function app_private.rate_limit_take(uuid, text, double precision, double precision, double precision) to service_role;
+grant execute on function app_private.record_worker_heartbeat(text, text) to service_role;
+grant execute on function app_private.worker_heartbeat_age_s() to service_role;
 grant execute on function app_private.check_challenge_code(uuid, uuid, text, text) to service_role;
 grant execute on function app_private.prune_expired() to service_role;
 
