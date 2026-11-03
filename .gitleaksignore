@@ -1,0 +1,20 @@
+# Accepted gitleaks findings, written by `toolchain.py baseline gitleaks` (a human decision).
+# autoswe's gates match each `#autoswe HASH RULE FILE` line: file, rule and a hash of the flagged
+# line's text (never the secret), so a finding stays accepted when its line moves. The
+# file:rule:line line after it is gitleaks' own fingerprint, used when gitleaks runs directly.
+#autoswe 820033265646a4be generic-api-key polymath-app-spec/content/extended-project-ladder-sketch.yaml
+polymath-app-spec/content/extended-project-ladder-sketch.yaml:generic-api-key:7
+#autoswe a08aec47d5713ab1 generic-api-key polymath-app-spec/content/extended-project-ladder-sketch.yaml
+polymath-app-spec/content/extended-project-ladder-sketch.yaml:generic-api-key:54
+#autoswe ec3ecf58be8b8617 generic-api-key polymath-app-spec/content/mvp-skill-graph.yaml
+polymath-app-spec/content/mvp-skill-graph.yaml:generic-api-key:9842
+#autoswe 311d4a8acecdaf6e generic-api-key polymath-app-spec/content/safety/prj.L6.bldc-esc-bench.md
+polymath-app-spec/content/safety/prj.L6.bldc-esc-bench.md:generic-api-key:3
+#autoswe ec3ecf58be8b8617 generic-api-key polymath-app-spec/content/syllabi/skill-specs/T3.yaml
+polymath-app-spec/content/syllabi/skill-specs/T3.yaml:generic-api-key:188
+#autoswe ec3ecf58be8b8617 generic-api-key polymath-app-spec/content/syllabi/spine-module-plan.yaml
+polymath-app-spec/content/syllabi/spine-module-plan.yaml:generic-api-key:999
+#autoswe fd06cccb08df35af generic-api-key polymath-app-spec/schemas/api.openapi.yaml
+polymath-app-spec/schemas/api.openapi.yaml:generic-api-key:1609
+#autoswe 379903a52b9eeee3 generic-api-key polymath-app-spec/schemas/api.openapi.yaml
+polymath-app-spec/schemas/api.openapi.yaml:generic-api-key:2355

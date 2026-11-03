@@ -35,3 +35,11 @@ Thumbs.db
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# autoswe local state
+.autoswe/logs/
+.autoswe/state.json
+.autoswe/STOP
+.autoswe/STEER.md
+CLAUDE.local.md
+.claude/agent-memory/

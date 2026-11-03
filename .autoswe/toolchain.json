@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "exclude": [
+    "node_modules/**",
+    ".venv/**",
+    "venv/**",
+    "vendor/**",
+    "dist/**",
+    "build/**",
+    ".autoswe/**",
+    "specs/*/tasks.json",
+    "**/*.min.js",
+    "polymath-app-spec/**",
+    "pnpm-lock.yaml",
+    "**/next-env.d.ts",
+    ".next/**"
+  ],
+  "tools": [
+    {
+      "name": "ruff-format",
+      "category": "format",
+      "globs": [
+        "**/*.py",
+        "**/*.pyi"
+      ],
+      "check": "ruff format --check --quiet --force-exclude {files}",
+      "full": "@files",
+      "fix": "ruff format --quiet --force-exclude {files}",
+      "on_edit": "fix",
+      "requires": "ruff",
+      "configured": false
+    },
+    {
+      "name": "ruff-lint",
+      "category": "lint",
+      "globs": [
+        "**/*.py",
+        "**/*.pyi"
+      ],
+      "check": "ruff check --no-cache --quiet --force-exclude {files}",
+      "fix": "ruff check --no-cache --fix --unfixable F401,F841 --quiet --force-exclude {files}",
+      "on_edit": "fix+check",
+      "requires": "ruff",
+      "configured": false,
+      "full": "@files"
+    },
+    {
+      "name": "eslint",
+      "category": "lint",
+      "globs": [
+        "**/*.js",
+        "**/*.jsx",
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.mjs",
+        "**/*.cjs"
+      ],
+      "check": "pnpm -w lint",
+      "requires": "pnpm",
+      "scope": "repo"
+    },
+    {
+      "name": "tsc",
+      "category": "types",
+      "globs": [
+        "**/*.ts",
+        "**/*.tsx"
+      ],
+      "check": "pnpm -w typecheck",
+      "requires": "pnpm",
+      "scope": "repo"
+    },
+    {
+      "name": "bandit",
+      "category": "security",
+      "globs": [
+        "**/*.py"
+      ],
+      "check": "bandit -q -ll -ii {baseline} {files}",
+      "full": "@files",
+      "on_edit": "check",
+      "baseline": {
+        "path": ".autoswe/baselines/bandit.json",
+        "flag": "-b",
+        "kind": "bandit",
+        "create": "bandit -q -f json --exit-zero -o {report} {files}"
+      },
+      "report": {
+        "parser": "bandit",
+        "command": "bandit -q -f json -ll -ii {baseline} {files}"
+      },
+      "requires": "bandit",
+      "configured": false
+    },
+    {
+      "name": "gitleaks",
+      "category": "security",
+      "globs": [
+        "**/*"
+      ],
+      "check": "gitleaks dir --no-banner --redact --config .gitleaks.toml {file}",
+      "full": ".",
+      "on_edit": "check",
+      "baseline": {
+        "path": ".gitleaksignore",
+        "kind": "gitleaks"
+      },
+      "report": {
+        "parser": "gitleaks",
+        "command": "gitleaks dir --no-banner --redact --config .gitleaks.toml --exit-code 0 --report-format json --report-path {report} {file}"
+      },
+      "requires": "gitleaks",
+      "probe": {
+        "args": [
+          "dir",
+          "--help"
+        ],
+        "needs": "8.19 or newer (the `gitleaks dir` subcommand)"
+      },
+      "configured": false
+    },
+    {
+      "name": "js-test",
+      "category": "test",
+      "globs": [
+        "**/*.js",
+        "**/*.ts"
+      ],
+      "check": "pnpm -w test",
+      "requires": "pnpm",
+      "configured": true
+    },
+    {
+      "name": "spec-validators",
+      "category": "test",
+      "scope": "repo",
+      "shell": true,
+      "check": "bash tools/ci/spec-validators.sh",
+      "requires": "python3"
+    }
+  ]
+}
