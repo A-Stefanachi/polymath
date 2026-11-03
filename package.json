@@ -16,7 +16,8 @@
     "db:start": "supabase start -x studio,edge-runtime,logflare,vector,imgproxy,supavisor,realtime,postgres-meta",
     "db:reset": "supabase db reset",
     "db:stop": "supabase stop",
-    "db:diff-reference": "python3 -B tools/db/diff_reference.py"
+    "db:diff-reference": "python3 -B tools/db/diff_reference.py",
+    "test:db": "supabase test db"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

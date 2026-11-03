@@ -143,3 +143,5 @@ jobs:
         run: pnpm db:diff-reference
         env:
           PG_BINDIR: /usr/lib/postgresql/17/bin
+      - name: pnpm test:db (pgTAP under supabase/tests)
+        run: pnpm test:db
