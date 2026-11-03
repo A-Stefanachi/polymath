@@ -17,12 +17,15 @@
     "db:reset": "supabase db reset",
     "db:stop": "supabase stop",
     "db:diff-reference": "python3 -B tools/db/diff_reference.py",
-    "test:db": "supabase test db"
+    "test:db": "supabase test db",
+    "gen:db-types": "node tools/gen/gen-types.mjs db",
+    "gen:api-types": "node tools/gen/gen-types.mjs api"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
     "@types/node": "24.19.2",
     "eslint": "9.39.5",
+    "openapi-typescript": "7.13.0",
     "supabase": "2.121.0",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.1",

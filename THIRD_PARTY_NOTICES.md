@@ -16,6 +16,7 @@ Direct dependencies and their licences (CLAUDE.md section 5). Transitive depende
 | `eslint-config-next` | 16.4.4 | MIT |
 | `lucide-react` | 1.67.0 | ISC |
 | `next` | 16.4.4 | MIT |
+| `openapi-typescript` | 7.13.0 | MIT |
 | `react` | 19.3.1 | MIT |
 | `react-dom` | 19.3.1 | MIT |
 | `supabase` (CLI) | 2.121.0 | MIT |

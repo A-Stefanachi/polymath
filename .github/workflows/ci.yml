@@ -33,6 +33,8 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: generated API types are committed and current (BL-0010)
+        run: pnpm gen:api-types && git diff --exit-code packages/shared-types
       - run: pnpm -w lint
       - run: pnpm lint:boundaries
       - run: pnpm claims:lint
@@ -145,3 +147,5 @@ jobs:
           PG_BINDIR: /usr/lib/postgresql/17/bin
       - name: pnpm test:db (pgTAP under supabase/tests)
         run: pnpm test:db
+      - name: generated DB types are committed and current (BL-0010)
+        run: pnpm gen:db-types && git diff --exit-code packages/shared-types

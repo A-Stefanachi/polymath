@@ -11,3 +11,4 @@ BL-0008,2026-11-03,2026-11-03,,25,Baseline migration and db:diff-reference by ag
 BL-0014,2026-11-03,2026-11-03,,40,Worker scaffold by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
 BL-0015,2026-11-03,2026-11-03,,15,Template kit port by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
 BL-0009,2026-11-03,2026-11-03,,20,Queue and rate-limit pgTAP tests by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
+BL-0010,2026-11-03,2026-11-03,,20,DB and API type generation by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)

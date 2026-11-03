@@ -2,6 +2,10 @@
 # autoswe's gates match each `#autoswe HASH RULE FILE` line: file, rule and a hash of the flagged
 # line's text (never the secret), so a finding stays accepted when its line moves. The
 # file:rule:line line after it is gitleaks' own fingerprint, used when gitleaks runs directly.
+#autoswe 4d26ee371f39afca generic-api-key packages/shared-types/src/api.gen.ts
+packages/shared-types/src/api.gen.ts:generic-api-key:4468
+#autoswe 0c1d21a757442c8e generic-api-key packages/shared-types/src/api.gen.ts
+packages/shared-types/src/api.gen.ts:generic-api-key:5273
 #autoswe 820033265646a4be generic-api-key polymath-app-spec/content/extended-project-ladder-sketch.yaml
 polymath-app-spec/content/extended-project-ladder-sketch.yaml:generic-api-key:7
 #autoswe a08aec47d5713ab1 generic-api-key polymath-app-spec/content/extended-project-ladder-sketch.yaml
