@@ -44,7 +44,8 @@ export function WelcomeForm() {
     setPhase("verifying");
     const res = await post("/auth/verify-code", { email, code }).catch(() => null);
     if (res?.ok) {
-      window.location.assign("/");
+      const next = res.data.redirect;
+      window.location.assign(typeof next === "string" && next.startsWith("/") && !next.startsWith("//") ? next : "/");
       return;
     }
     setPhase("sent");

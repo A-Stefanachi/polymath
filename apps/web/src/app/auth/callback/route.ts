@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { nextPath } from "@/lib/auth/next-step";
 import { appUrl } from "@/lib/auth/origin";
 import { logger } from "@/lib/logger";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -19,5 +20,5 @@ export async function GET(request: Request) {
     return NextResponse.redirect(appUrl(request, "/welcome?error=link"));
   }
   logger.info("auth.callback", { outcome: "signed_in" });
-  return NextResponse.redirect(appUrl(request, "/"));
+  return NextResponse.redirect(appUrl(request, await nextPath(supabase)));
 }

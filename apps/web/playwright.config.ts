@@ -29,8 +29,9 @@ function server(port: string, signup: "true" | "false") {
       NEXT_PUBLIC_SUPABASE_URL: supabase.url,
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: supabase.publishableKey,
       AUTH_SIGNUP_ENABLED: signup,
-      // Tests never touch the real staging database.
-      DATABASE_URL_PRIVILEGED: "",
+      // The API routes need the privileged connection; it is the local stack's database (never
+      // staging: localSupabase refuses a non-local host).
+      DATABASE_URL_PRIVILEGED: supabase.dbUrl,
     },
   };
 }
@@ -43,6 +44,11 @@ export default defineConfig({
   timeout: 90_000,
   projects: [
     { name: "signin", testMatch: "signin.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
+    {
+      name: "onboarding",
+      testMatch: "onboarding.spec.ts",
+      use: { baseURL: `http://127.0.0.1:${signupPort}`, timezoneId: "Europe/Rome" },
+    },
     { name: "enumeration", testMatch: "enumeration.spec.ts", use: { baseURL: `http://127.0.0.1:${noSignupPort}` } },
   ],
   webServer: [server(signupPort, "true"), server(noSignupPort, "false")],

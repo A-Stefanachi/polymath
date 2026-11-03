@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
+import { nextPath } from "@/lib/auth/next-step";
 import { parseCode, parseEmail } from "@/lib/auth/validate";
 import { logger } from "@/lib/logger";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-
-// Where a signed-in learner lands. S01 AC-2 sends a learner with profiles.onboarded_at null to
-// /onboarding; that screen is BL-0023, so until it exists everyone lands on "/".
-const AFTER_SIGN_IN = "/";
 
 export async function POST(request: Request) {
   const body: unknown = await request.json().catch(() => null);
@@ -22,5 +19,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "code_invalid" }, { status: error?.status === 429 ? 429 : 400 });
   }
   logger.info("auth.verify_code", { outcome: "signed_in" });
-  return NextResponse.json({ status: "signed_in", redirect: AFTER_SIGN_IN });
+  return NextResponse.json({ status: "signed_in", redirect: await nextPath(supabase) });
 }

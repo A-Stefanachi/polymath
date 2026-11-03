@@ -23,3 +23,4 @@ BL-0029,2026-11-03,,,20,Staging deploy workflow and laptop worker compose prepar
 BL-0019,2026-11-03,2026-11-03,,60,grading-core TypeScript port and python-vs-ts parity by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
 BL-0021,2026-11-03,2026-11-03,,60,Email-code sign-in with link and proxy and Playwright suite by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
 BL-0022,2026-11-03,2026-11-03,,60,API skeleton (zod from OpenAPI, error envelope, idempotency, rate limit, health) by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
+BL-0023,2026-11-03,2026-11-03,,45,Profile routes and onboarding form by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)

@@ -18,3 +18,28 @@ export const welcome = {
   unavailable: "We could not send the email. Nothing was lost; try again in a moment.",
   privacy: "Privacy summary, data export and deletion",
 } as const;
+
+// S02 Onboarding (doc 09). Steps 1 to 3 here; reminders (step 4) come with the notification task.
+export const onboarding = {
+  title: "Set up your practice",
+  progress: (step: number, total: number) => `Step ${String(step)} of ${String(total)}`,
+  goalHeading: "Your goal",
+  goal: "Working knowledge in a slice of hardware and software engineering: algebra to a measured, working sensor board.",
+  goalNote: "This is a target, not a promise of timing. A guided project completed and debugged marks the first working level.",
+  adultLabel: "I am 18 or older",
+  timeHeading: "Weekly time",
+  hoursLabel: "Hours per week (1 to 20)",
+  hoursHelp: "The default is 8 hours. You can change it at any time.",
+  hoursInvalid: "Enter a number of hours from 1 to 20.",
+  aboutHeading: "About you",
+  nameLabel: "Display name (optional)",
+  zoneLabel: "Time zone",
+  zoneHelp: "Detected from your device. Change it if it is not right.",
+  zoneInvalid: "Enter a time zone name such as Europe/Rome.",
+  adultRequired: "Please confirm this to continue.",
+  next: "Next",
+  back: "Back",
+  finish: "Finish",
+  saving: "Saving",
+  saveFailed: "We could not save that. Nothing was lost; try again in a moment.",
+} as const;
