@@ -41,7 +41,7 @@ packages/content-schema/  Ajv/zod validators, key regexes (single source of trut
 packages/grading-core/    pure TS numeric and multiple-choice graders
 packages/scheduler/       frontier, session builder, FSRS adapter, Elo/IRT-lite, mastery rule
 packages/tutor-policy/    attempt-first, hint ladder, leak filter, injection heuristics
-packages/llm/             LlmClient interface, Anthropic and Fake implementations, pricing.json
+packages/llm/             LlmClient interface, OpenRouter and Fake implementations, pricing.json
 packages/offline/         IndexedDB schema, outbox, sync client
 content/                  skills, edges, templates, projects (YAML; git is the source of truth)
 prompts/                  versioned prompt files with front matter

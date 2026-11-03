@@ -399,7 +399,7 @@ Status column: **Verified** = confirmed from a source opened in the research rep
 | REG-14 | Accessibility (WCAG 2.2 AA target; European Accessibility Act) | Contract requires WCAG 2.2 AA for core flows | EAA applicability and microenterprise exemption not retrievable on 31 Oct 2026 (Commission page and EUR-Lex landing page did not state them). **WCAG 2.2 verified** as a W3C Recommendation of 12 Dec 2024 with four new AA criteria, including 2.5.8 and 3.3.8 | WCAG verified; EAA not verifiable | Meet the contract target; axe-core in CI | Yes, if sold in the EU |
 | REG-15 | Consumer, tax and payments law | Monetisation is open; no payments in v1 | Not reviewed | n/a for v1 | Revisit with monetisation | Yes, later |
 | REG-16 | Copyright in LLM-assisted content | Templates drafted with LLM help | Report: legal status of LLM-transforming textbooks was not researched | Unverified | Original content only; humans review templates; do not feed copyrighted textbooks into drafting without rights | Yes |
-| REG-17 | LLM provider usage policies and data terms | Tutor, rubric, drafting | 31 Oct 2026: Anthropic API inputs/outputs auto-deleted within 30 days by default; zero data retention is an agreement-based option; training use and DPA not read; `inference_geo: us` costs 1.1x (00e rows 37, 39) | Partly verified | Read the commercial terms and DPA at integration; ask about ZDR | Yes |
+| REG-17 | LLM provider usage policies and data terms | Tutor, rubric, drafting | 3 Nov 2026 (00a I1): provider is OpenRouter with open-weights models; every request sets `data_collection: "deny"`; OpenRouter's own retention terms, DPA and the underlying providers' processing locations not yet read. The Anthropic row (00e rows 37, 39) no longer applies | Unverified | Read OpenRouter's terms, privacy policy and DPA and the chosen providers' policies at integration (BL-0073) | Yes |
 | REG-18 | Health and medical claims | App mentions sleep timing and breaks | Report: FDA clearances found were for medical conditions, not learning enhancement [S] | Unverified | No health claims; scheduling hints only; contract 8 | Recommended |
 | REG-19 | Electronics safety guidance (mains, batteries, soldering) | Physical builds | Not a legal check; a duty-of-care item | n/a | Safe-voltage-only ladder (low-voltage DC in L0-L4), explicit warnings, no mains work in v1 | Recommended for the terms of service |
 
@@ -644,7 +644,7 @@ Red-team set of at least 100 prompts in `tests/llm/redteam.jsonl`, run against t
 | ID | Test | Expected | Run |
 |---|---|---|---|
 | ST-SEC-01 | `gitleaks` on repo history and on built `.next` output and container layers | 0 findings | CI |
-| ST-SEC-02 | Grep client bundle for `sb_secret_`, `SUPABASE_SECRET_KEY`, `SERVICE_ROLE`, `ANTHROPIC`, `HMAC`, `DATABASE_URL` | None | CI |
+| ST-SEC-02 | Grep client bundle for `sb_secret_`, `SUPABASE_SECRET_KEY`, `SERVICE_ROLE`, `OPENROUTER`, `HMAC`, `DATABASE_URL` | None | CI |
 | ST-SEC-03 | Sandbox container `env` and filesystem search for secrets | None | CI |
 | ST-SEC-04 | Rotation rehearsal (HMAC dual secret, DB password, LLM key) | No downtime; old secrets rejected | MAN |
 | ST-SEC-05 | Error responses and logs on a forced 500 | No stack traces, SQL or secrets to the client | CI |
