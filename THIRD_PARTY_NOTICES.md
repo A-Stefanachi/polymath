@@ -34,6 +34,7 @@ Direct dependencies and their licences (CLAUDE.md section 5). Transitive depende
 | `typescript-eslint` | 8.72.1 | MIT |
 | `vitest` | 5.1.0 | MIT |
 | `yaml` | 2.9.1 | ISC |
+| `zod` (BL-0022, apps/web; 4.6.7 released 2026-10-12) | 4.6.7 | MIT |
 
 ## Worker (Python, `services/worker/uv.lock`)
 

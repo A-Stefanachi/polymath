@@ -4,9 +4,10 @@
 // The generated files are committed; CI regenerates them and fails on any difference
 // (git diff --exit-code packages/shared-types). Never edit them by hand.
 import { execFileSync } from "node:child_process";
-import { writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildApiModule } from "./api-schemas.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const OUT = path.join(ROOT, "packages", "shared-types", "src");
@@ -36,6 +37,12 @@ function genApi() {
   });
   writeFileSync(path.join(OUT, "api.gen.ts"), HEADER("api-types") + out);
   console.log("wrote packages/shared-types/src/api.gen.ts");
+
+  // Strict request-body schemas for the web app's route handlers (BL-0022).
+  const webOut = path.join(ROOT, "apps", "web", "src", "lib", "api", "openapi.gen.ts");
+  mkdirSync(path.dirname(webOut), { recursive: true });
+  writeFileSync(webOut, buildApiModule(OPENAPI, HEADER("api-types")));
+  console.log("wrote apps/web/src/lib/api/openapi.gen.ts");
 }
 
 const which = process.argv[2];

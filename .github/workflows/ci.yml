@@ -34,7 +34,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: generated API types are committed and current (BL-0010)
-        run: pnpm gen:api-types && git diff --exit-code packages/shared-types
+        run: pnpm gen:api-types && git diff --exit-code packages/shared-types apps/web/src/lib/api/openapi.gen.ts
       - run: pnpm -w lint
       - run: pnpm lint:boundaries
       - run: pnpm claims:lint
