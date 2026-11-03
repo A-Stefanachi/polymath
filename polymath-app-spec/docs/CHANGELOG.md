@@ -11,7 +11,7 @@ Record go/no-go outcomes, lean-gate releases, and scope-down choices here before
 Decision: the founder chose OpenRouter with open-weights models as the LLM provider (00a I1) and the founder's laptop as the lean-slice worker host in queue-only mode (00a I2). The OpenRouter key is in the cloud environment's network secrets and has a $50 monthly limit (checked 3 Nov 2026). Fly.io and Anthropic accounts drop out of BL-0001.
 
 - Edited to match: contract LLM line, doc 01 D-02, doc 03 (context diagram, 9 and 9.1, 12, ADR-011, OA-5), doc 12 (REG-17, ST-SEC-02), CLAUDE.md layout, BL-0001, BL-0029, BL-0054 and BL-0073 (title and a data-collection test; slug `llm-anthropic` kept as a stable key).
-- Models: pending the founder's choice.
+- Models (founder's choice, 3 Nov 2026): strong tier `deepseek/deepseek-v4.1-flash` (MIT), cheap tier `z-ai/glm-5.3-flash` (MIT). Evidence: both on OpenRouter's zero-data-retention endpoint list (checked 3 Nov 2026); Artificial Analysis index about equal to GLM-5.3 at a tenth of the price (vendor-reported benchmarks [R]). Alternative kept: `z-ai/glm-5.3` on Mistral's EU endpoint if EU residency is required (OQ-02). BL-0073 reads both LICENSE files, pins one provider and quantisation for rubric repeatability, verifies prices into `pricing.json` and runs the doc 08 adversarial suite before either model is relied on.
 - Next three tasks: BL-0001 (founder: Supabase staging, Vercel), BL-0002 (repo scaffold), BL-0003.
 
 ## 2026-11-03: research pass on the needs_human_review skills
