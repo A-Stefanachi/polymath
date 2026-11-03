@@ -1,0 +1,6 @@
+[project]
+name = "polymath-sandbox-runner"
+version = "0.0.0"
+description = "Execution sandbox for learner code (doc 03 section 4.4, ADR-006). Shares no code with the worker. Deferred group D3."
+requires-python = "==3.12.*"
+dependencies = []

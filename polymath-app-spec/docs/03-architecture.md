@@ -43,7 +43,7 @@ flowchart LR
   subgraph SYS["Polymath"]
     APP["Polymath PWA + API + worker + sandbox"]
   end
-  LLM["LLM provider - Anthropic Claude via LlmClient"]
+  LLM["LLM provider - OpenRouter, open-weights models, via LlmClient"]
   GH["GitHub - content repo, CI/CD"]
   PUSH["Browser push services - Web Push"]
   MAIL["Transactional email SMTP - sign-in codes and links"]
@@ -586,7 +586,7 @@ If the job is `failed` after `max_attempts`, the alert "Failed jobs" (section 10
 
 Rule: **no production data in staging or local**; staging uses seeded or synthetic users.
 
-**Lean-slice use of staging (00d section 9, decision G18).** The recommended path is Phase -1, then the lean slice (00d), then the deferred groups D1 to D9. The lean slice creates no production environment (BL-0109 is deferred): until D1 the founder's own study history lives in the staging Supabase project. That is an explicit, temporary exception to "synthetic data only": it is allowed only while the founder is the single user, and it ends before any beta learner is invited, when the production project is created and the history is migrated (or exported and re-imported). Because the Free plan has no backups (00e row 20) and staging may be Free, the lean set includes the backup and restore drill (BL-0103) and a weekly `pg_dump` export stored outside the project. The full plan above (separate production project with backups, synthetic-only staging) is unchanged and applies from the first outside user. Uploads are limited to the founder-only admin evidence log in the lean slice (G17 exception, doc 12).
+**Lean-slice use of staging (00d section 9, decision G18).** The recommended path is Phase -1, then the lean slice (00d), then the deferred groups D1 to D9. The lean slice creates no production environment (BL-0109 is deferred): until D1 the founder's own study history lives in the staging Supabase project. That is an explicit, temporary exception to "synthetic data only": it is allowed only while the founder is the single user, and it ends before any beta learner is invited, when the production project is created and the history is migrated (or exported and re-imported). Because the Free plan has no backups (00e row 20) and staging may be Free, the lean set includes the backup and restore drill (BL-0103) and a weekly `pg_dump` export stored outside the project. The full plan above (separate production project with backups, synthetic-only staging) is unchanged and applies from the first outside user. Uploads are limited to the founder-only admin evidence log in the lean slice (G17 exception, doc 12). **Worker on the founder's laptop (00a I2):** in the lean slice the staging worker runs on the founder's laptop (`docker compose up worker`) against the staging database, in queue-only mode: `WORKER_URL` is unset on Vercel, so symbolic submits take the queued path of 7.2 and are graded while the laptop is on. Numeric and multiple-choice grading are unaffected. The worker needs only outbound connections, so the laptop exposes no port. No Fly app exists until D1.
 
 ### 9.1 Configuration inventory
 
@@ -596,7 +596,7 @@ Rule: **no production data in staging or local**; staging uses seeded or synthet
 | `SUPABASE_SECRET_KEY` (`sb_secret_...`) | Web privileged modules, worker, CI sync | **Yes, highest** | Vercel (server only), Fly secrets, GitHub Actions environment secret | Never `NEXT_PUBLIC_`; never in the sandbox |
 | `DATABASE_URL_PRIVILEGED` | Web privileged modules (transactions), worker | **Yes** | same | Pooler URL for web (transaction mode), direct URL for worker |
 | `LLM_PROVIDER`, `LLM_MODEL_STRONG`, `LLM_MODEL_CHEAP` | Web, worker | No | env | Model IDs by config |
-| `ANTHROPIC_API_KEY` | Web, worker | **Yes** | Vercel, Fly secrets | One key per environment; spend limit set at provider |
+| `OPENROUTER_API_KEY` | Web, worker | **Yes** | Vercel, worker host secrets | One key per environment; monthly credit limit set on the key at OpenRouter (00a I1) |
 | `LLM_DAILY_USER_BUDGET_USD`, `LLM_DAILY_GLOBAL_BUDGET_USD` | Web, worker | No | env | Defaults 0.50 and 5.00 |
 | `WORKER_URL`, `WORKER_HMAC_SECRET` | Web <-> worker | Secret (HMAC) | Vercel, Fly | Rotate by supporting two secrets for 24 h |
 | `INTERNAL_APPLY_HMAC_SECRET` | Worker -> web callback | Secret | Fly, Vercel | Separate from the above |
@@ -712,7 +712,7 @@ Notification channel: a phone push service (for example ntfy or Pushover - verif
 | Tutor call size | 3,000 input tokens (system, item, reference solution, history), 400 output tokens |
 | Rubric calls per user per month | 40, each 2,000 input and 300 output tokens |
 | Evidence uploads per user per month | 10 files, average 3 MB |
-| LLM list prices per million tokens (**verified 31 Oct 2026**, platform.claude.com pricing) | strong model `claude-sonnet-5-5`: 2 input, 10 output; cheap model `claude-haiku-5-5`: 0.10 input, 0.50 output (prompts up to 100k). Earlier draft assumed 3/15 and 1/5, which are the Sonnet 4.x and Haiku 4.5 prices. Caching and batch discounts ignored, so conservative. Model IDs and prices are read from `pricing.json` at integration |
+| LLM list prices per million tokens (**verified 31 Oct 2026**, platform.claude.com pricing; **superseded by 00a I1**, see the I1 note under 12.2: the OpenRouter open-weights prices replace these, so the LLM lines below are an upper bound) | strong model `claude-sonnet-5-5`: 2 input, 10 output; cheap model `claude-haiku-5-5`: 0.10 input, 0.50 output (prompts up to 100k). Earlier draft assumed 3/15 and 1/5, which are the Sonnet 4.x and Haiku 4.5 prices. Caching and batch discounts ignored, so conservative. Model IDs and prices are read from `pricing.json` at integration |
 | Content authoring (founder, one-off, MVP slice of about 300 templates) | draft 6,000 in / 3,000 out on the strong model; 3 independent solves of 2,000 in / 800 out; roughly $0.12 per template, about $40 total, plus experimentation: budget $100 over the build |
 | Regions | One region for Vercel functions, Supabase and Fly, chosen near the founder; jurisdiction/data residency still open (contract 12) |
 
@@ -724,6 +724,8 @@ Notification channel: a phone push service (for example ntfy or Pushover - verif
 | Rubric call (Sonnet 5.5) | 2,000 x $2/M + 300 x $10/M = $0.004 + $0.003 | about $0.007 |
 | Per user per month (Sonnet 5.5) | 110 x 0.010 + 40 x 0.007 = 1.10 + 0.28 | about $1.4 (was $2.1 at the old assumed prices) |
 | Per user per month if tutor and rubric ran on Haiku 5.5 | 110 x 0.0005 + 40 x 0.00035 | about $0.07 (quality not evaluated) |
+
+**00a I1 note (3 Nov 2026):** the provider is now OpenRouter with open-weights models; the per-unit lines above are kept as an upper bound until `pricing.json` holds the chosen models' verified prices (BL-0073). Anthropic prompt caching and Batch API figures in 12.4 do not apply.
 
 ### 12.3 Monthly estimate
 
@@ -792,7 +794,7 @@ polymath/
     grading-core/                  pure TS numeric and MC graders (shared client/server)
     scheduler/                     frontier, session builder, FSRS wrapper (ts-fsrs), Elo/IRT-lite, mastery rule
     tutor-policy/                  attempt-first, ladder, leak filter, injection heuristics
-    llm/                           LlmClient interface, Anthropic and Fake implementations, pricing.json
+    llm/                           LlmClient interface, OpenRouter and Fake implementations, pricing.json
     offline/                       IndexedDB schema, outbox, sync client
   content/                         skills/, edges/, templates/, projects/  (YAML, source of truth)
   prompts/                         tutor/, rubric/, tagging/, drafting/  (versioned *.md with front matter)
@@ -903,12 +905,13 @@ Format: Context, Decision, Alternatives rejected, Consequences, Revisit when.
 - **Consequences:** Item generation must precompute `accepted_units` and tolerances and verify them (stored in `verification_report`); answer keys for cached items reach the device (threat T-OFF-1, accepted).
 - **Revisit when:** non-founder users make offline answer-key exposure unacceptable (then grade offline items only after sync).
 
-### ADR-011 LlmClient interface with versioned prompt files; Anthropic default; no orchestration framework
+### ADR-011 LlmClient interface with versioned prompt files; OpenRouter (open-weights models) default; no orchestration framework
 - **Context:** Contract: behind an interface, versioned prompts, never trust output as ground truth.
 - **Decision:** Thin interface (section 4.5), two implementations, prompts as files with front matter (`id`, `version`, `variables`, `model_tier`), pricing table in repo.
 - **Rejected:** LangChain/LlamaIndex (heavy abstractions, hidden prompts); LiteLLM proxy (extra service); Vercel AI SDK as the interface (convenient but couples code to its types; may still be used inside the TS implementation); fine-tuned models (no data, cost).
 - **Consequences:** Provider switch means writing one adapter; both languages need an adapter.
 - **Verification note (31 Oct 2026):** current Anthropic IDs are `claude-fable-5-1`, `claude-opus-5-5`, `claude-sonnet-5-5`, `claude-haiku-5-5`; the default strong tier in `pricing.json` should be Sonnet 5.5 ($2/$10) and the cheap tier Haiku 5.5 ($0.10/$0.50). Decision unchanged.
+- **Amended 3 Nov 2026 (00a I1):** the default provider is OpenRouter with open-weights models, called over its OpenAI-compatible HTTP API with no vendor SDK. Every request sets provider routing `data_collection: "deny"`, so only providers that neither train on nor retain prompts serve it. The Anthropic IDs and prices in the note above are history, not configuration.
 - **Revisit when:** a second provider is needed or tool-use orchestration is required.
 
 ### ADR-012 Content as YAML in git, synced by script
@@ -962,7 +965,7 @@ Format: Context, Decision, Alternatives rejected, Consequences, Revisit when.
 | OA-2 | Supabase features used (transaction-mode pooler, signed upload URLs, storage limits, `pg_cron`, PITR cost, SMTP limits) | **Partly verified 31 Oct 2026**: storage limits, PITR cost ($100 per month per 7 days), 7-day daily backups, plan prices, `pg_cron` listed as available, Postgres 17 upgrade target. Hosted default Postgres 17 verified 2 Nov 2026. **Unverified**: pooler, signed-URL expiry, SMTP limits, JWT claims. Test those on staging |
 | OA-3 | `ts-fsrs` licence and numbering of `State` | **Licence verified 31 Oct 2026**: MIT, version 6.0.0, Node >= 24 (npm); defaults to FSRS-7, adapter selects FSRS-6 (00a H3); `State` numeric values still unverified (read installed typings); pin exact 6.x (G11: exact pin, no float to a new major; GitHub README says Node >= 20, npm says >= 24, use 24) |
 | OA-4 | Vercel Hobby vs Pro licensing for a beta | **Verified 31 Oct 2026**: Hobby is personal non-commercial; Pro $20 per developer seat. Read the full terms before enrolling beta users |
-| OA-5 | Anthropic model names, prices, data-retention terms and prompt-caching behaviour | **Verified 31 Oct 2026**: model IDs, prices, caching multipliers, 30-day API retention. Unverified: training use, DPA, ZDR procedure, regions. Re-read at integration; route data-processing terms to legal review |
+| OA-5 | OpenRouter model slugs, prices, per-provider data policies and `data_collection: "deny"` routing (00a I1; replaces the Anthropic assumption) | **Partly verified 3 Nov 2026**: the founder's key works, a $50 monthly limit is set, the model catalogue and prices are readable from `/api/v1/models`. Unverified: OpenRouter's own retention and DPA, which underlying providers pass the deny filter for the chosen models, EU processing. Re-read at integration (BL-0073); route data-processing terms to legal review |
 | OA-6 | Region and data residency | Open founder question (contract 12) |
 | OA-7 | Exact Web Push and Background Sync behaviour on iOS | **Partly verified 31 Oct 2026**: Home Screen requirement, 16.4, user-gesture prompt. Background Sync and current iOS limits unverified; test on the founder's device in week 1. Sign-in: link-opens-Safari behaviour comes from third-party sources only; BL-0063 tests the code path in an installed PWA on a real iPhone |
 | OA-8 | A rate-limit table (`app_private.rate_limits`) is referenced by ER-8 and is not in the baseline `schema.sql` | Add in the first migration after baseline |

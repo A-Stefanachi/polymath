@@ -586,7 +586,7 @@ Format: **ID — title** (priority, milestone, epic, stories). *AC* = acceptance
 ### 9.1 Dependencies
 
 - D-01 `ts-fsrs` licence confirmed before use (contract section 3). Fallback: implement FSRS from the open specification after licence review.
-- D-02 Anthropic Claude API access for tutoring and rubric grading, behind `LlmClient`.
+- D-02 OpenRouter API access (open-weights models) for tutoring and rubric grading, behind `LlmClient` (00a I1).
 - D-03 Worker host (Fly.io or Cloud Run) with ngspice, kicad-cli, SymPy, pint, NumPy, sandbox runtime.
 - D-04 Content authoring capacity: original content only; the 40–60 skill nodes of the slice are the largest effort [P: estimate from research].
 - D-05 Hardware starter kit defined (BOM) before M3 (OQ-04).

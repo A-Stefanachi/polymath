@@ -150,7 +150,7 @@ tasks:
   estimate_h: 3
   estimate_status: unvalidated [P]
   description: Create GitHub (private repo), Supabase (staging and prod projects, region chosen per OQ-02;
-    default EU), Vercel, Fly.io, Anthropic API (workspace spend limit set), a domain, and a transactional
+    default EU), Vercel, Fly.io, OpenRouter API key (monthly credit limit set; 00a I1), a domain, and a transactional
     SMTP provider. Record region choice in infra/ACCOUNTS.md (no secrets). Verify Vercel Hobby vs Pro
     terms for a non-personal beta (OA-4).
   dependencies: []
@@ -167,7 +167,7 @@ tasks:
   acceptance_tests:
   - Checklist in infra/ACCOUNTS.md lists each service, plan, region and the date verified; contains no
     secrets (gitleaks protect passes on the file)
-  - Anthropic console shows a monthly spend limit set; screenshot path recorded in the checklist
+  - OpenRouter key settings show a monthly credit limit; date checked recorded in the checklist
   risk_notes: Region choice affects GDPR posture and is hard to change later; default EU if unsure.
 - id: BL-0002
   slug: repo-scaffold
@@ -1132,7 +1132,7 @@ tasks:
   risk_notes: none beyond the general risks in docs/14-risk-register.md
 - id: BL-0029
   slug: deploy-staging
-  title: 'Deploy staging: Vercel app, Supabase staging, Fly worker'
+  title: 'Deploy staging: Vercel app, Supabase staging, worker (laptop in the lean slice)'
   milestone: M0
   epic: EP-OBS
   owner: agent
@@ -1141,9 +1141,10 @@ tasks:
   lean_phase: L1
   estimate_h: 5
   estimate_status: unvalidated [P]
-  description: Staging environments with secrets in Vercel, Fly secrets and GitHub environments; deploy-staging.yml
-    deploys on main; migrations applied by workflow; /health returns git sha and db/worker reachability;
-    worker deployed to Fly with private networking to nothing else yet.
+  description: Staging environments with secrets in Vercel and GitHub environments; deploy-staging.yml
+    deploys on main; migrations applied by workflow; /health returns git sha and db/worker reachability.
+    Lean slice (00a I2) - the worker runs on the founder's laptop with docker compose against the staging
+    database in queue-only mode, WORKER_URL unset on Vercel; deployment to Fly (or Cloud Run) moves to D1.
   dependencies:
   - BL-0014
   - BL-0021
@@ -1164,9 +1165,10 @@ tasks:
   acceptance_tests:
   - curl https://<staging>/api/v1/health returns 200 with git_sha equal to the deployed commit
   - Push to main triggers deploy-staging and the run is green
-  - Worker /healthz reachable only with HMAC from the web app (direct call without HMAC returns 401)
-  risk_notes: Fly/Supabase behaviour assumptions OA-1/OA-2 unverified; verify during this task and record
-    in infra/VERIFIED.md.
+  - Worker /healthz reachable only with HMAC (direct call without HMAC returns 401; tested locally on the laptop worker)
+  - With WORKER_URL unset, /health reports the worker as queue-only and a symbolic submit returns 202 pending; the laptop worker grades it from the queue
+  risk_notes: Supabase behaviour assumptions OA-2 unverified; verify during this task and record in infra/VERIFIED.md.
+    Fly (OA-1) is verified when the worker is hosted in D1.
 - id: BL-0030
   slug: sentry-logs
   title: Sentry and structured logging in web and worker
@@ -2022,7 +2024,7 @@ tasks:
   acceptance_tests:
   - 'pytest runs the symbolic section of grader_vectors.json: all pass'
   - Expression of 5000 characters rejected with invalid_input in under 1 s
-  - submitAttempt p95 for symbolic < 2 s over 50 runs on staging (tools/loadtest/symbolic.js)
+  - submitAttempt p95 for symbolic < 2 s over 50 runs against a reachable worker (tools/loadtest/symbolic.js; local stack in the lean slice, staging once the worker is hosted, 00a I2)
   - Malicious input '__import__("os")' returns invalid_input, no execution
   risk_notes: sympy parse is dangerous; use the safe parser only.
 - id: BL-0055
@@ -2632,7 +2634,7 @@ tasks:
   risk_notes: Prices are recalled, not verified [R].
 - id: BL-0073
   slug: llm-anthropic
-  title: Anthropic LlmClient implementation, pricing.json and llm_calls logging
+  title: OpenRouter LlmClient implementation, pricing.json and llm_calls logging
   milestone: M2
   epic: EP-TUTOR
   owner: agent
@@ -2669,6 +2671,7 @@ tasks:
   - Budget exceeded returns a typed BudgetExceeded error without calling the provider
   - llm_calls row has tokens_in, tokens_out, cost_micro, purpose, no message content
   - pricing.json has a verified_on date within the last 7 days (CI check)
+  - Every request body sets provider data_collection to deny (asserted on the recorded fixtures; 00a I1)
   risk_notes: Vendor price and terms changes (R-13); data-retention terms need legal review (OA-5).
 - id: BL-0074
   slug: tutor-policy

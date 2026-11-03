@@ -13,6 +13,7 @@ out/
 dist/
 coverage/
 *.tsbuildinfo
+next-env.d.ts
 
 # Environment and secrets (CLAUDE.md 2.5)
 .env

@@ -235,7 +235,7 @@
       <ul class="rules">
         <li>UI components cannot import the privileged database client.</li>
         <li>Packages cannot open a socket or read <code>process.env</code>.</li>
-        <li>Only <code>packages/llm</code> imports the Anthropic SDK.</li>
+        <li>Only <code>packages/llm</code> calls the LLM provider.</li>
         <li>The Python worker cannot write <code>skill_state</code> or the review log.</li>
       </ul>
     </section>
