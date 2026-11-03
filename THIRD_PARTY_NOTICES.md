@@ -40,6 +40,7 @@ Direct dependencies of `services/worker` (BL-0014). Licences read from the packa
 | `mpmath` | 1.3.0 | BSD-3-Clause |
 | `numpy` | 2.5.3 | BSD-3-Clause |
 | `pint` | 0.26.2 | BSD-3-Clause |
+| `pg8000` (BL-0016) | 1.31.5 | BSD-3-Clause |
 | `pyyaml` | 6.0.3 | MIT |
 | `structlog` | 26.1.0 | MIT OR Apache-2.0 |
 | `sympy` | 1.14.0 | BSD-3-Clause |
@@ -48,6 +49,15 @@ Direct dependencies of `services/worker` (BL-0014). Licences read from the packa
 | `pytest` (dev) | 9.2.0 | MIT |
 
 The worker image also installs the Debian `ngspice` package (BSD-3-Clause for the simulator core, with some modules under other permissive licences) and copies the `uv` binary (MIT OR Apache-2.0).
+
+Transitive dependencies added by `pg8000` (BL-0016), pinned below the newest release through `constraint-dependencies` so each is at least two weeks old:
+
+| Package | Version | Licence |
+|---|---|---|
+| `scramp` | 1.4.17 | MIT-0 |
+| `asn1crypto` | 1.5.1 | MIT |
+| `python-dateutil` | 2.9.0.post0 | Apache-2.0 OR BSD-3-Clause |
+| `six` | 1.17.0 | MIT |
 
 ## Optional native dependency to confirm
 

@@ -15,3 +15,4 @@ BL-0010,2026-11-03,2026-11-03,,20,DB and API type generation by agent (autoswe d
 BL-0013,2026-11-03,2026-11-03,,30,Content schema package by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
 BL-0011,2026-11-03,2026-11-03,,25,RLS pgTAP harness by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
 BL-0012,2026-11-03,2026-11-03,,35,ST-RLS pgTAP suite and mutation check by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
+BL-0016,2026-11-03,2026-11-03,,25,Job queue worker loop by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)

@@ -151,6 +151,13 @@ jobs:
         run: pnpm test:rls
       - name: RLS mutation check (the tests fail when attempts loses its protection)
         run: bash tools/rls-mutation.sh
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.12"
+      - name: worker tests incl. job queue integration (BL-0016)
+        run: cd services/worker && uv run --frozen pytest
+        env:
+          POLYMATH_TEST_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
       - name: generated DB types are committed and current (BL-0010)
         run: pnpm gen:db-types && git diff --exit-code packages/shared-types
       - name: content-schema key regexes equal the DB check constraints (BL-0013)

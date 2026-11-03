@@ -7,6 +7,7 @@ dependencies = [
     "fastapi==0.136.0",
     "mpmath==1.3.0",
     "numpy==2.5.3",
+    "pg8000==1.31.5",
     "pint==0.26.2",
     "pyyaml==6.0.3",
     "structlog==26.1.0",
@@ -22,6 +23,8 @@ dev = [
 
 [tool.uv]
 package = false
+# Keep pg8000's transitive dependencies to releases at least two weeks old (BL-0016).
+constraint-dependencies = ["scramp==1.4.17", "python-dateutil==2.9.0.post0"]
 
 [tool.ruff]
 line-length = 110
