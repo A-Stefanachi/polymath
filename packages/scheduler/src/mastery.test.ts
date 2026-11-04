@@ -1,5 +1,6 @@
 // Boundary tests for the mastery functions; the shared vectors (mastery.vectors.ts) cover the oracle.
 import { describe, expect, it } from "vitest";
+import { DEFAULT_PARAMS } from "./params.ts";
 import { aggregateAttempts, isQualifying, masteryRule, masteryState, tierAttained, type MasteryAttempt } from "./mastery.ts";
 
 function att(n: number, over: Partial<MasteryAttempt> = {}): MasteryAttempt {
@@ -46,6 +47,57 @@ describe("masteryRule limits", () => {
     const one = [1, 2, 3].map((n) => att(n, { template_key: "t" }));
     expect(masteryRule(one, "L1", { nVerifiedTemplates: 1 }).met).toBe(true);
     expect(masteryRule(one, "L1", { nVerifiedTemplates: 2 }).checks.variants).toBe(false);
+  });
+});
+
+describe("BL-0185 span and template diversity (00a G3)", () => {
+  const P0 = { ...DEFAULT_PARAMS, mastery_min_span_days: 0 };
+  const three = (times: readonly string[], key: (n: number) => string = () => "t") =>
+    times.map((s, i) => att(i + 1, { submitted_at: s, template_key: key(i) }));
+
+  it("defaults: span 2 days and 2 templates", () => {
+    expect(DEFAULT_PARAMS.mastery_min_span_days).toBe(2);
+    expect(DEFAULT_PARAMS.mastery_min_templates).toBe(2);
+  });
+  it("does not count 23:50 and 00:10 as a 2-day span, and counts a full 2-day gap", () => {
+    const gaming = three(["2026-10-10T09:00:00Z", "2026-10-10T23:50:00Z", "2026-10-11T00:10:00Z"]);
+    const r = masteryRule(gaming, "L1");
+    expect(r.days).toBe(2);
+    expect(r.checks.days).toBe(false);
+    expect(r.met).toBe(false);
+    const ok = three(["2026-10-10T23:50:00Z", "2026-10-11T12:00:00Z", "2026-10-12T00:10:00Z"]);
+    expect(masteryRule(ok, "L1").checks.days).toBe(true);
+  });
+  it("measures the span in learner-local days with a timezone offset (and across a DST change)", () => {
+    // UTC days 10 and 12 (span 2). At UTC-2 the last attempt is 23:00 on the 11th (span 1).
+    const t = three(["2026-10-10T09:00:00Z", "2026-10-10T12:00:00Z", "2026-10-12T01:00:00Z"]);
+    expect(masteryRule(t, "L1", { tzOffsetMin: 0 }).checks.days).toBe(true);
+    expect(masteryRule(t, "L1", { tzOffsetMin: -120 }).checks.days).toBe(false);
+    // At UTC+2 the first attempt (09:00Z -> 11:00) stays on the 10th and the last (03:00) on the 12th.
+    expect(masteryRule(t, "L1", { tzOffsetMin: 120 }).checks.days).toBe(true);
+  });
+  it("mastery_min_span_days = 0 restores the v1.1 behaviour", () => {
+    const gaming = three(["2026-10-10T09:00:00Z", "2026-10-10T23:50:00Z", "2026-10-11T00:10:00Z"]);
+    expect(masteryRule(gaming, "L1", { params: P0 }).met).toBe(true);
+    expect(masteryRule(gaming, "L1").met).toBe(false);
+  });
+  it("a single-template skill is not blocked; two templates need a second one used", () => {
+    const one = [1, 2, 3].map((n) => att(n, { template_key: "only" }));
+    expect(masteryRule(one, "L1", { nVerifiedTemplates: 1 }).met).toBe(true);
+    const two = masteryRule(one, "L1", { nVerifiedTemplates: 2 });
+    expect(two.met).toBe(false);
+    expect(two.checks.variants).toBe(false);
+    const used = [att(1, { template_key: "a" }), att(2, { template_key: "b" }), att(3, { template_key: "a" })];
+    expect(masteryRule(used, "L1", { nVerifiedTemplates: 2 }).met).toBe(true);
+  });
+  it("mastery_min_templates = 0 switches the diversity condition off", () => {
+    const one = [1, 2, 3].map((n) => att(n, { template_key: "only" }));
+    const params = { ...DEFAULT_PARAMS, mastery_min_templates: 0 };
+    expect(masteryRule(one, "L1", { nVerifiedTemplates: 3, params }).met).toBe(true);
+  });
+  it("attempts without a template_key cannot show diversity when 2 templates exist", () => {
+    const noKey = [1, 2, 3].map((n) => att(n, { template_key: "" }));
+    expect(masteryRule(noKey, "L1", { nVerifiedTemplates: 2 }).checks.variants).toBe(false);
   });
 });
 
