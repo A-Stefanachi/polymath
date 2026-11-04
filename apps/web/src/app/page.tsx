@@ -1,4 +1,7 @@
 import { redirect } from "next/navigation";
+import { AppShell } from "@/components/shell/app-shell";
+import { Card } from "@/components/ui/card";
+import { ScreenTitle } from "@/components/ui/screen-title";
 import { nextPath } from "@/lib/auth/next-step";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -9,9 +12,11 @@ export default async function HomePage() {
   const next = await nextPath(await createSupabaseServerClient());
   if (next !== "/") redirect(next);
   return (
-    <main className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-3 px-4">
-      <h1 className="text-2xl font-semibold">Polymath</h1>
-      <p>Adaptive practice with spaced retrieval, graded feedback and guided builds.</p>
-    </main>
+    <AppShell>
+      <Card hero>
+        <ScreenTitle>Polymath</ScreenTitle>
+        <p>Adaptive practice with spaced retrieval, graded feedback and guided builds.</p>
+      </Card>
+    </AppShell>
   );
 }

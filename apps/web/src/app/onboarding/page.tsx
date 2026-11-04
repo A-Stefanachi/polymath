@@ -13,7 +13,7 @@ export default async function OnboardingPage() {
   // Consent comes first (BL-0028).
   if (!hasConsentRecord(data.consents as Record<string, unknown>)) redirect("/consent");
   return (
-    <main className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-4 px-4">
+    <main id="main" tabIndex={-1} className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-5 px-4 py-8 outline-none">
       <OnboardingForm
         initial={{
           displayName: data.display_name as string,

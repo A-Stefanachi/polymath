@@ -1,10 +1,16 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScreenTitle } from "@/components/ui/screen-title";
 import { onboarding as t } from "@/copy/strings";
 
 type Initial = { displayName: string; timezone: string; weeklyMinutes: number; alreadyOnboarded: boolean };
 const STEPS = 3;
+const LEGEND = "text-lg font-bold";
+const HELP = "text-[16px] text-muted";
 
 // A stored zone of "UTC" is the database default, so the device's zone is offered instead.
 function detectZone(stored: string): string {
@@ -55,56 +61,63 @@ export function OnboardingForm({ initial }: { initial: Initial }) {
   }
 
   return (
-    <form onSubmit={step < STEPS ? next : finish} className="flex flex-col gap-4" noValidate>
-      <h1 className="text-2xl font-semibold">{t.title}</h1>
-      <p aria-live="polite" className="text-sm">
-        {t.progress(step, STEPS)}
-      </p>
+    <form onSubmit={step < STEPS ? next : finish} className="flex flex-col gap-5" noValidate>
+      <ScreenTitle>{t.title}</ScreenTitle>
+      <div className="flex flex-col gap-2">
+        <p aria-live="polite" className="font-mono text-base font-semibold">
+          {t.progress(step, STEPS)}
+        </p>
+        <div aria-hidden="true" className="grid grid-cols-3 gap-1">
+          {Array.from({ length: STEPS }, (_, i) => (
+            <span key={i} className={`h-3 border-2 border-ink ${i < step - 1 ? "bg-primary" : i === step - 1 ? "bg-coin" : "bg-transparent"}`} />
+          ))}
+        </div>
+      </div>
       {step === 1 ? (
-        <fieldset className="flex flex-col gap-2">
-          <legend className="font-medium">{t.goalHeading}</legend>
+        <fieldset className="flex flex-col gap-3">
+          <legend className={`${LEGEND} mb-2`}>{t.goalHeading}</legend>
           <p>{t.goal}</p>
-          <p className="text-sm">{t.goalNote}</p>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={adult} onChange={(e) => setAdult(e.target.checked)} />
+          <p className={HELP}>{t.goalNote}</p>
+          <label className="flex min-h-12 items-center gap-3 text-[16px]">
+            <input type="checkbox" checked={adult} onChange={(e) => setAdult(e.target.checked)} className="size-6 shrink-0 accent-primary" />
             {t.adultLabel}
           </label>
         </fieldset>
       ) : null}
       {step === 2 ? (
         <fieldset className="flex flex-col gap-2">
-          <legend className="font-medium">{t.timeHeading}</legend>
-          <label htmlFor="hours" className="text-sm font-medium">
-            {t.hoursLabel}
-          </label>
-          <input id="hours" type="number" inputMode="decimal" min={1} max={20} step={0.5} value={hours} onChange={(e) => setHours(e.target.value)} className="rounded-md border px-3 py-2" />
-          <p className="text-sm">{t.hoursHelp}</p>
+          <legend className={`${LEGEND} mb-2`}>{t.timeHeading}</legend>
+          <Label htmlFor="hours">{t.hoursLabel}</Label>
+          <Input id="hours" type="number" mono inputMode="decimal" min={1} max={20} step={0.5} value={hours} onChange={(e) => setHours(e.target.value)} />
+          <p className={HELP}>{t.hoursHelp}</p>
         </fieldset>
       ) : null}
       {step === 3 ? (
         <fieldset className="flex flex-col gap-2">
-          <legend className="font-medium">{t.aboutHeading}</legend>
-          <label htmlFor="name" className="text-sm font-medium">
-            {t.nameLabel}
-          </label>
-          <input id="name" type="text" maxLength={80} autoComplete="nickname" value={name} onChange={(e) => setName(e.target.value)} className="rounded-md border px-3 py-2" />
-          <label htmlFor="zone" className="text-sm font-medium">
+          <legend className={`${LEGEND} mb-2`}>{t.aboutHeading}</legend>
+          <Label htmlFor="name">{t.nameLabel}</Label>
+          <Input id="name" type="text" maxLength={80} autoComplete="nickname" value={name} onChange={(e) => setName(e.target.value)} />
+          <Label htmlFor="zone" className="mt-2">
             {t.zoneLabel}
-          </label>
-          <input id="zone" type="text" autoComplete="off" value={zone} onChange={(e) => setZone(e.target.value)} className="rounded-md border px-3 py-2" />
-          <p className="text-sm">{t.zoneHelp}</p>
+          </Label>
+          <Input id="zone" type="text" autoComplete="off" value={zone} onChange={(e) => setZone(e.target.value)} />
+          <p className={HELP}>{t.zoneHelp}</p>
         </fieldset>
       ) : null}
-      {error ? <p role="alert" className="text-sm">{error}</p> : null}
-      <div className="flex gap-2">
+      {error ? (
+        <p role="alert" className="border-[3px] border-ink bg-nq-fill p-3 text-[16px] text-ink">
+          {error}
+        </p>
+      ) : null}
+      <div className="flex flex-wrap gap-3">
         {step > 1 ? (
-          <button type="button" onClick={() => setStep(step - 1)} className="rounded-md border px-3 py-2">
+          <Button type="button" variant="secondary" onClick={() => setStep(step - 1)}>
             {t.back}
-          </button>
+          </Button>
         ) : null}
-        <button type="submit" disabled={saving} className="rounded-md border px-3 py-2 font-medium">
+        <Button type="submit" disabled={saving}>
           {step < STEPS ? t.next : saving ? t.saving : t.finish}
-        </button>
+        </Button>
       </div>
     </form>
   );

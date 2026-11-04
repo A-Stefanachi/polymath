@@ -29,9 +29,10 @@ test("feedback stays hidden until a confidence is chosen, then the 1-5 value is 
   await page.getByLabel("Your answer").fill(`${REFERENCE} V`);
   await page.getByRole("button", { name: "Check" }).click();
 
-  await expect(page.getByRole("group", { name: "How sure are you?" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "1 Guessing" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "5 Certain" })).toBeVisible();
+  // BL-0058: the 1-5 choice has radio semantics (radiogroup of radios) instead of a group of buttons.
+  await expect(page.getByRole("radiogroup", { name: "How sure are you?" })).toBeVisible();
+  await expect(page.getByRole("radio", { name: "1 Guessing" })).toBeVisible();
+  await expect(page.getByRole("radio", { name: "5 Certain" })).toBeVisible();
   await expect(page.getByRole("heading", { name: /Correct\.|Not quite\./ })).toHaveCount(0);
   await expect(page.getByLabel("Your answer")).toHaveAttribute("readonly", "");
   expect(await attemptRows(userId)).toEqual([]);
@@ -39,7 +40,7 @@ test("feedback stays hidden until a confidence is chosen, then the 1-5 value is 
   const axe = await new AxeBuilder({ page }).analyze();
   expect(axe.violations.filter((v) => v.impact === "critical" || v.impact === "serious")).toEqual([]);
 
-  await page.getByRole("button", { name: "4", exact: true }).click();
+  await page.getByRole("radio", { name: "4", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Correct." })).toBeVisible();
   await expect(page.getByTestId("confidence")).toHaveCount(0);
   expect((await attemptRows(userId)).map((r) => r.confidence)).toEqual([4]);

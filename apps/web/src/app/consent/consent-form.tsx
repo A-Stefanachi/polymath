@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { consent as t } from "@/copy/strings";
 
 export function ConsentForm({ version }: { version: string }) {
@@ -21,19 +22,19 @@ export function ConsentForm({ version }: { version: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       {failed ? (
-        <p role="alert" className="text-sm">
+        <p role="alert" className="border-[3px] border-ink bg-nq-fill p-3 text-[16px] text-ink">
           {t.saveFailed}
         </p>
       ) : null}
-      <div className="flex flex-wrap gap-2">
-        <button type="button" disabled={saving} onClick={() => void choose(true)} className="rounded-md border px-3 py-2 font-medium">
+      <div className="flex flex-wrap gap-3">
+        <Button type="button" disabled={saving} onClick={() => void choose(true)}>
           {saving ? t.saving : t.accept}
-        </button>
-        <button type="button" disabled={saving} onClick={() => void choose(false)} className="rounded-md border px-3 py-2">
+        </Button>
+        <Button type="button" variant="secondary" disabled={saving} onClick={() => void choose(false)}>
           {t.decline}
-        </button>
+        </Button>
       </div>
     </div>
   );

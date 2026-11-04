@@ -1,3 +1,4 @@
+import { ScreenTitle } from "@/components/ui/screen-title";
 import { demoItem as t } from "@/copy/strings";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ItemCard } from "./item-card";
@@ -19,14 +20,12 @@ export default async function DemoItemPage() {
     .limit(1)
     .maybeSingle();
   return (
-    <main className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-4 px-4 py-6">
+    <main id="main" tabIndex={-1} className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-4 px-4 py-6 outline-none">
       {data ? (
         <ItemCard taskId={data.id as string} />
       ) : (
-        <section className="flex flex-col gap-2" aria-labelledby="empty-title">
-          <h1 id="empty-title" className="text-2xl font-semibold">
-            {t.emptyTitle}
-          </h1>
+        <section className="flex flex-col gap-3 border-[3px] border-dashed border-muted p-4" aria-labelledby="empty-title">
+          <ScreenTitle id="empty-title">{t.emptyTitle}</ScreenTitle>
           <p>{t.empty}</p>
         </section>
       )}
