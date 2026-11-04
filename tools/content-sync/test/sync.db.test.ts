@@ -60,6 +60,30 @@ describe.skipIf(!reachable)("content:sync against a throwaway database", () => {
     expect(await count("item_templates")).toBe(30);
   });
 
+  it("BL-0049 AC: stub skills are loaded but carry nothing schedulable, and no real skill depends on one", async () => {
+    // getFrontier does not exist yet (packages/scheduler is empty); this asserts the data facts it relies on:
+    // every stub has est_minutes 0 and no task kinds or graders, and no hard or soft edge leads from a stub
+    // to a real skill, so no stub can open or be offered by a frontier built from non-stub skills.
+    const stubs = await db.sql<{ n: string; schedulable: string }[]>`
+      select count(*)::text as n,
+             count(*) filter (where est_minutes <> 0 or task_kinds <> '{}' or grader_types <> '{}' or phone_suitable)::text as schedulable
+      from public.skills where status = 'stub'`;
+    expect(Number(stubs[0]?.n)).toBeGreaterThan(0);
+    expect(stubs[0]?.schedulable).toBe("0");
+    const leaks = await db.sql<{ n: string }[]>`
+      select count(*)::text as n from public.skill_edges e
+      join public.skills f on f.key = e.from_skill_key join public.skills t on t.key = e.to_skill_key
+      where f.status = 'stub' and t.status <> 'stub'`;
+    expect(leaks[0]?.n).toBe("0");
+  });
+
+  it("BL-0049 AC: module elec.opamp has no project step and the project validator passes (00a E2 exemption)", () => {
+    const r = spawnSync("python3", ["-B", path.join(CONTENT_ROOT, "..", "reference", "validate_projects.py"), "--quiet"], { encoding: "utf8" });
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    const ladder = readFileSync(path.join(CONTENT_ROOT, "project-ladder.yaml"), "utf8");
+    expect(ladder).not.toMatch(/elec\.opamp\./);
+  });
+
   it("the first run enqueues one content_postprocess job with an id-only payload and records the run", async () => {
     const jobs = await db.sql<{ kind: string; payload: Record<string, unknown>; status: string }[]>`select kind, payload, status::text as status from public.jobs`;
     const runs = await db.sql<{ id: string; status: string; git_sha: string; stats: { templates: { added: number } } }[]>`
