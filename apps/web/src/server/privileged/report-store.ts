@@ -16,7 +16,9 @@ export type FileReportInput = {
   /** Already validated `item_reported` props. */
   eventProps: Record<string, unknown>;
 };
-export type FileReportResult = { created: boolean; quarantined: boolean };
+/** The learner and skill whose FSRS state must be rebuilt because an attempt's disputed flag changed (00a J2, BL-0197). */
+export type RebuildTarget = { userId: string; skillKey: string };
+export type FileReportResult = { created: boolean; quarantined: boolean; rebuild?: RebuildTarget };
 
 export type RetireInput = { itemId: string; adminId: string; reason: string; retireTemplate: boolean };
 export type RetireResult = { status: string; templateRetired: boolean; replacedTasks: number; poolItemsRetired: number };
@@ -36,7 +38,7 @@ export type ReportRow = {
 };
 
 export type ResolveInput = { reportId: string; adminId: string; status: "confirmed" | "dismissed"; retireItem: boolean };
-export type ResolveResult = { report: ReportRow; retired: RetireResult | null } | "not_found" | "no_item";
+export type ResolveResult = { report: ReportRow; retired: RetireResult | null; rebuild?: RebuildTarget } | "not_found" | "no_item";
 
 export type ReportStore = {
   isAdmin(userId: string): Promise<boolean>;
@@ -88,6 +90,18 @@ async function replacePendingTasks(tx: Sql, itemId: string): Promise<number> {
     }
   }
   return replaced;
+}
+
+/** The skill an attempt belongs to, for the rebuild that follows a change of its disputed flag. */
+async function rebuildTargetOf(tx: Sql, attemptId: string): Promise<RebuildTarget | undefined> {
+  const r = (
+    await tx<{ user_id: string; skill_key: string }[]>`
+      select a.user_id, t.skill_key from public.attempts a
+        join public.items i on i.id = a.item_id
+        join public.item_templates t on t.key = i.template_key and t.version = i.template_version
+       where a.id = ${attemptId}`
+  )[0];
+  return r ? { userId: r.user_id, skillKey: r.skill_key } : undefined;
 }
 
 async function retireTx(tx: Sql, input: RetireInput, confirmedWrong: boolean): Promise<RetireResult | null> {
@@ -169,8 +183,10 @@ export function createReportStore(sql: Sql): ReportStore {
         const moved = await tx`update public.items set status = 'needs_human_review' where id = ${input.itemId} and status = 'verified' returning id`;
         if (moved.length > 0) await replacePendingTasks(tx, input.itemId);
         if (input.reason === "wrong_answer" && attemptId) {
-          await tx`update public.attempts set grade = jsonb_set(grade, '{disputed}', 'true'::jsonb)
-                    where id = ${attemptId} and user_id = ${input.userId} and grade is not null`;
+          const flagged = await tx`update public.attempts set grade = jsonb_set(grade, '{disputed}', 'true'::jsonb)
+                    where id = ${attemptId} and user_id = ${input.userId} and grade is not null returning id`;
+          const rebuild = flagged.length > 0 ? await rebuildTargetOf(tx, attemptId) : undefined;
+          return { created: true, quarantined: true, ...(rebuild ? { rebuild } : {}) };
         }
         return { created: true, quarantined: true };
       }),
@@ -206,11 +222,13 @@ export function createReportStore(sql: Sql): ReportStore {
         )[0];
         if (!cur) return "not_found" as const;
         if (input.retireItem && !cur.item_id) return "no_item" as const;
+        let rebuild: RebuildTarget | undefined;
         if (cur.status === "open") {
           await tx`update public.item_reports set status = ${input.status}, resolved_by = ${input.adminId}, resolved_at = now() where id = ${cur.id}`;
           // A dismissed report returns the attempt to the learner's record (doc 07 section 8.2, learner_error).
           if (input.status === "dismissed" && cur.attempt_id) {
-            await tx`update public.attempts set grade = grade - 'disputed' where id = ${cur.attempt_id} and grade ? 'disputed'`;
+            const cleared = await tx`update public.attempts set grade = grade - 'disputed' where id = ${cur.attempt_id} and grade ? 'disputed' returning id`;
+            if (cleared.length > 0) rebuild = await rebuildTargetOf(tx, cur.attempt_id);
           }
         }
         const retired =
@@ -221,7 +239,7 @@ export function createReportStore(sql: Sql): ReportStore {
           await tx<ReportRow[]>`select ${REPORT_COLUMNS(tx)} from public.item_reports r left join public.items i on i.id = r.item_id where r.id = ${cur.id}`
         )[0];
         if (!report) throw new Error("resolved report not found");
-        return { report, retired };
+        return { report, retired, ...(rebuild ? { rebuild } : {}) };
       }),
   };
 }
