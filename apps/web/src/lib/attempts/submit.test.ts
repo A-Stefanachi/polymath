@@ -46,7 +46,7 @@ async function addTemplate(key: string, grader: string): Promise<void> {
 async function addItem(name: string, template: string, answerKey: object, status = "verified"): Promise<string> {
   const row = (
     await sql<{ id: string }[]>`insert into public.items (template_key, template_version, seed, params, rendered, verification_report, status)
-      values (${template}, 1, ${seed++}, ${sql.json({})}, ${sql.json({ stem_md: "q" })}, ${sql.json({ verifier: "x", agreed: true })}, ${status}) returning id`
+      values (${template}, 1, ${seed++}, ${sql.json({})}, ${sql.json({ stem_md: "q", options: ["o1", "o2", "o3"].map((id) => ({ id, text_md: id })) })}, ${sql.json({ verifier: "x", agreed: true })}, ${status}) returning id`
   )[0];
   const id = row?.id ?? "";
   await sql`insert into public.item_secrets (item_id, answer_key) values (${id}, ${sql.json(answerKey as Parameters<typeof sql.json>[0])})`;
@@ -169,6 +169,16 @@ describe.skipIf(!reachable)("submitAttempt (database)", () => {
     const res = await post(learner, bodyFor(fx["mc"] ?? "", { kind: "choice", choice_ids: ["zz"] }));
     expect(res.status).toBe(400);
     expect(await count("attempts", learner)).toBe(before);
+  });
+
+  it("BL-0055: an option in the key but missing from the rendered options was not shown: 400, nothing stored", async () => {
+    const id = await addItem("mcHidden", tplMc, mcKey);
+    await sql`update public.items set rendered = ${sql.json({ stem_md: "q", options: [{ id: "o1", text_md: "a" }, { id: "o2", text_md: "b" }] })} where id = ${id}`;
+    const before = await count("attempts", learner);
+    const res = await post(learner, bodyFor(id, { kind: "choice", choice_ids: ["o3"] }));
+    expect(res.status).toBe(400);
+    expect(await count("attempts", learner)).toBe(before);
+    expect((await post(learner, bodyFor(id, { kind: "choice", choice_ids: ["o2"] }))).status).toBe(200);
   });
 
   it("stores unparseable numeric input as invalid_input with null score, not as wrong (00a B4)", async () => {

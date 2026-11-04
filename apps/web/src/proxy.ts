@@ -31,6 +31,12 @@ export async function proxy(request: NextRequest) {
     return redirect;
   }
   if (signedIn && pathname === "/welcome") return NextResponse.redirect(appUrl(request, "/"));
+  // Admin pages (ST-AUTH-05): a signed-in non-admin gets 403. The row is visible only to its owner (RLS
+  // admin_users_select_self); the page and its actions check again with the privileged connection (ADR-018).
+  if (signedIn && (pathname === "/admin" || pathname.startsWith("/admin/"))) {
+    const { data: row } = await supabase.from("admin_users").select("user_id").limit(1).maybeSingle();
+    if (!row) return new NextResponse("Forbidden", { status: 403, headers: { "content-type": "text/plain; charset=utf-8" } });
+  }
   return response;
 }
 

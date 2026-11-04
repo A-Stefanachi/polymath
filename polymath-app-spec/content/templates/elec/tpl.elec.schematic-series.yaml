@@ -1,6 +1,6 @@
 schema_version: 1
 key: tpl.elec.schematic-series
-version: 2
+version: 3
 authoring_status: ready
 skill_key: elec.meas.schematic-reading
 task_kind: retrieval
@@ -67,11 +67,11 @@ parameters:
   description: Net that the dead-end resistor R4 hangs from
 constraints:
 - id: r4-matters
-  expr: r4 >= 0.05 * (r1 + r2 + r3)
-  reason: If R4 is tiny, wrongly including it would fall within the tolerance.
+  expr: r4 >= 0.07 * (r1 + r2 + r3)
+  reason: If R4 is small, wrongly including it would fall within 3 x the tolerance (L11).
 - id: r2-matters
-  expr: r2 >= 0.05 * (r1 + r2 + r3)
-  reason: If R2 is tiny, skipping it would fall within the tolerance.
+  expr: r2 >= 0.07 * (r1 + r2 + r3)
+  reason: If R2 is small, skipping it would fall within 3 x the tolerance (L11).
 - id: distinct-path
   expr: r1 != r3
   reason: Different values make it clearer which part of the path a wrong answer used.

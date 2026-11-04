@@ -22,7 +22,7 @@ Direct dependencies and their licences (CLAUDE.md section 5). Transitive depende
 | `fast-check` (dev, grading-core and scheduler) | 4.10.2 | MIT |
 | `ts-fsrs` (BL-0041, packages/scheduler; published 2026-10-28, under two weeks old at adoption: accepted by the orchestrator because 00a G11 requires 6.x; details below) | 6.0.0 | MIT |
 | `@axe-core/playwright` (BL-0027, dev; wraps `axe-core`, MPL-2.0: file-level copyleft, used unmodified as a dev dependency only, never shipped) | 4.14.0 | MPL-2.0 |
-| `katex` (BL-0027, apps/web) | 0.19.0 | MIT |
+| `katex` (BL-0027, apps/web; BL-0050, tools/content-lint for rule L18, same pin) | 0.19.0 | MIT |
 | `lucide-react` | 1.67.0 | ISC |
 | `next` | 16.4.4 | MIT |
 | `openapi-typescript` | 7.13.0 | MIT |

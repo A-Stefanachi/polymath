@@ -61,7 +61,10 @@ function failure(problems: Problem[], extra: string[] = []): RunResult {
 
 export async function runSync(options: RunOptions): Promise<RunResult> {
   const loaded = loadContent(options.contentRoot);
-  const problems = [...loaded.problems, ...lintContent(loaded, options.contentRoot)];
+  const all = [...loaded.problems, ...lintContent(loaded, options.contentRoot)];
+  // Warnings (L06, L21, L26) are shown but never block the sync.
+  const problems = all.filter((p) => p.severity !== "W");
+  const warnings = all.filter((p) => p.severity === "W").map((p) => `${p.file} [${p.rule}] warning: ${p.message}`);
   if (options.only !== undefined && !loaded.templates.some((t) => t.doc["key"] === options.only))
     problems.push({ file: "(--only)", rule: "ARGS", message: `no valid template with key ${options.only}` });
   if (problems.length > 0) return failure(problems);
@@ -80,7 +83,7 @@ export async function runSync(options: RunOptions): Promise<RunResult> {
     const plan = buildPlan(loaded, existing, { only: options.only });
     if (plan.problems.length > 0) return failure(plan.problems);
 
-    if (options.dryRun) return { exitCode: 0, out: summary(plan, 0, true, null), err: [] };
+    if (options.dryRun) return { exitCode: 0, out: summary(plan, 0, true, null), err: warnings };
 
     runId = await startRun(sql, options.gitSha, options.gitRef, options.trigger);
     const c = countsOf(plan);
@@ -100,7 +103,7 @@ export async function runSync(options: RunOptions): Promise<RunResult> {
         templates: { ...stat(c.templates), job_template_keys: plan.templates.needsJob },
       },
     });
-    return { exitCode: 0, out: [`run ${runId}`, ...summary(plan, 0, false, jobId)], err: [] };
+    return { exitCode: 0, out: [`run ${runId}`, ...summary(plan, 0, false, jobId)], err: warnings };
   } catch (error) {
     // Postgres error messages carry no connection string; the URL is never interpolated anywhere.
     const message = error instanceof Error ? error.message : "unknown database error";

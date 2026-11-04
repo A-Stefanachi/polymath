@@ -1,0 +1,1 @@
+{ "base": "numeric", "set": { "render.stem_md": "Compute $\\frac{1}{$ for {{r1|tex}}, {{r2|tex}} and {{vin|tex}}." } }

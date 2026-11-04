@@ -1,0 +1,1 @@
+{ "base": "numeric", "set": { "hints.l1": { "$repeat": "think about the circuit ", "times": 12 } } }

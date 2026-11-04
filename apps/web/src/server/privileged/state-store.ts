@@ -144,7 +144,9 @@ const ATTEMPT_FROM = (db: Sql) => db`
   join public.skills s on s.key = t.skill_key`;
 
 const SCORE = (db: Sql) => db`(a.grade ->> 'score')::float8`;
-const ELIGIBLE = (db: Sql) => db`(coalesce((a.grade ->> 'mastery_eligible')::boolean, true) and t.mastery_eligible)`;
+// A reported attempt (`grade.disputed`, doc 07 section 8.2) is out of mastery evidence until triage clears it.
+const ELIGIBLE = (db: Sql) =>
+  db`(coalesce((a.grade ->> 'mastery_eligible')::boolean, true) and t.mastery_eligible and not coalesce((a.grade ->> 'disputed')::boolean, false))`;
 
 const toHistory = (r: Row): HistoryAttempt => ({
   id: String(r["id"]),

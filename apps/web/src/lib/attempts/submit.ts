@@ -19,6 +19,8 @@ import { json, type ApiContext } from "@/lib/api/route";
 import { checkEvent } from "@/lib/events/emit.ts";
 import { canServe } from "@/lib/items/serve.ts";
 import { applyGradedAttempt, defaultStateDeps, type SkillUpdate, type StateDeps } from "@/lib/state/apply-attempt.ts";
+import { gradeSymbolicAttempt, SYMBOLIC_GRADER_VERSION } from "@/lib/attempts/symbolic";
+import { createSymbolicClient, type SymbolicGrader } from "@/lib/attempts/symbolic-client";
 import { createAttemptStore, type AttemptRow, type AttemptStore } from "@/server/privileged/attempt-store";
 import { privilegedDb } from "@/server/privileged/db";
 import { createServeStore, type ServeStore } from "@/server/privileged/item-store";
@@ -49,10 +51,10 @@ const answerKey = z.discriminatedUnion("grader_type", [numericKey, choiceKey]);
 const SAFE_DETAIL = ["parsed", "unit", "bare_number", "typed_unit", "option_id", "late", "parse_error"];
 
 /** `state` applies a graded attempt to skill_state (BL-0042); tests that do not exercise it omit it. */
-type Stores = { serve: ServeStore; attempts: AttemptStore; state?: () => Promise<StateDeps> };
+type Stores = { serve: ServeStore; attempts: AttemptStore; state?: () => Promise<StateDeps>; symbolic?: SymbolicGrader };
 const defaultStores = (): Stores => {
   const sql = privilegedDb();
-  return { serve: createServeStore(sql), attempts: createAttemptStore(sql), state: defaultStateDeps };
+  return { serve: createServeStore(sql), attempts: createAttemptStore(sql), state: defaultStateDeps, symbolic: createSymbolicClient() };
 };
 
 /**
@@ -70,7 +72,17 @@ function bad(field: string, message: string): ApiError {
   return new ApiError("validation_failed", { errors: [{ field, message }] });
 }
 
-function gradeResponse(body: SubmitAttemptRequest, keyRaw: unknown, graderType: string): Grade {
+/** Option ids stored in `items.rendered.options`: the set the learner was shown (doc 08 section 2.3, G3). */
+export function shownOptionIds(rendered: unknown): string[] {
+  const options = typeof rendered === "object" && rendered !== null ? (rendered as { options?: unknown }).options : undefined;
+  if (!Array.isArray(options)) return [];
+  return options.flatMap((o: unknown) => {
+    const id = typeof o === "object" && o !== null ? (o as { id?: unknown }).id : undefined;
+    return typeof id === "string" ? [id] : [];
+  });
+}
+
+function gradeResponse(body: SubmitAttemptRequest, keyRaw: unknown, graderType: string, shown: string[]): Grade {
   const parsedKey = answerKey.safeParse(keyRaw);
   if (!parsedKey.success || parsedKey.data.grader_type !== graderType) {
     throw new Error("answer key missing or malformed"); // a data fault, mapped to 500 without detail
@@ -94,7 +106,10 @@ function gradeResponse(body: SubmitAttemptRequest, keyRaw: unknown, graderType: 
     return gradeExactNumeric(text, numeric, ref);
   }
   if (r.kind !== "choice" || r.choice_ids?.length !== 1) throw bad("response", "expected exactly one choice");
-  const grade = gradeMultipleChoice(r.choice_ids[0] ?? "", {
+  // Only an option in the rendered item counts as shown; the key's own list is not enough (G3).
+  const chosen = r.choice_ids[0] ?? "";
+  if (!shown.includes(chosen)) throw bad("response.choice_ids", "that option was not shown for this question");
+  const grade = gradeMultipleChoice(chosen, {
     options: key.reference.option_ids.map((id) => ({ id })),
     correct_option_id: key.reference.correct_option,
   });
@@ -141,7 +156,7 @@ export async function submitAttempt(ctx: ApiContext, stores: Stores = defaultSto
 
   // Replay: the stored result wins, whatever the new body says.
   const prior = await stores.attempts.findByClientId(userId, body.client_attempt_id);
-  if (prior) return json(toResult(prior, await applyState(stores, prior, new Date())));
+  if (prior) return respond(stores, prior);
 
   if (Date.parse(body.submitted_at) < Date.parse(body.started_at)) {
     throw bad("submitted_at", "must not be before started_at");
@@ -158,19 +173,25 @@ export async function submitAttempt(ctx: ApiContext, stores: Stores = defaultSto
   if (!item || !canServe(item, { userId, admin: await stores.serve.isAdmin(userId) }, (task?.assessment_kind ?? null) !== null)) {
     throw new ApiError("not_found");
   }
-  if (item.grader_type !== "exact_numeric" && item.grader_type !== "multiple_choice") {
+  const symbolic = item.grader_type === "symbolic_equivalence";
+  if (item.grader_type !== "exact_numeric" && item.grader_type !== "multiple_choice" && !symbolic) {
     throw bad("item_id", "this item is not graded inline yet");
   }
 
-  // 3-4. Key through the privileged module, grade with grading-core.
-  const grade = toStoredGrade(gradeResponse(body, await stores.attempts.loadAnswerKey(item.id), item.grader_type));
+  // 3-4. Key through the privileged module, grade with grading-core, or the worker for symbolic items. A symbolic
+  // grade of null means the worker did not answer: the attempt is stored pending with a grade_attempt job (202).
+  // Multiple choice is checked against the options actually shown (BL-0055, doc 08 section 2.3).
+  const answerKeyRaw = await stores.attempts.loadAnswerKey(item.id);
+  const grade: Record<string, unknown> | null = symbolic
+    ? await gradeSymbolicAttempt(body.response, answerKeyRaw, stores.symbolic ?? createSymbolicClient())
+    : toStoredGrade(gradeResponse(body, answerKeyRaw, item.grader_type, shownOptionIds(item.rendered)));
   const assessmentKind = task?.assessment_kind ?? null;
   const eventProps = {
     item_id: item.id,
     skill_key: task?.skill_key ?? item.skill_key,
     task_kind: item.task_kind,
-    correct: grade["correct"],
-    score: grade["score"],
+    correct: grade?.["correct"] ?? null,
+    score: grade?.["score"] ?? null,
     latency_ms: body.latency_ms ?? null,
     active_ms: body.active_ms ?? null,
     confidence: body.confidence ?? null,
@@ -192,8 +213,8 @@ export async function submitAttempt(ctx: ApiContext, stores: Stores = defaultSto
     submittedAt: body.submitted_at,
     response: body.response as Record<string, unknown>,
     grade,
-    gradeStatus: grade["status"] === "graded" ? "graded" : "invalid_input",
-    graderVersion: GRADER_VERSION,
+    gradeStatus: grade === null ? "pending" : grade["status"] === "graded" ? "graded" : "invalid_input",
+    graderVersion: symbolic ? SYMBOLIC_GRADER_VERSION : GRADER_VERSION,
     latencyMs: body.latency_ms ?? null,
     activeMs: body.active_ms ?? null,
     confidence: body.confidence ?? null,
@@ -202,5 +223,16 @@ export async function submitAttempt(ctx: ApiContext, stores: Stores = defaultSto
     assessmentKind,
     eventProps,
   });
+  return respond(stores, row);
+}
+
+/** 200 with the grade, or 202 while a queued grade is pending (doc 03 section 7.2; the caller polls getAttempt). */
+async function respond(stores: Stores, row: AttemptRow): Promise<Response> {
+  if (row.grade_status === "pending") {
+    return new Response(JSON.stringify(toResult(row)), {
+      status: 202,
+      headers: { "Content-Type": "application/json", Location: `/api/v1/attempts/${row.id}`, "Retry-After": "1" },
+    });
+  }
   return json(toResult(row, await applyState(stores, row, new Date())));
 }

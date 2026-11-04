@@ -154,8 +154,23 @@ importers:
 
   tools/claims-lint: {}
 
+  tools/content-lint:
+    dependencies:
+      '@polymath/claims-lint':
+        specifier: workspace:*
+        version: link:../claims-lint
+      '@polymath/content-sync':
+        specifier: workspace:*
+        version: link:../content-sync
+      katex:
+        specifier: 0.19.0
+        version: 0.19.0
+
   tools/content-sync:
     dependencies:
+      '@polymath/content-lint':
+        specifier: workspace:*
+        version: link:../content-lint
       '@polymath/content-schema':
         specifier: workspace:*
         version: link:../../packages/content-schema

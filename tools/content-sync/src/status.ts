@@ -20,12 +20,19 @@ export type StatusInput = {
   reviewLog: string;
   /** The G2 fuzz job recorded for this exact hash passed. */
   fuzzPassed: boolean;
+  /**
+   * Hash the review console signed off (item_templates.body._review, hand-solve done, 0 disagreements; BL-0057).
+   * It replaces the file's review block and the REVIEW-LOG row only for the hash it names, so an edited file
+   * is unreviewed again (doc 07 T9). The console never writes `provenance.review` (00a H4).
+   */
+  consoleReviewSha256?: string | null;
 };
 
 /** Files declare draft, ready or retired; only a ready template can become verified (rule 3). */
 export function statusFor(input: StatusInput): TemplateStatus {
   if (input.authoringStatus === "draft") return "draft";
   if (input.authoringStatus === "retired") return "retired";
-  const reviewed = input.review["template_sha256"] === input.sha256 && reviewLogDone(input.reviewLog, input.key);
+  const fileReviewed = input.review["template_sha256"] === input.sha256 && reviewLogDone(input.reviewLog, input.key);
+  const reviewed = fileReviewed || (input.consoleReviewSha256 ?? null) === input.sha256;
   return input.fuzzPassed && reviewed ? "verified" : "needs_human_review";
 }
