@@ -101,7 +101,7 @@ describe.skipIf(!reachable)("caps and guards (database)", () => {
     await sql`insert into public.modules (key, node, module, title, order_index) values (${`math.${moduleName}`}, 'math', ${moduleName}, 'BL-0046 test', 0)`;
     for (const skill of [a1, a2, a3]) {
       await sql`insert into public.skills (key, node, module, title, tier_target, est_minutes, license, source, status, task_kinds, grader_types, phone_suitable)
-        values (${skill}, 'math', ${moduleName}, 'BL-0046 test', 'L1', 5, 'CC0-1.0', 'bl0046-test', 'draft',
+        values (${skill}, 'math', ${moduleName}, 'BL-0046 test', 'L1', 5, 'CC0-1.0', 'bl0046-test', 'verified',
                 ${sql.array(KINDS)}::public.task_kind[], ${sql.array(["exact_numeric"])}::public.grader_type[], true)`;
       for (const kind of KINDS) {
         templates.push(tpl(skill, kind));

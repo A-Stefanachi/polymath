@@ -44,7 +44,8 @@ const tag = randomUUID().slice(0, 8);
 const moduleName = `bl44${tag}`;
 const s1 = `math.${moduleName}.s1`;
 const s2 = `math.${moduleName}.s2`;
-const tpl = (skill: string, kind: string) => `tpl.math.bl44-${skill.endsWith("s1") ? "a" : "b"}-${kind.replaceAll("_", "")}-${tag}`;
+const s3 = `math.${moduleName}.s3`; // a draft skill: visible to an admin only (skills_select)
+const tpl = (skill: string, kind: string) => `tpl.math.bl44-${skill.endsWith("s1") ? "a" : skill.endsWith("s2") ? "b" : "c"}-${kind.replaceAll("_", "")}-${tag}`;
 const KINDS = ["retrieval", "worked_example", "faded_problem", "problem"];
 const templates: string[] = [];
 let seed = 1;
@@ -53,6 +54,7 @@ let other = "";
 let pooless = "";
 let reviewee = "";
 let previewer = "";
+let admin = "";
 
 type Json = Record<string, unknown>;
 const headers = (key?: string) => ({ "content-type": "application/json", ...(key ? { "idempotency-key": key } : {}) });
@@ -85,7 +87,8 @@ async function buildOk(userId: string, body: Json = MICRO): Promise<Json> {
 
 describe.skipIf(!reachable)("session builder API (database)", () => {
   beforeAll(async () => {
-    [learner, other, pooless, reviewee, previewer] = [
+    [learner, other, pooless, reviewee, previewer, admin] = [
+      await createTestUser(sql),
       await createTestUser(sql),
       await createTestUser(sql),
       await createTestUser(sql),
@@ -93,9 +96,9 @@ describe.skipIf(!reachable)("session builder API (database)", () => {
       await createTestUser(sql),
     ];
     await sql`insert into public.modules (key, node, module, title, order_index) values (${`math.${moduleName}`}, 'math', ${moduleName}, 'BL-0044 test', 0)`;
-    for (const [skill, phone] of [[s1, true], [s2, true]] as const) {
+    for (const [skill, phone, status] of [[s1, true, "verified"], [s2, true, "verified"], [s3, true, "draft"]] as const) {
       await sql`insert into public.skills (key, node, module, title, tier_target, est_minutes, license, source, status, task_kinds, grader_types, phone_suitable)
-        values (${skill}, 'math', ${moduleName}, 'BL-0044 test', 'L1', 10, 'CC0-1.0', 'bl0044-test', 'draft',
+        values (${skill}, 'math', ${moduleName}, 'BL-0044 test', 'L1', 10, 'CC0-1.0', 'bl0044-test', ${status},
                 ${sql.array(KINDS)}::public.task_kind[], ${sql.array(["exact_numeric"])}::public.grader_type[], ${phone})`;
       for (const kind of KINDS) {
         const key = tpl(skill, kind);
@@ -110,6 +113,9 @@ describe.skipIf(!reachable)("session builder API (database)", () => {
     await addItems(learner, s1, 3);
     await addItems(learner, s2, 3);
     await addItems(other, s1, 3);
+    await addItems(learner, s3, 3);
+    await addItems(admin, s3, 3);
+    await sql`insert into public.admin_users (user_id) values (${admin})`;
     await addItems(previewer, s1, 3);
     await addItems(previewer, s2, 3);
     await sql`insert into public.skill_state (user_id, skill_key, mastery_state, due, last_review, stability, difficulty, reps, fsrs_state, tier_attained, first_seen_at)
@@ -119,7 +125,7 @@ describe.skipIf(!reachable)("session builder API (database)", () => {
   });
 
   afterAll(async () => {
-    const users = [learner, other, pooless, reviewee, previewer];
+    const users = [learner, other, pooless, reviewee, previewer, admin];
     await sql`delete from public.jobs where user_id in ${sql(users)}`;
     await sql`delete from public.events where user_id in ${sql(users)}`;
     await sql`delete from public.attempts where user_id in ${sql(users)}`;
@@ -127,8 +133,8 @@ describe.skipIf(!reachable)("session builder API (database)", () => {
     await sql`delete from public.sessions where user_id in ${sql(users)}`;
     await sql`delete from public.items where template_key in ${sql(templates)}`;
     await sql`delete from public.item_templates where key in ${sql(templates)}`;
-    await sql`delete from public.skill_state where skill_key in (${s1}, ${s2})`;
-    await sql`delete from public.skills where key in (${s1}, ${s2})`;
+    await sql`delete from public.skill_state where skill_key in (${s1}, ${s2}, ${s3})`;
+    await sql`delete from public.skills where key in (${s1}, ${s2}, ${s3})`;
     await sql`delete from public.modules where key = ${`math.${moduleName}`}`;
     for (const u of users) await deleteTestUser(sql, u);
     await sql.end();
@@ -359,6 +365,17 @@ describe.skipIf(!reachable)("session builder API (database)", () => {
     expect(res.status).toBe(503);
     expect(((await res.json()) as Json)["code"]).toBe("item_pool_empty");
     expect(await footprint(pooless)).toEqual(before);
+  });
+
+  it("BL-0048 RLS parity: a draft skill is not offered to a non-admin but is to an admin", async () => {
+    const focus = { ...MICRO, skill_focus: s3 };
+    const denied = await post(routes(learner).build, "/sessions/build", focus, `bl48-${randomUUID()}`);
+    expect(denied.status).toBe(400); // not on the frontier: the learner's snapshot has no such skill
+    const allowed = await post(routes(admin).build, "/sessions/build", focus, `bl48-${randomUUID()}`);
+    expect(allowed.status).toBe(201);
+    const tasks = ((await allowed.json()) as Json)["tasks"] as { skill_key: string }[];
+    expect(tasks.map((t) => t.skill_key)).toContain(s3);
+    await clearOpen(admin);
   });
 
   it("BL-0191: dry_run must be a boolean and unknown fields are still rejected", async () => {

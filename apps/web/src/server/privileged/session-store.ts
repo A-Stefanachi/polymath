@@ -4,6 +4,7 @@
 // items.params, verification_report or item_secrets; items are referenced by id only.
 import type { Sql } from "./db.ts";
 import { insertEvents } from "./events-store.ts";
+import { isAdminUser, skillVisibleSql } from "./skill-visibility.ts";
 
 export type SessionRow = {
   id: string;
@@ -323,6 +324,8 @@ export function createSessionStore(sql: Sql): SessionStore {
     },
 
     async snapshot(userId, now) {
+      // The `skills_select` rule (skill-visibility.ts): a non-admin is never offered a draft or needs_human_review skill.
+      const admin = await isAdminUser(sql, userId);
       const [profile, version, skills, edges, states, candidates, served, extras] = await Promise.all([
         sql<{ timezone: string; cap: unknown }[]>`
           select timezone, settings -> 'max_new_skills_per_day' as cap from public.profiles where id = ${userId}`,
@@ -333,12 +336,12 @@ export function createSessionStore(sql: Sql): SessionStore {
                  s.status::text as status,
                  exists (select 1 from public.item_templates t where t.skill_key = s.key and t.status = 'verified'
                           and t.pool = 'practice' and t.retired_at is null) as templated
-            from public.skills s where s.retired_at is null`,
+            from public.skills s where s.retired_at is null and ${skillVisibleSql(sql, "s", admin)}`,
         sql<Row[]>`
           select e.from_skill_key, e.to_skill_key, e.strength::text as strength, e.min_tier::text as min_tier
             from public.skill_edges e
-            join public.skills f on f.key = e.from_skill_key and f.retired_at is null
-            join public.skills t on t.key = e.to_skill_key and t.retired_at is null`,
+            join public.skills f on f.key = e.from_skill_key and f.retired_at is null and ${skillVisibleSql(sql, "f", admin)}
+            join public.skills t on t.key = e.to_skill_key and t.retired_at is null and ${skillVisibleSql(sql, "t", admin)}`,
         sql<Row[]>`
           select skill_key, mastery_state::text as mastery_state, elo, stability, difficulty, due, last_review, reps, lapses,
                  fsrs_state, scheduled_days, learning_steps, fsrs_extra, tier_attained::text as tier_attained, source,

@@ -2,6 +2,7 @@
 // the content graph plus the caller's own skill_state rows. Only graph fields are selected: no template,
 // item, key or verification columns are touched here (CLAUDE.md rule 2.6).
 import type { Sql } from "./db.ts";
+import { isAdminUser, skillVisibleSql } from "./skill-visibility.ts";
 
 export type GraphSkillRow = {
   key: string;
@@ -55,17 +56,20 @@ const strs = (v: unknown): string[] => (Array.isArray(v) ? v.map(String) : []);
 export function createGraphStore(sql: Sql): GraphStore {
   return {
     async snapshot(userId) {
+      // The `skills_select` rule (skill-visibility.ts): a non-admin never sees a draft or needs_human_review skill.
+      const admin = await isAdminUser(sql, userId);
       const [skills, edges, states] = await Promise.all([
         sql<Row[]>`
-          select key, node::text as node, module, title, description, tier_target::text as tier_target, est_minutes,
-                 license, source, status::text as status, task_kinds::text[] as task_kinds,
-                 grader_types::text[] as grader_types, phone_suitable, confusable_set
-            from public.skills where retired_at is null and status <> 'retired' order by key`,
+          select s.key, s.node::text as node, s.module, s.title, s.description, s.tier_target::text as tier_target, s.est_minutes,
+                 s.license, s.source, s.status::text as status, s.task_kinds::text[] as task_kinds,
+                 s.grader_types::text[] as grader_types, s.phone_suitable, s.confusable_set
+            from public.skills s
+           where s.retired_at is null and s.status <> 'retired' and ${skillVisibleSql(sql, "s", admin)} order by s.key`,
         sql<Row[]>`
           select e.from_skill_key, e.to_skill_key, e.strength::text as strength, e.min_tier::text as min_tier
             from public.skill_edges e
-            join public.skills f on f.key = e.from_skill_key and f.retired_at is null and f.status <> 'retired'
-            join public.skills t on t.key = e.to_skill_key and t.retired_at is null and t.status <> 'retired'
+            join public.skills f on f.key = e.from_skill_key and f.retired_at is null and f.status <> 'retired' and ${skillVisibleSql(sql, "f", admin)}
+            join public.skills t on t.key = e.to_skill_key and t.retired_at is null and t.status <> 'retired' and ${skillVisibleSql(sql, "t", admin)}
            order by e.from_skill_key, e.to_skill_key`,
         sql<Row[]>`
           select skill_key, mastery_state::text as mastery_state, elo, stability, difficulty, due, last_review, reps, lapses,

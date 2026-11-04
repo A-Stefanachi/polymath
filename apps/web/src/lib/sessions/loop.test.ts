@@ -77,7 +77,7 @@ describe.skipIf(!reachable)("new-skill learning loop (database)", () => {
     user = await createTestUser(sql);
     await sql`insert into public.modules (key, node, module, title, order_index) values (${`math.${moduleName}`}, 'math', ${moduleName}, 'BL-0045 test', 0)`;
     await sql`insert into public.skills (key, node, module, title, tier_target, est_minutes, license, source, status, task_kinds, grader_types, phone_suitable)
-      values (${skill}, 'math', ${moduleName}, 'BL-0045 test', 'L1', 10, 'CC0-1.0', 'bl0045-test', 'draft',
+      values (${skill}, 'math', ${moduleName}, 'BL-0045 test', 'L1', 10, 'CC0-1.0', 'bl0045-test', 'verified',
               ${sql.array(KINDS)}::public.task_kind[], ${sql.array(["exact_numeric"])}::public.grader_type[], true)`;
     for (const kind of KINDS) {
       await sql`insert into public.item_templates (key, skill_key, task_kind, grader_type, status, body, license, source, phone_suitable)

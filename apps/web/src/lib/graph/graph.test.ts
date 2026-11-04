@@ -55,6 +55,10 @@ const [A, B, C, D, E, F, G, S] = ["a", "b", "c", "d", "e", "f", "g", "stub"].map
 const ALL = [A, B, C, D, E, F, G, S];
 let learner = "";
 let other = "";
+// Skills a non-admin must not see (skills_select policy): in their own module so the lists above are unchanged.
+const hiddenMod = `bl48h${tag}`;
+const [HD, HR] = [`math.${hiddenMod}.draft`, `math.${hiddenMod}.review`];
+let boss = "";
 
 async function json(res: Response): Promise<Json> {
   expect(res.status).toBe(200);
@@ -63,12 +67,19 @@ async function json(res: Response): Promise<Json> {
 
 describe.skipIf(!reachable)("graph read API (database)", () => {
   beforeAll(async () => {
-    [learner, other] = [await createTestUser(sql), await createTestUser(sql)];
+    [learner, other, boss] = [await createTestUser(sql), await createTestUser(sql), await createTestUser(sql)];
+    await sql`insert into public.admin_users (user_id) values (${boss})`;
     await sql`insert into public.modules (key, node, module, title, order_index) values (${`math.${mod}`}, 'math', ${mod}, 'BL-0048 test', 0)`;
+    await sql`insert into public.modules (key, node, module, title, order_index) values (${`math.${hiddenMod}`}, 'math', ${hiddenMod}, 'BL-0048 hidden', 1)`;
+    for (const [k, status] of [[HD, "draft"], [HR, "needs_human_review"]] as const) {
+      await sql`insert into public.skills (key, node, module, title, tier_target, est_minutes, license, source, status, task_kinds, grader_types, phone_suitable)
+        values (${k}, 'math', ${hiddenMod}, 'BL-0048 hidden', 'L1', 10, 'CC0-1.0', 'bl0048-test', ${status},
+                ${sql.array(["worked_example", "retrieval"])}::public.task_kind[], ${sql.array(["exact_numeric"])}::public.grader_type[], false)`;
+    }
     for (const k of ALL) {
       const stub = k === S;
       await sql`insert into public.skills (key, node, module, title, tier_target, est_minutes, license, source, status, task_kinds, grader_types, phone_suitable)
-        values (${k}, 'math', ${mod}, 'BL-0048 test', 'L1', ${stub ? 0 : 10}, 'CC0-1.0', 'bl0048-test', ${stub ? "stub" : "draft"},
+        values (${k}, 'math', ${mod}, 'BL-0048 test', 'L1', ${stub ? 0 : 10}, 'CC0-1.0', 'bl0048-test', ${stub ? "stub" : "verified"},
                 ${sql.array(stub ? [] : ["worked_example", "retrieval"])}::public.task_kind[],
                 ${sql.array(stub ? [] : ["exact_numeric"])}::public.grader_type[], false)`;
     }
@@ -90,10 +101,24 @@ describe.skipIf(!reachable)("graph read API (database)", () => {
   afterAll(async () => {
     await sql`delete from public.skill_state where skill_key in ${sql(ALL)}`;
     await sql`delete from public.skill_edges where from_skill_key in ${sql(ALL)}`;
-    await sql`delete from public.skills where key in ${sql(ALL)}`;
-    await sql`delete from public.modules where key = ${`math.${mod}`}`;
-    for (const u of [learner, other]) await deleteTestUser(sql, u);
+    await sql`delete from public.skills where key in ${sql(ALL)} or key in (${HD}, ${HR})`;
+    await sql`delete from public.modules where key in (${`math.${mod}`}, ${`math.${hiddenMod}`})`;
+    for (const u of [learner, other, boss]) await deleteTestUser(sql, u);
     await sql.end();
+  });
+
+  it("BL-0048 RLS parity: draft and needs_human_review skills are hidden from a non-admin and shown to an admin", async () => {
+    const q = `/skills?module=${hiddenMod}`;
+    const mine = routes(learner);
+    expect((await json(await call(mine.list, q)))["items"]).toEqual([]);
+    for (const k of [HD, HR]) expect((await call(mine.skill, `/skills/${k}`, { skill_key: k })).status).toBe(404);
+    expect(JSON.stringify(await json(await call(mine.graph, "/graph")))).not.toContain(hiddenMod);
+    expect(JSON.stringify(await json(await call(mine.frontier, "/frontier")))).not.toContain(hiddenMod);
+
+    const admin = routes(boss);
+    expect((await json(await call(admin.list, q)))["items"].map((s: Json) => s["key"])).toEqual([HD, HR]);
+    for (const k of [HD, HR]) expect((await call(admin.skill, `/skills/${k}`, { skill_key: k })).status).toBe(200);
+    expect(JSON.stringify(await json(await call(admin.graph, "/graph")))).toContain(HD);
   });
 
   it("AC-1: listSkills pages by key, filters, merges only the caller's state and exposes no secret columns", async () => {
