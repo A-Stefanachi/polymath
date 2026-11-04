@@ -2,3 +2,17 @@
 export const PACKAGE_NAME = "@polymath/scheduler" as const;
 
 export * from "./elo.ts";
+export {
+  aggregateAttempts,
+  isQualifying,
+  masteryRule,
+  masteryState,
+  tierAttained,
+  type MasteryAttempt,
+  type MasteryRuleChecks,
+  type MasteryRuleOptions,
+  type MasteryRuleResult,
+  type MasteryStateInput,
+  type MasteryStateName,
+  type TierAttainedInput,
+} from "./mastery.ts";

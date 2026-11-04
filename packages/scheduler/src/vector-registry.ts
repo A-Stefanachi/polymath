@@ -44,10 +44,6 @@ export function vectorContext(): VectorContext {
  * the runner fails if a function is both implemented and listed, or named by a vector and in neither.
  */
 export const SKIPPED_FUNCTIONS: Readonly<Record<string, string>> = {
-  aggregate_attempts: "BL-0035",
-  mastery_rule: "BL-0035",
-  mastery_state: "BL-0035",
-  tier_attained: "BL-0035",
   needs_applied: "BL-0184",
   desired_retention: "BL-0187",
   tutor_overreliance: "BL-0188",
