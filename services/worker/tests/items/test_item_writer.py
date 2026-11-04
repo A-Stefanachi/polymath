@@ -85,6 +85,35 @@ def test_three_seeds_yield_three_verified_items_with_full_reports(db: Db, make_t
         assert sec[0][0]["reference"] > 0 and sec[0][1]["steps"]
 
 
+def _stored_solution(db: Db, key: str) -> dict[str, Any]:
+    rows = item_rows(db, key)
+    sec = db.execute("select solution from public.item_secrets where item_id = %s::uuid", (rows[0][5],))
+    return sec[0][0]
+
+
+def test_labelled_template_item_solution_carries_every_label(db: Db, make_template: Make) -> None:
+    """BL-0204 (00a K5): labels are copied, filled in like text_md."""
+
+    def label(t: dict[str, Any]) -> None:
+        steps = t["solution"]["steps"]
+        steps[0]["label"] = "Find the series current"
+        steps[1]["label"] = "Take the drop across R2"
+
+    tpl = make_template("labelled-steps", mutate=label)
+    item_writer.write_items(conn_of(db), tpl["key"], 1, [1])
+    steps = _stored_solution(db, tpl["key"])["steps"]
+    assert [s["label"] for s in steps] == ["Find the series current", "Take the drop across R2"]
+    assert all(s["text_md"] for s in steps)
+
+
+def test_unlabelled_template_item_solution_carries_no_label(db: Db, make_template: Make) -> None:
+    """BL-0204: existing items keep working without labels."""
+    tpl = make_template("unlabelled-steps")
+    item_writer.write_items(conn_of(db), tpl["key"], 1, [1])
+    steps = _stored_solution(db, tpl["key"])["steps"]
+    assert steps and all("label" not in s for s in steps)
+
+
 def test_wrong_generator_expression_yields_no_verified_item(db: Db, make_template: Make) -> None:
     """AC-2"""
 

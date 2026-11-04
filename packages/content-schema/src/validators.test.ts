@@ -73,6 +73,25 @@ describe("G0 rejects the 13 negative cases of the Python oracle", () => {
   });
 });
 
+describe("G0 step labels (BL-0204, 00a K5)", () => {
+  const withLabel = (label: unknown): Doc => {
+    const doc = base();
+    const steps = arr(obj(doc, "solution"), "steps");
+    (steps[0] as Doc)["label"] = label;
+    return doc;
+  };
+
+  it("accepts an optional label of 1 to 60 characters", () => {
+    expect(validateTemplate(withLabel("x")).valid).toBe(true);
+    expect(validateTemplate(withLabel("x".repeat(60))).valid).toBe(true);
+  });
+
+  it("rejects an empty label and one of 61 characters", () => {
+    expect(validateTemplate(withLabel("")).valid).toBe(false);
+    expect(validateTemplate(withLabel("x".repeat(61))).valid).toBe(false);
+  });
+});
+
 describe("key regexes", () => {
   it("acceptance 3: 'elec.dc.voltage-divider' is a skill key; 'Elec.dc.x' and 'elec.dc' are not", () => {
     expect(isKey("skill", "elec.dc.voltage-divider")).toBe(true);
