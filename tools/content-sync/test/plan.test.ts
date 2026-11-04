@@ -77,8 +77,11 @@ describe("planner on the real content", () => {
     ex.templates.push({ key: "tpl.math.gone", version: 1, status: "needs_human_review", sha256: "x", fuzzPassed: false });
     ex.templates.push({ key: "tpl.math.units-kilo", version: 2, status: "needs_human_review", sha256: "x", fuzzPassed: false });
     const p = buildPlan(loaded, ex);
+    // The newest version is read from the real content file, so a content edit that bumps it keeps this test valid.
+    const current = loaded.templates.find((t) => t.doc.key === "tpl.math.units-kilo")?.doc.version;
+    expect(current).toBeGreaterThan(2);
     expect(p.templates.retire).toEqual([
-      { key: "tpl.math.units-kilo", version: 2, reason: "superseded by version 3" },
+      { key: "tpl.math.units-kilo", version: 2, reason: `superseded by version ${String(current)}` },
       { key: "tpl.math.gone", version: 1, reason: "content file removed" },
     ]);
     const only = buildPlan(loaded, ex, { only: "tpl.math.units-kilo" });

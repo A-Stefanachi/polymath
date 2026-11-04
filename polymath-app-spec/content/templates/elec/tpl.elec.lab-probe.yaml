@@ -1,7 +1,7 @@
 schema_version: 1
 key: tpl.elec.lab-probe
 concept_static: true
-version: 2
+version: 3
 authoring_status: ready
 skill_key: elec.meas.lab-safety-esd
 task_kind: retrieval
@@ -64,7 +64,7 @@ answer:
   - id: correct
     correct: true
     value_expr: ans
-    text_md: Confirm the supply voltage and probe rating, then clip the probe ground lead to the circuit's ground node
+    text_md: Check supply and probe rating, then clip ground to circuit ground
   - id: nearest-node
     correct: false
     value_expr: w0

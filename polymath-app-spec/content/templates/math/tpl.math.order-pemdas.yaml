@@ -1,6 +1,6 @@
 schema_version: 1
 key: tpl.math.order-pemdas
-version: 3
+version: 4
 authoring_status: ready
 skill_key: math.alg.order-of-operations
 task_kind: problem
@@ -41,6 +41,9 @@ parameters:
   type: int
   min: 2
   max: 9
+derived:
+- name: prod
+  expr: b * c
 constraints: []
 render:
   stem_md: Evaluate ${{a|int}} + {{b|int}} \times {{c|int}}$.
@@ -53,9 +56,9 @@ solution:
       ans: a + b * c
   steps:
   - id: s1
-    text_md: 'Multiply first: ${{b|int}} \times {{c|int}}$.'
+    text_md: 'Multiply first: ${{b|int}} \times {{c|int}} = {{prod|int}}$.'
   - id: s2
-    text_md: Then add ${{a|int}}$ to get ${{ans|int}}$.
+    text_md: 'Then add: ${{a|int}} + {{prod|int}} = {{ans|int}}$.'
 answer:
   kind: numeric
   value: ans
@@ -90,7 +93,7 @@ verifiers:
 hints:
   l1: Which operation comes first when there are no parentheses?
   l2: Multiplication comes before addition.
-  l3: 'Work out the product on its own: ${{b|int}} 	imes {{c|int}}$.'
+  l3: 'Work out the product on its own: ${{b|int}} \times {{c|int}}$.'
 misconceptions:
 - tag: mc.add-first
   description: Adds left to right instead of multiplying first.

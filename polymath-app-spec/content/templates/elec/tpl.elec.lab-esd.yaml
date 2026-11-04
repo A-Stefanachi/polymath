@@ -1,7 +1,7 @@
 schema_version: 1
 key: tpl.elec.lab-esd
 concept_static: true
-version: 2
+version: 3
 authoring_status: ready
 skill_key: elec.meas.lab-safety-esd
 task_kind: retrieval
@@ -62,8 +62,7 @@ answer:
   - id: correct
     correct: true
     value_expr: ans
-    text_md: Wear an ESD wrist strap with its built-in resistor, clipped to the bench ESD ground point, and work on an ESD
-      mat
+    text_md: Wear a grounded ESD wrist strap and work on an ESD mat
   - id: no-spark
     correct: false
     value_expr: w0

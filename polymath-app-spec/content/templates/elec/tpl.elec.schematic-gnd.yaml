@@ -1,7 +1,7 @@
 schema_version: 1
 key: tpl.elec.schematic-gnd
 concept_static: true
-version: 2
+version: 3
 authoring_status: ready
 skill_key: elec.meas.schematic-reading
 task_kind: retrieval
@@ -61,7 +61,7 @@ answer:
   - id: correct
     correct: true
     value_expr: ans
-    text_md: 'The circuit''s common reference node: voltages are measured from it and it counts as 0 V'
+    text_md: The shared 0 V node that voltages are measured from
   - id: mains-earth
     correct: false
     value_expr: w0

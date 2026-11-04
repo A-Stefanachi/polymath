@@ -1,6 +1,6 @@
 schema_version: 1
 key: tpl.math.rearrange-ohm
-version: 2
+version: 3
 authoring_status: ready
 skill_key: math.alg.rearrange-formulas
 task_kind: problem
@@ -112,7 +112,7 @@ verifiers:
 hints:
   l1: Which letter has to end up alone on one side?
   l2: Undo the multiplication that is attached to R by doing the opposite to both sides.
-  l3: 'Divide both sides by the current: $R = {{v}}\,\mathrm{V} \, / \, {{i}}\,\mathrm{A}$.'
+  l3: 'Divide both sides of $V = I R$ by $I$, so that $R$ stands alone: $R = V / I$.'
 misconceptions:
 - tag: mc.multiplies-instead
   description: Multiplies V by I instead of dividing.

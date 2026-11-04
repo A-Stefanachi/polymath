@@ -1,6 +1,6 @@
 schema_version: 1
 key: tpl.elec.thevenin-model
-version: 2
+version: 3
 authoring_status: ready
 skill_key: elec.dc.thevenin-norton
 task_kind: problem
@@ -101,7 +101,7 @@ render:
     Replace everything except the load with its Thevenin equivalent, then find the current through $R_L$.
 
     '
-  answer_prompt: Enter the current with a unit, for example 12 mA.
+  answer_prompt: Enter the current with a unit, for example 12.4 mA. Give three significant figures.
   alt_text: A {{vs|eng}} source feeds R1 of {{r1|eng}} to node A. R2 of {{r2|eng}} joins A to ground. A load of {{rl|eng}}
     joins A to ground. Find the load current using a Thevenin equivalent.
 solution:

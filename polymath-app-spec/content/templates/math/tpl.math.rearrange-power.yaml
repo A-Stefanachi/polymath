@@ -1,6 +1,6 @@
 schema_version: 1
 key: tpl.math.rearrange-power
-version: 2
+version: 3
 authoring_status: ready
 skill_key: math.alg.rearrange-formulas
 task_kind: problem
@@ -121,7 +121,7 @@ verifiers:
 hints:
   l1: Which letter has to end up alone on one side?
   l2: Undo the multiplication that is attached to I by doing the opposite to both sides.
-  l3: 'Divide both sides by the voltage: $I = {{p}}\,\mathrm{W} \, / \, {{v}}\,\mathrm{V}$.'
+  l3: 'Divide both sides of $P = V I$ by $V$, so that $I$ stands alone: $I = P / V$.'
 misconceptions:
 - tag: mc.inverted-fraction
   description: Divides V by P, the fraction upside down.
