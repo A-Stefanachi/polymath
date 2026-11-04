@@ -32,4 +32,5 @@ export * from "./pack.ts";
 export * from "./applied-gap.ts";
 export * from "./plan.ts";
 export * from "./params.ts";
+export * from "./overreliance.ts";
 export type { AttemptSnapshot } from "./types.ts";

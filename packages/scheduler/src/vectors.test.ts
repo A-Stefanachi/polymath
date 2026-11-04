@@ -62,7 +62,7 @@ describe("scheduler_test_vectors.json", () => {
     });
   });
 
-  describe("skipped functions (not implemented yet)", () => {
+  describe.runIf(Object.keys(SKIPPED_FUNCTIONS).length > 0)("skipped functions (not implemented yet)", () => {
     for (const [fn, task] of Object.entries(SKIPPED_FUNCTIONS)) {
       it.todo(`${fn}: ${plan.skippedPerFunction[fn] ?? 0} vectors, delivered by ${task}`);
     }
@@ -77,5 +77,12 @@ describe("scheduler_test_vectors.json", () => {
   // BL-0039 gate: once every function is implemented, nothing may remain pending.
   it("has an empty pending list once no function is skipped", () => {
     if (Object.keys(SKIPPED_FUNCTIONS).length === 0) expect(Object.keys(PENDING_VECTOR_IDS)).toEqual([]);
+  });
+
+  // BL-0039 AC: every vector runs, none skipped (the reference check reports the same count).
+  it("runs every vector with none skipped or pending", () => {
+    expect(plan.byStatus.run).toHaveLength(file.count);
+    expect(plan.byStatus.skipped).toEqual([]);
+    expect(plan.byStatus.pending).toEqual([]);
   });
 });

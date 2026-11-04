@@ -43,9 +43,7 @@ export function vectorContext(): VectorContext {
  * reports them as todo (never passed). A function must leave this list in the task that implements it;
  * the runner fails if a function is both implemented and listed, or named by a vector and in neither.
  */
-export const SKIPPED_FUNCTIONS: Readonly<Record<string, string>> = {
-  tutor_overreliance: "BL-0188",
-};
+export const SKIPPED_FUNCTIONS: Readonly<Record<string, string>> = {};
 
 /**
  * Vector ids of an implemented function whose expected value needs a feature that BL-0184 to BL-0187

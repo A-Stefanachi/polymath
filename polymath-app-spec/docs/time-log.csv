@@ -45,3 +45,4 @@ BL-0037,2026-11-04,2026-11-04,0,1.5,Session packer, interleave stages, checkpoin
 BL-0042,2026-11-04,2026-11-04,0,60,Domain service applying graded attempts to review_log and skill_state by agent (autoswe direct track)
 BL-0184,2026-11-04,2026-11-04,0,0.5,needs_applied derivation and applied_gap acceptance checks by agent (autoswe direct track)
 BL-0038,2026-11-04,2026-11-04,0,0.5,weeklyPlanSlots and rebalance by agent (autoswe direct track)
+BL-0039,2026-11-04,2026-11-04,0,0.5,All scheduler vectors pass; tutorOverreliance pure function by agent (autoswe direct track)
