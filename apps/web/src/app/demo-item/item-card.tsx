@@ -10,6 +10,7 @@ import { FeedbackPanel } from "@/components/ui/feedback-panel";
 import { NumericAnswer } from "@/components/ui/numeric-answer";
 import { TaskCard } from "@/components/ui/task-card";
 import { demoItem as t } from "@/copy/strings";
+import { feedbackBody } from "@/lib/feedback-body";
 
 type Rendered = { prompt_md: string; alt_text?: string; answer_prompt?: string };
 type Loaded = { itemId: string; rendered: Rendered; startedAt: string };
@@ -17,11 +18,7 @@ type Result = { correct: boolean | null; status: string; feedback?: string; unit
 
 const NUMBER_AND_UNIT = /^\s*([-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?)\s*(\S*)\s*$/;
 
-/** The grader's message without a lead-in that repeats the panel title ("Correct. ..."). */
-export function feedbackBody(feedback: string | undefined, title: string): string {
-  const text = (feedback ?? "").trim();
-  return text.startsWith(title) ? text.slice(title.length).trim() : text;
-}
+export { feedbackBody };
 
 /** Statement text with `$...$` spans typeset by KaTeX (trust off: no \href or raw HTML). */
 function Statement({ source }: { source: string }) {
