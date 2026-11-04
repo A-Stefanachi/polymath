@@ -6,7 +6,7 @@
 #   bash tools/ci/local-ci.sh                 all jobs
 #   bash tools/ci/local-ci.sh --skip docker   skip the worker image build (slow, needs network)
 #   bash tools/ci/local-ci.sh --only database run one job: typescript, secrets, python, docker, parity,
-#                                             package-checks, database, web-db
+#                                             content, package-checks, database, web-db
 #
 # Needs Docker (local Supabase), Node 24 with pnpm, uv, Python 3.12, gitleaks and PostgreSQL 17 binaries.
 # The database job runs `supabase db reset`: it wipes the local database, as CI starts from an empty one.
@@ -65,6 +65,11 @@ fi
 if want python; then
   step ruff "uvx ruff@0.16.9 check services tools --extend-exclude tools/boundaries/fixtures && uvx ruff@0.16.9 format --check services tools --extend-exclude tools/boundaries/fixtures"
   step service-tests "bash tools/ci/service-tests.sh"
+fi
+
+if want content; then
+  # BL-0052: G2 fuzz of every template (about 20 s); CI caps it to the templates changed in the PR.
+  step content-fuzz "cd services/worker && CI=true uv run --frozen python -m polymath_worker.content.fuzz_cli"
 fi
 
 if want docker; then
