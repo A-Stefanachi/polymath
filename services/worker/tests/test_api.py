@@ -14,6 +14,13 @@ from polymath_worker.main import create_app
 NOW = 1_800_000_000.0
 CURRENT, PREVIOUS = "current-secret", "previous-secret"
 PATH = "/grade/symbolic"
+VALID = json.dumps(
+    {
+        "response_text": "x^2",
+        "reference": "x**2",
+        "spec": {"variables": ["x"], "sample_domain": {"x": [0.3, 2.5]}},
+    }
+).encode()
 
 
 def _client(previous=PREVIOUS, expires=None, current=CURRENT):
@@ -24,7 +31,8 @@ def _client(previous=PREVIOUS, expires=None, current=CURRENT):
 def _post(client, secret, body=b"{}", ts=NOW, path=PATH, signature=None):
     t = str(int(ts))
     sig = signature if signature is not None else sign(secret, t, "POST", path, body)
-    return client.post(path, content=body, headers={"X-Polymath-Timestamp": t, "X-Polymath-Signature": sig})
+    headers = {"X-Polymath-Timestamp": t, "X-Polymath-Signature": sig, "Content-Type": "application/json"}
+    return client.post(path, content=body, headers=headers)
 
 
 def test_healthz_is_public_and_reports_git_sha(monkeypatch):
@@ -42,15 +50,15 @@ def test_wrong_signature_is_401():
     assert _post(_client(), "other-secret").status_code == 401
 
 
-def test_current_secret_is_accepted_and_stub_says_not_implemented():
-    r = _post(_client(), CURRENT)
+def test_current_secret_is_accepted_and_grades_a_request():
+    r = _post(_client(), CURRENT, body=VALID)
     assert r.status_code == 200
-    assert r.json()["status"] == "not_implemented"
+    assert r.json()["status"] == "graded"
 
 
 def test_previous_secret_is_accepted_during_rotation_window():
     expires = datetime.fromtimestamp(NOW + 3600, tz=UTC)
-    assert _post(_client(expires=expires), PREVIOUS).status_code == 200
+    assert _post(_client(expires=expires), PREVIOUS, body=VALID).status_code == 200
 
 
 def test_previous_secret_is_rejected_after_rotation_window():
@@ -67,7 +75,7 @@ def test_signature_covers_body_and_path():
 
 def test_timestamp_window_boundary():
     c = _client()
-    assert _post(c, CURRENT, ts=NOW - REPLAY_WINDOW_S).status_code == 200
+    assert _post(c, CURRENT, body=VALID, ts=NOW - REPLAY_WINDOW_S).status_code == 200
     assert _post(c, CURRENT, ts=NOW - REPLAY_WINDOW_S - 1).status_code == 401
     assert _post(c, CURRENT, ts=NOW + REPLAY_WINDOW_S + 1).status_code == 401
 
@@ -78,7 +86,8 @@ def test_without_configured_secret_everything_is_rejected():
 
 def test_body_size_cap_boundary():
     c = _client()
-    assert _post(c, CURRENT, body=b"x" * MAX_BODY_BYTES).status_code == 200
+    # At the cap the request passes the HMAC gate (and fails body validation); one byte over is 413.
+    assert _post(c, CURRENT, body=b"x" * MAX_BODY_BYTES).status_code == 422
     assert _post(c, CURRENT, body=b"x" * (MAX_BODY_BYTES + 1)).status_code == 413
 
 
