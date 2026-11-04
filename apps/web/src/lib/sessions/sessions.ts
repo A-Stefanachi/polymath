@@ -7,6 +7,7 @@
 import { computeFrontier } from "@polymath/scheduler";
 import type { components } from "@polymath/shared-types";
 import { ApiError } from "@/lib/api/errors";
+import { BUCKETS } from "@/lib/api/rate-limit.ts";
 import { json, type ApiContext } from "@/lib/api/route";
 import { commitSessionReviews, defaultStateDeps, type StateDeps } from "@/lib/state/apply-attempt.ts";
 import { privilegedDb } from "@/server/privileged/db";
@@ -23,6 +24,7 @@ import { appliedGapSkills, BREAK_AFTER_MIN } from "./pack-inputs.ts";
 
 type BuildSessionRequest = components["schemas"]["BuildSessionRequest"];
 type CompleteSessionRequest = components["schemas"]["CompleteSessionRequest"];
+type PreviewBody = Omit<components["schemas"]["SessionPreview"], "tasks"> & { tasks: Record<string, unknown>[] };
 type Session = components["schemas"]["Session"];
 type SessionTask = components["schemas"]["SessionTask"];
 type SessionSummary = components["schemas"]["SessionSummary"];
@@ -128,10 +130,13 @@ async function sweep(deps: SessionDeps, user: string, now: Date): Promise<void> 
 export async function buildSession(ctx: ApiContext, deps: SessionDeps = defaultSessionDeps()): Promise<Response> {
   const user = userId(ctx);
   const body = ctx.body as BuildSessionRequest;
-  if (body.dry_run === true) throw bad("dry_run", "previews are not available yet");
+  // Preview (G16, doc 03 5.1): the same plan and item selection, but nothing is written. Its own rate-limit
+  // bucket, no sweep (it closes stale sessions), no pool top-up job and no reservation.
+  const preview = body.dry_run === true;
+  if (preview) await ctx.limit(BUCKETS.session_preview);
   const started = performance.now();
   const now = deps.now();
-  await sweep(deps, user, now);
+  if (!preview) await sweep(deps, user, now);
   if (body.plan_slot_id !== undefined && !(await deps.store.ownsPlanSlot(user, body.plan_slot_id))) throw new ApiError("not_found");
   if (await deps.store.hasOpenSession(user)) throw new ApiError("open_session_exists");
 
@@ -172,7 +177,7 @@ export async function buildSession(ctx: ApiContext, deps: SessionDeps = defaultS
     });
   }
 
-  await deps.pool(user, [...new Set(plan.tasks.flatMap((t) => (t.skill_key === null ? [] : [t.skill_key])))], now);
+  if (!preview) await deps.pool(user, [...new Set(plan.tasks.flatMap((t) => (t.skill_key === null ? [] : [t.skill_key])))], now);
   const assigned = assignItems(plan.tasks, snapshot.candidates, body.context, {
     states: setup.states,
     graph: setup.graph,
@@ -184,6 +189,27 @@ export async function buildSession(ctx: ApiContext, deps: SessionDeps = defaultS
   // A lab slot without project steps is served as a focus session (00a G4).
   const sessionType = plan.served_as ?? type;
   const planned = plannedMinutes(sessionType, assigned.tasks, body.available_minutes);
+  if (preview) {
+    return json({
+      dry_run: true,
+      session_type: sessionType,
+      context: body.context,
+      available_minutes: body.available_minutes,
+      planned_min: planned,
+      builder_version: "v1",
+      graph_version: snapshot.graphVersion,
+      plan_slot_id: body.plan_slot_id ?? null,
+      tasks: assigned.tasks.map((t) => ({
+        position: t.position,
+        task_kind: t.taskKind,
+        skill_key: t.skillKey,
+        project_step_key: null, // the lean slice feeds no project steps (pack-inputs.ts)
+        est_seconds: t.estSeconds,
+        reason: t.reason,
+        assessment_kind: null,
+      })),
+    } satisfies PreviewBody);
+  }
   const id = await deps.store.create(
     user,
     {

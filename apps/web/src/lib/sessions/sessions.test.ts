@@ -52,6 +52,7 @@ let learner = "";
 let other = "";
 let pooless = "";
 let reviewee = "";
+let previewer = "";
 
 type Json = Record<string, unknown>;
 const headers = (key?: string) => ({ "content-type": "application/json", ...(key ? { "idempotency-key": key } : {}) });
@@ -84,7 +85,13 @@ async function buildOk(userId: string, body: Json = MICRO): Promise<Json> {
 
 describe.skipIf(!reachable)("session builder API (database)", () => {
   beforeAll(async () => {
-    [learner, other, pooless, reviewee] = [await createTestUser(sql), await createTestUser(sql), await createTestUser(sql), await createTestUser(sql)];
+    [learner, other, pooless, reviewee, previewer] = [
+      await createTestUser(sql),
+      await createTestUser(sql),
+      await createTestUser(sql),
+      await createTestUser(sql),
+      await createTestUser(sql),
+    ];
     await sql`insert into public.modules (key, node, module, title, order_index) values (${`math.${moduleName}`}, 'math', ${moduleName}, 'BL-0044 test', 0)`;
     for (const [skill, phone] of [[s1, true], [s2, true]] as const) {
       await sql`insert into public.skills (key, node, module, title, tier_target, est_minutes, license, source, status, task_kinds, grader_types, phone_suitable)
@@ -103,12 +110,16 @@ describe.skipIf(!reachable)("session builder API (database)", () => {
     await addItems(learner, s1, 3);
     await addItems(learner, s2, 3);
     await addItems(other, s1, 3);
+    await addItems(previewer, s1, 3);
+    await addItems(previewer, s2, 3);
+    await sql`insert into public.skill_state (user_id, skill_key, mastery_state, due, last_review, stability, difficulty, reps, fsrs_state, tier_attained, first_seen_at)
+      values (${previewer}, ${s2}, 'reviewing', now() - interval '1 day', now() - interval '6 days', 5, 5, 3, 2, 'L1', now() - interval '30 days')`;
     await addItems(reviewee, s1, 6); // five builds in this file draw on it
     await addItems(pooless, s1, 2, "needs_human_review");
   });
 
   afterAll(async () => {
-    const users = [learner, other, pooless, reviewee];
+    const users = [learner, other, pooless, reviewee, previewer];
     await sql`delete from public.jobs where user_id in ${sql(users)}`;
     await sql`delete from public.events where user_id in ${sql(users)}`;
     await sql`delete from public.attempts where user_id in ${sql(users)}`;
@@ -163,13 +174,12 @@ describe.skipIf(!reachable)("session builder API (database)", () => {
     expect(await sql`select 1 from public.jobs where user_id = ${pooless} and kind = 'pregenerate_items' and priority = 100`).toHaveLength(1);
   });
 
-  it("rejects extra fields, bad ranges, dry_run and a focus skill off the frontier with 400", async () => {
+  it("rejects extra fields, bad ranges and a focus skill off the frontier with 400", async () => {
     const r = routes(other).build;
     const bodies: Json[] = [
       { ...MICRO, surprise: 1 },
       { ...MICRO, available_minutes: 0 },
       { ...MICRO, available_minutes: 241 },
-      { ...MICRO, dry_run: true },
       { ...MICRO, session_type: "focus" },
       { ...MICRO, skill_focus: "math.nothing.here" },
     ];
@@ -303,5 +313,57 @@ describe.skipIf(!reachable)("session builder API (database)", () => {
     expect(all.items.length).toBeGreaterThanOrEqual(3);
     expect(all.items.every((s) => s["status"] === "abandoned")).toBe(true);
     for (const bad of ["limit=0", "limit=101", "status=weird", "cursor=%%%"]) expect((await get(r.list, `/sessions?${bad}`)).status).toBe(400);
+  });
+
+  // BL-0191 (G16): dry_run previews the same plan without writing anything.
+  const footprint = async (userId: string) => ({
+    sessions: (await sql`select 1 from public.sessions where user_id = ${userId}`).length,
+    tasks: (await sql`select 1 from public.session_tasks where user_id = ${userId}`).length,
+    events: (await sql`select 1 from public.events where user_id = ${userId}`).length,
+    jobs: (await sql`select 1 from public.jobs where user_id = ${userId}`).length,
+    keys: (await sql`select 1 from public.idempotency_keys where user_id = ${userId}`).length,
+  });
+  const strip = (tasks: Json[]) =>
+    tasks.map((t) => ({ position: t["position"], task_kind: t["task_kind"], skill_key: t["skill_key"], est_seconds: t["est_seconds"], reason: t["reason"] }));
+
+  it("AC-1 (BL-0191): ten dry_run calls write nothing and the next real build has the same task list", async () => {
+    const before = await footprint(previewer);
+    let preview: Json = {};
+    for (let n = 0; n < 10; n += 1) {
+      const res = await post(routes(previewer).build, "/sessions/build", { ...MICRO, dry_run: true }, `bl191-${tag}`);
+      expect(res.status).toBe(200);
+      preview = (await res.json()) as Json;
+    }
+    expect(await footprint(previewer)).toEqual(before);
+    expect(preview).toMatchObject({ dry_run: true, session_type: "micro", context: "phone", available_minutes: 15 });
+    const previewTasks = preview["tasks"] as Json[];
+    expect(previewTasks.length).toBeGreaterThanOrEqual(3);
+    for (const t of previewTasks) expect(t).not.toHaveProperty("item_id");
+    expect(JSON.stringify(preview)).not.toMatch(/"id"|answer_key|rendered/);
+    // The Idempotency-Key was not consumed: a real build may reuse it.
+    const real = await post(routes(previewer).build, "/sessions/build", MICRO, `bl191-${tag}`);
+    expect(real.status).toBe(201);
+    const session = (await real.json()) as Json;
+    expect(strip(session["tasks"] as Json[])).toEqual(strip(previewTasks));
+    expect(session["planned_min"]).toBe(preview["planned_min"]);
+    // Same 409 rule as a real build while a session is open.
+    const open = await post(routes(previewer).build, "/sessions/build", { ...MICRO, dry_run: true });
+    expect(open.status).toBe(409);
+    expect(((await open.json()) as Json)["code"]).toBe("open_session_exists");
+    await clearOpen(previewer);
+  });
+
+  it("BL-0191: a preview with only unverified items is 503 and enqueues no pool job", async () => {
+    const before = await footprint(pooless);
+    const res = await post(routes(pooless).build, "/sessions/build", { ...MICRO, dry_run: true });
+    expect(res.status).toBe(503);
+    expect(((await res.json()) as Json)["code"]).toBe("item_pool_empty");
+    expect(await footprint(pooless)).toEqual(before);
+  });
+
+  it("BL-0191: dry_run must be a boolean and unknown fields are still rejected", async () => {
+    for (const b of [{ ...MICRO, dry_run: "yes" }, { ...MICRO, dry_run: true, surprise: 1 }]) {
+      expect((await post(routes(previewer).build, "/sessions/build", b)).status).toBe(400);
+    }
   });
 });
