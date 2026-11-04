@@ -90,6 +90,30 @@ jobs:
       - name: worker image runs as non-root with ngspice
         run: docker run --rm polymath-worker:ci sh -c 'test "$(id -un)" = worker && command -v ngspice && python -c "import polymath_worker.main"'
 
+  # BL-0052: G2 fuzz run (200 seeded samples) on the templates changed in the push or PR, with the worker's own
+  # code (doc 07 sections 7 and 10). Exit code 2 fails the job; --no-fuzz is refused because CI is set.
+  content:
+    name: content (G2 fuzz of changed templates)
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: |
+            services/*/pyproject.toml
+            services/*/uv.lock
+      - name: G2 fuzz of changed templates (per-template summary)
+        # A ref that cannot be resolved (first push of a branch) fuzzes every template.
+        run: cd services/worker && uv run --frozen python -m polymath_worker.content.fuzz_cli --changed-since "$BASE_SHA"
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+
   # BL-0019: the TypeScript exact_numeric grader gives the same JSON grades as the Python reference.
   python-vs-ts-parity:
     name: python-vs-ts parity

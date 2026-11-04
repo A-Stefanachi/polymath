@@ -3,11 +3,12 @@ polymath-app-spec/reference/verifiers/verify_template.py (BL-0017). Doc 07 secti
 
 Kept: the verifier kinds sympy_solve, sympy_exact, polar_vs_rectangular, pint_dimension, bounds,
 distinct_options, sympy_diff_vs_numeric and fault_uniqueness, plus self_grade, check_render and verify_item.
-Left out on purpose: the code and SPICE verifiers (reference_code_passes, model_vs_reference_code,
-golden_vectors, mutants_fail, spice_vs_closed_form, netlist_lint_reference) and the fuzz/CLI driver. They run
-gcc or ngspice, and that execution belongs to services/sandbox-runner (CLAUDE.md rule 7). A template that
-lists one of them gets status `skipped` for that verifier, which doc 07 section 6 turns into
-`needs_human_review`. Differences from the reference: imports, no ALLOW_SKIP switch (a skip is never a
+The registry names all 14 kinds of doc 07 section 5.3 (BL-0051): the code and SPICE ones
+(reference_code_passes, model_vs_reference_code, golden_vectors, mutants_fail, spice_vs_closed_form,
+netlist_lint_reference) run gcc, ngspice or the template's Python model, and that execution belongs to
+services/sandbox-runner (CLAUDE.md rule 7). A template that lists one of them gets status `skipped` for that
+verifier (`SANDBOX_KINDS`), which doc 07 section 6 turns into `needs_human_review`. The fuzz driver is
+`fuzz.py`. Differences from the reference: imports, no ALLOW_SKIP switch (a skip is never a
 pass) and no `code_cache`.
 """
 
@@ -232,6 +233,35 @@ REGISTRY = {
     "fault_uniqueness": v_fault_uniqueness,
 }
 
+# The other six of the 14 kinds of doc 07 section 5.3. They compile and run C, execute the template's Python
+# model or call ngspice, so the worker process does not run them (CLAUDE.md rule 7); the sandbox runner does,
+# in a later task. Until then each yields `skipped`, which is never a pass: doc 07 section 6 turns it into
+# `needs_human_review`.
+SANDBOX_KINDS = frozenset(
+    {
+        "reference_code_passes",
+        "model_vs_reference_code",
+        "golden_vectors",
+        "mutants_fail",
+        "spice_vs_closed_form",
+        "netlist_lint_reference",
+    }
+)
+IMPLEMENTED_KINDS = frozenset(REGISTRY) | SANDBOX_KINDS
+
+
+def run_verifier(tpl: dict, item: dict, v: dict) -> dict:
+    """Run one verifier entry and return its result dict: status pass, fail or skipped, plus evidence."""
+    kind = v["kind"]
+    fn = REGISTRY.get(kind)
+    if fn is None:
+        why = "requires services/sandbox-runner" if kind in SANDBOX_KINDS else "no implementation"
+        return {"status": "skipped", "detail": f"{why} for {kind}"}
+    try:
+        return fn(tpl, item, v)
+    except (Fail, se.ExprError, KeyError, ZeroDivisionError, ValueError) as e:
+        return {"status": "fail", "detail": str(e)}
+
 
 # ----------------------------------------------------------------------------- self-grade and wrong answers
 
@@ -344,16 +374,13 @@ def verify_item(tpl: dict, seed: int) -> dict:
     results, reasons = [], []
     for v in tpl["verifiers"]:
         kind = v["kind"]
-        fn = REGISTRY.get(kind)
         t1 = time.time()
-        if fn is None:
-            res = {"status": "skipped", "detail": f"no implementation for {kind}"}
-        else:
-            try:
-                res = fn(tpl, item, v)
-            except (Fail, se.ExprError, KeyError, ZeroDivisionError, ValueError) as e:
-                res = {"status": "fail", "detail": str(e)}
-        res = {"id": v["id"], "kind": kind, **res, "ms": int((time.time() - t1) * 1000)}
+        res = {
+            "id": v["id"],
+            "kind": kind,
+            **run_verifier(tpl, item, v),
+            "ms": int((time.time() - t1) * 1000),
+        }
         results.append(res)
     for r in results:
         if r["status"] != "pass":  # doc 07 section 7, G2: 0 skipped
