@@ -6,6 +6,38 @@ Record go/no-go outcomes, lean-gate releases, and scope-down choices here before
 
 <!-- Entries appear newest first. -->
 
+## 2026-11-04: CI runs locally only (00a L1)
+
+Decision: the founder removed GitHub Actions CI ("remove CI altogether and run it only locally"). Runs had queued for GitHub runners and held up merges.
+
+- Deleted `.github/workflows/ci.yml`. `deploy-staging.yml` stays: it deploys `main` and is not a check.
+- `pnpm ci:local` runs `tools/ci/local-ci.sh`, the same jobs on the founder's machine. A pull request merges only after a full run passes on its head commit.
+- `tools/ci/spec-validators.sh` now runs `validate_lessons.py`.
+- `infra/BRANCH-PROTECTION.md`: required status checks off. **Founder action:** turn off "Require status checks to pass" for `main` in GitHub settings, otherwise pull requests wait for checks that never report.
+- Next three tasks: BL-0198, BL-0199, BL-0200.
+
+## 2026-11-04: teaching layer (00a K1 to K12)
+
+Decision: the founder reported that the app "is not really teaching" and asked which teaching method fits the curriculum. After the research and the agent's recommendation, the founder asked for the specification ("create the specs for it").
+
+- Finding: a worked example showed only the problem statement. The solution steps were generated and stored in `item_secrets.solution`, but H1 was never built and the OpenAPI file had no field for them. Nothing explained an idea before practice.
+- Method chosen: explicit instruction, then worked examples with fading, then spaced retrieval. A short concept primer (lesson) runs inside the existing `worked_example` task, followed by a stepper with labelled steps and "pick the step's purpose" self-explanation. Faded problems show their given steps. There is no new task kind and no scheduler change. The 4.0-minute estimate and the reference vectors are unchanged.
+- Evidence used (doc 02 M14, all [S] or [R]): worked examples g = 0.48 in math; explanations help conceptual more than procedural knowledge; pre-training; refutation texts g = 0.41; subgoal labels. Added self-explanation prompts lowered the worked-example benefit in one meta-analysis, so typing is optional.
+- Specification added:
+  - 00a section K;
+  - `skill_lessons` in `schemas/schema.sql`, with 7 new database tests (all 257 pass on PostgreSQL 17);
+  - `WorkedStep`, `LessonView`, `TaskDetail.lesson` and the `rendered.worked_steps` fields in the OpenAPI file;
+  - the optional step `label` in the template schema;
+  - `schemas/lesson.schema.json`, `reference/validate_lessons.py` and a draft sample lesson for `elec.dc.ohms-law`;
+  - docs 02 (M14, LS-096 to LS-101, PRM-21), 04, 05 §5.6, 06 §7.2, 07 (L27, §15), 09 S08 and 11 §9 (two events).
+- Shipped with the specification so CI stays green, because CI compares each of these with the specification:
+  - the additive migration `20261104000000_skill_lessons.sql` (`pnpm db:diff-reference` is clean);
+  - regenerated `packages/shared-types` (API, database and event types);
+  - lint L27 in `tools/content-lint`, with its fixture.
+  No learner-facing behaviour changes until BL-0198.
+- Cost: eight lean tasks, BL-0198 to BL-0205, about 18 central founder-attention hours [P]. The lean target's upper bound moves from 225 to 250 founder hours.
+- Next three tasks: BL-0198 (serve worked steps), BL-0199 (stepper and faded cards), BL-0200 (lessons content type and sync).
+
 ## 2026-11-04: visual design "Bench Arcade" (00a J7)
 
 Decision: the founder found the M0 UI hard to like. They asked for a researched, readable and engaging design with 90s pixel-art icons, then approved the clickable prototype ("its perfect, put it in").

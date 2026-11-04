@@ -253,6 +253,27 @@ export function l25({ t }: Ctx): string[] {
   return [];
 }
 
+/**
+ * Step labels (00a K5): from 4 steps every step names its goal, because the stepper shows the labels and
+ * offers them as the self-explanation choices (00a K4); labels in one template must differ.
+ */
+export function l27({ t }: Ctx): string[] {
+  const steps = asArray(asDoc(t["solution"])["steps"]).map(asDoc);
+  const labels = steps.map((s) => (typeof s["label"] === "string" ? s["label"].trim() : ""));
+  const out: string[] = [];
+  if (steps.length >= 4) {
+    const missing = steps.flatMap((s, i) => (labels[i] === "" ? [str(s["id"]) || `#${String(i + 1)}`] : []));
+    if (missing.length > 0) out.push(`solution.steps has ${String(steps.length)} steps, so every step needs a label (missing: ${missing.join(", ")})`);
+  }
+  const seen = new Set<string>();
+  for (const label of labels.filter((l) => l !== "")) {
+    const key = label.toLowerCase();
+    if (seen.has(key)) out.push(`solution.steps label "${label}" is used twice; each step's goal must be distinct`);
+    seen.add(key);
+  }
+  return out;
+}
+
 /** Advisory only: a very long sentence in text the learner reads. */
 export function l26({ t }: Ctx): string[] {
   const out: string[] = [];

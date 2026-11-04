@@ -903,6 +903,12 @@
               "id": {
                 "type": "string"
               },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 60,
+                "description": "The step's goal as a short imperative, shown in the worked-example stepper and used as the self-explanation choices (00a K4, K5). Required on every step when a template has 4 or more steps (lint)."
+              },
               "text_md": {
                 "type": "string"
               }

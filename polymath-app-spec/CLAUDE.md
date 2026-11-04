@@ -89,6 +89,7 @@ These are the command names the backlog tasks create. Until the creating task is
 | `python3 reference/validate_spine_coherence.py` | spine-module-plan vs graph + spine-planned-skills.yaml | exists (validated) |
 | `python3 reference/validate_projects.py` | project ladder validator | exists (validated) |
 | `python3 reference/validate_templates.py` | sample template schema check | exists (validated) |
+| `python3 reference/validate_lessons.py` | concept primers in `content/lessons/` (schema, word limits, misconception tag, safe SVG; 00a K6) | exists (validated) |
 | `cd reference/verifiers && python3 -m pytest tests -q` | grader and verifier reference tests | exists (validated) |
 | `python3 reference/scheduler_reference.py check reference/scheduler_test_vectors.json` | scheduler reference vectors | exists (validated) |
 | `python3 reference/validate_backlog.py` | backlog consistency | exists (validated) |
@@ -160,7 +161,7 @@ While `backlog.yaml` → `meta.factory_gate.lean_only_until_task` (**BL-0181**) 
 
 - Commit message: `BL-xxxx: imperative summary` (72 characters or fewer), small commits, no unrelated reformatting. Keep any attribution trailers the harness asks for.
 - PR title: `BL-xxxx <task title>`. Body: what changed and why; how each acceptance test was run (command and result); files outside the task's expected scope (should be none); risks; docs and migrations updated; things you could not verify.
-- Squash merge. No force push to `main`. No merge with red CI.
+- Squash merge. No force push to `main`. No merge unless `pnpm ci:local` (`tools/ci/local-ci.sh`) passed on the PR's head commit, with its summary pasted into the PR. There is no GitHub Actions CI (00a L1).
 
 ## 11. Safety, security and privacy reminders for every change
 

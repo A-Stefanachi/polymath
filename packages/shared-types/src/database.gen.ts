@@ -762,6 +762,26 @@ isOneToOne: false
       referencedColumns: ["key"]
     }
                   ]
+                },"skill_lessons": {
+                  Row: {
+                    "body": NonNullable<Json>,"content_hash": string,"created_at": string,"id": string,"license": string,"retired_at": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"skill_key": string,"source": string,"status": Database["public"]['Enums']["content_status"],"updated_at": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body": NonNullable<Json>,"content_hash": string,"created_at"?: string,"id"?: string,"license": string,"retired_at"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"skill_key": string,"source": string,"status"?: Database["public"]['Enums']["content_status"],"updated_at"?: string,"version"?: number
+                  }
+                  Update: {
+                    "body"?: NonNullable<Json>,"content_hash"?: string,"created_at"?: string,"id"?: string,"license"?: string,"retired_at"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"skill_key"?: string,"source"?: string,"status"?: Database["public"]['Enums']["content_status"],"updated_at"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "skill_lessons_skill_key_fkey"
+      columns: ["skill_key"]
+isOneToOne: false
+      referencedRelation: "skills"
+      referencedColumns: ["key"]
+    }
+                  ]
                 },"skill_state": {
                   Row: {
                     "blocked_by": (string)[],"diag_credit": boolean,"difficulty": number,"due": string | null,"elapsed_days": number,"elo": number,"epoch_start": string | null,"ever_mastered": boolean,"first_seen_at": string | null,"fsrs_extra": NonNullable<Json>,"fsrs_model": string,"fsrs_state": number,"interleave_stage": number,"lapses": number,"last_review": string | null,"learning_steps": number,"loop_step": string | null,"mastered_at": string | null,"mastery_evidence": NonNullable<Json>,"mastery_state": Database["public"]['Enums']["mastery_state"],"n_attempts": number,"reps": number,"scheduled_days": number,"skill_key": string,"source": string,"stability": number,"tier_attained": Database["public"]['Enums']["tier"] | null,"updated_at": string,"user_id": string

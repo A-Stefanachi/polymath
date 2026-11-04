@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://polymath.example/schemas/lesson.schema.json",
+  "title": "Polymath concept primer (lesson) file",
+  "description": "One file per skill at content/lessons/<skill_key>.yaml (00a K6). Cross-file rules (skill key exists in the graph, file name equals skill_key, misconception tag matches a template of the skill when the skill has tagged templates, word limits, SVG safety) are enforced by reference/validate_lessons.py, not by this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "skill_key",
+    "version",
+    "authoring_status",
+    "license",
+    "source",
+    "provenance",
+    "est_seconds",
+    "screens",
+    "misconception",
+    "checks",
+    "recap_md"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "skill_key": { "type": "string", "pattern": "^[a-z]+\\.[a-z0-9-]+\\.[a-z0-9-]+$" },
+    "version": { "type": "integer", "minimum": 1, "description": "Bumped by the author on every content change; content:sync also keys versions by hash (00a K9)." },
+    "authoring_status": {
+      "enum": ["draft", "ready", "retired"],
+      "description": "Only the review console sets the database status to verified (00a K9, D4)."
+    },
+    "license": { "type": "string", "minLength": 1 },
+    "source": { "type": "string", "minLength": 1 },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authors", "created", "llm_assistance"],
+      "properties": {
+        "authors": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "created": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+        "llm_assistance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["used"],
+          "properties": {
+            "used": { "type": "boolean" },
+            "model": { "type": "string" },
+            "prompt_version": { "type": "string" }
+          }
+        }
+      }
+    },
+    "est_seconds": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 180,
+      "description": "Reading and check time for the full variant; the primer and the worked example share the 4.0-minute worked_example estimate (00a K11)."
+    },
+    "screens": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "description": "Recommended order: why it matters, the core idea(s), the mental model. At most 150 words of body text per screen (validator).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "body_md"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "title": { "type": "string", "minLength": 1, "maxLength": 60 },
+          "body_md": { "type": "string", "minLength": 1 },
+          "figure": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["svg", "alt"],
+            "properties": {
+              "svg": { "type": "string", "minLength": 1, "maxLength": 30000, "description": "Inline SVG; no script, no event attributes, no external references (validator)." },
+              "alt": { "type": "string", "minLength": 10, "maxLength": 300 }
+            }
+          }
+        }
+      }
+    },
+    "misconception": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag", "wrong_idea_md", "why_tempting_md", "correct_idea_md"],
+      "description": "Exactly one misconception per lesson, written as a refutation: the wrong idea, why it is tempting, the correct idea.",
+      "properties": {
+        "tag": { "type": "string", "pattern": "^mc\\.[a-z0-9-]+$" },
+        "wrong_idea_md": { "type": "string", "minLength": 1 },
+        "why_tempting_md": { "type": "string", "minLength": 1 },
+        "correct_idea_md": { "type": "string", "minLength": 1 }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "description": "Ungraded multiple-choice checks; exactly one correct option each (validator). They never create attempts or touch skill_state (00a K8).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "stem_md", "options"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "stem_md": { "type": "string", "minLength": 1 },
+          "options": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 4,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "text_md", "correct", "feedback_md"],
+              "properties": {
+                "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+                "text_md": { "type": "string", "minLength": 1 },
+                "correct": { "type": "boolean" },
+                "feedback_md": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "recap_md": { "type": "string", "minLength": 1, "description": "At most 60 words; the whole of the recap variant with the misconception's correct idea (00a K8)." }
+  }
+}

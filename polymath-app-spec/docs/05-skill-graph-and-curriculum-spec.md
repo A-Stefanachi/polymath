@@ -117,6 +117,22 @@ Contract enum `task_kind`. For a non-stub skill:
 
 Every skill carries every field in the schema; none is optional, which keeps the sync script simple. `status` starts at `draft`. A skill becomes `verified` only after it passes the human checklist (section 10) **and** at least one item template for it has passed item verification (spec 07 or the content-verification doc). Stubs use `status: stub` (00a section C).
 
+### 5.6 Concept primers (lessons, 00a K6)
+
+A skill may have one lesson file, `content/lessons/<skill_key>.yaml` (schema `schemas/lesson.schema.json`, validator `reference/validate_lessons.py`). The lesson is shown before the first worked example of the skill and as a short recap when the skill is relearned (00a K8). It is optional: a skill without a verified lesson starts at the worked example. Lessons are kept out of the graph file so that editing one never touches the graph's hash or the templates' reviews.
+
+How much a lesson does depends on the kind of skill (doc 02 M14):
+
+| Kind of skill | Lesson emphasis |
+|---|---|
+| Computation (most of the lean slice: algebra, Ohm's law, dividers, nodal analysis) | Short: why it matters, the one relation, the units rule. The labelled stepper (00a K5) carries most of the teaching. |
+| Conceptual (charge, current and voltage; what KCL and KVL mean; lab safety) | Fuller: a mental model with a figure, prediction checks ("which bulb is brighter?"), and a strong refutation of the top misconception, for example "a battery delivers a fixed current". |
+| Recognition (schematic reading, resistor codes) | A symbol next to the symbol it is confused with, then the perceptual drill. |
+| Code and firmware | Read a short program and predict its output, then the code tasks. |
+| Bench | The lesson is the background reading the project steps link to; the step itself stays worked, faded, then free build (LS-080). |
+
+The lesson's `misconception.tag` reuses a tag already declared by one of the skill's templates, so a graded wrong answer with that tag can point back to the lesson (00a K8). A lesson becomes visible to learners only after the founder approves its current version in the review console (00a K9).
+
 ---
 
 ## 6. The MVP graph

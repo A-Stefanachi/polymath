@@ -43,6 +43,21 @@ Status: v1.0, 1 Nov 2026. Companion: `07-content-pipeline-and-verification-spec.
 | Hand-solve log | `content/REVIEW-LOG.md` |
 | Dry-run sync (spec) | `python tools/content_sync.py --dry-run` |
 
+## Concept primers (lessons, BL-0203; doc 07 section 15, 00a K6)
+
+| Step | Action | Command / artefact |
+|------|--------|-------------------|
+| 1 | Start from the format example | `content/lessons/elec.dc.ohms-law.yaml` |
+| 2 | LLM draft from the skill's description, its templates' steps and misconception tags (and `core_ideas` for T1 to T6 skills); record `provenance.llm_assistance` | `content/prompts/lesson_assist_v1.md` |
+| 3 | Keep it short: at most 3 screens of 150 words, one misconception, 1 or 2 checks, recap of 60 words; reuse a template misconception tag | doc 05 section 5.6 for the emphasis by kind of skill |
+| 4 | Validate and lint | `python3 reference/validate_lessons.py`; `python3 reference/lint_claims.py` |
+| 5 | Set `authoring_status: ready`, open the PR, sync | `pnpm content:sync` (app repo) makes a version that waits for review |
+| 6 | Founder review in the console (L-G3 checklist) and approve | `/admin/content`, lesson tab |
+
+An edit to a verified lesson makes a new version that waits for review; learners keep the old one until it is approved.
+
+**Step labels (00a K5).** A template with 4 or more steps needs a `label` on every step (lint L27): the step's goal as a short imperative, at most 60 characters ("Write KCL at node A"). Adding a label changes the hash, so the template needs G3 again.
+
 ## Phase -1 (parallel, no app)
 
 Four weeks: Anki + generator sheets + spreadsheet (`00d` section 4). Same eight skill keys as the seed slice in `content-population-roadmap.md`. Does not replace G3 for production templates.

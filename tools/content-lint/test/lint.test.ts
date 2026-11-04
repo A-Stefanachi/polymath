@@ -19,8 +19,9 @@ function cli(...args: string[]): { status: number | null; output: string } {
 }
 
 describe("rules from the doc 07 table", () => {
-  it("the table has L01 to L26", () => {
-    expect(docRules).toHaveLength(26);
+  // L27 (step labels) joined the table with 00a K5.
+  it("the table has L01 to L27", () => {
+    expect(docRules).toHaveLength(27);
   });
   it("every rule of the table is implemented with the table's severity", () => {
     expect(RULES.map((r) => ({ id: r.id, severity: r.severity }))).toEqual(docRules);

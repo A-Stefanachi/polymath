@@ -1,5 +1,5 @@
 // pnpm content:lint [--content-root DIR] [--synced FILE.json] [PATH...]
-// G1 (doc 07 section 7): G0 schema check, then L01 to L26 on every template below the PATHs (files
+// G1 (doc 07 section 7): G0 schema check, then L01 to L27 on every template below the PATHs (files
 // or folders; default <content root>/templates). The skill graph and prompts come from the content
 // root. --synced names a JSON object {key: {version, sha256, status}} (what the database holds)
 // and switches L03 on; without it L03 is skipped because lint opens no database.
@@ -57,7 +57,7 @@ let count: number;
 if (parsed.positionals.length === 0) {
   const loaded = loadContent(root);
   const problems = [...loaded.problems, ...lintContent(loaded, root)];
-  // lintContent covers the graph and L01 to L26 without L03; add L03 only when asked.
+  // lintContent covers the graph and L01 to L27 without L03; add L03 only when asked.
   findings.push(...problems.map(toFinding));
   if (synced) findings.push(...lintTemplates(loaded.templates, { contentRoot: root, synced }).filter((f) => f.rule === "L03"));
   count = loaded.templates.length;

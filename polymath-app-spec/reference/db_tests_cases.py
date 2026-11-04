@@ -45,6 +45,7 @@ cur.execute("delete from public.item_templates where key like 'tpl.elec.%'")
 cur.execute("delete from public.experiments")
 cur.execute("delete from public.admin_users")
 cur.execute("delete from public.jobs")
+cur.execute("delete from public.skill_lessons")
 cur.execute("update public.skills set status='draft' where key in ('elec.dc.ohms-law','elec.dc.voltage-divider')")
 for u,e in ((A,'a@example.test'),(B,'b@example.test'),(C,'c@example.test')):
     cur.execute("insert into auth.users(id,email) values(%s,%s)",(u,e))
@@ -82,6 +83,10 @@ for u in (A,B):
 cur.execute("insert into public.item_reports(user_id,item_id,reason) values(%s,%s,'ambiguous')",(B,ids['iB']))
 cur.execute("insert into public.experiments(key,description,started_at,status,allocation_treatment_pct,design) values('exp.unit','unit-level',now()-interval '1 day','running',50,'{\"unit_type\":\"skill\"}'),('exp.user','user-level',now()-interval '1 day','running',50,'{}'),('exp.ext','external',now()-interval '1 day','running',50,'{\"allocation\":\"external\"}'),('exp.draft','d',null,'draft',50,'{}')")
 cur.execute("insert into public.experiment_assignments(experiment_key,user_id,arm,unit_type,unit_key,block_index,rng_seed) values('exp.ext',%s,'treatment','user',%s,0,'seed1')",(B,B))
+# concept primers (00a K7, K9): version 1 reviewed and verified, version 2 waiting for review
+cur.execute("""insert into public.skill_lessons(skill_key,version,status,body,content_hash,license,source,reviewed_by,reviewed_at)
+ values('elec.dc.ohms-law',1,'verified','{"screens":[]}','h1','original','x',%s,now()),
+       ('elec.dc.ohms-law',2,'needs_human_review','{"screens":[]}','h2','original','x',null,null)""",(C,))
 c.commit(); c.close()
 
 # ---------------- RLS isolation ----------------
@@ -101,6 +106,14 @@ t('A sees 2 verified skills + stubs, draft hidden','authenticated',A,"select cou
 t('A sees stubs','authenticated',A,"select count(*) > 0 from public.skills where status='stub'",('val',True))
 t('admin sees drafts','authenticated',C,"select count(*) > 0 from public.skills where status='draft'",('val',True))
 t('A reads modules','authenticated',A,"select count(*) from public.modules",('val',61))  # graph 0.7.0 module rows
+# skill_lessons (00a K7, K9)
+t('learner sees only the verified lesson version','authenticated',A,"select array_agg(version order by version) from public.skill_lessons",('val',[1]))
+t('admin sees every lesson version','authenticated',C,"select count(*) from public.skill_lessons",('val',2))
+t('learner cannot insert a lesson','authenticated',A,"insert into public.skill_lessons(skill_key,version,status,body,content_hash,license,source) values('elec.dc.ohms-law',3,'draft','{}','h3','original','x')",'fail')
+t('learner cannot approve a lesson','authenticated',A,"update public.skill_lessons set status='verified' where version=2 returning id",('val',[]))
+t('admin can approve a lesson with a reviewer','authenticated',C,"update public.skill_lessons set status='verified', reviewed_by=%s, reviewed_at=now() where version=2 returning version",('val',2),(C,))
+t('verified lesson without reviewer is rejected','service_role',None,"update public.skill_lessons set status='verified' where version=2",'fail:skill_lessons_verified_reviewed')
+t('anon cannot read lessons','anon',None,"select count(*) from public.skill_lessons",'fail')
 
 # ---------------- hidden columns ----------------
 for name,sql in [

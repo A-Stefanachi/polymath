@@ -376,6 +376,7 @@ Each rule has an id, a test and a severity (E = blocks sync, W = warning shown i
 | L24 | `fuzz.samples` at least 200 | E |
 | L25 | No `TODO`, `FIXME`, `lorem`, `XXX` text in any field | E |
 | L26 | Reading level and jargon: advisory only (W) | W |
+| L27 | A template with 4 or more `solution.steps` has a `label` on every step; labels within a template are distinct (00a K5) | E |
 
 ### G2 Fuzz run (200 samples)
 
@@ -555,3 +556,26 @@ Every request filed by documents 07 and 08 was decided in `00a-change-decisions.
 | CCR-10 (Elo conversion) | Accepted | 00a D3: `1500 + 400*log10(d/(1-d))`, owned by 06 |
 | CCR-11 (`authoring_status`) | Accepted | 00a D4: files declare only `draft`, `ready` or `retired`; only the pipeline sets `verified` |
 
+
+## 15. Concept primers (lessons, 00a K6 to K9)
+
+Lessons are a second content type next to templates. They teach; they are never graded.
+
+**Files.** `content/lessons/<skill_key>.yaml`, one per skill, schema `schemas/lesson.schema.json`. Shape: up to 3 screens (why it matters, the idea, how to use it) of at most 150 words each, an optional inline SVG figure per screen with alt text, exactly one misconception written as a refutation (wrong idea, why it is tempting, correct idea, `tag`), 1 or 2 multiple-choice checks with feedback on every option, and a recap of at most 60 words. `authoring_status` is `draft`, `ready` or `retired` (as D4 for templates).
+
+**Gates.**
+
+| Gate | Check | Tool |
+|---|---|---|
+| L-G0 | Schema | `reference/validate_lessons.py`; in the app, `packages/content-schema` and `pnpm content:validate` |
+| L-G1 | Cross-file rules: file name equals `skill_key`; the skill exists and is not a stub; word limits; unique ids; exactly one correct option per check; `misconception.tag` matches a tag of the skill's templates when they declare any; SVG is well-formed, has no script, `foreignObject`, event attribute or outside reference | `reference/validate_lessons.py`; `pnpm content:lint` |
+| L-G2 | Claims policy | `pnpm claims:lint` (it scans `content/`) |
+| L-G3 | Founder review in the console: facts and units correct, the misconception is real for beginners, checks have one defensible answer, nothing contradicts the skill's templates | `/admin/content`, lesson tab (00a K9) |
+
+There is no fuzz gate: a lesson has no parameters and no answer key.
+
+**Sync and status.** `content:sync` reads `ready` files and inserts a new `skill_lessons` version with `status = 'needs_human_review'` when the file's hash differs from the newest stored version; a `retired` file retires every version; a `draft` file is not synced. The console approval sets `status = 'verified'`, `reviewed_by` and `reviewed_at` for that version only. A later edit makes a new version that waits for review, and learners keep the older verified version meanwhile.
+
+**LLM drafting.** An LLM may draft a lesson from the skill's description, its templates (steps, misconceptions) and, for T1 to T6 skills, the `core_ideas` and `misconceptions` of `content/syllabi/skill-specs/`, using a versioned prompt (`content/prompts/lesson_assist_v1.md`, created by BL-0203). Provenance records the model and prompt version. The LLM never sets status (rule 4).
+
+**Templates: step labels.** For the stepper and the self-explanation choices (00a K4), `solution.steps[].label` names each step's goal. Lint L27 makes labels mandatory from 4 steps. Adding or changing a label changes the template hash, so the template returns to `needs_human_review` (T9) and needs the console approval again.

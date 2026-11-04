@@ -390,7 +390,7 @@ Do: write the failing test first where the acceptance test names one; implement;
 - Branch: `bl-0123-short-slug` from an up-to-date `main`. One task per branch; split large tasks into `bl-0123a` style sub-branches only when the task exceeds 8 hours.
 - Commits: `BL-0123: imperative summary` (72 characters), small commits, no unrelated reformatting. Git trailers for co-authorship follow the harness instructions.
 - Pull request title: `BL-0123 <task title>`. Body: what changed, how each acceptance test was run (command and result), risks, docs updated, follow-ups. Use squash merge.
-- No merge with red CI. No force push to `main`. Database migrations are never edited after merge; add a new one.
+- No merge unless `pnpm ci:local` passed on the head commit (00a L1: CI runs locally only). No force push to `main`. Database migrations are never edited after merge; add a new one.
 
 ### 8.5 Review checklist (founder, before merging)
 

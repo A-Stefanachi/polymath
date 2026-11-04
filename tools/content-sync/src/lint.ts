@@ -1,4 +1,4 @@
-// G1 for content:sync (doc 07 section 7). The template rules L01 to L26 live in tools/content-lint
+// G1 for content:sync (doc 07 section 7). The template rules L01 to L27 live in tools/content-lint
 // (BL-0050) and run here through lintTemplates, so `pnpm content:lint` and the sync apply the same
 // code. What stays here needs the whole graph: GRAPH (unique keys, key parts agree with node and
 // module, modules exist, prerequisites exist, no cycle), TPL-DUP (one file per key and version)
