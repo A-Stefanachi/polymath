@@ -24,6 +24,7 @@ from typing import Any
 
 import structlog
 
+from polymath_worker.content import safe_expr as se
 from polymath_worker.content import tplkit, verify
 
 log = structlog.get_logger("polymath_worker.content.item_writer")
@@ -153,7 +154,29 @@ def build_answer_key(tpl: dict, item: dict) -> dict:
         }
     elif g == "symbolic_equivalence":
         key["reference"] = str(c[a["reference"]])
+        key["misconceptions"] = symbolic_misconceptions(tpl, item)
     return key
+
+
+def symbolic_misconceptions(tpl: dict, item: dict) -> list[dict[str, str]]:
+    """Each misconception's tag and wrong-answer expression evaluated for the item's parameters (00a J4).
+
+    Written with `^` for powers, the spelling the learner grader reads; the verifier's self-grade checks the same
+    expressions, so a key built here tags exactly what the pipeline verified."""
+    ctx = verify._exact_ctx(tpl, item["params"])
+    out: list[dict[str, str]] = []
+    for m in tpl.get("misconceptions", []):
+        if "wrong_answer_expr" not in m:
+            continue
+        expr = se.evaluate(m["wrong_answer_expr"], ctx, se.sympy_funcs(), se.sympy_consts())
+        out.append(
+            {
+                "tag": m["tag"],
+                "expr": str(expr).replace("**", "^"),
+                "feedback_md": m.get("feedback_md", ""),
+            }
+        )
+    return out
 
 
 def build_solution(tpl: dict, item: dict) -> dict:

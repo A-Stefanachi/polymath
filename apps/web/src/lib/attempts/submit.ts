@@ -137,7 +137,7 @@ function toStoredGrade(grade: Grade): Record<string, unknown> {
   };
 }
 
-const toResult = (row: AttemptRow, skillUpdate?: SkillUpdate): AttemptResult => ({
+export const toResult = (row: AttemptRow, skillUpdate?: SkillUpdate): AttemptResult => ({
   ...(skillUpdate ? { skill_update: skillUpdate as NonNullable<AttemptResult["skill_update"]> } : {}),
   id: row.id,
   client_attempt_id: row.client_attempt_id,

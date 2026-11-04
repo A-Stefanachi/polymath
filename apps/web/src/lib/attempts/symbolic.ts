@@ -18,6 +18,8 @@ const symbolicKey = z.object({
     numeric_rel_tol: z.number().optional(),
   }),
   reference: z.string().min(1),
+  /** Absent in keys written before 00a J4. */
+  misconceptions: z.array(z.object({ tag: z.string(), expr: z.string(), feedback_md: z.string().optional() })).optional(),
 });
 
 /** Grader detail keys that may be stored and returned; the reference is never one of them. */
@@ -63,6 +65,11 @@ export async function gradeSymbolicAttempt(
     ...(key.data.answer_spec.form === undefined ? {} : { form: key.data.answer_spec.form }),
     ...(key.data.answer_spec.numeric_rel_tol === undefined ? {} : { numeric_rel_tol: key.data.answer_spec.numeric_rel_tol }),
   };
-  const graded = await grade({ responseText: r.expression, reference: key.data.reference, spec });
+  const graded = await grade({
+    responseText: r.expression,
+    reference: key.data.reference,
+    spec,
+    ...(key.data.misconceptions === undefined ? {} : { misconceptions: key.data.misconceptions }),
+  });
   return graded ? toStoredSymbolicGrade(graded) : null;
 }

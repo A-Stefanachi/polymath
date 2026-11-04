@@ -40,6 +40,14 @@ describe("createSymbolicClient", () => {
     expect(SYMBOLIC_TIMEOUT_MS).toBe(1500);
   });
 
+  it("sends the answer key's misconceptions to the worker when it has any (00a J4)", async () => {
+    const calls: Call[] = [];
+    const client = createSymbolicClient(ENV, fakeFetch(ok, calls), () => 1_800_000_000);
+    const misconceptions = [{ tag: "mc.a", expr: "2*x", feedback_md: "f" }];
+    await client({ ...REQ, misconceptions });
+    expect(JSON.parse(String(calls[0]?.init.body)).misconceptions).toEqual(misconceptions);
+  });
+
   it("signs exactly like the worker: HMAC-SHA256 hex of timestamp.POST.path.body", () => {
     // Value printed by polymath_worker.hmac_auth.sign("k", "1", "POST", "/grade/symbolic", b"{}").
     expect(signRequest("k", "1", "/grade/symbolic", "{}")).toBe("2b51dda6ada1c2cd6e58b61e9e1a76b4ed094209ad6e598272798d1344eae5ea");
