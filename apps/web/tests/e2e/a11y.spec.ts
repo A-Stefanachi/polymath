@@ -124,8 +124,14 @@ test("S06 Today, S07 preview sheet, S08 runner and S09 summary", async ({ page }
   await expect(page.getByRole("heading").first()).toBeVisible();
   await audit(page, "/session/[id]");
 
-  await page.goto(`${new URL(page.url()).pathname}/summary`);
-  await expect(page.locator("main")).toBeVisible();
+  // S09 summarises a finished session only; an open one sends /summary back to the runner (BL-0060), so the
+  // session is ended the way a learner ends it. Auditing a typed /summary URL measured a redirect in flight.
+  const sessionPath = new URL(page.url()).pathname;
+  await page.getByRole("button", { name: "Pause" }).click();
+  await page.getByRole("button", { name: "End this session" }).click();
+  await page.getByRole("button", { name: "End session" }).click();
+  await expect(page).toHaveURL(new RegExp(`${sessionPath}/summary$`));
+  await expect(page.getByTestId("headline")).toBeVisible();
   await audit(page, "/session/[id]/summary");
 });
 
