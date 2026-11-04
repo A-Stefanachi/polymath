@@ -261,10 +261,13 @@ def eng_parts(value: float, n: int = 3):
 def fmt_eng(value: float, unit: str, tex: bool = False) -> str:
     num, pre = eng_parts(value)
     if tex:
-        if unit == "ohm":
-            u = (r"\mathrm{%s}" % pre if pre else "") + r"\Omega"
+        base = r"\Omega" if unit == "ohm" else _UNIT_TEX.get(unit, r"\mathrm{%s}" % unit)
+        if pre == "u":
+            # "u" is only the ASCII alias for micro; KaTeX shows it as the letter u (issue #14).
+            u = r"\mu" + base
+        elif unit == "ohm":
+            u = (r"\mathrm{%s}" % pre if pre else "") + base
         else:
-            base = _UNIT_TEX.get(unit, r"\mathrm{%s}" % unit)
             u = (
                 r"\mathrm{%s%s}" % (pre, base[len(r"\mathrm{") : -1])
                 if base.startswith(r"\mathrm{")
