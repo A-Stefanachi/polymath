@@ -25,6 +25,10 @@ export interface SkillStateSnapshot {
   readonly elo?: number;
   readonly source?: string;
   readonly placement_age_days?: number;
+  /** 00a G1: a successful verification review replaced the placement grace by the normal tests. */
+  readonly verified_after_placement?: boolean;
+  /** 00a G1: a verify retrieval failed, which ends the placement grace early. */
+  readonly placement_verify_failed?: boolean;
 }
 
 export interface GraphSkill {
@@ -33,6 +37,8 @@ export interface GraphSkill {
   readonly est_minutes: number;
   readonly tier_target: Tier;
   readonly confusable_set?: string;
+  /** Content status; a `stub` skill is never offered to a learner (BL-0049 note). */
+  readonly status?: string;
 }
 
 export type EdgeStrength = "hard" | "soft";

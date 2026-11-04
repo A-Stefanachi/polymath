@@ -3,6 +3,16 @@ export const PACKAGE_NAME = "@polymath/scheduler" as const;
 
 export * from "./elo.ts";
 export {
+  computeAvailable,
+  computeFrontier,
+  frontierScores,
+  lockedReasons,
+  prereqSatisfied,
+  projectPull,
+  type FrontierScore,
+  type LockedReason,
+} from "./frontier.ts";
+export {
   aggregateAttempts,
   isQualifying,
   masteryRule,
