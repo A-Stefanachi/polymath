@@ -17,6 +17,12 @@ type Result = { correct: boolean | null; status: string; feedback?: string; unit
 
 const NUMBER_AND_UNIT = /^\s*([-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?)\s*(\S*)\s*$/;
 
+/** The grader's message without a lead-in that repeats the panel title ("Correct. ..."). */
+export function feedbackBody(feedback: string | undefined, title: string): string {
+  const text = (feedback ?? "").trim();
+  return text.startsWith(title) ? text.slice(title.length).trim() : text;
+}
+
 /** Statement text with `$...$` spans typeset by KaTeX (trust off: no \href or raw HTML). */
 function Statement({ source }: { source: string }) {
   const parts = source.split(/\$([^$]+)\$/);
@@ -124,7 +130,9 @@ export function ItemCard({ taskId }: { taskId: string }) {
           <div aria-live="polite" data-testid="feedback">
             {result && (
               <FeedbackPanel live={false} tone={!graded ? "info" : result.correct ? "correct" : "not-quite"} title={!graded ? t.invalid : result.correct ? t.correct : t.incorrect}>
-                {result.feedback && <p>{result.feedback}</p>}
+                {feedbackBody(result.feedback, !graded ? t.invalid : result.correct ? t.correct : t.incorrect) && (
+                  <p>{feedbackBody(result.feedback, !graded ? t.invalid : result.correct ? t.correct : t.incorrect)}</p>
+                )}
                 {result.unit && (
                   <p>
                     {t.unitRead}: {result.unit}
