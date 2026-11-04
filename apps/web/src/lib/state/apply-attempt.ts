@@ -95,7 +95,7 @@ export function tzOffsetMinutes(timezone: string, at: Date): number {
  * The scheduler functions count days on the UTC date of `submitted_at`. Shifting each timestamp by the
  * learner's offset at that instant makes the UTC date the learner-local date (06 section 4.1).
  */
-function toMasteryAttempt(a: HistoryAttempt, timezone: string): MasteryAttempt {
+export function toMasteryAttempt(a: HistoryAttempt, timezone: string): MasteryAttempt {
   const shifted = new Date(a.submittedAt.getTime() + tzOffsetMinutes(timezone, a.submittedAt) * 60_000);
   return {
     item_id: a.itemId,

@@ -19,6 +19,7 @@ import {
   type TaskRow,
 } from "@/server/privileged/session-store";
 import { assignItems, BuildInputError, buildPackSetup, plannedMinutes, planSession, sessionTypeFor } from "./builder.ts";
+import { appliedGapSkills, BREAK_AFTER_MIN } from "./pack-inputs.ts";
 
 type BuildSessionRequest = components["schemas"]["BuildSessionRequest"];
 type CompleteSessionRequest = components["schemas"]["CompleteSessionRequest"];
@@ -32,6 +33,8 @@ export type SessionDeps = {
   /** Pool stock check and shortage job (BL-0043). */
   pool: (userId: string, skillKeys: string[], now: Date) => Promise<unknown>;
   now: () => Date;
+  /** `backlog_suspend_threshold_min` override (default 120, 06 section 11); a seam for tests. */
+  backlogThresholdMin?: number;
 };
 
 export const defaultSessionDeps = (): SessionDeps => {
@@ -133,13 +136,18 @@ export async function buildSession(ctx: ApiContext, deps: SessionDeps = defaultS
   if (await deps.store.hasOpenSession(user)) throw new ApiError("open_session_exists");
 
   const state = await deps.state();
-  const snapshot = await deps.store.snapshot(user);
+  const snapshot = await deps.store.snapshot(user, now);
+  const appliedGap = await appliedGapSkills(user, snapshot, state);
   let plan;
   let type;
   let setup;
   try {
     type = sessionTypeFor(body.available_minutes, body.session_type);
-    setup = buildPackSetup(snapshot, now, state.fsrs, body.skill_focus);
+    setup = buildPackSetup(snapshot, now, state.fsrs, body.skill_focus, {
+      appliedGap,
+      params: state.params,
+      ...(deps.backlogThresholdMin === undefined ? {} : { backlogThresholdMin: deps.backlogThresholdMin }),
+    });
     if (body.skill_focus !== undefined && !computeFrontier(setup.graph, setup.states, state.params).includes(body.skill_focus)) {
       throw new BuildInputError("skill_focus", "the skill is not on the frontier or in progress");
     }
@@ -185,7 +193,7 @@ export async function buildSession(ctx: ApiContext, deps: SessionDeps = defaultS
       plannedMin: planned,
       graphVersion: snapshot.graphVersion,
       planSlotId: body.plan_slot_id ?? null,
-      plan: { tasks: assigned.tasks.map((t) => ({ position: t.position, reason: t.reason })), fill: plan.fill, dropped_without_item: assigned.dropped },
+      plan: { tasks: assigned.tasks.map((t) => ({ position: t.position, reason: t.reason })), fill: plan.fill, dropped_without_item: assigned.dropped, backlog: setup.backlog },
       tasks: assigned.tasks,
       builderMs: Math.round(performance.now() - started),
       fill: plan.fill,
@@ -201,7 +209,9 @@ export async function buildSession(ctx: ApiContext, deps: SessionDeps = defaultS
 export async function getSession(ctx: ApiContext, deps: SessionDeps = defaultSessionDeps()): Promise<Response> {
   const user = userId(ctx);
   const id = sessionIdParam(ctx);
-  await sweep(deps, user, deps.now());
+  const now = deps.now();
+  await sweep(deps, user, now);
+  await deps.store.suggestBreak(user, id, now, BREAK_AFTER_MIN); // an event only; the session is never ended (LS-055)
   const session = await deps.store.find(user, id);
   if (!session) throw new ApiError("not_found");
   return json(toSession(session));

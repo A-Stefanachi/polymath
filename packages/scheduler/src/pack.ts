@@ -71,6 +71,11 @@ export interface PackInput {
   readonly backlog?: boolean;
   /** Review backlog: no new skills. */
   readonly backlog_suspend_new?: boolean;
+  /**
+   * New frontier skills still allowed today (daily cap minus those already introduced, BL-0046, FR-024).
+   * Continuations are not new skills and are not counted; absent means no daily cap.
+   */
+  readonly max_new_frontier?: number;
   readonly project_steps?: readonly ProjectStepInput[];
 }
 
@@ -423,15 +428,17 @@ export function packSession(input: PackInput, params: SchedulerParams = DEFAULT_
     const fr = computeFrontier(graph, states, params);
     const ranked = frontierScores(graph, states, fr, input.project_pull ?? {}, input.node_minutes ?? {}, params);
     const inProgSet = new Set(inProg);
+    let dailyLeft = input.max_new_frontier ?? Number.POSITIVE_INFINITY;
     for (const r of ranked) {
       const k = r.key;
-      if (inProgSet.has(k) || skillSlots <= 0 || truthyBlock(states[k]?.blocked_by)) continue;
+      if (inProgSet.has(k) || skillSlots <= 0 || dailyLeft <= 0 || truthyBlock(states[k]?.blocked_by)) continue;
       for (const seq of [loopSeq("worked_example", true), loopSeq("worked_example", false)]) {
         const need = seq.reduce((s, x) => s + estimateMinutes(x), 0) + estimateMinutes("retrieval");
         if (seq.every((x) => okCtx(x, k)) && fits(need)) {
           for (const x of seq) add(x, k, "new_frontier");
           sameDayRetrievals.push(k);
           skillSlots -= 1;
+          dailyLeft -= 1;
           break;
         }
       }

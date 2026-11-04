@@ -69,6 +69,8 @@ export type SnapshotState = {
   blockedBy: string[];
   interleaveStage: number;
   firstSeenAt: Date | null;
+  /** Start of the current evidence epoch (after a decay); the mastery rule reads attempts from here. */
+  epochStart: Date | null;
 };
 
 /** An unserved, verified, user-owned practice item that could become a task. */
@@ -106,6 +108,20 @@ export type BuildSnapshot = {
   states: SnapshotState[];
   candidates: Candidate[];
   history: Record<string, ServedHistory>;
+  /** profiles.settings.max_new_skills_per_day as stored (validated by the builder); null when unset. */
+  maxNewSkillsPerDay: unknown;
+  /** Distinct skills introduced in the learner's local day: planned as `frontier` in a live session, or first seen today. */
+  newSkillsToday: number;
+  /** The latest built session carried the review-backlog flag (06 section 7.5 hysteresis). */
+  previousBacklog: boolean;
+  /** Attempt minutes per node over the last 7 days (06 section 6.3 load balancing). */
+  nodeMinutes: Record<string, number>;
+  /** Completion time of the latest node-wide checkpoint; null when none. */
+  lastCheckpointAt: Date | null;
+  /** Latest completed module checkpoint per module name. */
+  moduleCheckpointAt: Record<string, Date>;
+  /** Mean score of the learner's last interleaved sets per module, oldest first, at most 3 (06 section 7.6). */
+  interleaveSets: Record<string, number[]>;
 };
 
 export type NewTask = {
@@ -155,7 +171,12 @@ export type SessionStore = {
    * review units still have to be committed by the caller.
    */
   sweep(userId: string, now: Date, idleMin: number, plannedMaxAgeMin: number): Promise<string[]>;
-  snapshot(userId: string): Promise<BuildSnapshot>;
+  snapshot(userId: string, now: Date): Promise<BuildSnapshot>;
+  /**
+   * Writes one `break_suggested` event when the active session has run longer than `afterMin` minutes and none
+   * was written for it yet (FR-023, LS-055). It never ends or changes the session. True when written.
+   */
+  suggestBreak(userId: string, sessionId: string, now: Date, afterMin: number): Promise<boolean>;
   ownsPlanSlot(userId: string, planSlotId: string): Promise<boolean>;
   /** Inserts session, tasks and the session_built event; null when the user already has an open session. */
   create(userId: string, input: NewSession, now: Date): Promise<string | null>;
@@ -301,9 +322,10 @@ export function createSessionStore(sql: Sql): SessionStore {
       return idle;
     },
 
-    async snapshot(userId) {
-      const [profile, version, skills, edges, states, candidates, served] = await Promise.all([
-        sql<{ timezone: string }[]>`select timezone from public.profiles where id = ${userId}`,
+    async snapshot(userId, now) {
+      const [profile, version, skills, edges, states, candidates, served, extras] = await Promise.all([
+        sql<{ timezone: string; cap: unknown }[]>`
+          select timezone, settings -> 'max_new_skills_per_day' as cap from public.profiles where id = ${userId}`,
         sql<{ v: string }[]>`select left(git_sha, 12) as v from public.content_sync_runs
           where status = 'succeeded' order by finished_at desc nulls last limit 1`,
         sql<Row[]>`
@@ -320,7 +342,7 @@ export function createSessionStore(sql: Sql): SessionStore {
         sql<Row[]>`
           select skill_key, mastery_state::text as mastery_state, elo, stability, difficulty, due, last_review, reps, lapses,
                  fsrs_state, scheduled_days, learning_steps, fsrs_extra, tier_attained::text as tier_attained, source,
-                 loop_step, blocked_by, interleave_stage, first_seen_at
+                 loop_step, blocked_by, interleave_stage, first_seen_at, epoch_start
             from public.skill_state where user_id = ${userId}`,
         sql<Row[]>`
           with c as (
@@ -354,7 +376,45 @@ export function createSessionStore(sql: Sql): SessionStore {
                           or exists (select 1 from public.attempts a where a.item_id = i.id and a.user_id = ${userId}))) x
            where rn <= 200
            order by skill_key, rn`,
+        Promise.all([
+          sql<{ n: number }[]>`
+            with p as (select timezone from public.profiles where id = ${userId}),
+                 d as (select (date_trunc('day', ${now}::timestamptz at time zone p.timezone) at time zone p.timezone) as day_start from p)
+            select count(*)::int as n from (
+              select st.skill_key from public.session_tasks st
+                join public.sessions s on s.id = st.session_id, d
+               where st.user_id = ${userId} and st.reason = 'frontier' and st.skill_key is not null
+                 and s.status <> 'abandoned' and s.created_at >= d.day_start
+              union
+              select ss.skill_key from public.skill_state ss, d
+               where ss.user_id = ${userId} and ss.source <> 'placement' and ss.first_seen_at >= d.day_start) x`,
+          sql<{ b: string | null }[]>`select plan ->> 'backlog' as b from public.sessions where user_id = ${userId} order by created_at desc limit 1`,
+          sql<{ node: string; minutes: number }[]>`
+            select s.node::text as node, sum(coalesce(a.active_ms, a.latency_ms, 0)) / 60000.0 as minutes
+              from public.attempts a
+              join public.items i on i.id = a.item_id
+              join public.item_templates t on t.key = i.template_key and t.version = i.template_version
+              join public.skills s on s.key = t.skill_key
+             where a.user_id = ${userId} and a.submitted_at <= ${now}::timestamptz
+               and a.submitted_at >= ${now}::timestamptz - interval '7 days'
+             group by s.node`,
+          sql<{ scope_module: string | null; at: Date }[]>`
+            select scope_module, max(completed_at) as at from public.checkpoints
+             where user_id = ${userId} and status = 'completed' and completed_at is not null group by scope_module`,
+          sql<{ module: string; accs: number[] }[]>`
+            select module, array_agg(acc order by at) as accs from (
+              select sk.module, avg((a.grade ->> 'score')::float8) as acc, max(s.created_at) as at,
+                     row_number() over (partition by sk.module order by max(s.created_at) desc) as rn
+                from public.session_tasks st
+                join public.sessions s on s.id = st.session_id
+                join public.skills sk on sk.key = st.skill_key
+                join public.attempts a on a.session_task_id = st.id and a.grade_status = 'graded'
+               where st.user_id = ${userId} and st.reason = 'interleave'
+               group by sk.module, st.session_id) x
+             where rn <= 3 group by module`,
+        ]),
       ]);
+      const [today, backlog, minutes, checkpoints, sets] = extras;
       const history: Record<string, ServedHistory> = {};
       for (const r of served) {
         const h = (history[str(r["skill_key"])] ??= { seeds: [], templates: [], answers: [] });
@@ -401,6 +461,7 @@ export function createSessionStore(sql: Sql): SessionStore {
           blockedBy: (r["blocked_by"] as string[] | null) ?? [],
           interleaveStage: num(r["interleave_stage"]),
           firstSeenAt: optDate(r["first_seen_at"]),
+          epochStart: optDate(r["epoch_start"]),
         })),
         candidates: candidates.map((r) => ({
           itemId: str(r["item_id"]),
@@ -415,8 +476,31 @@ export function createSessionStore(sql: Sql): SessionStore {
           lastUsed: optDate(r["last_used"]),
         })),
         history,
+        maxNewSkillsPerDay: profile[0]?.cap ?? null,
+        newSkillsToday: today[0]?.n ?? 0,
+        previousBacklog: backlog[0]?.b === "true",
+        nodeMinutes: Object.fromEntries(minutes.map((r) => [r.node, num(r.minutes)])),
+        lastCheckpointAt: checkpoints.find((r) => r.scope_module === null)?.at ?? null,
+        moduleCheckpointAt: Object.fromEntries(checkpoints.flatMap((r) => (r.scope_module === null ? [] : [[r.scope_module, r.at] as const]))),
+        interleaveSets: Object.fromEntries(sets.map((r) => [r.module, r.accs.map(Number)])),
       };
     },
+
+    suggestBreak: (userId, sessionId, now, afterMin) =>
+      sql.begin(async (t) => {
+        const tx = t as unknown as Sql;
+        const row = (
+          await tx<{ status: string; started_at: Date | null }[]>`
+            select status::text as status, started_at from public.sessions where id = ${sessionId} and user_id = ${userId} for update`
+        )[0];
+        if (!row || row.status !== "active" || row.started_at === null) return false;
+        const elapsedMs = now.getTime() - row.started_at.getTime();
+        if (elapsedMs <= afterMin * MINUTE_MS) return false;
+        const done = await tx`select 1 from public.events where user_id = ${userId} and name = 'break_suggested' and props ->> 'session_id' = ${sessionId} limit 1`;
+        if (done.length > 0) return false;
+        await insertEvents(tx, [{ userId, name: "break_suggested", props: { session_id: sessionId, minutes_in: Math.floor(elapsedMs / MINUTE_MS) } }]);
+        return true;
+      }),
 
     ownsPlanSlot: async (userId, planSlotId) =>
       (await sql<{ ok: boolean }[]>`select exists (select 1 from public.plan_slots where id = ${planSlotId} and user_id = ${userId}) as ok`)[0]?.ok === true,

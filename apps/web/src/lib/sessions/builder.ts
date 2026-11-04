@@ -1,6 +1,7 @@
 // Session builder glue (BL-0044; doc 06 section 7, 00a A1/G4): turns a database snapshot into the pure
 // scheduler's input, and the scheduler's task list into rows with verified items. No I/O and no clock here.
 import {
+  DEFAULT_PARAMS,
   fromSkillStateColumns,
   microWindow,
   packSession,
@@ -15,6 +16,7 @@ import {
 } from "@polymath/scheduler";
 import { tzOffsetMinutes } from "@/lib/state/apply-attempt.ts";
 import type { BuildSnapshot, Candidate, NewTask, ServedHistory } from "@/server/privileged/session-store";
+import { backlogFlag, checkpointInput, interleaveStages, newSkillAllowance, type CheckpointInput } from "./pack-inputs.ts";
 import { dropSkippedWorkedExamples, enforceRetrievalGap, selectItem } from "./select-item.ts";
 
 type SkillGraph = PackInput["graph"];
@@ -57,6 +59,20 @@ export type PackSetup = {
   graph: SkillGraph;
   states: Record<string, PackSkillState>;
   interleave: Record<string, number>;
+  /** Review backlog (06 section 7.5): reviews may fill the budget and new skills are suspended. */
+  backlog: boolean;
+  /** New skills still allowed today (FR-024). */
+  newAllowance: number;
+  nodeMinutes: Record<string, number>;
+  checkpoint: CheckpointInput;
+};
+
+export type SetupOptions = {
+  /** Skills whose only open mastery condition is the applied attempt (`appliedGapSkills`). */
+  appliedGap?: ReadonlySet<string>;
+  params?: SchedulerParams;
+  /** 06 section 11 `backlog_suspend_threshold_min`; a seam for tests. */
+  backlogThresholdMin?: number;
 };
 
 /**
@@ -64,7 +80,14 @@ export type PackSetup = {
  * (never offered), so a plan only contains skills the pool can ever serve. `focusSkill` keeps the new-skill
  * slot for that skill by stubbing every other skill the learner has not started.
  */
-export function buildPackSetup(snap: BuildSnapshot, now: Date, fsrs: FsrsPort, focusSkill?: string): PackSetup {
+export function buildPackSetup(
+  snap: BuildSnapshot,
+  now: Date,
+  fsrs: FsrsPort,
+  focusSkill?: string,
+  options: SetupOptions = {},
+): PackSetup {
+  const params = options.params ?? DEFAULT_PARAMS;
   const stateOf = new Map(snap.states.map((s) => [s.skillKey, s]));
   const skills: Record<string, SkillGraph["skills"][string]> = {};
   for (const s of snap.skills) {
@@ -90,7 +113,6 @@ export function buildPackSetup(snap: BuildSnapshot, now: Date, fsrs: FsrsPort, f
   };
   const dayEnd = endOfLocalDay(now, snap.timezone);
   const states: Record<string, PackSkillState> = {};
-  const interleave: Record<string, number> = {};
   for (const st of snap.states) {
     const skill = skills[st.skillKey];
     if (!skill) continue; // a retired skill keeps its history but leaves the plan
@@ -125,10 +147,19 @@ export function buildPackSetup(snap: BuildSnapshot, now: Date, fsrs: FsrsPort, f
       due,
       loop_step: st.loopStep,
       blocked_by: st.blockedBy,
+      ...(options.appliedGap?.has(st.skillKey) === true ? { needs_applied: true } : {}),
     };
-    interleave[skill.module] = Math.max(interleave[skill.module] ?? 0, st.interleaveStage);
   }
-  return { graph, states, interleave };
+  const dueSkills = Object.values(states).filter((s) => s.due === true).length;
+  return {
+    graph,
+    states,
+    interleave: interleaveStages(snap.skills, snap.states, snap.interleaveSets, params),
+    backlog: backlogFlag(dueSkills, snap.previousBacklog, options.backlogThresholdMin),
+    newAllowance: newSkillAllowance(snap),
+    nodeMinutes: snap.nodeMinutes,
+    checkpoint: checkpointInput(snap, now, params),
+  };
 }
 
 /** Runs the pure packer for one window. */
@@ -147,6 +178,12 @@ export function planSession(
       graph: setup.graph,
       states: setup.states,
       interleave: setup.interleave,
+      node_minutes: setup.nodeMinutes,
+      backlog: setup.backlog,
+      backlog_suspend_new: setup.backlog, // 06 section 7.5: review share 1.0 and no new skills together
+      max_new_frontier: setup.newAllowance,
+      checkpoint: setup.checkpoint.status,
+      checkpoint_skills: setup.checkpoint.skills,
     },
     params,
   );
