@@ -100,6 +100,8 @@ export type ReviewLogRow = {
   flags: string[];
 };
 
+export type ReplayReview = { rating: 1 | 2 | 3 | 4; reviewedAt: Date; allDisputed: boolean };
+
 /** tierTarget is read-only context (skills.tier_target) and is ignored on write. */
 export type SkillWrite = SkillRow;
 
@@ -126,6 +128,8 @@ export type StateTx = {
   sessionReviewed(sessionId: string, skillKey: string): Promise<boolean>;
   reviewedSameLocalDay(userId: string, skillKey: string, at: Date, timezone: string): Promise<boolean>;
   insertReview(row: ReviewLogRow): Promise<void>;
+  /** The skill's review_log rows in order, each flagged when every attempt it covers is disputed (00a J2, BL-0197). */
+  reviewsForReplay(userId: string, skillKey: string): Promise<ReplayReview[]>;
   /** Owner check for the session-close entry point. */
   ownsSession(userId: string, sessionId: string): Promise<boolean>;
   events(rows: EventRow[]): Promise<void>;
@@ -147,6 +151,10 @@ const SCORE = (db: Sql) => db`(a.grade ->> 'score')::float8`;
 // A reported attempt (`grade.disputed`, doc 07 section 8.2) is out of mastery evidence until triage clears it.
 const ELIGIBLE = (db: Sql) =>
   db`(coalesce((a.grade ->> 'mastery_eligible')::boolean, true) and t.mastery_eligible and not coalesce((a.grade ->> 'disputed')::boolean, false))`;
+
+// A review_log row whose attempts are all disputed is out of FSRS evidence until triage (00a J2).
+const REVIEW_DISPUTED = (db: Sql) => db`(cardinality(r.attempt_ids) > 0 and not exists (
+  select 1 from public.attempts da where da.id = any(r.attempt_ids) and not coalesce((da.grade ->> 'disputed')::boolean, false)))`;
 
 const toHistory = (r: Row): HistoryAttempt => ({
   id: String(r["id"]),
@@ -312,15 +320,16 @@ export function createStateStore(sql: Sql): StateStore {
           },
           async lastRating(userId, skillKey) {
             const r = (
-              await db<{ rating: number }[]>`select rating from public.review_log where user_id = ${userId} and skill_key = ${skillKey}
-                order by reviewed_at desc, id limit 1`
+              await db<{ rating: number }[]>`select r.rating from public.review_log r where r.user_id = ${userId} and r.skill_key = ${skillKey}
+                and not ${REVIEW_DISPUTED(db)} order by r.reviewed_at desc, r.id limit 1`
             )[0];
             return r ? r.rating : null;
           },
           async lapsesSince(userId, skillKey, since) {
             return (
-              await db<{ n: number }[]>`select count(*)::int as n from public.review_log
-                where user_id = ${userId} and skill_key = ${skillKey} and rating = 1 and reviewed_at >= ${since.toISOString()}::timestamptz`
+              await db<{ n: number }[]>`select count(*)::int as n from public.review_log r
+                where r.user_id = ${userId} and r.skill_key = ${skillKey} and r.rating = 1
+                  and r.reviewed_at >= ${since.toISOString()}::timestamptz and not ${REVIEW_DISPUTED(db)}`
             )[0]?.n ?? 0;
           },
           async sessionStatus(userId, sessionId) {
@@ -377,6 +386,13 @@ export function createStateStore(sql: Sql): StateStore {
               values (${r.userId}, ${r.skillKey}, ${r.attemptId}, ${db.array(r.attemptIds)}::uuid[], ${r.sessionId}, ${r.rating},
                 ${r.reviewedAt.toISOString()}::timestamptz, ${r.elapsedDays}, ${r.scheduledDays}, ${r.stateBefore}, ${r.stabilityAfter},
                 ${r.difficultyAfter}, ${r.dueAfter.toISOString()}::timestamptz, ${r.paramsVersion}, ${db.array(r.flags)}::text[])`;
+          },
+          async reviewsForReplay(userId, skillKey) {
+            const rows = await db<{ rating: number; reviewed_at: Date; all_disputed: boolean }[]>`
+              select r.rating::int as rating, r.reviewed_at, ${REVIEW_DISPUTED(db)} as all_disputed
+              from public.review_log r where r.user_id = ${userId} and r.skill_key = ${skillKey}
+              order by r.reviewed_at, r.id`;
+            return rows.map((r) => ({ rating: r.rating as 1 | 2 | 3 | 4, reviewedAt: r.reviewed_at, allDisputed: r.all_disputed }));
           },
           async ownsSession(userId, sessionId) {
             return (
