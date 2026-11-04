@@ -5,13 +5,12 @@ import { cn } from "@/lib/utils";
 
 export type NavKey = "today" | "map" | "review" | "progress";
 
-// Only Today exists so far. The other three say so (honest copy) instead of linking to nothing; they become
-// links when their screens are built (doc 09 section 3).
+// An item whose screen does not exist yet has `href: null` and says so (honest copy) instead of linking to nothing.
 const ITEMS: { key: NavKey; label: string; icon: PixelIconName; href: string | null }[] = [
   { key: "today", label: shell.navToday, icon: "today", href: "/" },
-  { key: "map", label: shell.navMap, icon: "map", href: null },
-  { key: "review", label: shell.navReview, icon: "review", href: null },
-  { key: "progress", label: shell.navProgress, icon: "progress", href: null },
+  { key: "map", label: shell.navMap, icon: "map", href: "/map" },
+  { key: "review", label: shell.navReview, icon: "review", href: "/review" },
+  { key: "progress", label: shell.navProgress, icon: "progress", href: "/progress" },
 ];
 
 function NavItems({ current, rail }: { current: NavKey; rail: boolean }) {
