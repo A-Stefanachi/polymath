@@ -9,7 +9,7 @@ Data region: **`eu-west-2` (London)**, chosen by the founder on 3 Nov 2026 "for 
 | GitHub | Repository `A-Stefanachi/polymath` | n/a | n/a | done | 2026-11-03 | |
 | Supabase | Staging project `Polymath` (ref `iwmomsuoozqcffltvdgz`) | Free | eu-west-2 (London) | done | 2026-11-03 | Postgres 17.11, status healthy (management API). Dashboard labels the default branch "production"; in the spec it is staging. Free plan: pauses after a week idle, no backups (BL-0103 weekly `pg_dump`) |
 | OpenRouter | LLM provider (00a I1) | Paid, $50 monthly key limit | n/a | done | 2026-11-03 | Strong `deepseek/deepseek-v4.1-flash`, cheap `z-ai/glm-5.3-flash`; requests set `data_collection: "deny"` |
-| Vercel | Web app staging | Hobby (founder-only use; OA-4) | functions to match Supabase (lhr1, to check at BL-0029) | account done; project at BL-0029 | 2026-11-03 | Account `a-stefanachi`; token checked with a read-only API call. GitHub app not installed: deploys go through `deploy-staging.yml` (BL-0029) |
+| Vercel | Web app staging | Hobby (founder-only use; OA-4) | functions in lhr1 (London, matches Supabase) | done: project `polymath-staging`, https://polymath-staging.vercel.app | 2026-11-04 | Account `a-stefanachi`; token checked with a read-only API call. GitHub app not installed: deploys go through `deploy-staging.yml` (BL-0029) |
 | Worker host | Python worker | Founder's laptop, queue-only (00a I2) | n/a | open | | Docker Desktop with WSL2; Fly or Cloud Run before D1 |
 | Domain and DNS | Staging URL, mail sender | | | optional | | |
 | SMTP provider | Supabase Auth sign-in mails | | | optional | | Needed before sign-in mails on staging |

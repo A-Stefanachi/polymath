@@ -2,6 +2,24 @@
 
 `.github/workflows/deploy-staging.yml` deploys every push to `main`: `supabase db push` first, then the web app through the Vercel CLI, then a check that `/api/v1/health` reports the deployed commit. Until the settings below exist, the workflow skips with a warning that names what is missing. The worker runs on the founder's laptop in queue-only mode (00a I2).
 
+## Status (4 Nov 2026)
+
+Done by the build agent at the founder's request, through the Supabase management API and the Vercel API:
+
+| Step | State |
+|---|---|
+| Vercel project `polymath-staging` (`prj_V4X4YQyEAAML9eCNq1TfMWFp1gSo`, team `team_Y74kNTf8YPBhmXG1kUhQUQQ4`), root `apps/web`, Next.js, Node 24.x, functions in `lhr1` | done |
+| Vercel environment variables (production and preview targets): `APP_ENV`, `LLM_PROVIDER=fake`, `AUTH_SIGNUP_ENABLED=true`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` and `DATABASE_URL_PRIVILEGED` (transaction pooler, port 6543), the last two as sensitive | done |
+| Staging URL https://polymath-staging.vercel.app; `/api/v1/health` returns 200 with `db: ok` and `version` equal to the deployed commit | done |
+| Migrations applied to staging (3), recorded in `supabase_migrations.schema_migrations` as the CLI does, so `supabase db push` treats them as applied | done |
+| Auth: OTP length 6, expiry 900 s, site URL and the redirect `https://polymath-staging.vercel.app/auth/callback`, phone and anonymous sign-in off; signup on until the founder's account exists | done |
+| Legacy `anon` and `service_role` JWT keys disabled | done |
+| OA-9 / ST-RLS-19 probe on staging (`infra/VERIFIED.md`) | done |
+| Custom email templates (six-digit code in the email) | blocked: the Free plan refuses template changes with the built-in mailer. Needs custom SMTP (step 3 below). Until then staging sends Supabase's default email: a link only, which signs in in the browser that requested it (`/auth/callback?code=...`) |
+| GitHub environment `staging` (secrets for the deploy workflow) | open: no tool in the agent session can write repository secrets. Until it exists, deploy-staging skips and staging is deployed with `vercel deploy --prod` from a checkout |
+
+Left for the founder: the GitHub environment (step 2), custom SMTP and then the templates (step 3), and the iPhone check (`infra/VERIFIED.md`). Once the founder's account exists, set `AUTH_SIGNUP_ENABLED` to `false` on Vercel and turn off "Allow new users to sign up" in Supabase.
+
 ## One-time setup (founder)
 
 ### 1. Vercel project
@@ -33,9 +51,9 @@ Repository → Settings → Environments → New environment `staging`. Optional
 | secret | `SUPABASE_DB_PASSWORD` | the staging database password |
 | secret | `VERCEL_TOKEN` | a Vercel token scoped to the project |
 | variable | `SUPABASE_PROJECT_REF` | `iwmomsuoozqcffltvdgz` |
-| variable | `VERCEL_ORG_ID` | from step 1 |
-| variable | `VERCEL_PROJECT_ID` | from step 1 |
-| variable | `STAGING_URL` | for example `https://polymath-staging.vercel.app` |
+| variable | `VERCEL_ORG_ID` | `team_Y74kNTf8YPBhmXG1kUhQUQQ4` |
+| variable | `VERCEL_PROJECT_ID` | `prj_V4X4YQyEAAML9eCNq1TfMWFp1gSo` |
+| variable | `STAGING_URL` | `https://polymath-staging.vercel.app` |
 
 ### 3. Supabase staging settings
 

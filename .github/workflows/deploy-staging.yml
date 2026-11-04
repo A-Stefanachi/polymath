@@ -99,17 +99,16 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # Environment variables (Supabase URL and keys, GIT_SHA, APP_ENV=staging) live in the Vercel
       # project, never in this file (doc 03 section 9.2). The commit is passed at build time.
-      - name: vercel pull (staging = Vercel "preview" target)
-        run: pnpm dlx "vercel@${VERCEL_CLI}" pull --yes --environment=preview --token="$VERCEL_TOKEN"
+      # The Vercel project polymath-staging exists only for staging, so its "production" target is
+      # staging and its production domain is STAGING_URL (https://polymath-staging.vercel.app).
+      - name: vercel pull
+        run: pnpm dlx "vercel@${VERCEL_CLI}" pull --yes --environment=production --token="$VERCEL_TOKEN"
       - name: vercel build
-        run: pnpm dlx "vercel@${VERCEL_CLI}" build --token="$VERCEL_TOKEN" --build-env GIT_SHA="$GITHUB_SHA"
+        run: pnpm dlx "vercel@${VERCEL_CLI}" build --prod --token="$VERCEL_TOKEN"
+        env:
+          GIT_SHA: ${{ github.sha }}
       - name: vercel deploy
-        id: deploy
-        run: |
-          url=$(pnpm dlx "vercel@${VERCEL_CLI}" deploy --prebuilt --token="$VERCEL_TOKEN" --env GIT_SHA="$GITHUB_SHA")
-          echo "url=$url" >> "$GITHUB_OUTPUT"
-      - name: point the staging alias at this deployment
-        run: pnpm dlx "vercel@${VERCEL_CLI}" alias set "${{ steps.deploy.outputs.url }}" "${STAGING_URL#https://}" --token="$VERCEL_TOKEN"
+        run: pnpm dlx "vercel@${VERCEL_CLI}" deploy --prebuilt --prod --token="$VERCEL_TOKEN" --env GIT_SHA="$GITHUB_SHA"
       - name: /api/v1/health reports this commit (BL-0029 acceptance 1)
         run: |
           for _ in 1 2 3 4 5 6; do

@@ -6,6 +6,11 @@ do $$
 begin
   if not exists (select 1 from pg_class where relname = 'profiles' and relnamespace = 'public'::regnamespace) then
     drop function if exists public.is_service_role();
+  else
+    -- The baseline owns it: put its grants back (authenticated and service_role only; the create
+    -- step granted anon for the probe call).
+    revoke execute on function public.is_service_role() from anon, public;
+    grant execute on function public.is_service_role() to authenticated, service_role;
   end if;
 end $$;
 notify pgrst, 'reload schema';
