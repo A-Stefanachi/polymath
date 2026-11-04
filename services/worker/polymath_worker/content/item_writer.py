@@ -91,7 +91,8 @@ def load_template(conn: Any, key: str, version: int) -> tuple[dict, str]:
     skill_key, task_kind, grader_type, prior, status, body, pool, interleave, ref_time, eligible = rows[0]
     if status == "retired":
         raise TemplateNotUsable(f"template {key} v{version} is retired")
-    tpl = dict(body)
+    # `_sync` is the sync's bookkeeping (hash, run id, fuzz job id), not part of the template file.
+    tpl = {k: v for k, v in dict(body).items() if k != "_sync"}
     tpl.update(key=key, version=version, skill_key=skill_key, task_kind=task_kind, grader_type=grader_type)
     tpl["difficulty_prior"] = prior
     if pool != "practice":

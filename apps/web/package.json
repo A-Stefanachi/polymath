@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "e2e:auth": "next build && playwright test"
+    "e2e:auth": "next build && playwright test",
+    "e2e:m0": "playwright test -c playwright.m0.config.ts"
   },
   "dependencies": {
     "@polymath/grading-core": "workspace:*",

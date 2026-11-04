@@ -6,6 +6,28 @@ Record go/no-go outcomes, lean-gate releases, and scope-down choices here before
 
 <!-- Entries appear newest first. -->
 
+## 2026-11-04: M0 exit (BL-0032)
+
+Decision: M0 (walking skeleton, doc 01 section 10) is met on staging. The founder delegated BL-0032 to the build agent without review of the steps below.
+
+M0 exit criteria:
+
+- [x] One template rendered with 3 seeds, all verified: `tpl.elec.voltage-divider-vout` v1, seeds 1000 to 1002 (from the G3-reviewed range 1000 to 1004); `select count(*) from items where status='verified' and template_key='tpl.elec.voltage-divider-vout'` on staging returns 3.
+- [x] RLS tests green: local CI on this change, `pnpm test:rls` 69 tests PASS, `supabase test db` 86 tests PASS, RLS mutation checks PASS. GitHub CI is parked by the founder, so local CI (`tools/ci/local-ci.sh`) stands in for the CI summary of acceptance 3.
+- [x] Claims lint runs: `pnpm claims:lint` 0 violations (266 files).
+- [x] SM-06 = 0: on staging, attempts on an item that is not `verified` = 0, and open session tasks on such an item = 0.
+- [x] Demonstrable FRs: `pnpm e2e:m0` passes against https://polymath-staging.vercel.app (1 passed). It covers email-code sign-in (FR-001), the consent record (FR-004), onboarding with a weekly target (FR-002), the item for 3 seeds with its text alternative and no answer key in the page (FR-060, FR-067), numeric grading (FR-061), and the attempt and event rows (FR-110). The content comes from git through `content:sync` (FR-010, FR-122, FR-126).
+
+How it was done, and what differs from the plan:
+
+- The worker had no handler for the `content_postprocess` job that `content:sync` enqueues, so no synced template could reach `verified`. BL-0032 adds it (`services/worker/polymath_worker/postprocess.py`): the G2 fuzz run of doc 07 section 7, ported from `reference/verifiers/verify_template.py`. All 30 lean templates passed 200 samples. BL-0052 still owns the CI side of G2 and the per-template report.
+- The cloud session has no TCP route to the staging database (infra/ACCOUNTS.md) and the laptop worker is not running yet. The pipeline therefore ran on the local stack: sync, fuzz job, second sync (the divider is the only template with a G3 review, so it is the only `verified` one), and a `pregenerate_items` job for the 3 seeds. Its output rows were then copied unchanged to staging through the management API: modules, skills, edges, templates, items, item_secrets, sync runs and the two jobs. No status was set by hand. Later syncs to staging keep the verified status, because the hash is unchanged.
+- The e2e learner is a throwaway account made with the admin API (signup is off) and deleted at the end of the run. Only the email is stood in for: the test answers the browser's `/auth/send-code` call and mints the code with the admin API, because Resend's test sender delivers only to the founder's address. The code is typed into the real form and checked by the real verify route on staging. Delivery of the email is the founder's iPhone check (infra/VERIFIED.md, done 4 Nov 2026).
+- The exit demonstration from the phone (risk note of BL-0032) is the founder's 4 Nov 2026 sign-in recorded in infra/VERIFIED.md. Answering an item from the phone is not recorded separately.
+- Not run in this change: the worker image build (the sandbox proxy blocks it, as in Wave 4) and `pnpm e2e:auth` (the local CI run was stopped before it finished; no app code changed in this task).
+
+Next three tasks: BL-0050 (template lint L01 to L26), BL-0051 (verifier registry), BL-0052 (G2 fuzz in CI).
+
 ## 2026-11-03: worker heartbeat table and function default privileges (00a I3)
 
 Decision: the founder delegated the two schema questions of the Wave 2 review (PR #4) to the build agent's judgment. Both are recorded as 00a I3: `app_private.worker_heartbeat` (the one-row heartbeat doc 03 sections 8.4 and 8.6 call for, read by `GET /health`) and a global default-privileges entry so new functions are not executable by PUBLIC (a baseline gap found by ST-RLS-19).
