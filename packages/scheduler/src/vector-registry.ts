@@ -46,12 +46,6 @@ export function vectorContext(): VectorContext {
 export const SKIPPED_FUNCTIONS: Readonly<Record<string, string>> = {
   needs_applied: "BL-0184",
   tutor_overreliance: "BL-0188",
-  interleave_stage: "BL-0037",
-  pack_session: "BL-0037",
-  checkpoint_status: "BL-0037",
-  is_stuck: "BL-0037",
-  trace_back: "BL-0037",
-  hint_reliance: "BL-0037",
   weekly_plan_slots: "BL-0038",
   rebalance: "BL-0038",
 };

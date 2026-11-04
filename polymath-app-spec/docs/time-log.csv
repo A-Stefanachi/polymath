@@ -41,3 +41,4 @@ BL-0185,2026-11-04,2026-11-04,0,0.3,Mastery span and template-diversity tests (c
 BL-0187,2026-11-04,2026-11-04,0,1,Desired-retention default switch and logged latency ratio by agent (autoswe direct track)
 BL-0036,2026-11-04,2026-11-04,0,1,Frontier, scores, project pull and why-locked reasons by agent (autoswe direct track)
 BL-0186,2026-11-04,2026-11-04,0,0.5,Placement grace tier tests for the frontier by agent (autoswe direct track)
+BL-0037,2026-11-04,2026-11-04,0,1.5,Session packer, interleave stages, checkpoint status, stuck detection, trace-back and hint reliance by agent (autoswe direct track)
