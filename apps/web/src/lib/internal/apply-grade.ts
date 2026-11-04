@@ -10,6 +10,7 @@ import { timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { signRequest } from "@/lib/attempts/symbolic-client";
 import { applyGradedAttempt, defaultStateDeps, type StateDeps } from "@/lib/state/apply-attempt.ts";
+import { internalApplySecret } from "@/server/privileged/internal-secrets";
 
 export const APPLY_GRADE_PATH = "/api/internal/apply-grade";
 export const REPLAY_WINDOW_S = 60;
@@ -23,7 +24,7 @@ export type ApplyGradeDeps = {
 };
 
 const defaultDeps = (): ApplyGradeDeps => ({
-  secret: process.env["INTERNAL_APPLY_HMAC_SECRET"],
+  secret: internalApplySecret(),
   nowS: () => Math.floor(Date.now() / 1000),
   state: defaultStateDeps,
 });
