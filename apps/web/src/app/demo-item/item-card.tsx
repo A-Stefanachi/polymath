@@ -38,6 +38,7 @@ export function ItemCard({ taskId }: { taskId: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
+  const [askConfidence, setAskConfidence] = useState(false);
 
   useEffect(() => {
     let live = true;
@@ -53,12 +54,20 @@ export function ItemCard({ taskId }: { taskId: string }) {
     };
   }, [taskId]);
 
-  async function submit(event: FormEvent) {
+  // Check only locks the answer and asks for confidence; nothing is sent or shown until the learner
+  // picks 1-5 or skips (FR-071, doc 09 S08 AC 3).
+  function check(event: FormEvent) {
     event.preventDefault();
-    if (!loaded || busy || result) return;
-    const match = NUMBER_AND_UNIT.exec(answer);
-    if (!match) return setError(t.invalid);
+    if (!loaded || busy || result || askConfidence) return;
+    if (!NUMBER_AND_UNIT.test(answer)) return setError(t.invalid);
     setError(null);
+    setAskConfidence(true);
+  }
+
+  async function submit(confidence: number | null) {
+    const match = NUMBER_AND_UNIT.exec(answer);
+    if (!loaded || busy || result || !match) return;
+    setAskConfidence(false);
     setBusy(true);
     const res = await fetch("/api/v1/attempts", {
       method: "POST",
@@ -69,11 +78,15 @@ export function ItemCard({ taskId }: { taskId: string }) {
         session_task_id: taskId,
         started_at: loaded.startedAt,
         submitted_at: new Date().toISOString(),
+        ...(confidence === null ? {} : { confidence }),
         response: { kind: "numeric", value: Number(match[1]), ...(match[2] ? { unit: match[2] } : {}) },
       }),
     }).catch(() => null);
     setBusy(false);
-    if (!res?.ok) return setError(t.submitFailed);
+    if (!res?.ok) {
+      setError(t.submitFailed);
+      return setAskConfidence(true); // the answer is kept; the learner can pick again
+    }
     const body = (await res.json()) as { grade: { status: string; correct: boolean | null; feedback?: string; graders: { detail?: { unit?: unknown } }[] } | null };
     const unit = body.grade?.graders[0]?.detail?.unit;
     setResult({
@@ -93,7 +106,7 @@ export function ItemCard({ taskId }: { taskId: string }) {
       <p role="math" aria-label={rendered.alt_text ?? rendered.prompt_md} data-testid="statement">
         <Statement source={rendered.prompt_md} />
       </p>
-      <form onSubmit={submit} className="flex flex-col gap-2" noValidate>
+      <form onSubmit={check} className="flex flex-col gap-2" noValidate>
         <Label htmlFor="answer">{t.answerLabel}</Label>
         <Input
           id="answer"
@@ -102,17 +115,34 @@ export function ItemCard({ taskId }: { taskId: string }) {
           autoComplete="off"
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
-          readOnly={result !== null}
+          readOnly={result !== null || askConfidence || busy}
           aria-describedby="answer-help"
         />
         <p id="answer-help" className="text-sm">
           {rendered.answer_prompt || t.answerHelp}
         </p>
         {error && <p role="alert">{error}</p>}
-        <Button type="submit" disabled={busy || result !== null || answer.trim() === ""}>
+        <Button type="submit" disabled={busy || askConfidence || result !== null || answer.trim() === ""}>
           {busy ? t.checking : t.check}
         </Button>
       </form>
+      {askConfidence && (
+        <fieldset className="flex flex-col gap-2" data-testid="confidence">
+          <legend className="font-medium">{t.confidenceTitle}</legend>
+          <p className="text-sm">{t.confidenceHelp}</p>
+          <div className="flex flex-wrap gap-2">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <Button key={n} type="button" variant="outline" onClick={() => void submit(n)}>
+                {n}
+                {n === 1 ? ` ${t.confidenceGuessing}` : n === 5 ? ` ${t.confidenceCertain}` : ""}
+              </Button>
+            ))}
+          </div>
+          <Button type="button" variant="outline" className="self-start" onClick={() => void submit(null)}>
+            {t.confidenceSkip}
+          </Button>
+        </fieldset>
+      )}
       <div aria-live="polite" data-testid="feedback">
         {result && (
           <section className="flex flex-col gap-1">
