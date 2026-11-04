@@ -94,10 +94,14 @@ test.describe("phone", () => {
     expect(rows[0]?.planned_min).toBeLessThanOrEqual(15);
     expect(rows[0]?.tasks).toBeGreaterThan(0);
 
-    // The placeholder says so honestly and lets the learner leave; Today then builds again.
-    await expect(page.getByRole("heading", { level: 1, name: "Your session" })).toBeVisible();
-    await expect(page.getByText(/not built yet/)).toBeVisible();
-    await page.getByRole("button", { name: "End this session and go back" }).click();
+    // The runner (BL-0060) shows the first task; the learner can end the session from Pause, then return to
+    // Today, which builds again.
+    await expect(page.getByRole("button", { name: "Pause" })).toBeVisible();
+    await page.getByRole("button", { name: "Pause" }).click();
+    await page.getByRole("button", { name: "End this session" }).click();
+    await page.getByRole("button", { name: "End session" }).click();
+    await expect(page).toHaveURL(/\/summary$/);
+    await page.getByRole("link", { name: "Back to Today" }).click();
     await expect(page).toHaveURL(/\/$/);
     await expect(page.getByText(/^About \d+ min, \d+ tasks?$/)).toBeVisible();
   });

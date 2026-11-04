@@ -1,20 +1,19 @@
 import { redirect } from "next/navigation";
-import { AppShell } from "@/components/shell/app-shell";
 import { nextPath } from "@/lib/auth/next-step";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { SessionPlaceholder } from "./session-placeholder";
+import { SessionRunner } from "./session-runner";
 
 export const dynamic = "force-dynamic";
 
-// /session/[id] is the micro runner of BL-0060 (doc 09 S08). Until it exists this page says so plainly and lets
-// the learner end the session, so Today is never blocked by an open one.
+// /session/[id] is the micro runner (doc 09 S08). A focused screen: no navigation shell, its own top bar. The
+// server part only gates onboarding; tasks, answers and grading go through the /api/v1 routes.
 export default async function SessionPage({ params }: { params: Promise<{ id: string }> }) {
   const next = await nextPath(await createSupabaseServerClient());
   if (next !== "/") redirect(next);
   const { id } = await params;
   return (
-    <AppShell>
-      <SessionPlaceholder id={id} />
-    </AppShell>
+    <main id="main" tabIndex={-1} className="min-h-dvh outline-none">
+      <SessionRunner id={id} />
+    </main>
   );
 }
