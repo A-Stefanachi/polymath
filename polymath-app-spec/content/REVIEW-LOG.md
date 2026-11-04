@@ -30,7 +30,7 @@ On 2 November all 30 were rewritten as parameterised items, except 3 `concept_st
 | tpl.elec.lab-esd | 2 | 7100–7104 | pending | — |
 | tpl.elec.lab-probe | 2 | 7200–7204 | pending | — |
 | tpl.elec.schematic-gnd | 2 | 7000–7004 | pending | — |
-| tpl.elec.schematic-series | 2 | 6900–6904 | pending | — |
+| tpl.elec.schematic-series | 3 | 6900–6904 | pending | — |
 | tpl.elec.charge-current | 2 | 6000–6004 | pending | — |
 | tpl.elec.ohms-law-v | 2 | 6100–6104 | pending | — |
 | tpl.elec.ohms-law-r | 2 | 6200–6204 | pending | — |

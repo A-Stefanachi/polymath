@@ -7,15 +7,6 @@ import { licenceMessages, lintTemplates } from "@polymath/content-lint";
 
 import type { Doc, Loaded, Problem } from "./load.ts";
 
-/**
- * Rules that block the sync. These are the rules the sync enforced before BL-0050. The other
- * content-lint rules are reported as warnings here because two shipped templates fail them
- * (tpl.math.solve-linear-v1 L04: unknown name "c"; tpl.elec.schematic-series L11: a wrong answer
- * inside 3 x tolerance) and content edits void reviews. `pnpm content:lint` enforces all of them;
- * once the founder has fixed the two templates, delete this set so the sync enforces every rule.
- */
-const ENFORCED = new Set(["L01", "L02", "L10", "L20", "L22", "L24", "L25"]);
-
 function str(v: unknown): string {
   return typeof v === "string" ? v : "";
 }
@@ -95,7 +86,7 @@ function graphProblems(loaded: Loaded): Problem[] {
 }
 
 /** Runs G1 on loaded content. `contentRoot` locates content/prompts. Warnings carry severity "W". */
-export function lintContent(loaded: Loaded, contentRoot: string, enforceAll = false): Problem[] {
+export function lintContent(loaded: Loaded, contentRoot: string): Problem[] {
   const out: Problem[] = [...graphProblems(loaded)];
   const seen = new Map<string, string>();
   for (const { file, doc } of loaded.templates) {
@@ -108,6 +99,6 @@ export function lintContent(loaded: Loaded, contentRoot: string, enforceAll = fa
     contentRoot,
     skillKeys: loaded.graph ? new Set(loaded.graph.skills.map((s) => str(s.doc["key"]))) : undefined,
   });
-  for (const f of findings) out.push({ file: f.file, rule: f.rule, message: f.message, severity: enforceAll || ENFORCED.has(f.rule) ? f.severity : "W" });
+  for (const f of findings) out.push({ file: f.file, rule: f.rule, message: f.message, severity: f.severity });
   return out;
 }
