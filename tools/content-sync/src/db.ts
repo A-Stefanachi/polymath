@@ -20,8 +20,11 @@ export async function readExisting(sql: Sql): Promise<Existing> {
   const edges = await sql<{ from_skill_key: string; to_skill_key: string; strength: string; min_tier: string }[]>`
     select from_skill_key, to_skill_key, strength::text as strength, min_tier::text as min_tier from public.skill_edges`;
   // fuzzPassed: the G2 job recorded for this row finished successfully with result {"passed": true}.
-  const templates = await sql<{ key: string; version: number; status: string; sha256: string | null; fuzz_passed: boolean }[]>`
+  // console_review_sha256: the hash the review console signed off after a hand-solve with 0 disagreements (BL-0057).
+  const templates = await sql<{ key: string; version: number; status: string; sha256: string | null; fuzz_passed: boolean; console_review_sha256: string | null }[]>`
     select t.key, t.version, t.status::text as status, t.body->'_sync'->>'sha256' as sha256,
+           case when t.body #>> '{_review,hand_solve}' = 'done' and t.body #>> '{_review,disagreements}' = '0'
+                then t.body #>> '{_review,template_sha256}' end as console_review_sha256,
            exists (select 1 from public.jobs j
                     where j.id::text = t.body->'_sync'->>'fuzz_job_id'
                       and j.status = 'succeeded' and j.result->>'passed' = 'true') as fuzz_passed
@@ -30,7 +33,7 @@ export async function readExisting(sql: Sql): Promise<Existing> {
     modules: new Map(modules.map((m) => [m.key, { title: m.title, order_index: m.order_index, is_stub: m.is_stub }])),
     skills: new Map(skills.map((r) => [r.key, { content_hash: r.content_hash, status: r.status }])),
     edges: [...edges],
-    templates: templates.map((t) => ({ key: t.key, version: t.version, status: t.status, sha256: t.sha256, fuzzPassed: t.fuzz_passed })),
+    templates: templates.map((t) => ({ key: t.key, version: t.version, status: t.status, sha256: t.sha256, fuzzPassed: t.fuzz_passed, consoleReviewSha256: t.console_review_sha256 })),
   };
 }
 
@@ -123,8 +126,15 @@ export async function applyPlan(sql: Sql, plan: Plan, ctx: ApplyContext): Promis
         on conflict (key, version) do update set
           skill_key = excluded.skill_key, task_kind = excluded.task_kind, grader_type = excluded.grader_type,
           difficulty_prior = excluded.difficulty_prior, status = excluded.status,
-          body = jsonb_set(excluded.body, '{_sync,fuzz_job_id}',
-                   coalesce(excluded.body #> '{_sync,fuzz_job_id}', item_templates.body #> '{_sync,fuzz_job_id}', 'null'::jsonb)),
+          -- A console sign-off (body._review, BL-0057) survives only for the hash it names; any other hash drops it.
+          body = case when item_templates.body #>> '{_review,template_sha256}' = excluded.body #>> '{_sync,sha256}'
+                      then jsonb_set(
+                             jsonb_set(excluded.body, '{_sync,fuzz_job_id}',
+                               coalesce(excluded.body #> '{_sync,fuzz_job_id}', item_templates.body #> '{_sync,fuzz_job_id}', 'null'::jsonb)),
+                             '{_review}', item_templates.body -> '_review')
+                      else jsonb_set(excluded.body, '{_sync,fuzz_job_id}',
+                             coalesce(excluded.body #> '{_sync,fuzz_job_id}', item_templates.body #> '{_sync,fuzz_job_id}', 'null'::jsonb))
+                 end,
           phone_suitable = excluded.phone_suitable, est_seconds = excluded.est_seconds, license = excluded.license,
           source = excluded.source, content_hash = excluded.content_hash, tier = excluded.tier, pool = excluded.pool,
           interleave = excluded.interleave, reference_time_s = excluded.reference_time_s,

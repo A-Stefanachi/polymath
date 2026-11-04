@@ -32,6 +32,14 @@ describe("status rule (doc 07 section 10 step 5, 00a H4)", () => {
     expect(statusFor({ ...base, authoringStatus: "ready", reviewLog: "| tpl.a.b | 2 | 1–5 | pending | — |" })).toBe("needs_human_review");
     expect(statusFor({ ...base, authoringStatus: "ready", reviewLog: "| tpl.a.b | 2 | 1–5 | done | 1 |" })).toBe("needs_human_review");
   });
+  it("BL-0057: a console sign-off replaces the file review only for the hash it names", () => {
+    const ready = { ...base, authoringStatus: "ready", review: {}, reviewLog: "" };
+    expect(statusFor({ ...ready, consoleReviewSha256: "h1" })).toBe("verified");
+    expect(statusFor({ ...ready, consoleReviewSha256: "old" })).toBe("needs_human_review");
+    expect(statusFor({ ...ready, consoleReviewSha256: null })).toBe("needs_human_review");
+    expect(statusFor({ ...ready, consoleReviewSha256: "h1", fuzzPassed: false })).toBe("needs_human_review");
+    expect(statusFor({ ...ready, authoringStatus: "draft", consoleReviewSha256: "h1" })).toBe("draft");
+  });
   it("reviewLogDone matches the key cell exactly", () => {
     expect(reviewLogDone("| tpl.a.bc | 2 | s | done | 0 |", "tpl.a.b")).toBe(false);
   });

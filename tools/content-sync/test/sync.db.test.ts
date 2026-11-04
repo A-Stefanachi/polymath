@@ -123,6 +123,32 @@ describe.skipIf(!reachable)("content:sync against a throwaway database", () => {
     expect(row[0]).toEqual({ job: jobs[1]?.id, title: "Kilo-ohms to ohms, edited" });
   });
 
+  it("BL-0057: a console sign-off (body._review for the current hash) survives a re-sync; an edited file voids it (doc 07 T9)", async () => {
+    // What the review console stores after a passed G2 and a hand-solve (apps/web review-store.ts), written here by SQL.
+    const row = (await db.sql<{ hash: string; job: string }[]>`
+      select body->'_sync'->>'sha256' as hash, body->'_sync'->>'fuzz_job_id' as job from public.item_templates where key = ${TEMPLATE}`)[0];
+    if (!row) throw new Error("template row missing");
+    await db.sql`update public.jobs set status = 'succeeded', result = ${db.sql.json({ passed: true })} where id = ${row.job}`;
+    const review = { reviewer: "x", template_sha256: row.hash, hand_solve: "done", disagreements: 0, source: "console" };
+    await db.sql`update public.item_templates set status = 'verified', body = jsonb_set(body, '{_review}', ${db.sql.json(review)}) where key = ${TEMPLATE}`;
+
+    const same = sync();
+    expect(same.status, same.stderr).toBe(0);
+    expect(same.stdout).toMatch(/templates\s+created=0 updated=0 unchanged=30 retired=0/);
+    const kept = await db.sql<{ status: string; hash: string | null }[]>`
+      select status::text as status, body #>> '{_review,template_sha256}' as hash from public.item_templates where key = ${TEMPLATE}`;
+    expect(kept).toEqual([{ status: "verified", hash: row.hash }]);
+
+    const file = templatePath(TEMPLATE);
+    writeFileSync(file, readFileSync(file, "utf8").replace("title: Kilo-ohms to ohms, edited", "title: Kilo-ohms to ohms, edited again"));
+    const edited = sync();
+    expect(edited.status, edited.stderr).toBe(0);
+    expect(edited.stdout).toMatch(/templates\s+created=0 updated=1 unchanged=29 retired=0/);
+    const voided = await db.sql<{ status: string; review: unknown }[]>`
+      select status::text as status, body->'_review' as review from public.item_templates where key = ${TEMPLATE}`;
+    expect(voided).toEqual([{ status: "needs_human_review", review: null }]);
+  });
+
   it("AC: deleting a template file marks the row retired and keeps it, with no verification job", async () => {
     unlinkSync(templatePath(OTHER));
     const jobsBefore = await count("jobs");

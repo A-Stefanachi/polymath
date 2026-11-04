@@ -56,3 +56,4 @@ BL-0051,2026-11-04,2026-11-04,,20,Verifier registry with the 14 kinds and per-ki
 BL-0052,2026-11-04,2026-11-04,,20,G2 fuzz CLI, CI content job and fuzz tests by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
 BL-0055,2026-11-04,2026-11-04,0,5,Shown-options check against items.rendered.options in submitAttempt by agent (autoswe direct track)
 BL-0056,2026-11-04,2026-11-04,0,25,reportItem, retireItem, listItemReports, resolveItemReport with quarantine and attempt flag by agent (autoswe direct track)
+BL-0057,2026-11-04,2026-11-04,,30,Content review console /admin/content with console sign-off in body._review honoured by content:sync, admin 403 gate by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
