@@ -4,18 +4,22 @@ Payload (ids and numbers only, no content): {"template_key": str, "template_vers
 "seed_start": int, "count": int}. The seeds are seed_start .. seed_start + count - 1: a deterministic rule,
 so a retried or duplicated job produces the same items and the idempotent writer makes it a no-op. A list of
 seeds would work too but grows the payload; a range keeps it small and the dedupe key can be built from it.
+BL-0043 adds a second payload shape, {"user_id", "skill_keys", "want"} (doc 03 section 8.3), which tops up a
+user's per-skill stock of verified items with fresh seeds (`content/pool.py`).
 Template verification at sync time is `content_postprocess` (BL-0018), not this handler.
 """
 
 from __future__ import annotations
 
 import asyncio
+import re
+import uuid
 from collections.abc import Callable
 from typing import Any
 
 import structlog
 
-from polymath_worker.content import item_writer
+from polymath_worker.content import item_writer, pool
 from polymath_worker.job_queue import DB_ERRORS, Handler, JobRow, Retryable, connect_database
 
 log = structlog.get_logger("polymath_worker.pregenerate")
@@ -46,10 +50,47 @@ def parse_payload(payload: dict[str, Any]) -> tuple[str, int, list[int]]:
     return key, version, list(range(start, start + count))
 
 
+MAX_WANT = 50  # stock target per skill in one job
+MAX_SKILLS = 20
+_SKILL_KEY = re.compile(r"^[a-z]+\.[a-z0-9-]+\.[a-z0-9-]+$")
+
+
+def parse_pool_payload(payload: dict[str, Any]) -> tuple[str, list[str], int]:
+    """BL-0043 payload {user_id, skill_keys, want} (doc 03 section 8.3): ids and numbers only."""
+    user_id, skills, want = payload.get("user_id"), payload.get("skill_keys"), payload.get("want")
+    try:
+        user_id = str(uuid.UUID(user_id)) if isinstance(user_id, str) else None
+    except ValueError:
+        user_id = None
+    if user_id is None:
+        raise InvalidPayload("user_id must be a uuid")
+    if not isinstance(skills, list) or not 1 <= len(skills) <= MAX_SKILLS:
+        raise InvalidPayload(f"skill_keys must be a list of 1 to {MAX_SKILLS} keys")
+    if not all(isinstance(s, str) and _SKILL_KEY.match(s) for s in skills):
+        raise InvalidPayload("skill_keys must match the skill key pattern")
+    if not isinstance(want, int) or isinstance(want, bool) or not 1 <= want <= MAX_WANT:
+        raise InvalidPayload(f"want must be an integer between 1 and {MAX_WANT}")
+    return user_id, list(dict.fromkeys(skills)), want
+
+
 def make_handler(connect: Callable[[], Any]) -> Handler:
     """Handler factory; `connect` opens a database connection (one per job, closed afterwards)."""
 
+    def run_pool(job: JobRow) -> dict[str, Any]:
+        user_id, skills, want = parse_pool_payload(job.payload)
+        conn = connect()
+        try:
+            result = {s: pool.top_up_skill(conn, user_id, s, want) for s in skills}
+        except DB_ERRORS as e:
+            raise Retryable(f"database error: {type(e).__name__}") from e
+        finally:
+            conn.close()
+        log.info("pregenerate_items_pool_done", skills=len(skills), want=want)
+        return {"skills": result}
+
     def run_sync(job: JobRow) -> dict[str, Any]:
+        if "skill_keys" in job.payload:
+            return run_pool(job)
         key, version, seeds = parse_payload(job.payload)
         conn = connect()
         try:
