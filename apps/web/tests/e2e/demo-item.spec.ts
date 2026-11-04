@@ -36,7 +36,9 @@ test("signed-in learner answers correctly by keyboard: statement alternative, co
   const axe = await new AxeBuilder({ page }).analyze();
   expect(axe.violations.filter((v) => v.impact === "critical" || v.impact === "serious")).toEqual([]);
 
-  // Keyboard only: Tab reaches the answer field, Enter submits.
+  // Keyboard only: the first Tab stop is the skip link (BL-0058), the second the answer field; Enter submits.
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Skip to main content" })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.getByLabel("Your answer")).toBeFocused();
   await page.keyboard.type(`${REFERENCE} V`);

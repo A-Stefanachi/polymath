@@ -5,8 +5,10 @@ import katex from "katex";
 import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { ConfidenceSelector } from "@/components/ui/confidence-selector";
+import { FeedbackPanel } from "@/components/ui/feedback-panel";
+import { NumericAnswer } from "@/components/ui/numeric-answer";
+import { TaskCard } from "@/components/ui/task-card";
 import { demoItem as t } from "@/copy/strings";
 
 type Rendered = { prompt_md: string; alt_text?: string; answer_prompt?: string };
@@ -14,6 +16,12 @@ type Loaded = { itemId: string; rendered: Rendered; startedAt: string };
 type Result = { correct: boolean | null; status: string; feedback?: string; unit?: string };
 
 const NUMBER_AND_UNIT = /^\s*([-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?)\s*(\S*)\s*$/;
+
+/** The grader's message without a lead-in that repeats the panel title ("Correct. ..."). */
+export function feedbackBody(feedback: string | undefined, title: string): string {
+  const text = (feedback ?? "").trim();
+  return text.startsWith(title) ? text.slice(title.length).trim() : text;
+}
 
 /** Statement text with `$...$` spans typeset by KaTeX (trust off: no \href or raw HTML). */
 function Statement({ source }: { source: string }) {
@@ -100,63 +108,60 @@ export function ItemCard({ taskId }: { taskId: string }) {
   if (loadError) return <p role="alert">{t.loadFailed}</p>;
   if (!loaded) return <p aria-live="polite">{t.loading}</p>;
   const { rendered } = loaded;
+  const graded = result?.status === "graded";
   return (
-    <Card>
-      <h1 className="text-2xl font-semibold">{t.title}</h1>
-      <p role="math" aria-label={rendered.alt_text ?? rendered.prompt_md} data-testid="statement">
+    <TaskCard
+      label={t.title}
+      eyebrow={<h1>{t.title}</h1>}
+      footer={
+        <>
+          {askConfidence && (
+            <Card className="px-rise">
+              <ConfidenceSelector
+                legend={t.confidenceTitle}
+                help={t.confidenceHelp}
+                guessing={t.confidenceGuessing}
+                certain={t.confidenceCertain}
+                skip={t.confidenceSkip}
+                onPick={(n) => void submit(n)}
+              />
+            </Card>
+          )}
+          <div aria-live="polite" data-testid="feedback">
+            {result && (
+              <FeedbackPanel live={false} tone={!graded ? "info" : result.correct ? "correct" : "not-quite"} title={!graded ? t.invalid : result.correct ? t.correct : t.incorrect}>
+                {feedbackBody(result.feedback, !graded ? t.invalid : result.correct ? t.correct : t.incorrect) && (
+                  <p>{feedbackBody(result.feedback, !graded ? t.invalid : result.correct ? t.correct : t.incorrect)}</p>
+                )}
+                {result.unit && (
+                  <p>
+                    {t.unitRead}: {result.unit}
+                  </p>
+                )}
+                {graded && !result.correct && <p>{t.incorrectNote}</p>}
+              </FeedbackPanel>
+            )}
+          </div>
+        </>
+      }
+    >
+      <p role="math" aria-label={rendered.alt_text ?? rendered.prompt_md} data-testid="statement" className="max-w-[34ch] text-question sm:max-w-[60ch]">
         <Statement source={rendered.prompt_md} />
       </p>
-      <form onSubmit={check} className="flex flex-col gap-2" noValidate>
-        <Label htmlFor="answer">{t.answerLabel}</Label>
-        <Input
+      <form onSubmit={check} className="flex flex-col gap-4" noValidate>
+        <NumericAnswer
           id="answer"
-          name="answer"
-          inputMode="decimal"
-          autoComplete="off"
+          label={t.answerLabel}
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
           readOnly={result !== null || askConfidence || busy}
-          aria-describedby="answer-help"
+          help={rendered.answer_prompt || t.answerHelp}
+          error={error}
         />
-        <p id="answer-help" className="text-sm">
-          {rendered.answer_prompt || t.answerHelp}
-        </p>
-        {error && <p role="alert">{error}</p>}
         <Button type="submit" disabled={busy || askConfidence || result !== null || answer.trim() === ""}>
           {busy ? t.checking : t.check}
         </Button>
       </form>
-      {askConfidence && (
-        <fieldset className="flex flex-col gap-2" data-testid="confidence">
-          <legend className="font-medium">{t.confidenceTitle}</legend>
-          <p className="text-sm">{t.confidenceHelp}</p>
-          <div className="flex flex-wrap gap-2">
-            {[1, 2, 3, 4, 5].map((n) => (
-              <Button key={n} type="button" variant="outline" onClick={() => void submit(n)}>
-                {n}
-                {n === 1 ? ` ${t.confidenceGuessing}` : n === 5 ? ` ${t.confidenceCertain}` : ""}
-              </Button>
-            ))}
-          </div>
-          <Button type="button" variant="outline" className="self-start" onClick={() => void submit(null)}>
-            {t.confidenceSkip}
-          </Button>
-        </fieldset>
-      )}
-      <div aria-live="polite" data-testid="feedback">
-        {result && (
-          <section className="flex flex-col gap-1">
-            <h2 className="font-medium">{result.status !== "graded" ? t.invalid : result.correct ? t.correct : t.incorrect}</h2>
-            {result.feedback && <p>{result.feedback}</p>}
-            {result.unit && (
-              <p>
-                {t.unitRead}: {result.unit}
-              </p>
-            )}
-            {result.status === "graded" && !result.correct && <p>{t.incorrectNote}</p>}
-          </section>
-        )}
-      </div>
-    </Card>
+    </TaskCard>
   );
 }

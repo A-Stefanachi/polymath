@@ -33,6 +33,10 @@ Direct dependencies and their licences (CLAUDE.md section 5). Transitive depende
 | `tailwind-merge` | 3.7.0 | MIT |
 | `tailwindcss` | 4.3.4 | MIT |
 | `tw-animate-css` | 1.4.0 | MIT |
+| `@fontsource/atkinson-hyperlegible-next` (BL-0058, apps/web; self-hosted font files; published 2026-07-19) | 5.3.0 | OFL-1.1 |
+| `@fontsource/atkinson-hyperlegible-mono` (BL-0058, apps/web; self-hosted font files; published 2026-07-19) | 5.3.0 | OFL-1.1 |
+| `@fontsource/pixelify-sans` (BL-0058, apps/web; self-hosted font files; published 2026-07-19) | 5.3.0 | OFL-1.1 |
+| `@fontsource/silkscreen` (BL-0058, apps/web; self-hosted font files; published 2026-07-19) | 5.3.0 | OFL-1.1 |
 | `typescript` | 6.0.3 | Apache-2.0 |
 | `typescript-eslint` | 8.72.1 | MIT |
 | `vitest` | 5.1.0 | MIT |

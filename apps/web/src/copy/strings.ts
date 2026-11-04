@@ -87,6 +87,58 @@ export const demoItem = {
   submitFailed: "We could not check that. Nothing was lost; try again in a moment.",
 } as const;
 
+// Layout shell and core components (BL-0058, doc 09 sections 3 and 10).
+export const shell = {
+  skipToContent: "Skip to main content",
+  brand: "Polymath",
+  navLabel: "Main",
+  navToday: "Today",
+  navMap: "Map",
+  navReview: "Review",
+  navProgress: "Progress",
+  unavailable: "not available yet",
+  unavailableVisible: "Not available yet",
+} as const;
+
+export const ui = {
+  correct: "Correct.",
+  notQuite: "Not quite.",
+  pause: "Pause",
+  taskOf: (n: number, total: number) => `Task ${n} of ${total}`,
+  minutesOf: (done: number, total: number) => `${done} of ${total} min`,
+  chipReviewing: "Reviewing",
+  chipLearning: "Learning",
+  chipReady: "Ready",
+  chipLocked: "Locked",
+  guessing: "Guessing",
+  certain: "Certain",
+} as const;
+
+// Component gallery at /dev/gallery (not linked from the app; shows sample text only).
+export const gallery = {
+  title: "Bench Arcade",
+  intro: "Pixel chrome, plain questions. Components of the app on one page, in the current colour theme.",
+  colour: "Colour",
+  buttons: "Buttons",
+  icons: "Icons",
+  states: "Skill states",
+  feedback: "Feedback",
+  session: "Question card and session bar",
+  navigation: "Navigation",
+  sampleQuestion: "A divider has R1 = 330 ohms on top and R2 = 130 ohms to ground, fed from 3.3 V. What is the output voltage at the junction?",
+  sampleHelp: "Three significant figures is enough, for example 2.50",
+  primary: "Check",
+  secondary: "See the steps",
+  disabled: "Disabled",
+  correctBody: "0.93 V. The output is Vin x R2 / (R1 + R2): 3.3 x 130 / 460.",
+  notQuiteBody: "The reference is 0.93 V. Check which resistor sits between the output and ground: that one goes on top of the fraction.",
+  infoTitle: "Check the format.",
+  infoBody: "That answer could not be read. Try a number followed by a unit, for example 2.5 V.",
+  next: "Next",
+  answerErrorSample: "Enter a number, for example 0.93",
+  lockedWhy: "Needs Ohm's law first",
+} as const;
+
 // Content review console (BL-0057, FR-124): admin only, so plain working wording.
 export const adminContent = {
   title: "Content review",

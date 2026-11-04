@@ -649,6 +649,8 @@ Core flows: sign-in, onboarding, Today, micro runner, focus runner, tutor, check
 
 ### 10.1 Token starter (Tailwind CSS variables; shadcn/ui theme)
 
+> The colour values and the font stack below are superseded by 00a J7 ("Bench Arcade": its palette, self-hosted Atkinson Hyperlegible Next, Pixelify Sans, Silkscreen and Atkinson Hyperlegible Mono). The spacing, breakpoints, motion, targets and contrast rules here still apply.
+
 Colours (WCAG contrast ratios computed against the stated background):
 
 | Token | Light | Dark | Use / contrast |

@@ -6,6 +6,18 @@ Record go/no-go outcomes, lean-gate releases, and scope-down choices here before
 
 <!-- Entries appear newest first. -->
 
+## 2026-11-04: visual design "Bench Arcade" (00a J7)
+
+Decision: the founder found the M0 UI hard to like. They asked for a researched, readable and engaging design with 90s pixel-art icons, then approved the clickable prototype ("its perfect, put it in").
+
+- Evidence used:
+  - Seductive-details meta-analyses: decoration inside a lesson tends to reduce learning, so pixel art stays in the chrome.
+  - One task per screen with immediate feedback, as in Brilliant- and Duolingo-style flows.
+  - Readability guidance: 16 to 18 px body text, about 1.5 line height, short lines on a phone.
+  - Atkinson Hyperlegible Next, designed for character distinction (claims are the makers' [R]).
+- Rules kept: WCAG 2.2 AA contrast for every pair (measured), no streaks, XP or confetti, and self-hosted fonts, so no third-party requests.
+- Next three tasks: BL-0058 (tokens, shell and components in this look), BL-0196, BL-0197.
+
 ## 2026-11-04: Wave 5 decisions (00a J1 to J6)
 
 Decision: the founder delegated the six open questions of the Wave 5 review to the build agent ("take decisions for me"). Each is recorded as a 00a J entry.

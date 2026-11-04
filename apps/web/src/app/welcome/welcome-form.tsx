@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { welcome } from "@/copy/strings";
 
 type Phase = "idle" | "sending" | "sent" | "verifying";
@@ -53,12 +56,10 @@ export function WelcomeForm() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       <form onSubmit={sendCode} className="flex flex-col gap-2" noValidate>
-        <label htmlFor="email" className="text-sm font-medium">
-          {welcome.emailLabel}
-        </label>
-        <input
+        <Label htmlFor="email">{welcome.emailLabel}</Label>
+        <Input
           id="email"
           name="email"
           type="email"
@@ -66,29 +67,31 @@ export function WelcomeForm() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="rounded-md border px-3 py-2"
         />
         {!awaitingCode ? (
-          <button type="submit" disabled={phase === "sending"} className="rounded-md border px-3 py-2 font-medium">
+          <Button type="submit" disabled={phase === "sending"} className="mt-2">
             {phase === "sending" ? welcome.sending : welcome.sendCode}
-          </button>
+          </Button>
         ) : null}
       </form>
 
-      <div aria-live="polite" className="flex flex-col gap-2 text-sm">
+      <div aria-live="polite" className="flex flex-col gap-2 text-[16px]">
         {awaitingCode ? <p>{welcome.sent}</p> : null}
-        {message ? <p role="alert">{message}</p> : null}
+        {message ? (
+          <p role="alert" className="border-[3px] border-ink bg-nq-fill p-3 text-ink">
+            {message}
+          </p>
+        ) : null}
       </div>
 
       {awaitingCode ? (
         <form onSubmit={verify} className="flex flex-col gap-2" noValidate>
-          <label htmlFor="code" className="text-sm font-medium">
-            {welcome.codeLabel}
-          </label>
-          <input
+          <Label htmlFor="code">{welcome.codeLabel}</Label>
+          <Input
             id="code"
             name="code"
             type="text"
+            mono
             inputMode="numeric"
             autoComplete="one-time-code"
             pattern="[0-9]*"
@@ -96,20 +99,20 @@ export function WelcomeForm() {
             required
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            className="rounded-md border px-3 py-2 font-mono tracking-widest"
+            className="tracking-widest"
           />
-          <div className="flex gap-2">
-            <button type="submit" disabled={phase === "verifying"} className="rounded-md border px-3 py-2 font-medium">
+          <div className="mt-2 flex flex-wrap gap-3">
+            <Button type="submit" disabled={phase === "verifying"}>
               {phase === "verifying" ? welcome.verifying : welcome.signIn}
-            </button>
-            <button type="button" onClick={() => void sendCode()} className="rounded-md border px-3 py-2">
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => void sendCode()}>
               {welcome.resend}
-            </button>
+            </Button>
           </div>
         </form>
       ) : null}
 
-      <p className="text-sm">{welcome.privacy}</p>
+      <p className="text-[16px] text-muted">{welcome.privacy}</p>
     </div>
   );
 }

@@ -1,24 +1,186 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/*
+ * Design tokens, "Bench Arcade" (BL-0058, decision 00a J7; doc 09 section 10).
+ * Light is "Paper", dark is "CRT". Dark follows the system setting; a `data-theme="light|dark"`
+ * attribute on <html> overrides it (the toggle itself arrives with settings, doc 09 section 10.1).
+ * The dark values appear twice (media query and manual override) because CSS cannot share a block
+ * between the two conditions; src/styles/contrast.test.ts checks that the copies agree and that every
+ * text and boundary pair meets WCAG 2.2 AA. Change a colour only together with that test.
+ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  color-scheme: light;
+  --bg: #f5f1e6;
+  --surface: #fffdf7;
+  --field: #ffffff;
+  --ink: #1a1c2c;
+  --muted: #4a4f63;
+  --primary: #2b4bb8;
+  --on-primary: #ffffff;
+  --ok: #116b3a;
+  --ok-fill: #c8f0d6;
+  --nq: #b43f0e;
+  --nq-fill: #ffe0c2;
+  --coin: #ffcd4b;
+  --on-coin: #1a1c2c;
+  --control: #e8e3d3;
+  --focus: #2b4bb8;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #12131f;
+    --surface: #1c1e30;
+    --field: #12131f;
+    --ink: #f2ebd9;
+    --muted: #b3b7cc;
+    --primary: #8fb0ff;
+    --on-primary: #12131f;
+    --ok: #7ee2a1;
+    --ok-fill: #173b27;
+    --nq: #ffb37a;
+    --nq-fill: #4a2814;
+    --coin: #ffcd4b;
+    --on-coin: #12131f;
+    --control: #2a2d45;
+    --focus: #8fb0ff;
   }
 }
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #12131f;
+  --surface: #1c1e30;
+  --field: #12131f;
+  --ink: #f2ebd9;
+  --muted: #b3b7cc;
+  --primary: #8fb0ff;
+  --on-primary: #12131f;
+  --ok: #7ee2a1;
+  --ok-fill: #173b27;
+  --nq: #ffb37a;
+  --nq-fill: #4a2814;
+  --coin: #ffcd4b;
+  --on-coin: #12131f;
+  --control: #2a2d45;
+  --focus: #8fb0ff;
+}
+
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-field: var(--field);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-ok: var(--ok);
+  --color-ok-fill: var(--ok-fill);
+  --color-nq: var(--nq);
+  --color-nq-fill: var(--nq-fill);
+  --color-coin: var(--coin);
+  --color-on-coin: var(--on-coin);
+  --color-control: var(--control);
+  --color-focus: var(--focus);
+
+  --font-sans: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+  --font-display: "Pixelify Sans", ui-monospace, monospace;
+  --font-label: "Silkscreen", ui-monospace, monospace;
+  --font-mono: "Atkinson Hyperlegible Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Type scale of the design: question 19/30, body 17/26, screen title 30/36, button 22. */
+  --text-question: 19px;
+  --text-question--line-height: 30px;
+  --text-body: 17px;
+  --text-body--line-height: 26px;
+  --text-title: 30px;
+  --text-title--line-height: 36px;
+  --text-button: 22px;
+  --text-button--line-height: 28px;
+
+  /* Hard offset shadows (no blur): buttons 4 px, small controls 3 px, hero cards 6 px. */
+  --shadow-px: 4px 4px 0 var(--ink);
+  --shadow-px-sm: 3px 3px 0 var(--ink);
+  --shadow-px-hero: 6px 6px 0 var(--ink);
+
+  /* Square corners everywhere. */
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+
+  --spacing-target: 48px;
+  --spacing-target-lg: 60px;
+}
+
+html {
+  background: var(--bg);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 26px;
+  font-feature-settings: "tnum";
+}
+
+/* Keyboard focus: 3 px ring, offset 3 px (doc 09 section 7). */
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* In the base layer so utility classes (nav items, buttons) can override link colour and underline. */
+@layer base {
+  a {
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+/* Press: the control sinks onto its shadow. Motion stays under 200 ms and is off for reduced motion. */
+.px-press {
+  transition:
+    transform 80ms cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 80ms cubic-bezier(0.2, 0, 0, 1);
+}
+.px-press:active:not(:disabled):not([aria-disabled="true"]) {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 0 transparent;
+}
+
+/* The feedback sheet rises in 160 ms. */
+.px-rise {
+  animation: px-rise 160ms cubic-bezier(0.2, 0, 0, 1);
+}
+@keyframes px-rise {
+  from {
+    transform: translateY(24px);
+    opacity: 0.4;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .px-press {
+    transition: none;
+  }
+  .px-rise {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
 }

@@ -1,3 +1,5 @@
+import { PixelIcon } from "@/components/pixel-icon";
+import { ScreenTitle } from "@/components/ui/screen-title";
 import { welcome } from "@/copy/strings";
 import { WelcomeForm } from "./welcome-form";
 
@@ -5,11 +7,14 @@ import { WelcomeForm } from "./welcome-form";
 export default async function WelcomePage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
   return (
-    <main className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-4 px-4">
-      <h1 className="text-2xl font-semibold">{welcome.title}</h1>
+    <main id="main" tabIndex={-1} className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-5 px-4 py-8 outline-none">
+      <ScreenTitle className="flex items-center gap-3">
+        <PixelIcon name="micro" size={32} className="text-primary" />
+        {welcome.title}
+      </ScreenTitle>
       <p>{welcome.description}</p>
       {error === "link" ? (
-        <p role="alert" className="text-sm">
+        <p role="alert" className="border-[3px] border-ink bg-nq-fill p-3 text-[16px] text-ink">
           {welcome.linkInvalid}
         </p>
       ) : null}

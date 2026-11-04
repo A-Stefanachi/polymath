@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScreenTitle } from "@/components/ui/screen-title";
 import { MathText } from "@/components/math-text";
 import { adminContent as t } from "@/copy/strings";
 import { TEMPLATE_KEY, type ReviewItem, type TemplateView } from "@/lib/admin/review";
@@ -26,7 +27,7 @@ function RetireForm({ itemId, suffix }: { itemId: string; suffix: string }) {
         <input type="checkbox" name="retire_template" />
         {t.retireTemplate}
       </label>
-      <Button type="submit" variant="outline" className="self-start">
+      <Button type="submit" variant="secondary" size="md" className="self-start">
         {t.retire}
       </Button>
     </form>
@@ -100,7 +101,7 @@ function Approve({ tpl }: { tpl: TemplateView }) {
       </label>
       <Label htmlFor="notes">{t.notes}</Label>
       <Input id="notes" name="notes" maxLength={2000} autoComplete="off" />
-      <Button type="submit" className="self-start">
+      <Button type="submit" size="md" className="self-start">
         {t.approve}
       </Button>
     </form>
@@ -212,7 +213,7 @@ export default async function AdminContentPage({ searchParams }: { searchParams:
   // The proxy already answered 403 for non-admins; this is the second check of ADR-018.
   if (!userId || !(await stores.reports.isAdmin(userId))) {
     return (
-      <main className="mx-auto max-w-3xl px-4 py-6">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-3xl px-4 py-6 outline-none">
         <p role="alert">{t.forbidden}</p>
       </main>
     );
@@ -221,10 +222,14 @@ export default async function AdminContentPage({ searchParams }: { searchParams:
   const noticeText = notice && Object.hasOwn(t.notices, notice) ? t.notices[notice as keyof typeof t.notices] : null;
   const template = one(params["template"]);
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6">
-      <h1 className="text-2xl font-semibold">{t.title}</h1>
+    <main id="main" tabIndex={-1} className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6 outline-none">
+      <ScreenTitle>{t.title}</ScreenTitle>
       <p>{t.intro}</p>
-      {noticeText && <p role="status">{noticeText}</p>}
+      {noticeText && (
+        <p role="status" className="border-[3px] border-ink bg-surface p-3">
+          {noticeText}
+        </p>
+      )}
       {template && TEMPLATE_KEY.test(template) ? <Detail templateKey={template} /> : <Queue />}
     </main>
   );
