@@ -1,6 +1,6 @@
 schema_version: 1
 key: tpl.elec.nodal-unknown
-version: 2
+version: 3
 authoring_status: ready
 skill_key: elec.dc.nodal-analysis
 task_kind: problem
@@ -114,7 +114,7 @@ render:
     Use nodal analysis to find $V_A$, the voltage at node A relative to ground.
 
     '
-  answer_prompt: Enter the voltage with a unit, for example 4.2 V.
+  answer_prompt: Enter the voltage with a unit, for example 4.27 V. Give three significant figures.
   alt_text: Node A joins R1 of {{r1|eng}} from a {{v1|eng}} source, R2 of {{r2|eng}} from a {{v2|eng}} source, and R3 of {{r3|eng}}
     to ground. Find the voltage at A.
 solution:

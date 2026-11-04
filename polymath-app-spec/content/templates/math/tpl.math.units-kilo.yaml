@@ -1,6 +1,6 @@
 schema_version: 1
 key: tpl.math.units-kilo
-version: 3
+version: 4
 authoring_status: ready
 skill_key: math.alg.units-and-prefixes
 task_kind: problem
@@ -88,7 +88,7 @@ verifiers:
 hints:
   l1: Is a kilo-ohm larger or smaller than an ohm?
   l2: The prefix kilo means one thousand.
-  l3: 'Set up the conversion: ${{a|fixed:1}}\ \text{k}\Omega = {{a|fixed:1}} \times 1000\ \Omega$.'
+  l3: 'Start from one unit: $1\ \text{k}\Omega = 1000\ \Omega$. Now scale that to the value you were given.'
 misconceptions:
 - tag: mc.prefix-direction
   description: Divides by 1000 instead of multiplying.

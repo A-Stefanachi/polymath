@@ -1,6 +1,6 @@
 schema_version: 1
 key: tpl.math.solve-linear-v2
-version: 2
+version: 3
 authoring_status: ready
 skill_key: math.alg.solve-linear
 task_kind: problem
@@ -58,8 +58,9 @@ derived:
   expr: d - b
 constraints:
 - id: left-larger
-  expr: a > c
-  reason: The x terms must collect to a positive coefficient, and equal coefficients leave no x to solve for.
+  expr: a - c >= 2
+  reason: The x terms must collect to a positive coefficient other than 1, so the working never shows 1x or a division by 1;
+    equal coefficients would leave no x to solve for.
 render:
   stem_md: 'Solve for $x$: ${{a|int}}x + {{b|int}} = {{c|int}}x + {{d|int}}$.'
   answer_prompt: Enter the value of x.

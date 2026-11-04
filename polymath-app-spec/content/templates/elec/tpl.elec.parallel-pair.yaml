@@ -1,6 +1,6 @@
 schema_version: 1
 key: tpl.elec.parallel-pair
-version: 2
+version: 3
 authoring_status: ready
 skill_key: elec.dc.series-parallel
 task_kind: problem
@@ -66,7 +66,7 @@ render:
     What is their equivalent resistance?
 
     '
-  answer_prompt: Enter the resistance with a unit, for example 330 ohm or 1.2 kohm.
+  answer_prompt: Enter the resistance with a unit, for example 332 ohm or 1.24 kohm. Give three significant figures.
   alt_text: R1 of {{r1|eng}} and R2 of {{r2|eng}} in parallel. Find the equivalent resistance.
 solution:
   generator:
