@@ -43,6 +43,8 @@ export type AttemptStore = {
   /** The stored `item_secrets.answer_key`, or null when the item has none. */
   loadAnswerKey(itemId: string): Promise<unknown>;
   findByClientId(userId: string, clientAttemptId: string): Promise<AttemptRow | null>;
+  /** The attempt when it exists and belongs to `userId` (getAttempt, BL-0196). */
+  findById(userId: string, attemptId: string): Promise<AttemptRow | null>;
   /** True when the session exists and belongs to `userId`. */
   ownsSession(userId: string, sessionId: string): Promise<boolean>;
   /**
@@ -67,6 +69,10 @@ export function createAttemptStore(sql: Sql): AttemptStore {
     loadAnswerKey: async (itemId) =>
       (await sql<{ answer_key: unknown }[]>`select answer_key from public.item_secrets where item_id = ${itemId}`)[0]?.answer_key ?? null,
     findByClientId: (userId, clientAttemptId) => find(sql, userId, clientAttemptId),
+    findById: async (userId, attemptId) =>
+      (
+        await sql<AttemptRow[]>`select ${COLUMNS(sql)} from public.attempts where id = ${attemptId} and user_id = ${userId}`
+      )[0] ?? null,
     ownsSession: async (userId, sessionId) =>
       (await sql<{ ok: boolean }[]>`select exists (select 1 from public.sessions where id = ${sessionId} and user_id = ${userId}) as ok`)[0]?.ok === true,
     insert: (a) =>
