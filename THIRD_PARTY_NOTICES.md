@@ -5,6 +5,9 @@ Direct dependencies and their licences (CLAUDE.md section 5). Transitive depende
 | Package | Version | Licence |
 |---|---|---|
 | `@eslint/js` | 9.39.5 | MIT |
+| `@playwright/test` (BL-0021, dev) | 1.63.0 | Apache-2.0 |
+| `@supabase/ssr` (BL-0021) | 0.12.7 | MIT |
+| `@supabase/supabase-js` (BL-0021) | 2.118.0 | MIT |
 | `@tailwindcss/postcss` | 4.3.4 | MIT |
 | `@types/node` | 24.19.2 | MIT |
 | `@types/react` | 19.3.0 | MIT |
@@ -16,6 +19,9 @@ Direct dependencies and their licences (CLAUDE.md section 5). Transitive depende
 | `clsx` | 2.1.1 | MIT |
 | `eslint` | 9.39.5 | MIT |
 | `eslint-config-next` | 16.4.4 | MIT |
+| `fast-check` (dev, grading-core) | 4.10.2 | MIT |
+| `@axe-core/playwright` (BL-0027, dev; wraps `axe-core`, MPL-2.0: file-level copyleft, used unmodified as a dev dependency only, never shipped) | 4.14.0 | MPL-2.0 |
+| `katex` (BL-0027, apps/web) | 0.19.0 | MIT |
 | `lucide-react` | 1.67.0 | ISC |
 | `next` | 16.4.4 | MIT |
 | `openapi-typescript` | 7.13.0 | MIT |
@@ -30,6 +36,7 @@ Direct dependencies and their licences (CLAUDE.md section 5). Transitive depende
 | `typescript-eslint` | 8.72.1 | MIT |
 | `vitest` | 5.1.0 | MIT |
 | `yaml` | 2.9.1 | ISC |
+| `zod` (BL-0022, apps/web; 4.6.7 released 2026-10-12) | 4.6.7 | MIT |
 
 ## Worker (Python, `services/worker/uv.lock`)
 

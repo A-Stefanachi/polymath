@@ -1,0 +1,83 @@
+// UI strings (doc 09 section 11: plain, calm, no pressure). One source so the copy lint sees them all.
+
+export const welcome = {
+  title: "Polymath",
+  description: "Adaptive practice with spaced retrieval, graded feedback and guided builds.",
+  emailLabel: "Email address",
+  sendCode: "Email me a code",
+  sending: "Sending",
+  sent: "Check your email and enter the 6-digit code here. The email also has a sign-in link, which may open in your browser instead of this app.",
+  codeLabel: "6-digit code",
+  signIn: "Sign in",
+  verifying: "Checking the code",
+  resend: "Send a new code",
+  invalidEmail: "Enter an email address like name@example.com.",
+  codeInvalid: "That code did not work. It may be wrong, already used or expired. You can ask for a new one.",
+  linkInvalid: "That sign-in link did not work. It may be already used or expired. Enter your email to get a new code.",
+  rateLimited: "Too many requests just now. Wait a minute and try again.",
+  unavailable: "We could not send the email. Nothing was lost; try again in a moment.",
+  privacy: "Privacy summary, data export and deletion",
+} as const;
+
+// Consent screen (FR-004, doc 11 section 8, doc 12). Founder self-consent only for now; the full beta
+// flow comes in M5. The text is versioned by CONSENT_VERSION in src/lib/profile/consent.ts.
+export const consent = {
+  title: "Your data and research use",
+  intro: "Before you start, here is what this app records and how it may be used. You can use the app either way.",
+  loggedHeading: "What is logged",
+  logged: "Your answers, session times, hints used, tutor messages and uploads, so that practice can be scheduled and the app can be evaluated.",
+  researchHeading: "What research use means",
+  research: "With your agreement, this data may be analysed to compare two ways of organising the same course. Without it, your data is still used to run the app for you, and is left out of those analyses.",
+  whoHeading: "Who sees it",
+  who: "Only the person running the study, in a form that uses an internal id instead of your name. Tutor text is processed by a third-party provider.",
+  withdrawHeading: "How to withdraw",
+  withdraw: "You can withdraw at any time without penalty. A settings page for this is planned; until then, tell the person running the study and it will be recorded.",
+  accept: "I agree to research use of my data",
+  decline: "Continue without research use",
+  saving: "Saving",
+  saveFailed: "We could not save your choice. Nothing was lost; try again in a moment.",
+} as const;
+
+// S02 Onboarding (doc 09). Steps 1 to 3 here; reminders (step 4) come with the notification task.
+export const onboarding = {
+  title: "Set up your practice",
+  progress: (step: number, total: number) => `Step ${String(step)} of ${String(total)}`,
+  goalHeading: "Your goal",
+  goal: "Working knowledge in a slice of hardware and software engineering: algebra to a measured, working sensor board.",
+  goalNote: "This is a target, not a promise of timing. A guided project completed and debugged marks the first working level.",
+  adultLabel: "I am 18 or older",
+  timeHeading: "Weekly time",
+  hoursLabel: "Hours per week (1 to 20)",
+  hoursHelp: "The default is 8 hours. You can change it at any time.",
+  hoursInvalid: "Enter a number of hours from 1 to 20.",
+  aboutHeading: "About you",
+  nameLabel: "Display name (optional)",
+  zoneLabel: "Time zone",
+  zoneHelp: "Detected from your device. Change it if it is not right.",
+  zoneInvalid: "Enter a time zone name such as Europe/Rome.",
+  adultRequired: "Please confirm this to continue.",
+  next: "Next",
+  back: "Back",
+  finish: "Finish",
+  saving: "Saving",
+  saveFailed: "We could not save that. Nothing was lost; try again in a moment.",
+} as const;
+
+// Throwaway M0 demo item page (BL-0027, doc 09 S08). Feedback wording follows S08: no confetti, no points.
+export const demoItem = {
+  title: "Practice question",
+  emptyTitle: "No question is waiting",
+  empty: "There is no open question for you right now. Come back when a session has been prepared.",
+  loading: "Loading the question",
+  loadFailed: "We could not load the question. Nothing was lost; try again in a moment.",
+  answerLabel: "Your answer",
+  answerHelp: "Type a number and its unit, for example 2.5 V.",
+  check: "Check",
+  checking: "Checking",
+  correct: "Correct.",
+  incorrect: "Not quite.",
+  incorrectNote: "This one will come back later for another try.",
+  unitRead: "Unit read as",
+  invalid: "That answer could not be read. Try a number followed by a unit, for example 2.5 V.",
+  submitFailed: "We could not check that. Nothing was lost; try again in a moment.",
+} as const;

@@ -17,9 +17,11 @@
     "db:reset": "supabase db reset",
     "db:stop": "supabase stop",
     "db:diff-reference": "python3 -B tools/db/diff_reference.py",
+    "e2e:auth": "pnpm --filter @polymath/web e2e:auth",
     "test:db": "supabase test db",
     "test:rls": "bash tools/rls-test.sh",
-    "gen:db-types": "node tools/gen/gen-types.mjs db",
+    "gen:events": "node tools/gen/gen-events.mjs",
+    "gen:db-types":"node tools/gen/gen-types.mjs db",
     "gen:api-types": "node tools/gen/gen-types.mjs api",
     "content:sync": "node tools/content-sync/src/cli.ts"
   },
@@ -31,6 +33,7 @@
     "supabase": "2.121.0",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.1",
-    "vitest": "5.1.0"
+    "vitest": "5.1.0",
+    "yaml": "2.9.1"
   }
 }

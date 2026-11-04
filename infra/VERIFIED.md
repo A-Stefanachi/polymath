@@ -9,7 +9,7 @@ Assumption: a secret key (`sb_secret_...`) runs as the `service_role` Postgres r
 | Environment | Date | Publishable key | Secret key | Result |
 |---|---|---|---|---|
 | Local (Supabase CLI 2.121.0, Postgres 17.11) | 2026-11-03 | `current_user` anon, `auth.role()` anon, `is_service_role()` false | `current_user` service_role, `auth.role()` service_role, `is_service_role()` true | holds |
-| Staging (`iwmomsuoozqcffltvdgz`, Postgres 17.11) | pending | | | pending: the probe writes two temporary objects to staging, which this agent session was not permitted to do. Run `supabase/probes/oa9_rls19.sh staging` from a session or machine allowed to write to staging, and fill in this row |
+| Staging (`iwmomsuoozqcffltvdgz`, Postgres 17.11) | 2026-11-04 | `current_user` anon, `auth.role()` anon, `is_service_role()` false | `current_user` service_role, `auth.role()` service_role, `is_service_role()` true | holds (probe through the management API at the founder's request; `is_service_role()` grants restored to the baseline afterwards) |
 
 `auth.role()` returned `service_role` for the secret key locally, so both branches of `is_service_role()` agree; the `current_user` check stays as the guard the doc calls for.
 
@@ -18,7 +18,7 @@ Assumption: a secret key (`sb_secret_...`) runs as the `service_role` Postgres r
 | Environment | Date | Publishable key | Secret key | Result |
 |---|---|---|---|---|
 | Local, `auto_expose_new_tables = false` | 2026-11-03 | 42501 "permission denied for table zz_rls19_probe" (HTTP 401) | 42501 (HTTP 403) | holds |
-| Staging | pending | | | pending, same probe as above |
+| Staging | 2026-11-04 | 42501 (HTTP 401) | 42501 (HTTP 403) | holds; the probe table was dropped |
 
 ## Postgres major version (BL-0007)
 
@@ -26,3 +26,18 @@ Assumption: a secret key (`sb_secret_...`) runs as the `service_role` Postgres r
 |---|---|---|
 | Local | 2026-11-03 | PostgreSQL 17.11 on x86_64-pc-linux-gnu |
 | Staging | 2026-11-03 | PostgreSQL 17.11 on x86_64-pc-linux-gnu (read-only query through the management API) |
+
+## Email code sign-in on a real iPhone (BL-0021, S01 AC-5)
+
+Assumption: in Safari on iOS, the six-digit code from the sign-in email can be pasted or autofilled into the code field (`autocomplete="one-time-code"`) and signs in; the kept link opens in the browser and signs in too. The local Playwright tests cover the server side only.
+
+| Environment | Date | Result |
+|---|---|---|
+| Staging, real iPhone, Safari | pending | pending: the founder runs the steps below and fills in this row |
+
+Steps (staging, a real inbox on custom SMTP):
+1. On the iPhone open `/welcome` of the staging app in Safari. Enter the founder's email and tap "Email me a code".
+2. Open the email in the Mail app. Note whether it arrived in the inbox or in junk, and how long it took.
+3. Return to Safari. Tap the code field: iOS should offer the code above the keyboard. Tap it (autofill), or copy the code in Mail and paste it. Tap "Sign in". Expect the app at `/`.
+4. Sign out (clear site data), request a new code, and this time tap the link in the email. Expect to be signed in at `/`.
+5. Add to Home Screen and repeat step 3 inside the installed app (the link may open in Safari instead; that is expected, the code path is the one that must work). Record the result of each step here.

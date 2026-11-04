@@ -249,6 +249,16 @@ otp_expiry = 900
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# Polymath (BL-0021): the sign-in email carries the six-digit code and the sign-in link. A new
+# user gets the confirmation template, an existing one the magic_link template.
+[auth.email.template.magic_link]
+subject = "Your Polymath sign-in code"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.confirmation]
+subject = "Your Polymath sign-in code"
+content_path = "./supabase/templates/confirmation.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"
