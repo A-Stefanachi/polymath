@@ -2,6 +2,7 @@
 
 import "katex/dist/katex.min.css";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { LessonPrimer, type LessonView, type PrimerResult } from "@/components/lesson-primer";
 import { MathText } from "@/components/math-text";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,7 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NumericAnswer } from "@/components/ui/numeric-answer";
 import { TaskCard } from "@/components/ui/task-card";
-import { runner as t } from "@/copy/strings";
+import { lesson as lt, runner as t } from "@/copy/strings";
+import { LessonMarkdown } from "@/lib/lessons/markdown";
 import { feedbackBody } from "@/lib/feedback-body";
 import { parseNumericAnswer, pollDelayMs, TaskTimer } from "@/lib/runner/runner";
 import { ReportProblem } from "./report-problem";
@@ -36,9 +38,9 @@ type Item = {
 
 /** doc 11: worked_example_viewed.dwell_ms is capped at 300,000 ms per example. */
 const DWELL_CAP_MS = 300_000;
-type Grade = { status: string; correct: boolean | null; feedback?: string; graders?: { detail?: { unit?: unknown } }[] };
+type Grade = { status: string; correct: boolean | null; feedback?: string; misconception_tags?: string[]; graders?: { detail?: { unit?: unknown } }[] };
 type AttemptBody = { id: string; grade_status: string; grade: Grade | null };
-type Result = { graded: boolean; correct: boolean | null; feedback: string; unit?: string; pending?: boolean };
+type Result = { graded: boolean; correct: boolean | null; feedback: string; unit?: string; pending?: boolean; tags: string[] };
 type Phase = "answering" | "confidence" | "submitting" | "waiting" | "feedback";
 
 const READ_ONLY_KINDS = ["worked_example", "reading"];
@@ -50,6 +52,7 @@ function resultOf(body: AttemptBody): Result {
     graded: true,
     correct: body.grade?.correct ?? null,
     feedback: body.grade?.feedback ?? "",
+    tags: body.grade?.misconception_tags ?? [],
     ...(typeof unit === "string" ? { unit } : {}),
   };
 }
@@ -64,6 +67,8 @@ export function TaskView({
   label,
   last,
   paused,
+  knownLesson,
+  onLesson,
   onNext,
   onSkip,
 }: {
@@ -72,6 +77,9 @@ export function TaskView({
   label: string;
   last: boolean;
   paused: boolean;
+  /** The primer of this task's skill when an earlier worked example of the session loaded it (feedback links back to it). */
+  knownLesson?: LessonView | undefined;
+  onLesson?: (skillKey: string, lesson: LessonView) => void;
   /** `selfExplanation` is sent only by the worked-example stepper (completeTask, FR-032). */
   onNext: (selfExplanation?: string) => void;
   /** Leaves a task the screen cannot show yet; closes it as skipped (completeTask, `not_now`). */
@@ -86,6 +94,9 @@ export function TaskView({
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
   const [confidence, setConfidence] = useState<number | null>(null);
+  const [lesson, setLesson] = useState<LessonView | null>(null);
+  const [primerDone, setPrimerDone] = useState(false);
+  const [recapOpen, setRecapOpen] = useState(false);
 
   const timer = useRef<TaskTimer | null>(null);
   const attemptId = useRef<string>(crypto.randomUUID());
@@ -108,8 +119,12 @@ export function TaskView({
     void fetch(`/api/v1/tasks/${task.id}`)
       .then(async (res) => {
         if (!res.ok) throw new Error("load");
-        const body = (await res.json()) as { item: Item };
+        const body = (await res.json()) as { item: Item; lesson?: LessonView };
         if (!live) return;
+        if (body.lesson) {
+          setLesson(body.lesson);
+          if (task.skill_key) onLesson?.(task.skill_key, body.lesson);
+        }
         timer.current = new TaskTimer(Date.now());
         startedAt.current = new Date().toISOString();
         setItem(body.item);
@@ -118,7 +133,7 @@ export function TaskView({
     return () => {
       live = false;
     };
-  }, [task.id, reload]);
+  }, [task.id, reload, task.skill_key, onLesson]);
 
   // A new task takes focus on its heading, so a screen reader reads it and one Tab reaches the answer.
   useEffect(() => {
@@ -141,7 +156,7 @@ export function TaskView({
       return setPhase("feedback");
     }
     if (body.grade_status === "pending_review" || body.grade_status === "pending") {
-      setResult({ graded: false, correct: null, feedback: "", pending: true });
+      setResult({ graded: false, correct: null, feedback: "", pending: true, tags: [] });
       return setPhase("feedback");
     }
     // invalid_input and error never count as an attempt: the learner may change the answer and try again.
@@ -159,7 +174,7 @@ export function TaskView({
         if (!alive.current) return;
         const delay = pollDelayMs(Date.now() - from);
         if (delay === null) {
-          setResult({ graded: false, correct: null, feedback: "", pending: true });
+          setResult({ graded: false, correct: null, feedback: "", pending: true, tags: [] });
           return setPhase("feedback");
         }
         await new Promise((r) => setTimeout(r, delay));
@@ -260,6 +275,43 @@ export function TaskView({
   const locked = phase !== "answering";
   const title = result?.correct ? t.correct : t.notQuite;
   const body = result && feedbackBody(result.feedback, title);
+  // Analytics only (doc 11 section 9, 00a K10): fire and forget; nothing here is an attempt or touches skill_state.
+  function sendLessonEvent(name: "lesson_viewed" | "lesson_check_answered", props: Record<string, unknown>) {
+    void fetch("/api/v1/events", {
+      method: "POST",
+      keepalive: true,
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ events: [{ client_event_id: crypto.randomUUID(), name, at: new Date().toISOString(), props }] }),
+    }).catch(() => undefined);
+  }
+  if (lesson && !primerDone) {
+    const finishPrimer = (r: PrimerResult) => {
+      sendLessonEvent("lesson_viewed", { skill_key: lesson.skill_key, lesson_version: lesson.version, variant: lesson.variant, screens_seen: r.stepsSeen, skipped: r.skipped, dwell_ms: r.dwellMs });
+      timer.current = new TaskTimer(Date.now());
+      setPrimerDone(true);
+    };
+    return (
+      <div className="flex flex-col gap-3.5">
+        <TaskCard
+          label="Concept primer"
+          eyebrow={
+            <h1 ref={headingRef} tabIndex={-1} className="outline-none">
+              {label}
+            </h1>
+          }
+        >
+          <LessonPrimer
+            lesson={lesson}
+            onFinish={finishPrimer}
+            onCheckAnswered={(checkId, correct) => sendLessonEvent("lesson_check_answered", { skill_key: lesson.skill_key, lesson_version: lesson.version, check_id: checkId, correct })}
+          />
+        </TaskCard>
+      </div>
+    );
+  }
+  // A graded answer tagged with the lesson's mix-up (00a K8): the correct idea and a way back to the recap.
+  const shownLesson = lesson ?? knownLesson ?? null;
+  const mixup = shownLesson !== null && result !== null && !result.pending && result.tags.includes(shownLesson.misconception.tag) ? shownLesson : null;
   const touch = () => timer.current?.touch(Date.now());
   const steps = rendered.worked_steps ?? [];
   const stepper = task.task_kind === "worked_example" && steps.length > 0;
@@ -335,11 +387,33 @@ export function TaskView({
                       {t.unitRead}: {result.unit}
                     </p>
                   )}
+                  {mixup && (
+                    <div data-testid="mixup" className="flex flex-col gap-2">
+                      <p className="font-semibold">{lt.commonMixup}</p>
+                      <p>{lt.mixupLead}</p>
+                      <LessonMarkdown source={mixup.misconception.correct_idea_md} />
+                      {!recapOpen && (
+                        <Button type="button" variant="secondary" size="md" className="self-start" onClick={() => setRecapOpen(true)}>
+                          {lt.readRecap}
+                        </Button>
+                      )}
+                    </div>
+                  )}
                   {!result.pending && result.correct === false && <p>{t.comesBack}</p>}
                   {!result.pending && result.correct === false && confidence !== null && confidence >= 4 && <p>{t.sureNote}</p>}
                 </FeedbackPanel>
               )}
             </div>
+            {mixup && recapOpen && (
+              <Card>
+                <div data-testid="lesson-recap">
+                  <LessonPrimer lesson={{ ...mixup, variant: "recap" }} mode="preview" />
+                </div>
+                <Button type="button" variant="secondary" size="md" className="self-start" onClick={() => setRecapOpen(false)}>
+                  {lt.recapClose}
+                </Button>
+              </Card>
+            )}
             <ReportProblem itemId={item.id} />
           </>
         }

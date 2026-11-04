@@ -3,7 +3,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
-import { validateSkillNode, validateTemplate, type SchemaError } from "@polymath/content-schema";
+import { validateLesson, validateSkillNode, validateTemplate, type SchemaError } from "@polymath/content-schema";
 import { parseDocument } from "yaml";
 
 import { entrySha256, templateSha256, typedFromDocument, type Typed } from "./canonical.ts";
@@ -22,9 +22,12 @@ export type GraphData = {
   skills: SkillEntry[];
 };
 export type TemplateEntry = { file: string; doc: Doc; sha256: string };
+/** A G0-valid concept primer; `sha256` covers the whole file except `authoring_status` (doc 07 section 15). */
+export type LessonEntry = { file: string; fileName: string; doc: Doc; sha256: string };
 export type Loaded = {
   graph: GraphData | undefined;
   templates: TemplateEntry[];
+  lessons: LessonEntry[];
   reviewLog: string;
   problems: Problem[];
 };
@@ -76,7 +79,24 @@ export function loadTemplateDir(dir: string, prefix: string, problems: Problem[]
   return templates;
 }
 
-/** Reads the graph file and the templates below `contentRoot`. Problems are collected, not thrown. */
+/** Reads and G0-validates every lesson YAML in `dir` (content/lessons, one level); `prefix` is the path shown. */
+export function loadLessonDir(dir: string, prefix: string, problems: Problem[]): LessonEntry[] {
+  const lessons: LessonEntry[] = [];
+  for (const rel of yamlFiles(dir)) {
+    const file = `${prefix}/${rel}`;
+    const parsed = parseYaml(file, readFileSync(path.join(dir, rel), "utf8"), problems);
+    if (!parsed) continue;
+    const result = validateLesson(parsed.js);
+    if (!result.valid) {
+      for (const e of result.errors) problems.push({ file, rule: "G0", message: describe(e) });
+      continue;
+    }
+    if (isDoc(parsed.js)) lessons.push({ file, fileName: path.basename(rel), doc: parsed.js, sha256: entrySha256(parsed.typed, ["authoring_status"]) });
+  }
+  return lessons;
+}
+
+/** Reads the graph file, the templates and the lessons below `contentRoot`. Problems are collected, not thrown. */
 export function loadContent(contentRoot: string): Loaded {
   const problems: Problem[] = [];
 
@@ -106,7 +126,9 @@ export function loadContent(contentRoot: string): Loaded {
 
   const templates = loadTemplateDir(path.join(contentRoot, CONTENT_LAYOUT.templates), CONTENT_LAYOUT.templates, problems);
 
+  const lessons = loadLessonDir(path.join(contentRoot, CONTENT_LAYOUT.lessons), CONTENT_LAYOUT.lessons, problems);
+
   const logPath = path.join(contentRoot, CONTENT_LAYOUT.reviewLog);
   const reviewLog = existsSync(logPath) ? readFileSync(logPath, "utf8") : "";
-  return { graph, templates, reviewLog, problems };
+  return { graph, templates, lessons, reviewLog, problems };
 }

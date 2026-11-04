@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { LessonView } from "@/components/lesson-primer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SessionTopBar } from "@/components/ui/session-top-bar";
@@ -21,6 +22,9 @@ export function SessionRunner({ id }: { id: string }) {
   const router = useRouter();
   const [session, setSession] = useState<Loaded | null>(null);
   const [failed, setFailed] = useState(false);
+  // Primers loaded by this session's worked examples, so a later task of the skill can link its feedback back to one.
+  const [lessons, setLessons] = useState<Record<string, LessonView>>({});
+  const rememberLesson = useCallback((skill: string, l: LessonView) => setLessons((all) => ({ ...all, [skill]: l })), []);
   const [done, setDone] = useState<string[]>([]);
   const [screen, setScreen] = useState<Screen>("task");
   const [ending, setEnding] = useState(false);
@@ -193,7 +197,7 @@ export function SessionRunner({ id }: { id: string }) {
         )}
         {current && !ending && (
           <div hidden={screen !== "task"}>
-            <TaskView key={current.id} sessionId={id} task={current} label={label} last={index === total - 1} paused={screen !== "task"} onNext={(selfExplanation) => void advance(current, false, selfExplanation)} onSkip={() => void advance(current, true)} />
+            <TaskView key={current.id} knownLesson={current.skill_key ? lessons[current.skill_key] : undefined} onLesson={rememberLesson} sessionId={id} task={current} label={label} last={index === total - 1} paused={screen !== "task"} onNext={(selfExplanation) => void advance(current, false, selfExplanation)} onSkip={() => void advance(current, true)} />
           </div>
         )}
         <Button variant="link" size="md" className="self-start" onClick={() => setHelp(true)}>

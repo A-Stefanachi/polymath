@@ -51,7 +51,22 @@ export type Existing = {
   skills: Map<string, { content_hash: string | null; status: string }>;
   edges: EdgeRow[];
   templates: ExistingTemplate[];
+  lessons?: ExistingLesson[];
 };
+
+/** A stored lesson version; `hash` is skill_lessons.content_hash. */
+export type ExistingLesson = { skill_key: string; version: number; status: string; hash: string };
+export type LessonRow = {
+  skill_key: string;
+  version: number;
+  /** Always needs_human_review: only the review console sets verified (00a K9). */
+  status: "needs_human_review";
+  body: Doc;
+  content_hash: string;
+  license: string;
+  source: string;
+};
+export type LessonRetirement = { skill_key: string; version: number };
 
 export type Change<T> = { row: T; kind: "created" | "updated" };
 export type Counts = { created: number; updated: number; unchanged: number; retired: number };
@@ -63,6 +78,7 @@ export type Plan = {
   skills: { changes: Change<SkillRow>[]; unchanged: number; retire: string[] };
   edges: { insert: EdgeRow[]; update: EdgeRow[]; remove: EdgeRow[]; unchanged: number };
   templates: { changes: Change<TemplateRow>[]; unchanged: number; retire: Retirement[]; needsJob: string[]; awaitingReview: string[] };
+  lessons: { changes: Change<LessonRow>[]; unchanged: number; retire: LessonRetirement[] };
   problems: Problem[];
 };
 
@@ -245,10 +261,51 @@ export function buildPlan(loaded: Loaded, existing: Existing, options: PlanOptio
     }
   }
 
-  return { modules, modulesUnchanged: allModules.length - modules.length, skills: { changes: skillChanges, unchanged: skillsUnchanged, retire: retireSkills }, edges, templates, problems };
+  const lessons = planLessons(loaded, existing.lessons ?? [], options);
+
+  return { modules, modulesUnchanged: allModules.length - modules.length, skills: { changes: skillChanges, unchanged: skillsUnchanged, retire: retireSkills }, edges, templates, lessons, problems };
 }
 
-export function countsOf(plan: Plan): { modules: Counts; skills: Counts; edges: Counts; templates: Counts } {
+/**
+ * Doc 07 section 15: a `ready` file becomes a new version (needs_human_review) when its hash differs from the
+ * newest stored version, or when that version is retired; a `retired` file retires every version; a `draft`
+ * file is not synced. A new version is numbered after the newest stored one, so an author who forgets to bump
+ * `version` still gets a fresh (skill_key, version) row. A removed file leaves its rows alone: the spec retires
+ * only through a `retired` file.
+ */
+function planLessons(loaded: Loaded, stored: ExistingLesson[], options: PlanOptions): Plan["lessons"] {
+  const plan: Plan["lessons"] = { changes: [], unchanged: 0, retire: [] };
+  if (options.only !== undefined) return plan; // --only names a template key
+  for (const { doc, sha256 } of loaded.lessons) {
+    const skill = s(doc["skill_key"]);
+    const rows = stored.filter((r) => r.skill_key === skill).sort((a, b) => b.version - a.version);
+    const newest = rows[0];
+    const authoring = s(doc["authoring_status"]);
+    if (authoring === "retired") {
+      for (const r of rows) if (r.status !== "retired") plan.retire.push({ skill_key: skill, version: r.version });
+    } else if (authoring === "ready") {
+      if (newest && newest.hash === sha256 && newest.status !== "retired") {
+        plan.unchanged++;
+        continue;
+      }
+      plan.changes.push({
+        kind: "created",
+        row: {
+          skill_key: skill,
+          version: Math.max(Number(doc["version"]), (newest?.version ?? 0) + 1),
+          status: "needs_human_review",
+          body: doc,
+          content_hash: sha256,
+          license: s(doc["license"]),
+          source: s(doc["source"]),
+        },
+      });
+    }
+  }
+  return plan;
+}
+
+export function countsOf(plan: Plan): { modules: Counts; skills: Counts; edges: Counts; templates: Counts; lessons: Counts } {
   const n = (changes: { kind: string }[], kind: string): number => changes.filter((c) => c.kind === kind).length;
   return {
     modules: { created: n(plan.modules, "created"), updated: n(plan.modules, "updated"), unchanged: plan.modulesUnchanged, retired: 0 },
@@ -265,5 +322,7 @@ export function countsOf(plan: Plan): { modules: Counts; skills: Counts; edges: 
       unchanged: plan.templates.unchanged,
       retired: plan.templates.retire.length,
     },
+    // A new version of a skill that already had one counts as created too: every lesson version is a new row.
+    lessons: { created: plan.lessons.changes.length, updated: 0, unchanged: plan.lessons.unchanged, retired: plan.lessons.retire.length },
   };
 }

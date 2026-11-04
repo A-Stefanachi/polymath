@@ -1,7 +1,7 @@
 // pnpm content:lint [--content-root DIR] [--synced FILE.json] [PATH...]
 // G1 (doc 07 section 7): G0 schema check, then L01 to L27 on every template below the PATHs (files
 // or folders; default <content root>/templates). The skill graph and prompts come from the content
-// root. --synced names a JSON object {key: {version, sha256, status}} (what the database holds)
+// root. Without PATHs it also checks content/lessons/ (G0 as LG0, then the L-G1 rules LG1-*, doc 07 section 15). --synced names a JSON object {key: {version, sha256, status}} (what the database holds)
 // and switches L03 on; without it L03 is skipped because lint opens no database.
 // Output: one line per finding, `file [Lnn] E|W message`. Exit 0 when there is no error (warnings
 // are shown), 1 on any error, 2 when the lint could not run.
@@ -48,7 +48,8 @@ const toFinding = (p: Problem): Finding => ({
   file: p.file,
   // The schema half of L01 is G0 (load.ts); the schema also states the L24 minimum of fuzz.samples
   // (minimum 200), so a template under it never reaches the rule code and is reported as L24.
-  rule: p.rule === "G0" ? (p.message.startsWith("/fuzz/samples") ? "L24" : "L01") : p.rule,
+  // A lesson file's schema half is LG0 (doc 07 section 15, gate L-G0); its cross-file rules are LG1-*.
+  rule: p.rule === "G0" ? (p.file.startsWith("lessons/") ? "LG0" : p.message.startsWith("/fuzz/samples") ? "L24" : "L01") : p.rule,
   severity: p.severity ?? "E",
   message: p.rule === "G0" ? `schema: ${p.message}` : p.message,
 });
@@ -61,6 +62,7 @@ if (parsed.positionals.length === 0) {
   findings.push(...problems.map(toFinding));
   if (synced) findings.push(...lintTemplates(loaded.templates, { contentRoot: root, synced }).filter((f) => f.rule === "L03"));
   count = loaded.templates.length;
+  console.log(`content:lint: ${String(loaded.lessons.length)} lesson(s) valid at G0`);
 } else {
   const problems: Problem[] = [];
   const loaded = loadContent(root);

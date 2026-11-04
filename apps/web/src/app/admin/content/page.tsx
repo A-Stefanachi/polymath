@@ -9,7 +9,10 @@ import { MathText } from "@/components/math-text";
 import { adminContent as t } from "@/copy/strings";
 import { TEMPLATE_KEY, type ReviewItem, type TemplateView } from "@/lib/admin/review";
 import { reviewStores, sessionUserId } from "@/lib/admin/session";
-import { approveTemplateAction, retireItemAction } from "./actions";
+import { LessonPrimer } from "@/components/lesson-primer";
+import { SKILL_KEY } from "@/lib/admin/lessons";
+import { toLessonView } from "@/lib/lessons/view";
+import { approveLessonAction, approveTemplateAction, retireItemAction, retireLessonAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -206,6 +209,104 @@ async function Queue() {
   );
 }
 
+function Tabs({ active }: { active: "templates" | "lessons" }) {
+  const cls = (on: boolean) => `px-3 py-2 ${on ? "border-b-[3px] border-ink font-bold" : "underline"}`;
+  return (
+    <nav aria-label={t.tabsLabel} className="flex gap-2">
+      <Link href="/admin/content" className={cls(active === "templates")} aria-current={active === "templates" ? "page" : undefined}>
+        {t.tabTemplates}
+      </Link>
+      <Link href="/admin/content?tab=lessons" className={cls(active === "lessons")} aria-current={active === "lessons" ? "page" : undefined}>
+        {t.tabLessons}
+      </Link>
+    </nav>
+  );
+}
+
+async function LessonQueue() {
+  const queue = await reviewStores().lessons.queue();
+  return (
+    <section className="flex flex-col gap-2" aria-labelledby="lessons-title">
+      <h2 id="lessons-title" className="text-xl font-semibold">
+        {t.lessonsQueueTitle}
+      </h2>
+      <p className="text-sm">{t.lessonsIntro}</p>
+      {queue.length === 0 ? (
+        <p>{t.lessonsQueueEmpty}</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {queue.map((q) => (
+            <li key={`${q.skill_key}-${q.version}`}>
+              <Link href={`/admin/content?tab=lessons&lesson=${q.skill_key}&version=${q.version}`} className="underline">
+                {t.lessonOpen(q.skill_key, q.version)}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+async function LessonDetail({ skillKey, version }: { skillKey: string; version: number }) {
+  const row = await reviewStores().lessons.get(skillKey, version);
+  const view = row ? toLessonView(row.skill_key, row.version, row.body, "full") : null;
+  if (!row || !view) return <p role="status">{t.notices.not_found}</p>;
+  return (
+    <section className="flex flex-col gap-4" aria-labelledby="lesson-title">
+      <h2 id="lesson-title" className="text-xl font-semibold">
+        {row.skill_key}, {t.version.toLowerCase()} {row.version}
+      </h2>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 text-sm">
+        <dt>{t.lessonStatus}</dt>
+        <dd data-testid="lesson-status">{row.status}</dd>
+        {row.reviewed_at && (
+          <>
+            <dt>{t.lessonReviewedAt}</dt>
+            <dd>{row.reviewed_at.toISOString()}</dd>
+          </>
+        )}
+      </dl>
+      <h2 className="text-xl font-semibold">{t.lessonPreviewTitle}</h2>
+      <div className="border-[3px] border-ink p-3">
+        <LessonPrimer lesson={view} mode="preview" />
+      </div>
+      {row.status === "needs_human_review" && (
+        <form action={approveLessonAction} className="flex flex-col gap-2">
+          <h2 className="text-xl font-semibold">{t.lessonChecklistTitle}</h2>
+          <input type="hidden" name="skill_key" value={row.skill_key} />
+          <input type="hidden" name="version" value={row.version} />
+          {t.lessonChecklist.map((item) => (
+            <label key={item} className="flex items-center gap-2">
+              <input type="checkbox" required />
+              {item}
+            </label>
+          ))}
+          <p className="text-sm">{t.lessonApproveHelp}</p>
+          <Button type="submit" size="md" className="self-start">
+            {t.lessonApprove}
+          </Button>
+        </form>
+      )}
+      {row.status === "verified" && <p data-testid="approved-state">{t.lessonApprovedState}</p>}
+      {row.status === "retired" && <p data-testid="retired-state">{t.lessonRetiredState}</p>}
+      {row.status !== "retired" && (
+        <form action={retireLessonAction} className="flex flex-col gap-2">
+          <input type="hidden" name="skill_key" value={row.skill_key} />
+          <input type="hidden" name="version" value={row.version} />
+          <p className="text-sm">{t.lessonRetireHelp}</p>
+          <Button type="submit" variant="secondary" size="md" className="self-start">
+            {t.lessonRetire}
+          </Button>
+        </form>
+      )}
+      <Link href="/admin/content?tab=lessons" className="underline">
+        {t.lessonBack}
+      </Link>
+    </section>
+  );
+}
+
 export default async function AdminContentPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;
   const userId = await sessionUserId();
@@ -221,6 +322,9 @@ export default async function AdminContentPage({ searchParams }: { searchParams:
   const notice = one(params["notice"]);
   const noticeText = notice && Object.hasOwn(t.notices, notice) ? t.notices[notice as keyof typeof t.notices] : null;
   const template = one(params["template"]);
+  const lessons = one(params["tab"]) === "lessons";
+  const lessonKey = one(params["lesson"]);
+  const lessonVersion = Number(one(params["version"]));
   return (
     <main id="main" tabIndex={-1} className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6 outline-none">
       <ScreenTitle>{t.title}</ScreenTitle>
@@ -230,7 +334,18 @@ export default async function AdminContentPage({ searchParams }: { searchParams:
           {noticeText}
         </p>
       )}
-      {template && TEMPLATE_KEY.test(template) ? <Detail templateKey={template} /> : <Queue />}
+      <Tabs active={lessons ? "lessons" : "templates"} />
+      {lessons ? (
+        lessonKey && SKILL_KEY.test(lessonKey) && Number.isSafeInteger(lessonVersion) && lessonVersion >= 1 ? (
+          <LessonDetail skillKey={lessonKey} version={lessonVersion} />
+        ) : (
+          <LessonQueue />
+        )
+      ) : template && TEMPLATE_KEY.test(template) ? (
+        <Detail templateKey={template} />
+      ) : (
+        <Queue />
+      )}
     </main>
   );
 }

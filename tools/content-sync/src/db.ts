@@ -29,7 +29,10 @@ export async function readExisting(sql: Sql): Promise<Existing> {
                     where j.id::text = t.body->'_sync'->>'fuzz_job_id'
                       and j.status = 'succeeded' and j.result->>'passed' = 'true') as fuzz_passed
       from public.item_templates t`;
+  const lessons = await sql<{ skill_key: string; version: number; status: string; content_hash: string }[]>`
+    select skill_key, version, status::text as status, content_hash from public.skill_lessons`;
   return {
+    lessons: lessons.map((l) => ({ skill_key: l.skill_key, version: l.version, status: l.status, hash: l.content_hash })),
     modules: new Map(modules.map((m) => [m.key, { title: m.title, order_index: m.order_index, is_stub: m.is_stub }])),
     skills: new Map(skills.map((r) => [r.key, { content_hash: r.content_hash, status: r.status }])),
     edges: [...edges],
@@ -157,6 +160,20 @@ export async function applyPlan(sql: Sql, plan: Plan, ctx: ApplyContext): Promis
       await tx`
         update public.item_templates set status = 'retired', retired_at = now(), retired_reason = ${r.reason}, updated_at = now()
          where key = ${r.key} and version = ${r.version}`;
+    }
+
+    // Lessons (00a K9): a new version always waits for review; this tool never writes 'verified'. The skills
+    // above are already in this transaction, so the foreign key holds for a skill added in the same run.
+    for (const { row: l } of plan.lessons.changes) {
+      await tx`
+        insert into public.skill_lessons (skill_key, version, status, body, content_hash, license, source)
+        values (${l.skill_key}, ${l.version}, ${l.status}::public.content_status, ${tx.json(l.body as postgres.JSONValue)},
+                ${l.content_hash}, ${l.license}, ${l.source})`;
+    }
+    for (const r of plan.lessons.retire) {
+      await tx`
+        update public.skill_lessons set status = 'retired', retired_at = now()
+         where skill_key = ${r.skill_key} and version = ${r.version}`;
     }
 
     const stats = tx.json({ ...ctx.stats, job_id: jobId } as postgres.JSONValue);

@@ -40,6 +40,8 @@ const numericKey = z.object({
     bare_number_means: z.string().nullable().optional(),
   }),
   reference: z.union([z.number(), z.object({ re: z.number(), im: z.number() })]),
+  // Known wrong answers by misconception tag (doc 07 section 5 wrong_answer_expr, evaluated for the item); optional.
+  misconceptions: z.array(z.object({ tag: z.string(), value: z.number(), feedback_md: z.string().nullable().optional() })).optional(),
 });
 const choiceKey = z.object({
   grader_type: z.literal("multiple_choice"),
@@ -103,7 +105,7 @@ function gradeResponse(body: SubmitAttemptRequest, keyRaw: unknown, graderType: 
       ...(spec.unit === undefined ? {} : { unit: spec.unit }),
       ...(spec.bare_number_means === undefined ? {} : { bare_number_means: spec.bare_number_means }),
     };
-    return gradeExactNumeric(text, numeric, ref);
+    return gradeExactNumeric(text, numeric, ref, (key.misconceptions ?? []).map((m) => ({ tag: m.tag, value: m.value, feedback_md: m.feedback_md ?? null })));
   }
   if (r.kind !== "choice" || r.choice_ids?.length !== 1) throw bad("response", "expected exactly one choice");
   // Only an option in the rendered item counts as shown; the key's own list is not enough (G3).

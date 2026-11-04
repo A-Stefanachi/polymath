@@ -4,6 +4,7 @@
 // module, modules exist, prerequisites exist, no cycle), TPL-DUP (one file per key and version)
 // and SKILL-LIC (the licence rule L10 applied to skills, whose license and source are not null).
 import { licenceMessages, lintTemplates } from "@polymath/content-lint";
+import { lessonProblems } from "@polymath/content-schema";
 
 import type { Doc, Loaded, Problem } from "./load.ts";
 
@@ -85,9 +86,25 @@ function graphProblems(loaded: Loaded): Problem[] {
   return out;
 }
 
+/** L-G1 of doc 07 section 15 for every lesson file: needs the graph (skills, stubs) and the templates' misconception tags. */
+function lessonFileProblems(loaded: Loaded): Problem[] {
+  if (!loaded.graph) return [];
+  const skills = new Map(loaded.graph.skills.map(({ doc }) => [str(doc["key"]), { stub: doc["status"] === "stub" }]));
+  const tags = new Map<string, Set<string>>();
+  for (const { doc } of loaded.templates) {
+    for (const m of (doc["misconceptions"] as Doc[] | undefined) ?? []) {
+      const key = str(doc["skill_key"]);
+      tags.set(key, (tags.get(key) ?? new Set<string>()).add(str(m["tag"])));
+    }
+  }
+  return loaded.lessons.flatMap(({ file, fileName, doc }) =>
+    lessonProblems(doc, { fileName, skills, tags }).map((p) => ({ file, rule: p.rule, message: p.message })),
+  );
+}
+
 /** Runs G1 on loaded content. `contentRoot` locates content/prompts. Warnings carry severity "W". */
 export function lintContent(loaded: Loaded, contentRoot: string): Problem[] {
-  const out: Problem[] = [...graphProblems(loaded)];
+  const out: Problem[] = [...graphProblems(loaded), ...lessonFileProblems(loaded)];
   const seen = new Map<string, string>();
   for (const { file, doc } of loaded.templates) {
     const id = `${str(doc["key"])}@${String(doc["version"])}`;

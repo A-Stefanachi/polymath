@@ -50,6 +50,8 @@ function summary(plan: Plan, errors: number, dryRun: boolean, jobId: string | nu
   } else lines.push("verification: no template changed, no job enqueued");
   const waiting = plan.templates.awaitingReview;
   lines.push(`awaiting human review: ${String(waiting.length)}${waiting.length > 0 ? ` (${waiting.join(", ")})` : ""}`);
+  for (const { row } of plan.lessons.changes) lines.push(`lesson ${row.skill_key} version ${String(row.version)}: new, ${row.status}`);
+  for (const r of plan.lessons.retire) lines.push(`lesson ${r.skill_key} version ${String(r.version)}: retired`);
   return lines;
 }
 
@@ -116,6 +118,7 @@ export async function runSync(options: RunOptions): Promise<RunResult> {
         skills: stat(c.skills),
         edges: stat(c.edges),
         templates: { ...stat(c.templates), job_template_keys: plan.templates.needsJob },
+        lessons: stat(c.lessons),
       },
     });
     return { exitCode: 0, out: [`run ${runId}`, ...summary(plan, 0, false, jobId)], err: warnings };

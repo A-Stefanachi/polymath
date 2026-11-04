@@ -89,6 +89,8 @@ test("admin approves a template by keyboard (hash stored), retires an item, and 
     // Keyboard path: box, notes, button.
     await page.goto(`/admin/content?template=${key}`);
     await page.keyboard.press("Tab"); // the skip link (BL-0058) comes first
+    await page.keyboard.press("Tab"); // then the Templates and Lessons tabs (BL-0201)
+    await page.keyboard.press("Tab");
     await page.keyboard.press("Tab");
     await expect(page.getByLabel("I solved two of the five items by hand")).toBeFocused();
     await page.keyboard.press("Space");

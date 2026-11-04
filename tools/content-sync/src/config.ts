@@ -16,6 +16,7 @@ export const CONTENT_ROOT = fileURLToPath(new URL("../../../polymath-app-spec/co
 export const CONTENT_LAYOUT = {
   graph: "mvp-skill-graph.yaml",
   templates: "templates",
+  lessons: "lessons",
   reviewLog: "REVIEW-LOG.md",
   prompts: "prompts",
 } as const;

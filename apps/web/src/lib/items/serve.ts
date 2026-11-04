@@ -11,6 +11,8 @@ import { ApiError } from "@/lib/api/errors";
 import { json, type ApiContext } from "@/lib/api/route";
 import { privilegedDb } from "@/server/privileged/db";
 import { createServeStore, type ServeItemRow, type ServeStore, type ServeTaskRow } from "@/server/privileged/item-store";
+import { createLessonStore, type LessonSource } from "@/server/privileged/lesson-store";
+import { toLessonView, type LessonView } from "@/lib/lessons/view";
 import { workedStepsFor } from "./worked-steps.ts";
 
 type LearnerItem = components["schemas"]["LearnerItem"];
@@ -118,7 +120,18 @@ export async function readItem(ctx: ApiContext, store: ServeStore = defaultStore
   return json(toLearnerItem(item));
 }
 
-export async function readTask(ctx: ApiContext, store: ServeStore = defaultStore()): Promise<Response> {
+/**
+ * 00a K8: the skill's newest verified concept primer on a worked_example task. `full` until the caller has a graded
+ * attempt on the skill, then `recap`. Null when the skill has none, or when the stored body is not a usable lesson.
+ */
+async function lessonFor(userId: string, skillKey: string, source: LessonSource): Promise<LessonView | null> {
+  const stored = await source.newestVerified(skillKey);
+  if (!stored) return null;
+  const variant = (await source.hasGradedAttempt(userId, skillKey)) ? "recap" : "full";
+  return toLessonView(skillKey, stored.version, stored.body, variant);
+}
+
+export async function readTask(ctx: ApiContext, store: ServeStore = defaultStore(), lessons?: LessonSource): Promise<Response> {
   const id = userId(ctx);
   const task = await store.findTask(id, idParam(ctx, "task_id"));
   const item = task?.item_id ? await store.findItem(task.item_id) : null;
@@ -144,5 +157,10 @@ export async function readTask(ctx: ApiContext, store: ServeStore = defaultStore
     const steps = workedStepsFor(await store.findSolution(item.id), task.task_kind, faded);
     if (steps) Object.assign(learnerItem.rendered, steps);
   }
-  return json({ task: toTask(task), item: learnerItem });
+  // The primer rides on the caller's own practice-pool worked_example only, like the steps (00a K8).
+  const lesson =
+    item.pool === "practice" && task.assessment_kind === null && task.task_kind === "worked_example" && task.skill_key
+      ? await lessonFor(id, task.skill_key, lessons ?? createLessonStore(privilegedDb()))
+      : null;
+  return json({ task: toTask(task), item: learnerItem, ...(lesson ? { lesson } : {}) });
 }
