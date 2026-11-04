@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Claims-policy lint of contract section 8 (BL-0006, BL-0194), run by pnpm claims:lint.",
+  "exports": {
+    "./rules": "./src/rules.ts"
+  },
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json",

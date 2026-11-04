@@ -1,0 +1,9 @@
+{
+  "base": "numeric",
+  "extra": [
+    {
+      "base": "numeric",
+      "set": { "key": "tpl.elec.voltage-divider-far", "difficulty_prior": 0.9 }
+    }
+  ]
+}

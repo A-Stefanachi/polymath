@@ -1,0 +1,20 @@
+{
+  "name": "@polymath/content-lint",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "pnpm content:lint (BL-0050): the G1 static lint rules L01 to L26 of doc 07 section 7.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@polymath/claims-lint": "workspace:*",
+    "@polymath/content-sync": "workspace:*",
+    "katex": "0.19.0"
+  }
+}

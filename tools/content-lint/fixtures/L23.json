@@ -1,0 +1,1 @@
+{ "base": "numeric", "set": { "verifiers.0.spec.equations.0": "vin * r2 / (r1 + r2)" } }

@@ -1,0 +1,1 @@
+{ "base": "numeric", "set": { "parameters.3": { "name": "spare", "type": "int", "min": 1, "max": 5 } } }

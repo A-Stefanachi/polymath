@@ -1,0 +1,1 @@
+{ "base": "spice", "set": { "answer.skeleton": "V1 in 0 AC 1\nR1 in out 1k\n.include /etc/passwd\n.end\n" } }
