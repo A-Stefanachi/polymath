@@ -56,7 +56,7 @@ const toFinding = (p: Problem): Finding => ({
 let count: number;
 if (parsed.positionals.length === 0) {
   const loaded = loadContent(root);
-  const problems = [...loaded.problems, ...lintContent(loaded, root, true)];
+  const problems = [...loaded.problems, ...lintContent(loaded, root)];
   // lintContent covers the graph and L01 to L26 without L03; add L03 only when asked.
   findings.push(...problems.map(toFinding));
   if (synced) findings.push(...lintTemplates(loaded.templates, { contentRoot: root, synced }).filter((f) => f.rule === "L03"));
