@@ -20,6 +20,8 @@ Direct dependencies and their licences (CLAUDE.md section 5). Transitive depende
 | `eslint` | 9.39.5 | MIT |
 | `eslint-config-next` | 16.4.4 | MIT |
 | `fast-check` (dev, grading-core) | 4.10.2 | MIT |
+| `@axe-core/playwright` (BL-0027, dev; wraps `axe-core`, MPL-2.0: file-level copyleft, used unmodified as a dev dependency only, never shipped) | 4.14.0 | MPL-2.0 |
+| `katex` (BL-0027, apps/web) | 0.19.0 | MIT |
 | `lucide-react` | 1.67.0 | ISC |
 | `next` | 16.4.4 | MIT |
 | `openapi-typescript` | 7.13.0 | MIT |

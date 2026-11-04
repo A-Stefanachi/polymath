@@ -62,3 +62,22 @@ export const onboarding = {
   saving: "Saving",
   saveFailed: "We could not save that. Nothing was lost; try again in a moment.",
 } as const;
+
+// Throwaway M0 demo item page (BL-0027, doc 09 S08). Feedback wording follows S08: no confetti, no points.
+export const demoItem = {
+  title: "Practice question",
+  emptyTitle: "No question is waiting",
+  empty: "There is no open question for you right now. Come back when a session has been prepared.",
+  loading: "Loading the question",
+  loadFailed: "We could not load the question. Nothing was lost; try again in a moment.",
+  answerLabel: "Your answer",
+  answerHelp: "Type a number and its unit, for example 2.5 V.",
+  check: "Check",
+  checking: "Checking",
+  correct: "Correct.",
+  incorrect: "Not quite.",
+  incorrectNote: "This one will come back later for another try.",
+  unitRead: "Unit read as",
+  invalid: "That answer could not be read. Try a number followed by a unit, for example 2.5 V.",
+  submitFailed: "We could not check that. Nothing was lost; try again in a moment.",
+} as const;

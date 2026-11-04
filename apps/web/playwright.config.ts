@@ -50,6 +50,7 @@ export default defineConfig({
       use: { baseURL: `http://127.0.0.1:${signupPort}`, timezoneId: "Europe/Rome" },
     },
     { name: "consent", testMatch: "consent.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
+    { name: "demo-item", testMatch: "demo-item.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
     { name: "enumeration", testMatch: "enumeration.spec.ts", use: { baseURL: `http://127.0.0.1:${noSignupPort}` } },
   ],
   webServer: [server(signupPort, "true"), server(noSignupPort, "false")],
