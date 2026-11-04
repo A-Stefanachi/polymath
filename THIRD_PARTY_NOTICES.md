@@ -19,7 +19,8 @@ Direct dependencies and their licences (CLAUDE.md section 5). Transitive depende
 | `clsx` | 2.1.1 | MIT |
 | `eslint` | 9.39.5 | MIT |
 | `eslint-config-next` | 16.4.4 | MIT |
-| `fast-check` (dev, grading-core) | 4.10.2 | MIT |
+| `fast-check` (dev, grading-core and scheduler) | 4.10.2 | MIT |
+| `ts-fsrs` (BL-0041, packages/scheduler; published 2026-10-28, under two weeks old at adoption: accepted by the orchestrator because 00a G11 requires 6.x; details below) | 6.0.0 | MIT |
 | `@axe-core/playwright` (BL-0027, dev; wraps `axe-core`, MPL-2.0: file-level copyleft, used unmodified as a dev dependency only, never shipped) | 4.14.0 | MPL-2.0 |
 | `katex` (BL-0027, apps/web) | 0.19.0 | MIT |
 | `lucide-react` | 1.67.0 | ISC |
@@ -67,7 +68,7 @@ Transitive dependencies added by `pg8000` (BL-0016), pinned below the newest rel
 | `python-dateutil` | 2.9.0.post0 | Apache-2.0 OR BSD-3-Clause |
 | `six` | 1.17.0 | MIT |
 
-## ts-fsrs 6.0.0 (BL-0040, pinned for BL-0041; not yet a dependency)
+## ts-fsrs 6.0.0 (BL-0040, dependency of packages/scheduler since BL-0041)
 
 `ts-fsrs` 6.0.0 (FSRS scheduling library, used only behind `packages/scheduler/src/fsrs-adapter.ts`), licence MIT, checked with `npm view ts-fsrs@6.0.0 license` and the `LICENSE` file inside the published tarball on 2026-11-04. Its one runtime dependency, `@open-spaced-repetition/srs-kit` 1.0.0, is BSD-3-Clause. Licence texts as published:
 
