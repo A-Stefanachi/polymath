@@ -41,3 +41,20 @@ Steps (staging, a real inbox on custom SMTP):
 3. Return to Safari. Tap the code field: iOS should offer the code above the keyboard. Tap it (autofill), or copy the code in Mail and paste it. Tap "Sign in". Expect the app at `/`.
 4. Sign out (clear site data), request a new code, and this time tap the link in the email. Expect to be signed in at `/`.
 5. Add to Home Screen and repeat step 3 inside the installed app (the link may open in Safari instead; that is expected, the code path is the one that must work). Record the result of each step here.
+
+## ts-fsrs licence, version and API (BL-0040, OA-3, 00a B7/G11/H3)
+
+Assumption: `ts-fsrs` is permissively licensed, a 6.x release implements FSRS-6 with 21 weights, and the adapter can schedule a card from a rating, the review time and a desired retention. Checked with `npm view` and by reading the published tarballs (no library code was run).
+
+| Date | Version | Licence id | FSRS-6 default weights | Published | Result |
+|---|---|---|---|---|---|
+| 2026-11-04 | `ts-fsrs` 6.0.0 (npm `latest`, integrity `sha512-kX03GIEhXgBtUrgZuv7k7Aax8oYF3GCO0lASqJFw/8cvvI7qjE83J8IzFhHugux7//W0yquG7zidk3e9NRgEwg==`) | MIT (tarball `LICENSE` identical to 5.4.2; copyright Open Spaced Repetition) | 21 (5.4.2 lists 21 `default_w` values, the last being the decay 0.1542; 6.0.0 has a `models/fsrs-6` entry and `FSRS6_DECAY = 0.1542`) | 2026-10-28 | licence and model confirmed |
+
+Facts for the adapter (BL-0041):
+- 6.0.0 requires Node 24 or later; its only dependency is `@open-spaced-repetition/srs-kit` 1.0.0 (BSD-3-Clause).
+- The new API is the asynchronous `DefaultScheduler(options)` factory with `newCard`, `preview`, `review({ card, grade, now })` returning `{ card, revlog }`, `retrievability`, `nextInterval`, camelCase fields. It **defaults to FSRS-7** (34 weights, fractional-day intervals). The adapter must pass `version: 'FSRS-6'`, and the contract test must assert the model name (`scheduler.definition.model.name`), 21 weights and whole-day intervals (00a H3). The exact option names for desired retention and short-term mode must be read from the installed typings in BL-0041 before `FsrsPort` is frozen.
+- `Card.elapsed_days` is removed in 6.0.0: elapsed time derives from `last_review` and the review time, so the adapter passes `now` explicitly (no clock inside `packages/scheduler`).
+- The legacy `fsrs()` / `FSRS` facade is deprecated but remains (FSRS-6, `request_retention`, `enable_short_term`, `enable_fuzz`); the adapter does not use it.
+- 5.4.2 (2026-09-01) also implements FSRS-6, but 00a G11 requires 6.x, so it is not chosen.
+
+Decision: pin `ts-fsrs` exactly to 6.0.0 (no caret) when BL-0041 adds the dependency. 6.0.0 was published on 2026-10-28, so it reaches the two-week age rule on 2026-11-11; BL-0041 should not add it earlier unless the founder waives the rule. This task did not add it to `packages/scheduler/package.json` (it asks only for the notice and this record). If the licence or API becomes unsuitable, implement FSRS-6 from the published algorithm behind the same adapter (BL-0040 risk note). Founder confirms in the PR.
