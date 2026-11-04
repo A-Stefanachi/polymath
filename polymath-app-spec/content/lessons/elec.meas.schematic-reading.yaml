@@ -1,0 +1,121 @@
+# Concept primer for elec.meas.schematic-reading (00a K6, BL-0203). Ready for the founder's review in the console (00a K9).
+# Recognition skill: symbols shown next to the symbols they are confused with (doc 05 section 5.6).
+# Validate: python3 reference/validate_lessons.py
+schema_version: 1
+skill_key: elec.meas.schematic-reading
+version: 1
+authoring_status: ready
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-04'
+  llm_assistance:
+    used: true
+    model: claude-opus-5-5
+    prompt_version: lesson_assist_v1
+est_seconds: 150
+screens:
+- id: why
+  title: Why this matters
+  body_md: >-
+    A schematic is the map of a circuit. It shows which parts are connected to which, not where they sit on
+    the board. You will build, measure and debug every circuit in this course from a schematic, so reading
+    one quickly and correctly comes before everything else.
+- id: idea
+  title: Symbols that look alike
+  body_md: >-
+    A resistor is drawn as a zigzag or as a plain box; both mean the same part.
+
+
+    A cell has two plates of different lengths: the long plate is the positive terminal. A battery is drawn
+    as several cells, or as one cell marked with its voltage.
+
+
+    A capacitor also has two parallel plates, but they are the same length. Look at the plate lengths before
+    you decide which part it is.
+
+
+    Ground is a stack of lines that get shorter towards the bottom. It marks the circuit's 0 V reference node.
+  figure:
+    alt: Five symbols in a row. A zigzag resistor, a box resistor, a capacitor with two equal plates, a cell with one long and one short plate marked plus on the long side, and a ground symbol of three shrinking lines.
+    svg: >-
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 100" width="300" height="100">
+      <g fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M8 40 H18 L22 32 L30 48 L38 32 L46 48 L50 40 H60"/>
+      <path d="M70 40 H80 M110 40 H120"/>
+      <rect x="80" y="33" width="30" height="14"/>
+      <path d="M130 40 H152 M158 40 H180 M152 28 V52 M158 28 V52"/>
+      <path d="M190 40 H212 M219 40 H240 M212 26 V54 M219 33 V47"/>
+      <path d="M275 20 V40 M261 40 H289 M266 47 H284 M271 54 H279"/>
+      </g>
+      <g font-family="sans-serif" font-size="11" fill="currentColor">
+      <text x="204" y="24">+</text>
+      <text x="10" y="78">resistor</text>
+      <text x="72" y="78">resistor</text>
+      <text x="132" y="78">capacitor</text>
+      <text x="204" y="78">cell</text>
+      <text x="258" y="78">ground</text>
+      </g>
+      </svg>
+- id: model
+  title: Tracing nets
+  body_md: >-
+    A net is everything joined by wire. A dot marks a junction; in the common convention, two wires that
+    cross without a dot are not connected.
+
+
+    Labels join places too: every point labelled VIN is the same net, even with no wire drawn between them,
+    and every ground symbol on the sheet is the same 0 V net.
+
+
+    To find what is in a path, start at one net and follow the connections part by part to the other, writing
+    down each net you pass. Position on the page means nothing; only connections count. A part whose far end
+    goes to a net with nothing else on it is a dead end and carries no current.
+misconception:
+  tag: mc.gnd-separate-nets
+  wrong_idea_md: Each ground symbol is its own connection, so two parts drawn to separate ground symbols are not joined.
+  why_tempting_md: >-
+    No wire is drawn between the symbols, and everywhere else on a schematic only drawn wires seem to join
+    things.
+  correct_idea_md: >-
+    Every ground symbol on the sheet is the same net, the 0 V node that voltages are measured from. Separate
+    symbols only save drawing long wires. Net labels work the same way: two places labelled VIN are connected.
+checks:
+- id: trace
+  stem_md: >-
+    R1 goes from VIN to N1, R2 from N1 to GND, and R3 from N1 to a test pad TP1 that has nothing else
+    connected. Which resistors carry current from VIN to GND?
+  options:
+  - id: correct
+    text_md: R1 and R2 only
+    correct: true
+    feedback_md: Right. R3 ends at a pad with nothing else on it, so it is a dead end and carries no current.
+  - id: dead-end
+    text_md: R1, R2 and R3
+    correct: false
+    feedback_md: R3 goes to a pad with nothing else connected, so no current can flow through it.
+  - id: first-only
+    text_md: R1 only
+    correct: false
+    feedback_md: R2 joins N1 to GND, so it completes the path. Trace each net in turn.
+- id: plates
+  stem_md: A symbol has two parallel plates, one long and one short. What is it?
+  options:
+  - id: correct
+    text_md: A cell, with the long plate as the positive terminal
+    correct: true
+    feedback_md: Right. Plates of different lengths mark a cell; the long one is positive.
+  - id: capacitor
+    text_md: A capacitor
+    correct: false
+    feedback_md: A capacitor's two plates are the same length. Unequal plates mark a cell.
+  - id: ground
+    text_md: A ground connection
+    correct: false
+    feedback_md: Ground is a stack of three or more lines that get shorter, at the end of a single wire.
+recap_md: >-
+  A schematic shows connections, not positions. A zigzag and a box are both resistors; unequal plates are a
+  cell (long plate positive), equal plates a capacitor. Every ground symbol, and every repeated net label, is
+  one net. Trace paths net by net; a dead-end branch carries no current.

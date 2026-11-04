@@ -1,0 +1,122 @@
+# Concept primer for math.alg.linear-functions (00a K6, BL-0203). Ready for the founder's review in the console (00a K9).
+# Validate: python3 reference/validate_lessons.py
+schema_version: 1
+skill_key: math.alg.linear-functions
+version: 1
+authoring_status: ready
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-04'
+  llm_assistance:
+    used: true
+    model: claude-opus-5-5
+    prompt_version: lesson_assist_v1
+est_seconds: 100
+screens:
+- id: why
+  title: Why this matters
+  body_md: >-
+    Many relations in electronics are straight lines. The current through a resistor plotted against the
+    voltage across it is a line through the origin, and many sensors give an output that rises in a straight
+    line with what they measure. The slope tells you how fast one quantity changes with the other.
+- id: idea
+  title: The idea
+  body_md: >-
+    A straight line can be written as
+
+
+    $$y = mx + c$$
+
+
+    $m$ is the slope: how much $y$ changes for each step of 1 in $x$. Between two points,
+
+
+    $$m = \frac{\text{rise}}{\text{run}} = \frac{y_2 - y_1}{x_2 - x_1}$$
+
+
+    $c$ is the $y$-intercept: the value of $y$ where the line crosses the $y$ axis, at $x = 0$. A positive
+    slope rises to the right; a negative slope falls.
+  figure:
+    alt: A straight line rising to the right on x and y axes. A right-angled triangle under the line marks the run along x and the rise along y; the line crosses the y axis at the intercept c.
+    svg: >-
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 160" width="220" height="160">
+      <g fill="none" stroke="currentColor">
+      <path d="M30 140 H210 M30 140 V10" stroke-width="2"/>
+      <path d="M30 110 L200 25" stroke-width="3"/>
+      <path d="M90 80 H150 V50" stroke-width="2" stroke-dasharray="5 4"/>
+      </g>
+      <g font-family="sans-serif" font-size="13" fill="currentColor">
+      <text x="200" y="155">x</text>
+      <text x="14" y="20">y</text>
+      <text x="108" y="96">run</text>
+      <text x="156" y="70">rise</text>
+      <text x="12" y="114">c</text>
+      </g>
+      </svg>
+- id: model
+  title: How to use it
+  body_md: >-
+    To find the line through $(1, 3)$ and $(4, 9)$:
+
+
+    1. Slope: rise $= 9 - 3 = 6$, run $= 4 - 1 = 3$, so $m = 6/3 = 2$.
+
+
+    2. Intercept: put one point into $y = mx + c$. $3 = 2 \times 1 + c$, so $c = 1$.
+
+
+    3. Check with the other point: $2 \times 4 + 1 = 9$. The line is $y = 2x + 1$.
+
+
+    Take both differences in the same point order, second minus first on top and bottom, or the sign of the
+    slope flips.
+misconception:
+  tag: mc.run-over-rise
+  wrong_idea_md: The slope is the change in $x$ divided by the change in $y$.
+  why_tempting_md: >-
+    Both differences are needed, and points are written with $x$ first, so putting the $x$ difference on top
+    can feel natural.
+  correct_idea_md: >-
+    Slope is rise over run, $\frac{\Delta y}{\Delta x}$: how much $y$ changes per unit of $x$. Through $(1, 3)$
+    and $(4, 9)$ it is $6/3 = 2$, not $3/6$.
+checks:
+- id: slope
+  stem_md: What is the slope of the line through $(2, 1)$ and $(5, 10)$?
+  options:
+  - id: correct
+    text_md: '$3$'
+    correct: true
+    feedback_md: Right. Rise $10 - 1 = 9$, run $5 - 2 = 3$, and $9/3 = 3$.
+  - id: run-over-rise
+    text_md: '$\frac{1}{3}$'
+    correct: false
+    feedback_md: This is run over rise, the fraction upside down. Slope is the change in $y$ over the change in $x$.
+  - id: forgets-run
+    text_md: '$9$'
+    correct: false
+    feedback_md: That is only the rise. Divide it by the run.
+  - id: mixed-order
+    text_md: '$-3$'
+    correct: false
+    feedback_md: The sign is flipped. Take both differences in the same point order.
+- id: intercept
+  stem_md: What is the $y$-intercept of $y = 4x - 7$?
+  options:
+  - id: correct
+    text_md: '$-7$'
+    correct: true
+    feedback_md: Right. At $x = 0$, $y = -7$.
+  - id: slope-as-intercept
+    text_md: '$4$'
+    correct: false
+    feedback_md: That is the slope, the number multiplying $x$.
+  - id: sign
+    text_md: '$7$'
+    correct: false
+    feedback_md: The constant term is $-7$, so the line crosses the $y$ axis below the origin.
+recap_md: >-
+  A line is $y = mx + c$. The slope $m$ is rise over run, $\frac{y_2 - y_1}{x_2 - x_1}$, with both differences
+  in the same point order. The intercept $c$ is $y$ at $x = 0$; find it by putting one point into the equation.

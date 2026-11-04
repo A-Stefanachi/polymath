@@ -1,0 +1,101 @@
+# Concept primer for elec.dc.nodal-analysis (00a K6, BL-0203). Ready for the founder's review in the console (00a K9).
+# Validate: python3 reference/validate_lessons.py
+schema_version: 1
+skill_key: elec.dc.nodal-analysis
+version: 1
+authoring_status: ready
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-04'
+  llm_assistance:
+    used: true
+    model: claude-opus-5-5
+    prompt_version: lesson_assist_v1
+est_seconds: 120
+screens:
+- id: why
+  title: Why this matters
+  body_md: >-
+    Some circuits cannot be reduced with series and parallel rules, for example when two sources feed the
+    same node. Nodal analysis is a routine that always works for resistor circuits: one KCL equation per
+    unknown node. Circuit simulators such as SPICE are built on the same idea.
+- id: idea
+  title: The idea
+  body_md: >-
+    1. Choose a reference node, ground, at 0 V.
+
+
+    2. Name each unknown node voltage, such as $V_A$.
+
+
+    3. At each unknown node, write KCL with every current *leaving* the node. The current leaving node A through a resistor $R$ to a node at voltage $V_B$ is $\frac{V_A - V_B}{R}$, and the currents leaving add to zero.
+
+
+    4. Solve. One unknown node gives one equation; two give a system of two equations.
+
+
+    Writing every current as leaving keeps the signs consistent, so you never have to guess which way each
+    current flows.
+- id: model
+  title: Worked through
+  body_md: >-
+    Node A connects through $R_1 = 1$ k$\Omega$ to $V_1 = 10$ V, through $R_2 = 1$ k$\Omega$ to $V_2 = 5$ V,
+    and through $R_3 = 1$ k$\Omega$ to ground. KCL at A, with resistances in k$\Omega$ and currents in mA:
+
+
+    $$\frac{V_A - 10}{1} + \frac{V_A - 5}{1} + \frac{V_A}{1} = 0$$
+
+
+    So $3V_A = 15$ and $V_A = 5$ V.
+
+
+    Sense check: $V_A$ lies between 0 and the largest source voltage. It is not the plain average of the
+    sources, 7.5 V, because $R_3$ pulls the node towards ground.
+misconception:
+  tag: mc.nodal-forgets-branch
+  wrong_idea_md: Only the branches with a source need a term in the node equation.
+  why_tempting_md: >-
+    The sources look like where the action is, and a resistor to ground seems to just sit there.
+  correct_idea_md: >-
+    Every branch at the node carries current, so every branch gets a term. The resistor to ground adds
+    $\frac{V_A}{R_3}$. In the example, leaving it out gives $V_A = 7.5$ V instead of the correct 5 V.
+checks:
+- id: equation
+  stem_md: >-
+    Node A connects through 2 k$\Omega$ to a 9 V source and through 1 k$\Omega$ to ground. Which equation is
+    KCL at A, with currents leaving?
+  options:
+  - id: correct
+    text_md: $\frac{V_A - 9}{2000} + \frac{V_A}{1000} = 0$
+    correct: true
+    feedback_md: Right. One term per branch, each written as current leaving A.
+  - id: forgets-branch
+    text_md: $\frac{V_A - 9}{2000} = 0$
+    correct: false
+    feedback_md: The 1 k$\Omega$ resistor also carries current away from A, so it needs its own term.
+  - id: sign-error
+    text_md: $\frac{V_A + 9}{2000} + \frac{V_A}{1000} = 0$
+    correct: false
+    feedback_md: The current leaving A towards the source is $\frac{V_A - 9}{2000}$. Check the sign.
+- id: solve
+  stem_md: Solve that equation. What is $V_A$?
+  options:
+  - id: correct
+    text_md: 3 V
+    correct: true
+    feedback_md: Right. Multiply by 2000 to get $V_A - 9 + 2V_A = 0$, so $3V_A = 9$ and $V_A = 3$ V.
+  - id: forgets-branch
+    text_md: 9 V
+    correct: false
+    feedback_md: That is the answer without the resistor to ground. That branch pulls A below the source voltage.
+  - id: averages
+    text_md: 4.5 V
+    correct: false
+    feedback_md: This averages 0 V and 9 V. Each side is weighted by its resistor, so solve the equation.
+recap_md: >-
+  Choose ground, name the unknown node voltages, and at each one write KCL with every current leaving:
+  $\frac{V_A - V_B}{R}$ for each branch, summed to zero. Every branch gets a term, including a resistor to
+  ground. Then solve the equations.

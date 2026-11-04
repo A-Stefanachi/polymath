@@ -1,0 +1,124 @@
+# Concept primer for elec.meas.lab-safety-esd (00a K6, BL-0203). Ready for the founder's review in the console (00a K9).
+# Conceptual skill: fuller treatment with a mental model and figure (doc 05 section 5.6).
+# Validate: python3 reference/validate_lessons.py
+schema_version: 1
+skill_key: elec.meas.lab-safety-esd
+version: 1
+authoring_status: ready
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-04'
+  llm_assistance:
+    used: true
+    model: claude-opus-5-5
+    prompt_version: lesson_assist_v1
+est_seconds: 150
+screens:
+- id: why
+  title: Why this matters
+  body_md: >-
+    Every circuit in this course runs at low voltage, so the bench is a safe place to learn. A few habits
+    still matter: they protect you, your instruments and your parts, and each takes only seconds. Treat them
+    as a routine you follow every time you sit down at the bench, before you touch anything.
+- id: idea
+  title: The bench rules
+  body_md: >-
+    - **Low voltage only.** Circuits here run at 24 V or less. Never open, probe or wire mains-powered equipment.
+
+
+    - **Batteries.** Never short a cell's terminals. A shorted or damaged lithium cell can get hot enough to burn you or start a fire.
+
+
+    - **Soldering.** Keep the hot iron in its stand and work with ventilation or a fume extractor.
+
+
+    - **Measuring.** Check that the supply is what you expect and within the probe's rating. A bench oscilloscope's ground clip is normally tied to earth through its power cord, so clip it only to the circuit's ground. On any other node it can create a short.
+
+
+    - **Static.** Wear a grounded wrist strap and work on an ESD mat when you handle bare parts. The next screen explains why.
+- id: model
+  title: Static you cannot feel
+  body_md: >-
+    Moving about builds up static charge on your body, which holds it much like a capacitor. When you touch a
+    part, that charge flows through it in a brief pulse. You notice a spark only at a few thousand volts; some
+    parts, such as a MOSFET's gate, can be damaged by far less, and the damage may not show until later.
+
+
+    A wrist strap joins you through a resistor, often 1 M$\Omega$, to the same ground as the ESD mat. You, the
+    mat and the part then sit at the same potential, so no pulse flows when you touch it. The resistor limits
+    the current through you if you touch something live, so never bypass it.
+
+
+    Handle parts by their bodies, not their pins, and keep them in the antistatic bag until you fit them.
+  figure:
+    alt: Block diagram. A person wearing a wrist strap connects through a 1 megohm resistor to a common ground point; the ESD mat connects to the same ground point.
+    svg: >-
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" width="240" height="160">
+      <g fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="10" y="20" width="80" height="30"/>
+      <path d="M90 35 H120"/>
+      <rect x="120" y="28" width="40" height="14"/>
+      <path d="M160 35 H200 V128"/>
+      <rect x="10" y="100" width="120" height="16"/>
+      <path d="M130 108 H200"/>
+      <path d="M186 128 H214 M191 135 H209 M196 142 H204"/>
+      </g>
+      <circle cx="200" cy="108" r="3" fill="currentColor"/>
+      <g font-family="sans-serif" font-size="11" fill="currentColor">
+      <text x="18" y="39">you + strap</text>
+      <text x="122" y="22">1 MΩ</text>
+      <text x="44" y="112">ESD mat</text>
+      <text x="150" y="156">ground</text>
+      </g>
+      </svg>
+misconception:
+  tag: mc.esd-no-feel-no-harm
+  wrong_idea_md: If you did not feel a spark when you picked up a part, the part is fine.
+  why_tempting_md: >-
+    A static shock you can feel is sharp and obvious, so feeling nothing seems to mean nothing happened.
+  correct_idea_md: >-
+    You feel a discharge only at a few thousand volts, and some parts are damaged by far less. The damage can
+    show up later as a part that fails or behaves oddly. Use a grounded strap and mat whether or not you feel
+    anything.
+checks:
+- id: put-down
+  stem_md: >-
+    You have taken a MOSFET out of its antistatic bag and need to put it down for a minute while you prepare
+    the board. Where should it go?
+  options:
+  - id: correct
+    text_md: Back in its antistatic bag, or on the grounded ESD mat
+    correct: true
+    feedback_md: Right. Both keep the part at the same potential as you and the bench.
+  - id: plastic-tray
+    text_md: On an ordinary plastic tray
+    correct: false
+    feedback_md: Ordinary plastic can hold a static charge. Use the bag or the ESD mat.
+  - id: no-spark
+    text_md: Anywhere on the bench, since you felt no spark when you picked it up
+    correct: false
+    feedback_md: Static too small to feel can still damage a gate. Keep the part on the mat or in its bag.
+- id: scope-ground
+  stem_md: >-
+    You want to measure a node on a powered 9 V breadboard with a bench oscilloscope probe. Where does the
+    probe's ground clip go?
+  options:
+  - id: correct
+    text_md: On the circuit's ground node
+    correct: true
+    feedback_md: Right. The clip is normally earthed through the scope's power cord, so it belongs on circuit ground only.
+  - id: nearest
+    text_md: On whichever node is closest to the one you are measuring
+    correct: false
+    feedback_md: The clip is normally earthed, so on another node it can create a short. Use circuit ground.
+  - id: nowhere
+    text_md: Nowhere, because the tip alone is enough
+    correct: false
+    feedback_md: A voltage needs a reference. Without the ground clip the reading is unreliable.
+recap_md: >-
+  Stay at 24 V or less and never work on mains. Never short a battery. Clip a scope's ground lead only to
+  circuit ground. Wear a grounded wrist strap on an ESD mat and handle parts by their bodies: static too small
+  to feel can still damage a part, and the damage may show later.

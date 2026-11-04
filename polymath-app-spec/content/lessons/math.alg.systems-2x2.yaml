@@ -1,0 +1,102 @@
+# Concept primer for math.alg.systems-2x2 (00a K6, BL-0203). Ready for the founder's review in the console (00a K9).
+# Validate: python3 reference/validate_lessons.py
+schema_version: 1
+skill_key: math.alg.systems-2x2
+version: 1
+authoring_status: ready
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-04'
+  llm_assistance:
+    used: true
+    model: claude-opus-5-5
+    prompt_version: lesson_assist_v1
+est_seconds: 100
+screens:
+- id: why
+  title: Why this matters
+  body_md: >-
+    A circuit with two unknowns, such as two node voltages, gives two equations that must both hold at the
+    same time. Nodal analysis, later in this course, produces exactly this kind of system, so solving two
+    equations in two unknowns is a tool you will use there.
+- id: idea
+  title: The idea
+  body_md: >-
+    Elimination removes one unknown by adding the equations. It works only when that unknown has equal and
+    opposite coefficients, so you first scale one or both equations to make them match.
+
+
+    1. Multiply each equation by a number so the $y$ terms become $+ky$ and $-ky$.
+
+
+    2. Add the equations: $y$ cancels and one equation in $x$ is left.
+
+
+    3. Solve for $x$, then put it back into either original equation to find $y$.
+
+
+    Substitution, where you solve one equation for $y$ and put that into the other, gives the same answer.
+- id: model
+  title: Worked through
+  body_md: >-
+    $$2x + 3y = 12 \qquad x - y = 1$$
+
+
+    The $y$ coefficients are $+3$ and $-1$. Multiply the second equation by 3: $3x - 3y = 3$.
+
+
+    Add it to the first: $5x = 15$, so $x = 3$.
+
+
+    Back into $x - y = 1$: $3 - y = 1$, so $y = 2$.
+
+
+    Check in the first equation: $2 \times 3 + 3 \times 2 = 12$. Both equations hold, so the answer is right.
+    Before you write the result, check which unknown the question asks for.
+misconception:
+  tag: mc.adds-without-scaling
+  wrong_idea_md: Add the two equations straight away and the $y$ terms will disappear.
+  why_tempting_md: >-
+    Adding the equations is the step you remember from examples where the coefficients already matched.
+  correct_idea_md: >-
+    Adding cancels $y$ only when its coefficients are equal and opposite, such as $+3y$ and $-3y$. With
+    $2x + 3y = 12$ and $x - y = 1$, adding as they are gives $3x + 2y = 13$, which still has $y$. Scale first,
+    then add.
+checks:
+- id: first-step
+  stem_md: To eliminate $y$ from $4x + 2y = 10$ and $3x - y = 5$, what should you do first?
+  options:
+  - id: correct
+    text_md: Multiply the second equation by 2, then add the equations
+    correct: true
+    feedback_md: Right. That makes the $y$ terms $+2y$ and $-2y$, so they cancel when you add.
+  - id: add-now
+    text_md: Add the equations as they are
+    correct: false
+    feedback_md: That gives $7x + y = 15$; the $y$ terms do not cancel because $+2y$ and $-y$ do not match.
+  - id: scale-wrong
+    text_md: Multiply the first equation by 2, then add the equations
+    correct: false
+    feedback_md: That makes the $y$ terms $+4y$ and $-y$, which still do not cancel.
+- id: solve
+  stem_md: Solve $x + y = 7$ and $x - y = 1$. What is $x$?
+  options:
+  - id: correct
+    text_md: '$x = 4$'
+    correct: true
+    feedback_md: Right. Adding gives $2x = 8$, so $x = 4$, and then $y = 3$.
+  - id: reports-y
+    text_md: '$x = 3$'
+    correct: false
+    feedback_md: That is the value of $y$. Check which unknown the question asks for.
+  - id: forgets-divide
+    text_md: '$x = 8$'
+    correct: false
+    feedback_md: Adding gives $2x = 8$. Divide by 2 to find $x$.
+recap_md: >-
+  To eliminate an unknown, scale the equations until its coefficients are equal and opposite, then add them.
+  Solve for the remaining unknown, substitute back, and check both equations. Adding before the coefficients
+  match leaves both unknowns in place.

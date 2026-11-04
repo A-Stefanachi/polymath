@@ -1,0 +1,101 @@
+# Concept primer for math.alg.exponents-roots (00a K6, BL-0203). Ready for the founder's review in the console (00a K9).
+# Validate: python3 reference/validate_lessons.py
+schema_version: 1
+skill_key: math.alg.exponents-roots
+version: 1
+authoring_status: ready
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-04'
+  llm_assistance:
+    used: true
+    model: claude-opus-5-5
+    prompt_version: lesson_assist_v1
+est_seconds: 100
+screens:
+- id: why
+  title: Why this matters
+  body_md: >-
+    Engineering numbers are written with powers of ten ($4.7 \times 10^{3}\ \Omega$), power formulas contain
+    squares ($P = I^2 R$), and roots undo them ($I = \sqrt{P/R}$). A few exponent rules let you simplify these
+    expressions instead of multiplying everything out.
+- id: idea
+  title: The rules
+  body_md: >-
+    For the same base $a$:
+
+
+    - Multiply powers: add the exponents. $a^m \times a^n = a^{m+n}$
+
+
+    - Divide powers: subtract the exponents. $a^m / a^n = a^{m-n}$
+
+
+    - Power of a power: multiply the exponents. $(a^m)^n = a^{mn}$
+
+
+    - $a^0 = 1$, $a^{-n} = 1/a^n$ and $a^{1/2} = \sqrt{a}$.
+
+
+    Squaring means multiplying a number by itself: $5^2 = 5 \times 5 = 25$, not $5 \times 2$.
+- id: model
+  title: How to use it
+  body_md: >-
+    Simplify step by step, one rule per line:
+
+
+    $$\frac{(2^3)^2}{2^4} = \frac{2^6}{2^4} = 2^2 = 4$$
+
+
+    Check by working it out directly: $(2^3)^2 = 8^2 = 64$ and $2^4 = 16$, and $64/16 = 4$.
+
+
+    The same rules handle prefixes: $10^{3} \times 10^{-3} = 10^{0} = 1$, so a kilo-ohm times a milliampere
+    gives volts with no factor left over.
+misconception:
+  tag: mc.adds-power-of-power
+  wrong_idea_md: A power of a power adds the exponents, so $(2^3)^2 = 2^5$.
+  why_tempting_md: >-
+    Adding exponents is the first rule most people learn, for $a^m \times a^n$, and the two expressions look
+    alike.
+  correct_idea_md: >-
+    $(2^3)^2 = 2^3 \times 2^3 = 2^{3+3} = 2^6 = 64$, not $2^5 = 32$. A power of a power multiplies the exponents;
+    adding is for multiplying two powers of the same base.
+checks:
+- id: power-of-power
+  stem_md: Simplify $(10^2)^3$.
+  options:
+  - id: correct
+    text_md: '$10^6$'
+    correct: true
+    feedback_md: Right. A power of a power multiplies the exponents, $2 \times 3 = 6$.
+  - id: adds
+    text_md: '$10^5$'
+    correct: false
+    feedback_md: This adds the exponents. Write it out as $10^2 \times 10^2 \times 10^2$ and count the factors of 10.
+  - id: subtracts
+    text_md: '$10^{-1}$'
+    correct: false
+    feedback_md: Subtracting exponents is for dividing powers. Here a power is raised to a power.
+- id: divide
+  stem_md: What is $3^5 / 3^3$?
+  options:
+  - id: correct
+    text_md: '$9$'
+    correct: true
+    feedback_md: Right. Subtract the exponents to get $3^2 = 9$.
+  - id: adds-on-division
+    text_md: '$6561$'
+    correct: false
+    feedback_md: This is $3^8$, which adds the exponents. Dividing powers of the same base subtracts them.
+  - id: square-as-double
+    text_md: '$6$'
+    correct: false
+    feedback_md: The exponent rule gives $3^2$, but squaring means $3 \times 3$, not $3 \times 2$.
+recap_md: >-
+  Same base: multiply powers by adding exponents, divide by subtracting, and raise a power to a power by
+  multiplying exponents, so $(2^3)^2 = 2^6$, not $2^5$. A negative exponent means one over the power, and the
+  exponent $\frac{1}{2}$ is a square root.

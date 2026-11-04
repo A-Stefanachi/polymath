@@ -1,0 +1,106 @@
+# Concept primer for elec.dc.power-energy (00a K6, BL-0203). Ready for the founder's review in the console (00a K9).
+# Validate: python3 reference/validate_lessons.py
+schema_version: 1
+skill_key: elec.dc.power-energy
+version: 1
+authoring_status: ready
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-04'
+  llm_assistance:
+    used: true
+    model: claude-opus-5-5
+    prompt_version: lesson_assist_v1
+est_seconds: 100
+screens:
+- id: why
+  title: Why this matters
+  body_md: >-
+    Power tells you whether a part will overheat: a common small resistor is rated for 0.25 W, and more than
+    that makes it run hot. Energy tells you how long a battery will last. Both come from the voltage and
+    current you already know how to find.
+- id: idea
+  title: The idea
+  body_md: >-
+    **Power** is the rate at which energy is delivered, in watts (W):
+
+
+    $$P = VI$$
+
+
+    For a resistor, Ohm's law gives two more forms that always agree: $P = I^2 R = V^2 / R$.
+
+
+    **Energy** is power over time, in joules (J):
+
+
+    $$E = Pt$$
+
+
+    with $t$ in seconds. One joule is one watt for one second.
+- id: model
+  title: How to use it
+  body_md: >-
+    A 12 V supply feeds a load drawing 0.25 A for 10 min.
+
+
+    1. Power: $P = 12 \times 0.25 = 3\ \text{W}$.
+
+
+    2. Time in seconds: $t = 10 \times 60 = 600\ \text{s}$.
+
+
+    3. Energy: $E = 3 \times 600 = 1800\ \text{J}$.
+
+
+    Batteries are often rated in watt-hours: $1\ \text{Wh} = 3600\ \text{J}$, so this is 0.5 Wh. Give the
+    unit the question asks for.
+
+
+    Sense check for a resistor: more resistance across a fixed voltage means less current, so less power.
+misconception:
+  tag: mc.energy-stops-at-power
+  wrong_idea_md: Power and energy are the same thing, so a 3 W load "uses 3 J" however long it runs.
+  why_tempting_md: >-
+    Both describe how much electricity something uses, and everyday speech often mixes the two words.
+  correct_idea_md: >-
+    Power is a rate, joules per second. Energy is power times time. A 3 W load running for 600 s uses
+    $3 \times 600 = 1800$ J; run it twice as long at the same power and it uses twice the energy.
+checks:
+- id: resistor-power
+  stem_md: A 1 k$\Omega$ resistor is connected across 10 V. How much power does it dissipate?
+  options:
+  - id: correct
+    text_md: 0.1 W
+    correct: true
+    feedback_md: Right. $P = V^2/R = 100 / 1000 = 0.1$ W. Or $I = 10$ mA and $P = VI = 10 \times 0.01$.
+  - id: stops-at-current
+    text_md: 0.01 W
+    correct: false
+    feedback_md: The number 0.01 is the current in amperes. Multiply it by the voltage to get the power.
+  - id: multiplies-by-r
+    text_md: 100 000 W
+    correct: false
+    feedback_md: This is $V^2 \times R$. The resistance goes underneath, $V^2 / R$.
+- id: energy
+  stem_md: A load takes 2 W for 5 min. How much energy does it use?
+  options:
+  - id: correct
+    text_md: 600 J
+    correct: true
+    feedback_md: Right. 5 min is 300 s, and $2 \times 300 = 600$ J.
+  - id: minutes
+    text_md: 10 J
+    correct: false
+    feedback_md: This multiplies by minutes. A joule is a watt for one second, so convert to 300 s first.
+  - id: stops-at-power
+    text_md: 2 J
+    correct: false
+    feedback_md: 2 is the power in watts. Energy also depends on how long the load runs.
+recap_md: >-
+  Power is $P = VI$ in watts; for a resistor also $I^2 R$ and $V^2 / R$. Energy is power times time, $E = Pt$, in
+  joules when $t$ is in seconds. Power is a rate and energy is an amount: the same 3 W for twice as long uses
+  twice the energy.

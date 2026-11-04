@@ -1,0 +1,132 @@
+# Concept primer for elec.dc.kirchhoff-laws (00a K6, BL-0203). Ready for the founder's review in the console (00a K9).
+# Conceptual skill: fuller treatment with a mental model, figure and prediction checks (doc 05 section 5.6).
+# Validate: python3 reference/validate_lessons.py
+schema_version: 1
+skill_key: elec.dc.kirchhoff-laws
+version: 1
+authoring_status: ready
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-04'
+  llm_assistance:
+    used: true
+    model: claude-opus-5-5
+    prompt_version: lesson_assist_v1
+est_seconds: 150
+screens:
+- id: why
+  title: Why this matters
+  body_md: >-
+    Ohm's law describes one resistor. Kirchhoff's two laws tie a whole circuit together: one for the
+    currents meeting at a node, one for the voltages around a loop. Nodal analysis, later in this course, is
+    built on them, and so is every circuit simulator.
+- id: kcl
+  title: The current law (KCL)
+  body_md: >-
+    A node is a point where branches meet. Charge cannot pile up at a node, so
+
+
+    $$\text{total current in} = \text{total current out}$$
+
+
+    Arrows on a diagram show the direction you assume for each current. Sort the branches by their arrows
+    before you add anything: in the figure, $I_1 + I_2 = I_3 + I_4$.
+
+
+    With $I_1 = 30$ mA and $I_2 = 20$ mA in, and $I_3 = 10$ mA out, $I_4 = 30 + 20 - 10 = 40$ mA out.
+
+
+    If an answer comes out negative, the current flows against the arrow you drew. The arrow was a guess;
+    the sign tells you the real direction.
+  figure:
+    alt: Node N with four branches. Arrows show I1 entering from the left and I2 entering from the top; I3 leaves to the right and I4 leaves downwards.
+    svg: >-
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 160" width="220" height="160">
+      <g fill="none" stroke="currentColor" stroke-width="3">
+      <path d="M20 80 H200 M110 10 V150"/>
+      </g>
+      <circle cx="110" cy="80" r="5" fill="currentColor"/>
+      <g fill="currentColor">
+      <path d="M72 80 l-10 -6 v12 z"/>
+      <path d="M110 52 l-6 -10 h12 z"/>
+      <path d="M162 80 l-10 -6 v12 z"/>
+      <path d="M110 122 l-6 -10 h12 z"/>
+      </g>
+      <g font-family="sans-serif" font-size="14" fill="currentColor">
+      <text x="38" y="72">I1</text>
+      <text x="118" y="36">I2</text>
+      <text x="168" y="72">I3</text>
+      <text x="118" y="130">I4</text>
+      <text x="118" y="74">N</text>
+      </g>
+      </svg>
+- id: kvl
+  title: The voltage law (KVL)
+  body_md: >-
+    Think of voltage as height. Walk round any closed loop and you end at the height where you started, so
+    the rises and drops along the way add to zero.
+
+
+    In a single loop with one source, the source's voltage equals the sum of the drops across the parts:
+
+
+    $$V_S = V_1 + V_2$$
+
+
+    A 9 V battery driving two resistors in series, with 4 V across the first, leaves $9 - 4 = 5$ V across the
+    second.
+
+
+    Both laws need a consistent direction: decide which way each current flows and which way you walk the
+    loop, then keep to it.
+misconception:
+  tag: mc.kcl-adds-all
+  wrong_idea_md: At a node, add up all the known currents to get the unknown one.
+  why_tempting_md: >-
+    The law is often quoted as "the currents at a node add to zero", and adding sounds like adding everything
+    you are given.
+  correct_idea_md: >-
+    Direction matters. Currents in go on one side, currents out on the other: $I_1 + I_2 = I_3 + I_4$. With
+    30 mA and 20 mA in and 10 mA out, $I_4 = 50 - 10 = 40$ mA out, not $30 + 20 + 10 = 60$ mA.
+checks:
+- id: node
+  stem_md: >-
+    Three wires meet at a node. 5 mA flows in on the first wire and 2 mA flows out on the second. What does
+    the third wire carry?
+  options:
+  - id: correct
+    text_md: 3 mA out of the node
+    correct: true
+    feedback_md: Right. In equals out, so $5 = 2 + I$, and $I = 3$ mA flowing out.
+  - id: adds-all
+    text_md: 7 mA out of the node
+    correct: false
+    feedback_md: This adds both currents. The 2 mA already leaves, so it goes on the out side with the unknown.
+  - id: sign-flipped
+    text_md: 3 mA into the node
+    correct: false
+    feedback_md: The size is right but the direction is not. More flows in than out so far, so the rest must leave.
+- id: loop
+  stem_md: >-
+    A 12 V source drives a single loop through two resistors. The voltage across the first resistor is 5 V.
+    What is the voltage across the second?
+  options:
+  - id: correct
+    text_md: 7 V
+    correct: true
+    feedback_md: Right. The drops round the loop add up to the source, so $12 - 5 = 7$ V.
+  - id: full-source
+    text_md: 12 V
+    correct: false
+    feedback_md: Each part does not get the full source voltage. The drops share it, and together they equal 12 V.
+  - id: adds
+    text_md: 17 V
+    correct: false
+    feedback_md: The drops cannot add to more than the source. Round the loop, $V_S = V_1 + V_2$.
+recap_md: >-
+  KCL: at a node, total current in equals total current out, so sort the branches by direction before you add.
+  KVL: round any closed loop, the rises and drops add to zero, so in a single loop the source voltage equals the
+  sum of the drops. A negative answer means the current flows against its arrow.
