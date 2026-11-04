@@ -11,7 +11,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "e2e:auth": "next build && playwright test",
-    "e2e:m0": "playwright test -c playwright.m0.config.ts"
+    "e2e:a11y": "next build && playwright test --project=a11y",
+    "e2e:m0":"playwright test -c playwright.m0.config.ts"
   },
   "dependencies": {
     "@fontsource/atkinson-hyperlegible-mono": "5.3.0",
