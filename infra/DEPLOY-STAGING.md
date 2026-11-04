@@ -18,7 +18,7 @@ Done by the build agent at the founder's request, through the Supabase managemen
 | Custom email templates (six-digit code in the email) | blocked: the Free plan refuses template changes with the built-in mailer. Needs custom SMTP (step 3 below). Until then staging sends Supabase's default email: a link only, which signs in in the browser that requested it (`/auth/callback?code=...`) |
 | GitHub environment `staging` (secrets for the deploy workflow) | open: no tool in the agent session can write repository secrets. Until it exists, deploy-staging skips and staging is deployed with `vercel deploy --prod` from a checkout |
 
-Left for the founder: the GitHub environment (step 2), custom SMTP and then the templates (step 3), and the iPhone check (`infra/VERIFIED.md`). Once the founder's account exists, set `AUTH_SIGNUP_ENABLED` to `false` on Vercel and turn off "Allow new users to sign up" in Supabase.
+Parked by the founder (4 Nov 2026): custom SMTP with the email templates, and the GitHub environment for automatic deploys. Until they are picked up, the build agent deploys staging by hand after each merge: new migrations through the management API (recorded in `supabase_migrations.schema_migrations`), then `vercel deploy --prod` from a `git archive` of the commit, then the `/api/v1/health` version check. No sign-in emails are needed for now. Left for the founder later: the GitHub environment (step 2), custom SMTP and then the templates (step 3), and the iPhone check (`infra/VERIFIED.md`). Once the founder's account exists, set `AUTH_SIGNUP_ENABLED` to `false` on Vercel and turn off "Allow new users to sign up" in Supabase.
 
 ## One-time setup (founder)
 
