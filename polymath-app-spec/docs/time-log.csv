@@ -51,3 +51,4 @@ BL-0045,2026-11-04,2026-11-04,0,1,New-skill loop gap and fresh-variant item sele
 BL-0048,2026-11-04,2026-11-04,0,1.5,Graph read API (listSkills, getSkill, getGraph, getFrontier, getReviewQueue) by agent (autoswe direct track)
 BL-0046,2026-11-04,2026-11-04,0,2,Daily new-skill cap, break suggestion, backlog flag and packer inputs by agent (autoswe direct track)
 BL-0191,2026-11-04,2026-11-04,0,0.7,dry_run session preview on POST /sessions/build by agent (autoswe direct track)
+BL-0032,2026-11-04,2026-11-04,,90,M0 exit test on staging (pnpm e2e:m0) plus the missing content_postprocess G2 fuzz handler and the first content load to staging by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)

@@ -21,6 +21,8 @@ Done by the build agent at the founder's request, through the Supabase managemen
 
 Parked by the founder (4 Nov 2026): the GitHub environment for automatic deploys. Until it is picked up, the build agent deploys staging by hand after each merge: new migrations through the management API (recorded in `supabase_migrations.schema_migrations`), then `vercel deploy --prod` from a `git archive` of the commit, then the `/api/v1/health` version check. Left for the founder: the GitHub environment (step 2) and the iPhone check (`infra/VERIFIED.md`), now possible with the code email.
 
+Content on staging (BL-0032, 4 Nov 2026): the cloud session cannot reach staging's Postgres, so content runs through the pipeline on the local stack (`pnpm content:sync`, the worker's `content_postprocess` fuzz job, a second sync, then `pregenerate_items`), and the resulting rows are copied unchanged to staging through the management API (`pg_dump --data-only` of modules, skills, skill_edges, content_sync_runs, jobs, item_templates, items and item_secrets). Status is never set by hand. Once the laptop worker runs against staging, `pnpm content:sync` with `--allow-remote` from the laptop replaces this. The M0 exit test is `pnpm e2e:m0`. It needs `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SECRET_KEY` for staging, makes a throwaway learner and deletes it at the end.
+
 ## One-time setup (founder)
 
 ### 1. Vercel project
