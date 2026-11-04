@@ -63,10 +63,13 @@ describe("planner on the real content", () => {
     const ex = existingFrom(loaded);
     const row = ex.templates.find((t) => t.key === key);
     if (!row) throw new Error("fixture row missing");
-    // No REVIEW-LOG row is done today, so the rule demotes even a verified row: nothing is verified by hand.
+    // The real file carries a review for its current hash and a done REVIEW-LOG row, so a verified row is left
+    // as it is. Demotion without a valid review is covered by the status-rule tests above.
     row.status = "verified";
+    row.fuzzPassed = true;
     const p = buildPlan(loaded, ex);
-    expect(p.templates.changes.map((c) => [c.row.key, c.kind, c.row.status])).toEqual([[key, "updated", "needs_human_review"]]);
+    expect(p.templates.changes).toEqual([]);
+    expect(p.templates.needsJob).toEqual([]);
     row.sha256 = "different";
     const q = buildPlan(loaded, ex);
     expect(q.templates.needsJob).toEqual([key]);

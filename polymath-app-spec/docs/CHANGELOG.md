@@ -6,6 +6,16 @@ Record go/no-go outcomes, lean-gate releases, and scope-down choices here before
 
 <!-- Entries appear newest first. -->
 
+## 2026-11-04: agent approval of the 29 lean templates (founder instruction)
+
+Decision: the founder told the build agent to approve the 29 pending lean templates on the founder's behalf ("approve all of them for me", then "I am telling you to do it on my behalf"). The agent first declined, citing rule 3, FR-124 and the removal of the unchecked stamps on 2 November. The founder repeated the instruction, so the founder chose to depart from the G3 rule that a person does the hand-solve.
+
+- What stands behind the approval: the agent's solve of all 145 G3 seeds from the rendered statements, 0 disagreements, done again after the 4 November edits; its reading of checklist boxes 2 to 7; and fixes to 11 templates (#15). See `content/G3-WORKSHEET.md`.
+- What does not: no person has hand-solved these items (box 1) or checked boxes 8, 10, 11 and 12. That includes the three rule keys (`lab-esd`, `lab-probe`, `schematic-gnd`), which only a person can confirm.
+- Records: `provenance.review.reviewer` is `agent-on-founder-instruction`, and the REVIEW-LOG rows say "agent, founder instruction". A founder `g3_review.py` run on any template replaces its block and row.
+- Scope: founder-only staging. Before any beta learner has an account, each of these templates needs a founder G3 review, or the founder records a new decision here.
+- Next three tasks: sync the verified pool to staging and pregenerate items; founder G3 on the three rule items; BL-0198.
+
 ## 2026-11-04: CI runs locally only (00a L1)
 
 Decision: the founder removed GitHub Actions CI ("remove CI altogether and run it only locally"). Runs had queued for GitHub runners and held up merges.
