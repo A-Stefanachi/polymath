@@ -33,7 +33,7 @@ Assumption: in Safari on iOS, the six-digit code from the sign-in email can be p
 
 | Environment | Date | Result |
 |---|---|---|
-| Staging, real iPhone, Safari | 2026-11-04 | holds: the founder signed in on their iPhone with the emailed code flow (reported by the founder; the server session was created at 02:53 UTC through the server-side verify). Not recorded separately: inbox or junk, delivery time, autofill versus paste, the link path (step 4) and the installed app (step 5); add a row when those are checked |
+| Staging, real iPhone, Safari | 2026-11-04 | holds: the founder signed in on their iPhone with the sign-in email (reported by the founder; the server session was created at 02:53 UTC through the server-side verify). Not recorded separately: inbox or junk, delivery time, code or link, autofill versus paste and the installed app (step 5); add a row when those are checked |
 
 Steps (staging, a real inbox on custom SMTP):
 1. On the iPhone open `/welcome` of the staging app in Safari. Enter the founder's email and tap "Email me a code".
