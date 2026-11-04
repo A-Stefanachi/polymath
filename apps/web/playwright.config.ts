@@ -49,6 +49,11 @@ export default defineConfig({
       testMatch: "onboarding.spec.ts",
       use: { baseURL: `http://127.0.0.1:${signupPort}`, timezoneId: "Europe/Rome" },
     },
+    {
+      name: "today",
+      testMatch: "today.spec.ts",
+      use: { baseURL: `http://127.0.0.1:${signupPort}`, timezoneId: "Europe/Rome" },
+    },
     { name: "consent", testMatch: "consent.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
     { name: "demo-item", testMatch: "demo-item.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
     { name: "ui-gallery", testMatch: "ui-gallery.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
