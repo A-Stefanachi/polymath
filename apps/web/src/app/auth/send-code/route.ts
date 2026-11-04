@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { appUrl } from "@/lib/auth/origin";
 import { parseEmail, signupEnabled, withMinimumDuration } from "@/lib/auth/validate";
 import { logger } from "@/lib/logger";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -17,7 +18,10 @@ export async function POST(request: Request) {
     const supabase = await createSupabaseServerClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: signupEnabled() },
+      // Where Supabase sends the browser after its own verify step: used by the default email
+      // template (staging on the built-in mailer, which allows no custom template). Supabase only
+      // honours it when the URL is on the project's redirect allow-list; otherwise it uses site_url.
+      options: { shouldCreateUser: signupEnabled(), emailRedirectTo: appUrl(request, "/auth/callback").toString() },
     });
     // The address is never logged (rule 2.5): only the outcome class.
     if (!error) {
