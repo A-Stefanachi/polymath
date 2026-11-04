@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { deleteUserByEmail } from "./support/mail";
-import { signInAs } from "./support/signin";
+import { acceptConsent, signInAs } from "./support/signin";
 
 // BL-0061 acceptance (doc 09 S14, S15, S17): /map, /progress and /review. The three screens read the app's own API
 // from the browser, so the scenarios answer those documents with fixed JSON (page.route); the server side of each
@@ -292,6 +292,13 @@ test("review: counts, due rows and the upcoming list; Not now changes nothing; n
 
 test("review: Practise now builds a session for that skill and opens it; an open session is explained", async ({ page }) => {
   await signedIn(page, "review-start");
+  // /session/[id] gates on consent and onboarding (BL-0060), so this learner completes both for real.
+  await acceptConsent(page);
+  await page.getByLabel("I am 18 or older").check();
+  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Finish" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "What fits your time now?" })).toBeVisible();
   await answer(page, "**/api/v1/graph", GRAPH);
   await answer(page, /\/api\/v1\/review-queue/, QUEUE);
   let body: Record<string, unknown> = {};

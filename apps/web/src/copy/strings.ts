@@ -326,6 +326,7 @@ export const runner = {
   endConfirmNo: "Keep going",
   ending: "Ending",
   endError: "We could not end the session. Try again.",
+  nextError: "We could not save your progress on this step. Try again.",
   report: "Report a problem",
   reportTitle: "What is wrong with this question?",
   reportReasons: {
@@ -399,6 +400,7 @@ export const lists = {
   // Skill-state words, doc 09 section 3.2.
   stateReviewing: "Reviewing",
   stateReviewingApplied: "Reviewing: needs one more applied problem",
+  statePlacementGrace: "Seems solid (to re-check)",
   stateLearning: "Learning",
   stateReady: "Ready to start",
   stateLocked: "Locked",
@@ -442,6 +444,7 @@ export const skillMap = {
   whyLockedFailed: "Could not load the reasons. Try again.",
   whyLockedNone: "Nothing blocks this skill.",
   reviewingNote: "Reviewing: your recall is being checked again over the next days.",
+  appliedNote: "You have the recall evidence. One worked problem, a debugging case or a checkpoint item completes it.",
   practiseThis: "Practise this",
   practiseUnavailable: "Practice opens when the prerequisites above are solid.",
   stubNote: "Content for this skill is not written yet.",

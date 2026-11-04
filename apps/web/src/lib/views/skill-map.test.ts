@@ -74,6 +74,24 @@ describe("buildMapSkills", () => {
   });
 });
 
+describe("state words from needs_applied and placement_grace (00a J9, doc 09 section 3.2)", () => {
+  const reviewing = (flags: { needs_applied?: boolean; placement_grace?: boolean }) =>
+    buildMapSkills({ nodes: [skill("elec.a.rev", { mastery_state: "reviewing", tier_attained: "L1", ...flags })], edges: [] }, { available: [], in_progress: [] }, NOW)[0];
+  it("reads 'Reviewing: needs one more applied problem' when needs_applied is true", () => {
+    expect(reviewing({ needs_applied: true })?.word).toBe("Reviewing: needs one more applied problem");
+  });
+  it("reads 'Seems solid (to re-check)' and shows no tier for a placement-grace skill", () => {
+    const s = reviewing({ placement_grace: true, needs_applied: true });
+    expect(s?.word).toBe("Seems solid (to re-check)");
+    expect(s?.tier).toBeNull();
+  });
+  it("keeps the plain 'Reviewing' word and the tier without either flag", () => {
+    const s = reviewing({ needs_applied: false, placement_grace: false });
+    expect(s?.word).toBe("Reviewing");
+    expect(s?.tier).toBe("L1");
+  });
+});
+
 describe("trailOrder", () => {
   const skills = buildMapSkills(graph, { available: [], in_progress: [] }, NOW);
   it("puts prerequisites before the skills that need them and keeps every skill", () => {

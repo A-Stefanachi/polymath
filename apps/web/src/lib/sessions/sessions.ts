@@ -19,7 +19,7 @@ import {
   type SummaryRow,
   type TaskRow,
 } from "@/server/privileged/session-store";
-import { assignItems, BuildInputError, buildPackSetup, plannedMinutes, planSession, sessionTypeFor } from "./builder.ts";
+import { assignItems, BuildInputError, buildPackSetup, isDueForReview, plannedMinutes, planSession, sessionTypeFor } from "./builder.ts";
 import { appliedGapSkills, BREAK_AFTER_MIN } from "./pack-inputs.ts";
 
 type BuildSessionRequest = components["schemas"]["BuildSessionRequest"];
@@ -153,8 +153,13 @@ export async function buildSession(ctx: ApiContext, deps: SessionDeps = defaultS
       params: state.params,
       ...(deps.backlogThresholdMin === undefined ? {} : { backlogThresholdMin: deps.backlogThresholdMin }),
     });
-    if (body.skill_focus !== undefined && !computeFrontier(setup.graph, setup.states, state.params).includes(body.skill_focus)) {
-      throw new BuildInputError("skill_focus", "the skill is not on the frontier or in progress");
+    // A focus is the frontier, a skill in progress, or (00a J9, doc 09 S17 AC 2) a skill due for review.
+    const focus = body.skill_focus;
+    if (focus !== undefined) {
+      const dueForReview = snapshot.states.some((s) => s.skillKey === focus && isDueForReview(s, now));
+      if (!dueForReview && !computeFrontier(setup.graph, setup.states, state.params).includes(focus)) {
+        throw new BuildInputError("skill_focus", "the skill is not on the frontier, in progress or due for review");
+      }
     }
     plan = planSession(setup, type, body.context, body.available_minutes, state.params);
   } catch (error) {

@@ -25,8 +25,8 @@ export async function startSession(body: StartBody): Promise<StartResult> {
   const problem = (await response.json().catch(() => ({}))) as { code?: unknown };
   if (problem.code === "open_session_exists") return { ok: false, reason: "open" };
   if (problem.code === "item_pool_empty") return { ok: false, reason: "pool" };
-  // buildSession accepts skill_focus only for a skill on the frontier or in progress (BL-0050), so a due review
-  // of a skill that is already past that gets a 400. Say so instead of a generic failure.
+  // buildSession accepts skill_focus for a skill on the frontier, in progress or due for review (00a J9); any
+  // other skill gets a 400. Say so instead of a generic failure.
   if (problem.code === "validation_failed" && body.skill_focus !== undefined) return { ok: false, reason: "focus" };
   return { ok: false, reason: "failed" };
 }

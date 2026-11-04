@@ -9,6 +9,7 @@ import {
   DEFAULT_PARAMS,
   frontierScores,
   fromSkillStateColumns,
+  inPlacementGrace,
   lockedReasons,
   type FsrsPort,
   type PackInput,
@@ -18,7 +19,8 @@ import {
 import type { components } from "@polymath/shared-types";
 import { ApiError } from "@/lib/api/errors";
 import { json, type ApiContext } from "@/lib/api/route";
-import { sharedFsrsPort } from "@/lib/state/apply-attempt.ts";
+import { appliedGapSkills } from "@/lib/sessions/pack-inputs.ts";
+import { defaultStateDeps, sharedFsrsPort, type StateDeps } from "@/lib/state/apply-attempt.ts";
 import { createGraphStore, type GraphEdgeRow, type GraphSkillRow, type GraphSnapshot, type GraphStateRow, type GraphStore } from "@/server/privileged/graph-store";
 import { privilegedDb } from "@/server/privileged/db";
 
@@ -36,6 +38,8 @@ export type GraphDeps = {
   fsrs: () => Promise<FsrsPort>;
   params: SchedulerParams;
   now: () => Date;
+  /** Reads the attempt history behind `needs_applied` (BL-0184); without it the flag is false. */
+  state?: () => Promise<StateDeps>;
 };
 
 export const defaultGraphDeps = (): GraphDeps => ({
@@ -43,6 +47,7 @@ export const defaultGraphDeps = (): GraphDeps => ({
   fsrs: sharedFsrsPort,
   params: DEFAULT_PARAMS,
   now: () => new Date(),
+  state: defaultStateDeps,
 });
 
 const NODE_CODES = ["math", "phys", "sw", "ml", "elec", "sig", "ctl", "mech", "sens", "net", "matl", "sys", "sec", "econ", "prof", "def", "rf", "robo", "cv", "pwr"];
@@ -95,6 +100,9 @@ type View = {
   retrievability: Map<string, number>;
   graph: SkillGraph;
   snapshots: Record<string, SkillStateSnapshot>;
+  /** `reviewing` skills whose only open mastery condition is the applied attempt (BL-0184). */
+  appliedGap: ReadonlySet<string>;
+  params: SchedulerParams;
 };
 
 function retrievabilityOf(fsrs: FsrsPort, st: GraphStateRow, now: Date): number | undefined {
@@ -117,7 +125,7 @@ function retrievabilityOf(fsrs: FsrsPort, st: GraphStateRow, now: Date): number 
   );
 }
 
-async function load(deps: GraphDeps, user: string): Promise<View> {
+async function load(deps: GraphDeps, user: string, withApplied = true): Promise<View> {
   const now = deps.now();
   const [snap, fsrs] = await Promise.all([deps.store.snapshot(user), deps.fsrs()]);
   snap.skills.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0)); // code-point order, as the cursor compares
@@ -159,16 +167,21 @@ async function load(deps: GraphDeps, user: string): Promise<View> {
       min_tier: e.minTier as Tier,
     })),
   };
-  return { snap, skillByKey, stateByKey, retrievability, graph, snapshots };
+  const appliedGap = withApplied && deps.state ? await appliedGapSkills(user, { skills: snap.skills, states: snap.states, timezone: snap.timezone }, await deps.state()) : new Set<string>();
+  return { snap, skillByKey, stateByKey, retrievability, graph, snapshots, appliedGap, params: deps.params };
 }
 
 const iso = (d: Date | null): string | null => (d === null ? null : d.toISOString());
 
 function stateView(v: View, key: string): StateView {
   const st = v.stateByKey.get(key);
-  if (!st) return { mastery_state: "unseen" };
+  if (!st) return { mastery_state: "unseen", needs_applied: false, placement_grace: false };
   const r = v.retrievability.get(key);
+  const snapshot = v.snapshots[key];
   return {
+    needs_applied: v.appliedGap.has(key),
+    // Same test as the frontier's grace (00a G1); a skill in grace never shows a tier (doc 09 section 3.2).
+    placement_grace: snapshot !== undefined && inPlacementGrace(snapshot, v.params),
     mastery_state: st.masteryState as StateView["mastery_state"],
     elo: st.elo,
     due: iso(st.due),
@@ -295,7 +308,7 @@ export type FrontierView = Frontier & { locked: LockedSkill[] };
  * `Frontier` response schema; `getFrontier` strips it and the UI reads the reasons from `getSkill.blocked_by`.
  */
 export async function frontierView(deps: GraphDeps, user: string): Promise<FrontierView> {
-  const v = await load(deps, user);
+  const v = await load(deps, user, false);
   const learning = Object.keys(v.snapshots).filter((k) => v.snapshots[k]?.mastery_state === "learning" && v.graph.skills[k]?.status !== "stub");
   const frontier = computeFrontier(v.graph, v.snapshots, deps.params).filter((k) => !learning.includes(k));
   const nodeMinutes: Record<string, number> = {};
@@ -332,7 +345,7 @@ export async function getReviewQueue(ctx: ApiContext, deps: GraphDeps = defaultG
   const user = userId(ctx);
   const q = query(ctx, ["horizon_h"]);
   const horizonH = intParam(q, "horizon_h", 0, 168, 24);
-  const v = await load(deps, user);
+  const v = await load(deps, user, false);
   const now = deps.now();
   const horizon = new Date(now.getTime() + horizonH * HOUR_MS);
   const rows = [...v.stateByKey.values()]

@@ -105,7 +105,29 @@ export type ReplayReview = { rating: 1 | 2 | 3 | 4; reviewedAt: Date; allDispute
 /** tierTarget is read-only context (skills.tier_target) and is ignored on write. */
 export type SkillWrite = SkillRow;
 
+/** A session task with its session's status and any stored outcome (completeTask, 00a J9). */
+export type TaskLock = {
+  id: string;
+  sessionId: string;
+  sessionStatus: string;
+  position: number;
+  taskKind: string;
+  skillKey: string | null;
+  projectStepKey: string | null;
+  itemId: string | null;
+  status: string;
+  estSeconds: number;
+  reason: string | null;
+  assessmentKind: string | null;
+  /** `sessions.plan.task_outcomes[task id]`, null when none is stored. */
+  outcome: Record<string, unknown> | null;
+};
+
 export type StateTx = {
+  /** The user's own task, locked with its session row; null for another user's or a missing task. */
+  lockTask(userId: string, taskId: string): Promise<TaskLock | null>;
+  /** Closes a task and stores the outcome under `sessions.plan.task_outcomes` (a skip is not an attempt, 06 section 10). */
+  closeTask(taskId: string, sessionId: string, status: "done" | "skipped", at: Date, outcome: Record<string, unknown>): Promise<void>;
   /** Compare-and-set of attempts.state_applied_at (00a H15): the idempotency guard. */
   claim(attemptId: string, now: Date): Promise<ClaimResult>;
   /** Creates the skill_state row when missing, then returns it locked for the transaction. */
@@ -177,6 +199,41 @@ export function createStateStore(sql: Sql): StateStore {
         const db = tx as unknown as Sql;
         const json = (v: unknown) => db.json(v as Parameters<Sql["json"]>[0]);
         const api: StateTx = {
+          async lockTask(userId, taskId) {
+            const r = (
+              await db<Row[]>`
+                select st.id, st.session_id, s.status::text as session_status, st.position, st.task_kind::text as task_kind,
+                       st.skill_key, st.project_step_key, st.item_id, st.status::text as status, st.est_seconds, st.reason,
+                       st.assessment_kind, s.plan -> 'task_outcomes' -> st.id::text as outcome
+                  from public.session_tasks st join public.sessions s on s.id = st.session_id
+                 where st.id = ${taskId} and st.user_id = ${userId} and s.user_id = ${userId}
+                   for update of st, s`
+            )[0];
+            if (!r) return null;
+            const outcome = r["outcome"];
+            return {
+              id: String(r["id"]),
+              sessionId: String(r["session_id"]),
+              sessionStatus: String(r["session_status"]),
+              position: num(r["position"]),
+              taskKind: String(r["task_kind"]),
+              skillKey: (r["skill_key"] as string | null) ?? null,
+              projectStepKey: (r["project_step_key"] as string | null) ?? null,
+              itemId: (r["item_id"] as string | null) ?? null,
+              status: String(r["status"]),
+              estSeconds: num(r["est_seconds"]),
+              reason: (r["reason"] as string | null) ?? null,
+              assessmentKind: (r["assessment_kind"] as string | null) ?? null,
+              outcome: typeof outcome === "object" && outcome !== null ? (outcome as Record<string, unknown>) : null,
+            };
+          },
+          async closeTask(taskId, sessionId, status, at, outcome) {
+            await db`update public.session_tasks set status = ${status}::public.session_task_status,
+              completed_at = ${at.toISOString()}::timestamptz where id = ${taskId}`;
+            await db`update public.sessions set plan = jsonb_set(plan, '{task_outcomes}',
+              coalesce(plan -> 'task_outcomes', '{}'::jsonb) || jsonb_build_object(${taskId}::text, ${json(outcome)}::jsonb), true)
+              where id = ${sessionId}`;
+          },
           async claim(attemptId, now) {
             const rows = await db<Row[]>`
               with c as (

@@ -33,7 +33,7 @@ export function SkillDetail({
       <p>
         <StatusChip state={skill.state} label={skill.word} />
       </p>
-      {skill.state === "reviewing" ? <p>{t.reviewingNote}</p> : null}
+      {skill.state === "reviewing" ? <p>{skill.needsApplied ? t.appliedNote : t.reviewingNote}</p> : null}
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
         <dt className="font-semibold">{t.tierReached}</dt>
         <dd>{skill.tier ?? t.tierNone}</dd>

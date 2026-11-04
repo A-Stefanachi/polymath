@@ -1615,7 +1615,7 @@ export interface components {
                 project_step_key?: string | null;
                 est_seconds: number;
                 /** @enum {string|null} */
-                reason?: "due_review" | "continue" | "frontier" | "interleave" | "checkpoint" | "project" | null;
+                reason?: "due_review" | "continue" | "frontier" | "interleave" | "checkpoint" | "project" | "applied_gap" | null;
                 /** @enum {string|null} */
                 assessment_kind?: "diagnostic" | "module_end" | "periodic" | "delayed" | "transfer" | null;
             }[];
@@ -1632,7 +1632,7 @@ export interface components {
             status: components["schemas"]["SessionTaskStatus"];
             est_seconds: number;
             /** @enum {string|null} */
-            reason?: "due_review" | "continue" | "frontier" | "interleave" | "checkpoint" | "project" | null;
+            reason?: "due_review" | "continue" | "frontier" | "interleave" | "checkpoint" | "project" | "applied_gap" | null;
             /**
              * @description Null for ordinary practice. Assessment-pool items are only served with a non-null kind.
              * @enum {string|null}
@@ -1924,6 +1924,16 @@ export interface components {
             reps?: number;
             lapses?: number;
             tier_attained?: components["schemas"]["Tier"] | null;
+            /**
+             * @description True when the skill is `reviewing` and the applied attempt is the only open mastery condition (derived at
+             *     read time, docs/06 section 4.3, 00a G2 and J9). Screens read it as "Reviewing: needs one more applied problem".
+             */
+            needs_applied?: boolean;
+            /**
+             * @description True while a `reviewing` skill credited by placement is inside the 14-day grace (docs/06 section 6.1, 00a G1
+             *     and J9). Screens read it as "Seems solid (to re-check)" and never show a tier for it.
+             */
+            placement_grace?: boolean;
         };
         Skill: {
             key: components["schemas"]["SkillKey"];

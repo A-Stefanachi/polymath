@@ -253,6 +253,22 @@ describe.skipIf(!reachable)("submitAttempt (database)", () => {
     expect((await post(learner, bodyFor(item, num(1), { confidence: 6 }))).status).toBe(400);
   });
 
+  it("00a J9 (b): a graded attempt marks its session task done in the same transaction; invalid_input and a replay do not change it", async () => {
+    const statusOf = async (id: string) => (await sql<{ status: string; completed_at: Date | null }[]>`select status::text as status, completed_at from public.session_tasks where id = ${id}`)[0];
+    const invalid = await addTask(learner, fx["num"] ?? "");
+    expect((await post(learner, bodyFor(fx["num"] ?? "", num(1, "kg"), { session_id: invalid.sessionId, session_task_id: invalid.taskId }))).status).toBe(200);
+    expect((await statusOf(invalid.taskId))?.status).toBe("pending"); // not an attempt: the learner re-answers
+
+    const { sessionId, taskId } = await addTask(learner, fx["num"] ?? "");
+    const body = bodyFor(fx["num"] ?? "", num(REFERENCE * 2), { session_id: sessionId, session_task_id: taskId });
+    expect((await post(learner, body)).status).toBe(200);
+    const done = await statusOf(taskId);
+    expect(done?.status).toBe("done"); // a wrong answer is still an answered task
+    expect(done?.completed_at).not.toBeNull();
+    expect((await post(learner, body)).status).toBe(200); // replay
+    expect((await statusOf(taskId))?.status).toBe("done");
+  });
+
   it("does not write skill_state or review_log (BL-0042 owns them)", async () => {
     expect(await count("skill_state", learner)).toBe(0);
     expect(await count("review_log", learner)).toBe(0);

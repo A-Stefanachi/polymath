@@ -18,6 +18,22 @@ function round4(x: number): number {
 }
 
 /**
+ * 00a G1: a `reviewing` card with source `placement` inside the grace window that has not been verified since
+ * and has no failed verify retrieval. Screens word it "Seems solid (to re-check)" and never show a tier for it.
+ */
+export function inPlacementGrace(state: SkillStateSnapshot, params: SchedulerParams = DEFAULT_PARAMS): boolean {
+  const age = state.placement_age_days;
+  return (
+    (state.mastery_state ?? "unseen") === "reviewing" &&
+    state.source === "placement" &&
+    state.verified_after_placement !== true &&
+    state.placement_verify_failed !== true &&
+    age !== undefined &&
+    age <= params.placement_grace_days
+  );
+}
+
+/**
  * Frontier test for one hard edge (contract 7.1). 00a G1: a `reviewing` card with source `placement`
  * inside the grace window (not verified since, no failed verify retrieval) satisfies the retrievability
  * test whatever its R and counts as tier L1 for the `min_tier` test, for this test only.
@@ -34,15 +50,7 @@ export function prereqSatisfied(
   const threshold = hysteresis ? params.continue_r_threshold : params.prereq_r_threshold;
   let ok = ms === "mastered" || (ms === "reviewing" && r !== undefined && r !== null && r >= threshold);
   let tier = tierIdx(state.tier_attained);
-  const age = state.placement_age_days;
-  const grace =
-    ms === "reviewing" &&
-    state.source === "placement" &&
-    state.verified_after_placement !== true &&
-    state.placement_verify_failed !== true &&
-    age !== undefined &&
-    age <= params.placement_grace_days;
-  if (grace) {
+  if (inPlacementGrace(state, params)) {
     ok = true;
     tier = Math.max(tier, tierIdx(params.placement_grace_max_tier));
   }
