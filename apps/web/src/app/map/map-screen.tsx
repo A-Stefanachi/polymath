@@ -190,7 +190,7 @@ function Loaded({ skills, edges }: { skills: MapSkill[]; edges: MapEdge[] }) {
                   <span className={cn("flex size-14 shrink-0 items-center justify-center border-[3px] border-ink", look.box, s.state !== "locked" && "shadow-px-sm")}>
                     <PixelIcon name={s.state === "ready" ? TILE_ICON.ready : look.icon} size={28} />
                   </span>
-                  <span className="flex max-w-[190px] flex-col">
+                  <span className="flex max-w-[190px] flex-col bg-bg px-1.5 py-0.5">
                     <span className="text-[16px] leading-[21px] font-bold">{s.title}</span>
                     <span className="text-[14px] leading-[19px] text-muted">{hint ? `${s.word}: ${hint}` : s.word}</span>
                   </span>
