@@ -57,3 +57,4 @@ BL-0052,2026-11-04,2026-11-04,,20,G2 fuzz CLI, CI content job and fuzz tests by 
 BL-0055,2026-11-04,2026-11-04,0,5,Shown-options check against items.rendered.options in submitAttempt by agent (autoswe direct track)
 BL-0056,2026-11-04,2026-11-04,0,25,reportItem, retireItem, listItemReports, resolveItemReport with quarantine and attempt flag by agent (autoswe direct track)
 BL-0050,2026-11-04,2026-11-04,,60,Template lint rules L01 to L26 (tools/content-lint) shared with content:sync by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
+BL-0054,2026-11-04,2026-11-04,,60,Symbolic grader endpoint in the worker (grader process, HMAC), TS client and the submitAttempt symbolic path with the pending/202 fallback by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)

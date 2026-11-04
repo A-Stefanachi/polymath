@@ -25,8 +25,9 @@ export type NewAttempt = {
   startedAt: string;
   submittedAt: string;
   response: Record<string, unknown>;
-  grade: Record<string, unknown>;
-  gradeStatus: "graded" | "invalid_input";
+  /** Null with `pending`: the attempt and a `grade_attempt` job are stored together (doc 03 section 7.2). */
+  grade: Record<string, unknown> | null;
+  gradeStatus: "graded" | "invalid_input" | "pending";
   graderVersion: string;
   latencyMs: number | null;
   activeMs: number | null;
@@ -77,8 +78,8 @@ export function createAttemptStore(sql: Sql): AttemptStore {
                  submitted_at, response, grade, grade_status, graded_at, grader_version, latency_ms, active_ms, confidence,
                  offline, client_grade, assessment_kind, hints_used, max_hint_level, unaided)
           values (${a.userId}, ${a.itemId}, ${a.sessionId}, ${a.sessionTaskId}, ${a.clientAttemptId}, ${a.startedAt},
-                 ${a.submittedAt}, ${tx.json(a.response as Parameters<typeof tx.json>[0])}, ${tx.json(a.grade as Parameters<typeof tx.json>[0])},
-                 ${a.gradeStatus}, now(), ${a.graderVersion}, ${a.latencyMs}, ${a.activeMs}, ${a.confidence}, ${a.offline},
+                 ${a.submittedAt}, ${tx.json(a.response as Parameters<typeof tx.json>[0])}, ${a.grade ? tx.json(a.grade as Parameters<typeof tx.json>[0]) : null},
+                 ${a.gradeStatus}, ${a.gradeStatus === "pending" ? null : tx`now()`}, ${a.graderVersion}, ${a.latencyMs}, ${a.activeMs}, ${a.confidence}, ${a.offline},
                  ${a.clientGrade ? tx.json(a.clientGrade as Parameters<typeof tx.json>[0]) : null}, ${a.assessmentKind}, 0, 0, true)
           on conflict (user_id, client_attempt_id) do nothing
           returning id`;
@@ -89,6 +90,10 @@ export function createAttemptStore(sql: Sql): AttemptStore {
           return { row: existing, created: false };
         }
         await insertEvents(db, [{ userId: a.userId, name: "attempt_submitted", props: { ...a.eventProps, attempt_id: id } }]);
+        if (a.gradeStatus === "pending") {
+          // Ids only in the payload (CLAUDE.md rule 5); the dedupe key makes a retry of this insert harmless.
+          await tx`select public.enqueue_job('grade_attempt', ${tx.json({ attempt_id: id })}, ${a.userId}, ${`grade:${id}`})`;
+        }
         const row = await find(db, a.userId, a.clientAttemptId);
         if (!row) throw new Error("inserted attempt not found");
         return { row, created: true };
