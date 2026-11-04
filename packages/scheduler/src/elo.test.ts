@@ -74,4 +74,10 @@ describe("mapRating", () => {
     expect(mapRating(good, 1).rating).toBe(3);
     expect(mapRating({ ...good, template_n_obs: 19 }, 3).rating).toBe(3);
   });
+
+  it("still reports the latency ratio when the latency rows are ignored (BL-0187)", () => {
+    expect(mapRating({ ...good, latency_ms: 30000, template_n_obs: 19 }, 3).latencyRatio).toBe(3);
+    expect(mapRating({ ...good, latency_ms: 30000 }, 3).latencyRatio).toBe(3);
+    expect(mapRating({ ...good, latency_ms: null }, 3).latencyRatio).toBeNull();
+  });
 });

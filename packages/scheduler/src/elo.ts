@@ -40,6 +40,8 @@ export interface RatingResult {
   /** FSRS rating 1 to 4, or null when the attempt creates no review. */
   readonly rating: 1 | 2 | 3 | 4 | null;
   readonly flags: readonly string[];
+  /** latency / expected latency for the review log; kept even while the latency rows are ignored (BL-0187). */
+  readonly latencyRatio?: number | null;
 }
 
 /** Rounds to 4 decimals on the exact binary value, like Python's round(x, 4); normalises -0. */
@@ -167,17 +169,19 @@ export function mapRating(
   const conf = att.confidence ?? null;
   const flags: string[] = [];
   let ratio: number | null = null;
+  let latencyRatio: number | null = null;
   if (att.latency_ms !== null && att.latency_ms !== undefined && att.expected_ms) {
-    ratio = att.latency_ms / att.expected_ms;
-    // 00a G5: latency rows are ignored until the template has enough observations.
+    latencyRatio = att.latency_ms / att.expected_ms;
+    ratio = latencyRatio;
+    // 00a G5: latency rows are ignored until the template has enough observations; the ratio is still logged.
     if ((att.template_n_obs ?? 0) < params.latency_min_obs) ratio = null;
   }
   if (h >= 4 || s < params.fail_threshold) {
     if (conf !== null && conf >= 4 && h < 4) flags.push("high_confidence_error");
-    return { rating: 1, flags };
+    return { rating: 1, flags, latencyRatio };
   }
-  if (s < params.correct_threshold || h >= 2) return { rating: 2, flags };
-  if (ratio !== null && ratio > params.latency_slow_ratio) return { rating: 2, flags: ["slow"] };
+  if (s < params.correct_threshold || h >= 2) return { rating: 2, flags, latencyRatio };
+  if (ratio !== null && ratio > params.latency_slow_ratio) return { rating: 2, flags: ["slow"], latencyRatio };
   const easy =
     s >= 0.95 &&
     h === 0 &&
@@ -189,5 +193,5 @@ export function mapRating(
     att.rapid_flag !== true &&
     att.grader_type !== "multiple_choice";
   if (conf !== null && conf <= 2) flags.push("low_confidence_correct");
-  return { rating: easy ? 4 : 3, flags };
+  return { rating: easy ? 4 : 3, flags, latencyRatio };
 }

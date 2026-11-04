@@ -38,3 +38,4 @@ BL-0043,2026-11-04,2026-11-04,,30,Per-user item pool top-up and shortage enqueue
 BL-0035,2026-11-04,2026-11-04,0,2,Mastery rule, mastery state, tier attained and attempt aggregation by agent (autoswe direct track)
 BL-0041,2026-11-04,2026-11-04,0,40,FSRS-6 adapter over ts-fsrs 6.0.0 with frozen contract test by agent (autoswe direct track)
 BL-0185,2026-11-04,2026-11-04,0,0.3,Mastery span and template-diversity tests (conditions already in BL-0035) by agent (autoswe direct track)
+BL-0187,2026-11-04,2026-11-04,0,1,Desired-retention default switch and logged latency ratio by agent (autoswe direct track)

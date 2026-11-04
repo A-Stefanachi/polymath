@@ -18,5 +18,9 @@ export const vectorHandlers: VectorHandlers = {
   diagnostic_init: (i) => diagnosticInit(num(i.d), num(i.score)),
   cold_start_theta: (i) => coldStartTheta(i.prereq_thetas as number[]),
   target_item_difficulty: (i) => targetItemDifficulty(num(i.theta)),
-  map_rating: (i) => mapRating(att(i.att), (i.reps as number | undefined) ?? 0, withParams(i.params)),
+  map_rating: (i) => {
+    // The log-only latencyRatio is not part of the oracle's output.
+    const { rating, flags } = mapRating(att(i.att), (i.reps as number | undefined) ?? 0, withParams(i.params));
+    return { rating, flags };
+  },
 };
