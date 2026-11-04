@@ -11,6 +11,7 @@ import { ApiError } from "@/lib/api/errors";
 import { json, type ApiContext } from "@/lib/api/route";
 import { privilegedDb } from "@/server/privileged/db";
 import { createServeStore, type ServeItemRow, type ServeStore, type ServeTaskRow } from "@/server/privileged/item-store";
+import { workedStepsFor } from "./worked-steps.ts";
 
 type LearnerItem = components["schemas"]["LearnerItem"];
 type SessionTask = components["schemas"]["SessionTask"];
@@ -136,5 +137,12 @@ export async function readTask(ctx: ApiContext, store: ServeStore = defaultStore
     assessment_kind: task.assessment_kind,
     offline: false,
   });
-  return json({ task: toTask(task), item: toLearnerItem(item) });
+  const learnerItem = toLearnerItem(item);
+  // 00a K2: steps only for the caller's own worked_example / faded_problem task on a practice-pool item.
+  if (item.pool === "practice" && task.assessment_kind === null && (task.task_kind === "worked_example" || task.task_kind === "faded_problem")) {
+    const faded = task.task_kind === "faded_problem" ? await store.countEarlierFaded(task) : 0;
+    const steps = workedStepsFor(await store.findSolution(item.id), task.task_kind, faded);
+    if (steps) Object.assign(learnerItem.rendered, steps);
+  }
+  return json({ task: toTask(task), item: learnerItem });
 }
