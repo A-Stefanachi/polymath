@@ -516,6 +516,13 @@ export const progressScreen = {
   refresherView: "Open the skill map",
 } as const;
 
+// Offline page (/offline), shown by the service worker when a page load fails, doc 09 section 8.
+export const offlinePage = {
+  title: "You are offline",
+  body: "Polymath needs a connection to open this page. Check your connection, then try again.",
+  retry: "Try again",
+} as const;
+
 // S17 Review queue (/review), doc 09.
 export const reviewScreen = {
   title: "Review",
