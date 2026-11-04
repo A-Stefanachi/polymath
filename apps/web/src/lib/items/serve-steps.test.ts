@@ -6,6 +6,7 @@ import { logger } from "@/lib/logger";
 import { defineRoute, type ApiDeps } from "@/lib/api/route";
 import { createTestUser, dbReachable, deleteTestUser, testSql } from "@/lib/api/test-db";
 import { createServeStore } from "@/server/privileged/item-store";
+import { createLessonStore } from "@/server/privileged/lesson-store";
 import { readItem, readTask } from "./serve.ts";
 
 const sql = testSql();
@@ -20,7 +21,7 @@ const deps = (userId: string): ApiDeps => ({
   logger: silent,
 });
 const fetchTask = (userId: string, id: string) =>
-  defineRoute("getTask", (ctx) => readTask(ctx, store), deps(userId))(new Request(`http://localhost/api/v1/tasks/${id}`), {
+  defineRoute("getTask", (ctx) => readTask(ctx, store, createLessonStore(sql)), deps(userId))(new Request(`http://localhost/api/v1/tasks/${id}`), {
     params: Promise.resolve({ task_id: id }),
   });
 const fetchItem = (userId: string, id: string) =>

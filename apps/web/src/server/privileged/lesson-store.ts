@@ -25,7 +25,12 @@ export type LessonStore = {
   retire(input: { skillKey: string; version: number; now: Date }): Promise<{ kind: "retired" | "not_found" }>;
   /** The newest verified version of a skill, or null (what a learner receives). */
   newestVerified(skillKey: string): Promise<{ version: number; body: unknown } | null>;
+  /** True when the user has a graded attempt on an item of the skill: the primer is then served as a recap (K8). */
+  hasGradedAttempt(userId: string, skillKey: string): Promise<boolean>;
 };
+
+/** What getTask needs: the two reads, nothing that writes. */
+export type LessonSource = Pick<LessonStore, "newestVerified" | "hasGradedAttempt">;
 
 export function createLessonStore(sql: Sql): LessonStore {
   return {
@@ -64,5 +69,15 @@ export function createLessonStore(sql: Sql): LessonStore {
           select version, body from public.skill_lessons
            where skill_key = ${skillKey} and status = 'verified' order by version desc limit 1`
       )[0] ?? null,
+
+    hasGradedAttempt: async (userId, skillKey) =>
+      (
+        await sql<{ ok: boolean }[]>`
+          select exists (
+            select 1 from public.attempts a
+              join public.items i on i.id = a.item_id
+              join public.item_templates t on t.key = i.template_key and t.version = i.template_version
+             where a.user_id = ${userId} and a.grade_status = 'graded' and t.skill_key = ${skillKey}) as ok`
+      )[0]?.ok === true,
   };
 }

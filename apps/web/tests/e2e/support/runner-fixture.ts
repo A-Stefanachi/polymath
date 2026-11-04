@@ -11,7 +11,11 @@ type Grader = "exact_numeric" | "multiple_choice" | "symbolic_equivalence";
 const DUE: Grader[] = ["exact_numeric", "exact_numeric", "exact_numeric", "multiple_choice", "multiple_choice", "symbolic_equivalence"];
 const NEW_KINDS: Record<string, Grader> = { worked_example: "exact_numeric", faded_problem: "exact_numeric", retrieval: "multiple_choice", problem: "symbolic_equivalence" };
 
-export type RunnerFixture = { cleanup: () => Promise<void> };
+/** BL-0202: the new skill's numeric keys know one wrong answer, tagged like the sample lesson's mix-up (mc.ohm-milliamps-as-amps). */
+export const MIXUP_TAG = "mc.ohm-milliamps-as-amps";
+export const MIXUP_VALUE = 10;
+
+export type RunnerFixture = { cleanup: () => Promise<void>; newSkillKey: string };
 
 function renderedFor(grader: Grader) {
   if (grader === "multiple_choice")
@@ -32,10 +36,10 @@ function renderedFor(grader: Grader) {
   };
 }
 
-function keyFor(grader: Grader) {
+function keyFor(grader: Grader, withMixup = false) {
   if (grader === "multiple_choice") return { grader_type: grader, reference: { correct_option: "a", option_ids: ["a", "b"] } };
   if (grader === "symbolic_equivalence") return { grader_type: grader, answer_spec: { variables: ["x"], sample_domain: { x: [0.3, 2.5] } }, reference: "2*x" };
-  return { grader_type: grader, answer_spec: { kind: "numeric", unit: "V", tolerance: { rel: 0.01 } }, reference: NUMERIC_REFERENCE };
+  return { grader_type: grader, answer_spec: { kind: "numeric", unit: "V", tolerance: { rel: 0.01 } }, reference: NUMERIC_REFERENCE, ...(withMixup ? { misconceptions: [{ tag: MIXUP_TAG, value: MIXUP_VALUE }] } : {}) };
 }
 
 export const STEP_LABELS = ["Find the series current", "Take the drop across one resistor", "Check the sum"] as const;
@@ -85,7 +89,7 @@ export async function createRunnerFixture(userId: string, onlyNewSkill = false, 
         )[0];
         // The builder never serves two items with the same answer to one skill (06 section 3.8), so the worked example
         // (never graded) carries another reference than its faded problem; otherwise the faded task is dropped.
-        const answerKey = steps && kind === "worked_example" ? { ...keyFor(grader), reference: NUMERIC_REFERENCE - 1 } : keyFor(grader);
+        const answerKey = steps && kind === "worked_example" ? { ...keyFor(grader), reference: NUMERIC_REFERENCE - 1 } : keyFor(grader, steps !== undefined && !due);
         const solution = steps && !due && (kind === "worked_example" || kind === "faded_problem") ? solutionFor(steps === "labelled") : null;
         await sql`insert into public.item_secrets (item_id, answer_key, solution) values (${item?.id ?? ""}, ${sql.json(answerKey)}, ${solution === null ? null : sql.json(solution)})`;
       }
@@ -100,7 +104,9 @@ export async function createRunnerFixture(userId: string, onlyNewSkill = false, 
   await addSkill(DUE.length + 1, NEW_KINDS, false);
 
   return {
+    newSkillKey: `math.${moduleName}.s${String(DUE.length + 1)}`,
     cleanup: async () => {
+      await sql`delete from public.skill_lessons where skill_key in ${sql(skills)}`;
       await sql`delete from public.jobs where user_id = ${userId}`;
       await sql`delete from public.events where user_id = ${userId}`;
       await sql`delete from public.attempts where user_id = ${userId}`;
