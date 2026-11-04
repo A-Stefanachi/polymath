@@ -48,3 +48,4 @@ BL-0038,2026-11-04,2026-11-04,0,0.5,weeklyPlanSlots and rebalance by agent (auto
 BL-0039,2026-11-04,2026-11-04,0,0.5,All scheduler vectors pass; tutorOverreliance pure function by agent (autoswe direct track)
 BL-0044,2026-11-04,2026-11-04,0,2,Session builder API (build, start, get, complete, list) by agent (autoswe direct track)
 BL-0045,2026-11-04,2026-11-04,0,1,New-skill loop gap and fresh-variant item selection by agent (autoswe direct track)
+BL-0048,2026-11-04,2026-11-04,0,1.5,Graph read API (listSkills, getSkill, getGraph, getFrontier, getReviewQueue) by agent (autoswe direct track)
