@@ -135,6 +135,29 @@ test("S06 Today, S07 preview sheet, S08 runner and S09 summary", async ({ page }
   await audit(page, "/session/[id]/summary");
 });
 
+test("S08 worked-example stepper and faded-problem card (BL-0199)", async ({ page }) => {
+  const userId = await onboarded(page, "stepper");
+  fixtures.push(await createRunnerFixture(userId, true, "labelled"));
+  await page.reload();
+  await expect(page.getByRole("radio", { name: "15 min" })).toBeChecked();
+  await page.getByRole("button", { name: "Start 15-minute session" }).click();
+  await expect(page.getByRole("heading", { level: 2, name: /^Step 1 of 3/ })).toBeVisible();
+  await audit(page, "worked example (question)");
+  await page.getByRole("group", { name: "What is this step doing?" }).getByRole("button").first().click();
+  await expect(page.getByRole("status")).toBeVisible();
+  await audit(page, "worked example (label shown)");
+  for (const n of [2, 3]) {
+    await page.getByRole("button", { name: "Show the next step" }).click();
+    await expect(page.getByRole("heading", { level: 2, name: new RegExp(`^Step ${String(n)} of 3`) })).toBeVisible();
+    await page.getByRole("group", { name: "What is this step doing?" }).getByRole("button").first().click();
+  }
+  await expect(page.getByRole("heading", { name: "Why it works" })).toBeVisible();
+  await audit(page, "worked example (explanation)");
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.getByTestId("given-steps")).toBeVisible();
+  await audit(page, "faded problem");
+});
+
 test("S14 map (trail and list), S15 progress and S17 review", async ({ page }) => {
   const userId = await onboarded(page, "screens");
   fixtures.push(await createRunnerFixture(userId));

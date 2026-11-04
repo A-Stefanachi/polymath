@@ -64,6 +64,11 @@ export default defineConfig({
       use: { baseURL: `http://127.0.0.1:${signupPort}`, timezoneId: "Europe/Rome" },
     },
     {
+      name: "worked-stepper",
+      testMatch: "worked-stepper.spec.ts",
+      use: { baseURL: `http://127.0.0.1:${signupPort}`, timezoneId: "Europe/Rome" },
+    },
+    {
       name: "pwa",
       testMatch: "pwa.spec.ts",
       use: { baseURL: `http://127.0.0.1:${signupPort}`, timezoneId: "Europe/Rome", viewport: { width: 360, height: 800 }, serviceWorkers: "allow" },

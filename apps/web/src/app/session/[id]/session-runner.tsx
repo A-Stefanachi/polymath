@@ -99,12 +99,12 @@ export function SessionRunner({ id }: { id: string }) {
 
   // A graded task is already closed on the server by its attempt (00a J9). A worked example is closed by
   // completeTask, which also moves the skill's loop step; an unsupported task is skipped (best effort).
-  async function advance(task: RunnerTask, skip = false) {
+  async function advance(task: RunnerTask, skip = false, selfExplanation?: string) {
     if (advancing.current) return;
     advancing.current = true;
     setNextError(false);
     try {
-      const body = skip ? { outcome: "skipped", skip_reason: "not_now" } : task.task_kind === "worked_example" ? { outcome: "done" } : null;
+      const body = skip ? { outcome: "skipped", skip_reason: "not_now" } : task.task_kind === "worked_example" ? { outcome: "done", ...(selfExplanation ? { self_explanation: selfExplanation } : {}) } : null;
       if (body) {
         const res = await fetch(`/api/v1/tasks/${task.id}/complete`, { method: "POST", headers: { ...json, "idempotency-key": crypto.randomUUID() }, body: JSON.stringify(body) }).catch(() => null);
         if (!res?.ok && !skip) return setNextError(true);
@@ -193,7 +193,7 @@ export function SessionRunner({ id }: { id: string }) {
         )}
         {current && !ending && (
           <div hidden={screen !== "task"}>
-            <TaskView key={current.id} sessionId={id} task={current} label={label} last={index === total - 1} paused={screen !== "task"} onNext={() => void advance(current)} onSkip={() => void advance(current, true)} />
+            <TaskView key={current.id} sessionId={id} task={current} label={label} last={index === total - 1} paused={screen !== "task"} onNext={(selfExplanation) => void advance(current, false, selfExplanation)} onSkip={() => void advance(current, true)} />
           </div>
         )}
         <Button variant="link" size="md" className="self-start" onClick={() => setHelp(true)}>
