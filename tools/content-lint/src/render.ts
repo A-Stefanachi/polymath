@@ -59,7 +59,9 @@ function eng(value: number, unit: string, tex: boolean): string {
   const [scale, pre] = value === 0 ? [1, ""] : (SI.find(([s]) => a >= s * 0.9995) ?? [1e-12, "p"]);
   const n = sig(value / scale, 3);
   if (!tex) return `${n} ${pre}${unit === "ohm" ? "Ω" : unit}`;
-  const u = unit === "ohm" ? (pre ? `\\mathrm{${pre}}\\Omega` : "\\Omega") : `\\mathrm{${pre}${unit}}`;
+  // "u" is only the ASCII alias for micro; tplkit.py writes it as \mu (issue #14).
+  const base = unit === "ohm" ? "\\Omega" : `\\mathrm{${unit}}`;
+  const u = pre === "u" ? `\\mu${base}` : unit === "ohm" ? (pre ? `\\mathrm{${pre}}\\Omega` : "\\Omega") : `\\mathrm{${pre}${unit}}`;
   return `${n}\\,${u}`;
 }
 
