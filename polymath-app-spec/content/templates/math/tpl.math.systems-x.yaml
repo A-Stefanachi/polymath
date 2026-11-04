@@ -21,6 +21,12 @@ provenance:
     - misconception_tags
     model: claude-opus-5-5
     prompt_version: template_assist_v1
+  review:
+    reviewer: agent-on-founder-instruction
+    date: '2026-11-04'
+    template_sha256: f322594ac4f6e66f70d34c59e4312c790608147a8450458fc9dc9fb7bd113ae4
+    checklist_version: g3_checklist_v1
+    notes: 'Approved by the build agent on the founder''s explicit instruction of 2026-11-04, not by a founder hand-solve. The agent solved seeds 5000 to 5004 from the rendered statements with 0 disagreements and read boxes 2 to 7 (content/G3-WORKSHEET.md). No person has done box 1 (own hand-solve) or checked boxes 8, 10, 11 and 12.'
 delivery:
   contexts:
   - phone

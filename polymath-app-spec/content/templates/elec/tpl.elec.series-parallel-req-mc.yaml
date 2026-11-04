@@ -20,6 +20,12 @@ provenance:
     - misconception_tags
     model: claude-sonnet-5-5
     prompt_version: template_assist_v1
+  review:
+    reviewer: agent-on-founder-instruction
+    date: '2026-11-04'
+    template_sha256: 7536e356ec44b7ec2f53f087aaff664ec163e64d93109d0616e59e1969aa4a38
+    checklist_version: g3_checklist_v1
+    notes: 'Approved by the build agent on the founder''s explicit instruction of 2026-11-04, not by a founder hand-solve. The agent solved seeds 4000 to 4004 from the rendered statements with 0 disagreements and read boxes 2 to 7 (content/G3-WORKSHEET.md). No person has done box 1 (own hand-solve) or checked boxes 8, 10, 11 and 12.'
 delivery:
   contexts:
   - phone
