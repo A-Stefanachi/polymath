@@ -18,4 +18,6 @@ paths = [
   '''(^|/)\.git/''',
   # Agent worktrees are full copies of this repository (git-ignored); they are scanned in their own checkout.
   '''(^|/)\.claude/worktrees/''',
+  # Next.js build output (git-ignored): `next build` writes random preview and encryption keys here.
+  '''(^|/)\.next/''',
 ]
