@@ -51,6 +51,9 @@ export async function createDemoItem(userId: string): Promise<DemoFixture> {
       await sql`delete from public.events where user_id = ${userId}`;
       await sql`delete from public.attempts where user_id = ${userId}`;
       await sql`delete from public.sessions where user_id = ${userId}`;
+      // Since BL-0042 a graded attempt writes the learner's skill_state and review_log (doc 06 section 4).
+      await sql`delete from public.review_log where user_id = ${userId}`;
+      await sql`delete from public.skill_state where user_id = ${userId}`;
       await sql`delete from public.items where id = ${itemId}`;
       await sql`delete from public.item_templates where key = ${templateKey}`;
       await sql`delete from public.skills where key = ${skillKey}`;
