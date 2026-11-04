@@ -29,5 +29,6 @@ export {
 export * from "./fsrs-adapter.ts";
 export * from "./retention.ts";
 export * from "./pack.ts";
+export * from "./applied-gap.ts";
 export * from "./params.ts";
 export type { AttemptSnapshot } from "./types.ts";
