@@ -250,7 +250,7 @@ async function commitUnit(ctx: Ctx, skill: SkillRow, unit: readonly UnitAttempt[
 }
 
 /** Loop-step moves (06 section 7.4 "Loop-step transitions"); it moves forward except the decay reset. */
-function nextLoopStep(
+export function nextLoopStep(
   step: string | null,
   trigger: { kind: string; score: number } | null,
   state: string,

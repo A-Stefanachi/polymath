@@ -11,20 +11,8 @@ import { fallbackTitle } from "@/lib/today/today";
 import { ShortcutHelp } from "./shortcut-help";
 import { TaskView, type RunnerTask } from "./task-view";
 
-type Loaded = { status: string; planned_min: number; tasks: (RunnerTask & { position: number; est_seconds: number })[] };
+type Loaded = { status: string; planned_min: number; tasks: (RunnerTask & { position: number; est_seconds: number; status: string })[] };
 type Screen = "task" | "paused" | "confirm-end";
-
-const storeKey = (id: string) => `polymath.runner.${id}`;
-
-/** Task ids the learner has moved past, kept for this tab so a reload resumes at the next task (no API lists them). */
-function readDone(id: string): string[] {
-  try {
-    const raw: unknown = JSON.parse(window.sessionStorage.getItem(storeKey(id)) ?? "[]");
-    return Array.isArray(raw) ? raw.filter((x): x is string => typeof x === "string") : [];
-  } catch {
-    return [];
-  }
-}
 
 const json = { "content-type": "application/json" };
 
@@ -40,7 +28,9 @@ export function SessionRunner({ id }: { id: string }) {
   const [help, setHelp] = useState(false);
   const [titles, setTitles] = useState<Record<string, string>>({});
   const [reload, setReload] = useState(0);
+  const [nextError, setNextError] = useState(false);
   const finishing = useRef(false);
+  const advancing = useRef(false);
 
   useEffect(() => {
     let live = true;
@@ -55,7 +45,8 @@ export function SessionRunner({ id }: { id: string }) {
         body = (await res.json()) as Loaded;
       }
       if (!live) return;
-      setDone(readDone(id));
+      // The server is the resume point: a graded attempt, a completed worked example or a skip closes the task there.
+      setDone(body.tasks.filter((x) => x.status === "done" || x.status === "skipped").map((x) => x.id));
       setSession({ ...body, tasks: [...body.tasks].sort((a, b) => a.position - b.position) });
     })().catch(() => live && setFailed(true));
     void loadTitles().then((x) => live && setTitles(x)).catch(() => undefined);
@@ -106,10 +97,22 @@ export function SessionRunner({ id }: { id: string }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  function advance(taskId: string) {
-    const next = [...done, taskId];
-    window.sessionStorage.setItem(storeKey(id), JSON.stringify(next));
-    setDone(next);
+  // A graded task is already closed on the server by its attempt (00a J9). A worked example is closed by
+  // completeTask, which also moves the skill's loop step; an unsupported task is skipped (best effort).
+  async function advance(task: RunnerTask, skip = false) {
+    if (advancing.current) return;
+    advancing.current = true;
+    setNextError(false);
+    try {
+      const body = skip ? { outcome: "skipped", skip_reason: "not_now" } : task.task_kind === "worked_example" ? { outcome: "done" } : null;
+      if (body) {
+        const res = await fetch(`/api/v1/tasks/${task.id}/complete`, { method: "POST", headers: { ...json, "idempotency-key": crypto.randomUUID() }, body: JSON.stringify(body) }).catch(() => null);
+        if (!res?.ok && !skip) return setNextError(true);
+      }
+      setDone((d) => [...d, task.id]);
+    } finally {
+      advancing.current = false;
+    }
   }
 
   if (failed)
@@ -147,6 +150,11 @@ export function SessionRunner({ id }: { id: string }) {
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 pt-4 pb-12">
         <p className="sr-only" aria-live="polite">{`Task ${index + 1} of ${total}`}</p>
         {ending && <p aria-live="polite">{t.ending}</p>}
+        {nextError && (
+          <p role="alert" className="font-semibold text-nq">
+            {t.nextError}
+          </p>
+        )}
         {endError && (
           <div className="flex flex-col gap-3">
             <p role="alert" className="font-semibold text-nq">
@@ -185,7 +193,7 @@ export function SessionRunner({ id }: { id: string }) {
         )}
         {current && !ending && (
           <div hidden={screen !== "task"}>
-            <TaskView key={current.id} sessionId={id} task={current} label={label} last={index === total - 1} paused={screen !== "task"} onNext={() => advance(current.id)} />
+            <TaskView key={current.id} sessionId={id} task={current} label={label} last={index === total - 1} paused={screen !== "task"} onNext={() => void advance(current)} onSkip={() => void advance(current, true)} />
           </div>
         )}
         <Button variant="link" size="md" className="self-start" onClick={() => setHelp(true)}>

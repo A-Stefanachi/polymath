@@ -96,6 +96,13 @@ export function createAttemptStore(sql: Sql): AttemptStore {
           return { row: existing, created: false };
         }
         await insertEvents(db, [{ userId: a.userId, name: "attempt_submitted", props: { ...a.eventProps, attempt_id: id } }]);
+        // 00a J9: a graded attempt closes its session task in the same transaction, so getSession is the runner's
+        // resume point. A pending (queued) grade closes it too: the learner has answered and the attempt row exists;
+        // the worker's grade needs nothing more from them. `invalid_input` is not an attempt (the learner re-answers).
+        if (a.sessionTaskId !== null && a.gradeStatus !== "invalid_input") {
+          await tx`update public.session_tasks set status = 'done', completed_at = coalesce(completed_at, ${a.submittedAt}::timestamptz)
+            where id = ${a.sessionTaskId} and user_id = ${a.userId} and status <> 'done'`;
+        }
         if (a.gradeStatus === "pending") {
           // Ids only in the payload (CLAUDE.md rule 5); the dedupe key makes a retry of this insert harmless.
           await tx`select public.enqueue_job('grade_attempt', ${tx.json({ attempt_id: id })}, ${a.userId}, ${`grade:${id}`})`;

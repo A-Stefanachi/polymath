@@ -256,7 +256,7 @@ async function closeIn(tx: Sql, userId: string, sessionId: string, input: CloseI
   )[0];
   if (!found) return "not_found";
   if (found["status"] === "completed" || found["status"] === "abandoned") return "already_closed";
-  // The server has no per-task "done" write yet: a task with an attempt is done at the attempt's time.
+  // submitAttempt marks its task done (00a J9); this heals tasks whose attempt predates that write.
   await tx`
     update public.session_tasks st set status = 'done', completed_at = coalesce(st.completed_at, a.last_at)
       from (select session_task_id, max(submitted_at) as last_at from public.attempts

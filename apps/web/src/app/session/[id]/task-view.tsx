@@ -53,6 +53,7 @@ export function TaskView({
   last,
   paused,
   onNext,
+  onSkip,
 }: {
   sessionId: string;
   task: RunnerTask;
@@ -60,6 +61,8 @@ export function TaskView({
   last: boolean;
   paused: boolean;
   onNext: () => void;
+  /** Leaves a task the screen cannot show yet; closes it as skipped (completeTask, `not_now`). */
+  onSkip: () => void;
 }) {
   const [item, setItem] = useState<Item | null>(null);
   const [loadError, setLoadError] = useState(false);
@@ -319,7 +322,7 @@ export function TaskView({
           <div className="flex flex-col gap-3">
             <p className="font-semibold">{t.unsupportedTitle}</p>
             <p>{t.unsupportedBody}</p>
-            <Button variant="secondary" onClick={onNext}>
+            <Button variant="secondary" onClick={onSkip}>
               {t.skipTask}
             </Button>
           </div>
