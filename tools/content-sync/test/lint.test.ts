@@ -30,7 +30,8 @@ function edit(change: (t: string) => string, run: () => void): void {
 }
 const rules = (): string[] => {
   const l = loadContent(dir);
-  return [...l.problems, ...lintContent(l, dir)].map((p) => p.rule);
+  // Warnings do not block the sync, so they are not problems here.
+  return [...l.problems, ...lintContent(l, dir)].filter((p) => p.severity !== "W").map((p) => p.rule);
 };
 
 describe("G0 and G1", () => {

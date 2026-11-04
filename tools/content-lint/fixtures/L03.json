@@ -1,0 +1,4 @@
+{
+  "base": "numeric",
+  "synced": { "tpl.elec.voltage-divider-vout": { "version": 1, "sha256": "0000", "status": "verified" } }
+}

@@ -1,0 +1,1 @@
+{ "base": "numeric", "set": { "render.stem_md": { "$repeat": "word ", "times": 300 } } }

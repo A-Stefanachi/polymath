@@ -9,7 +9,8 @@ import { parseDocument } from "yaml";
 import { entrySha256, templateSha256, typedFromDocument, type Typed } from "./canonical.ts";
 import { CONTENT_LAYOUT } from "./config.ts";
 
-export type Problem = { file: string; rule: string; message: string };
+/** `severity` "W" is a warning that does not block the sync (doc 07 section 7); absent means error. */
+export type Problem = { file: string; rule: string; message: string; severity?: "E" | "W" };
 
 export type Doc = Record<string, unknown>;
 
@@ -57,6 +58,23 @@ function yamlFiles(dir: string): string[] {
     .sort();
 }
 
+/** Reads and G0-validates every template YAML below `dir`; `prefix` is the path shown for each file. */
+export function loadTemplateDir(dir: string, prefix: string, problems: Problem[]): TemplateEntry[] {
+  const templates: TemplateEntry[] = [];
+  for (const rel of yamlFiles(dir)) {
+    const file = `${prefix}/${rel}`;
+    const parsed = parseYaml(file, readFileSync(path.join(dir, rel), "utf8"), problems);
+    if (!parsed) continue;
+    const result = validateTemplate(parsed.js);
+    if (!result.valid) {
+      for (const e of result.errors) problems.push({ file, rule: "G0", message: describe(e) });
+      continue;
+    }
+    if (isDoc(parsed.js)) templates.push({ file, doc: parsed.js, sha256: templateSha256(parsed.typed) });
+  }
+  return templates;
+}
+
 /** Reads the graph file and the templates below `contentRoot`. Problems are collected, not thrown. */
 export function loadContent(contentRoot: string): Loaded {
   const problems: Problem[] = [];
@@ -84,19 +102,7 @@ export function loadContent(contentRoot: string): Loaded {
     }
   }
 
-  const templates: TemplateEntry[] = [];
-  const templatesDir = path.join(contentRoot, CONTENT_LAYOUT.templates);
-  for (const rel of yamlFiles(templatesDir)) {
-    const file = `${CONTENT_LAYOUT.templates}/${rel}`;
-    const parsed = parseYaml(file, readFileSync(path.join(templatesDir, rel), "utf8"), problems);
-    if (!parsed) continue;
-    const result = validateTemplate(parsed.js);
-    if (!result.valid) {
-      for (const e of result.errors) problems.push({ file, rule: "G0", message: describe(e) });
-      continue;
-    }
-    if (isDoc(parsed.js)) templates.push({ file, doc: parsed.js, sha256: templateSha256(parsed.typed) });
-  }
+  const templates = loadTemplateDir(path.join(contentRoot, CONTENT_LAYOUT.templates), CONTENT_LAYOUT.templates, problems);
 
   const logPath = path.join(contentRoot, CONTENT_LAYOUT.reviewLog);
   const reviewLog = existsSync(logPath) ? readFileSync(logPath, "utf8") : "";

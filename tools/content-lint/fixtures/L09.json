@@ -1,0 +1,7 @@
+{
+  "base": "numeric",
+  "set": {
+    "parameters.3": { "name": "k", "type": "int", "min": 1, "max": 5 },
+    "render.stem_md": "Using {{k|eng}} as a scale, find the output of {{r1|tex}}, {{r2|tex}} and {{vin|tex}}."
+  }
+}

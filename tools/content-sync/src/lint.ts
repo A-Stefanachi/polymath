@@ -1,48 +1,27 @@
-// G1 for content:sync: the lint rules that need only the loaded data (doc 07 section 7). The full
-// L01 to L26 set is BL-0050. Implemented here, by the doc's ids:
-//   L01 filename equals key + ".yaml" (the schema half of L01 is G0, run in load.ts)
-//   L02 skill_key exists in the skill graph; perceptual_drill only with multiple_choice or exact_numeric
-//   L10 license is in the allowed set; source is not a non-commercial pointer; prompt_version file exists
-//   L20 phone_suitable implies phone in contexts and est_seconds <= 180
-//   L22 a ready template has at least 2 verifiers, one not bounds or pint_dimension
-//   L24 fuzz.samples >= 200
-//   L25 no TODO, FIXME, lorem or XXX text
-// and three checks of its own: GRAPH (unique keys, key parts agree with node and module, modules
-// exist, prerequisites exist, no cycle), TPL-DUP (one file per key and version) and SKILL-LIC
-// (L10 applied to skills, whose license and source columns are also not null).
-import { existsSync } from "node:fs";
-import path from "node:path";
+// G1 for content:sync (doc 07 section 7). The template rules L01 to L26 live in tools/content-lint
+// (BL-0050) and run here through lintTemplates, so `pnpm content:lint` and the sync apply the same
+// code. What stays here needs the whole graph: GRAPH (unique keys, key parts agree with node and
+// module, modules exist, prerequisites exist, no cycle), TPL-DUP (one file per key and version)
+// and SKILL-LIC (the licence rule L10 applied to skills, whose license and source are not null).
+import { licenceMessages, lintTemplates } from "@polymath/content-lint";
 
-import { ALLOWED_LICENSES, CONTENT_LAYOUT } from "./config.ts";
 import type { Doc, Loaded, Problem } from "./load.ts";
 
-const NON_COMMERCIAL = /non-?commercial|\bNC-SA\b|\bBY-NC\b|ocw\.mit\.edu|MIT OpenCourseWare/i;
-const PLACEHOLDER = /\b(TODO|FIXME|XXX)\b|lorem/i;
+/**
+ * Rules that block the sync. These are the rules the sync enforced before BL-0050. The other
+ * content-lint rules are reported as warnings here because two shipped templates fail them
+ * (tpl.math.solve-linear-v1 L04: unknown name "c"; tpl.elec.schematic-series L11: a wrong answer
+ * inside 3 x tolerance) and content edits void reviews. `pnpm content:lint` enforces all of them;
+ * once the founder has fixed the two templates, delete this set so the sync enforces every rule.
+ */
+const ENFORCED = new Set(["L01", "L02", "L10", "L20", "L22", "L24", "L25"]);
 
 function str(v: unknown): string {
   return typeof v === "string" ? v : "";
 }
 
-function asDoc(v: unknown): Doc {
-  return typeof v === "object" && v !== null && !Array.isArray(v) ? (v as Doc) : {};
-}
-
-function* strings(v: unknown): Generator<string> {
-  if (typeof v === "string") yield v;
-  else if (Array.isArray(v)) for (const x of v) yield* strings(x);
-  else if (typeof v === "object" && v !== null) for (const x of Object.values(v)) yield* strings(x);
-}
-
 function licenceProblems(file: string, rule: string, doc: Doc): Problem[] {
-  const out: Problem[] = [];
-  const license = str(doc["license"]);
-  if (!(ALLOWED_LICENSES as readonly string[]).includes(license))
-    out.push({ file, rule, message: `license "${license}" is not one of ${ALLOWED_LICENSES.join(", ")}` });
-  const source = str(doc["source"]).trim();
-  if (source === "") out.push({ file, rule, message: "source is empty" });
-  else if (NON_COMMERCIAL.test(source))
-    out.push({ file, rule, message: "source points at non-commercial material (doc 07 section 11)" });
-  return out;
+  return licenceMessages(doc).map((message) => ({ file, rule, message }));
 }
 
 /** Finds a cycle in the prerequisite graph; returns the keys on it, or undefined. */
@@ -115,59 +94,20 @@ function graphProblems(loaded: Loaded): Problem[] {
   return out;
 }
 
-/** Runs the G1 rules above on loaded content. `contentRoot` locates content/prompts. */
-export function lintContent(loaded: Loaded, contentRoot: string): Problem[] {
+/** Runs G1 on loaded content. `contentRoot` locates content/prompts. Warnings carry severity "W". */
+export function lintContent(loaded: Loaded, contentRoot: string, enforceAll = false): Problem[] {
   const out: Problem[] = [...graphProblems(loaded)];
-  const skillKeys = new Set((loaded.graph?.skills ?? []).map((s) => str(s.doc["key"])));
   const seen = new Map<string, string>();
   for (const { file, doc } of loaded.templates) {
-    const key = str(doc["key"]);
-    const base = path.posix.basename(file);
-    if (base !== `${key}.yaml`) out.push({ file, rule: "L01", message: `file name must be ${key}.yaml` });
-
-    const id = `${key}@${String(doc["version"])}`;
+    const id = `${str(doc["key"])}@${String(doc["version"])}`;
     const prior = seen.get(id);
-    if (prior) out.push({ file, rule: "TPL-DUP", message: `${key} version ${String(doc["version"])} is also defined in ${prior}` });
+    if (prior) out.push({ file, rule: "TPL-DUP", message: `${str(doc["key"])} version ${String(doc["version"])} is also defined in ${prior}` });
     seen.set(id, file);
-
-    if (loaded.graph && !skillKeys.has(str(doc["skill_key"])))
-      out.push({ file, rule: "L02", message: `skill_key ${str(doc["skill_key"])} is not in the skill graph` });
-    if (doc["task_kind"] === "perceptual_drill" && !["multiple_choice", "exact_numeric"].includes(str(doc["grader_type"])))
-      out.push({ file, rule: "L02", message: "perceptual_drill is allowed only with multiple_choice or exact_numeric" });
-
-    out.push(...licenceProblems(file, "L10", doc));
-    const llm = asDoc(asDoc(doc["provenance"])["llm_assistance"]);
-    const promptVersion = str(llm["prompt_version"]);
-    if (llm["used"] === true && promptVersion !== "") {
-      const promptFile = path.join(contentRoot, CONTENT_LAYOUT.prompts, `${promptVersion}.md`);
-      if (!/^[A-Za-z0-9_.-]+$/.test(promptVersion) || !existsSync(promptFile))
-        out.push({ file, rule: "L10", message: `prompt_version ${promptVersion} has no file in content/${CONTENT_LAYOUT.prompts}/` });
-    }
-
-    const delivery = asDoc(doc["delivery"]);
-    if (delivery["phone_suitable"] === true) {
-      const contexts = Array.isArray(delivery["contexts"]) ? delivery["contexts"] : [];
-      const est = typeof delivery["est_seconds"] === "number" ? delivery["est_seconds"] : Infinity;
-      if (!contexts.includes("phone") || est > 180)
-        out.push({ file, rule: "L20", message: "phone_suitable needs phone in contexts and est_seconds <= 180" });
-    }
-
-    if (doc["authoring_status"] === "ready") {
-      const verifiers = Array.isArray(doc["verifiers"]) ? (doc["verifiers"] as Doc[]) : [];
-      if (verifiers.length < 2 || !verifiers.some((v) => !["bounds", "pint_dimension"].includes(str(v["kind"]))))
-        out.push({ file, rule: "L22", message: "a ready template needs 2 verifiers, one not bounds or pint_dimension" });
-    }
-
-    const samples = asDoc(doc["fuzz"])["samples"];
-    if (typeof samples !== "number" || samples < 200)
-      out.push({ file, rule: "L24", message: "fuzz.samples must be at least 200" });
-
-    for (const s of strings(doc)) {
-      if (PLACEHOLDER.test(s)) {
-        out.push({ file, rule: "L25", message: `placeholder text "${(PLACEHOLDER.exec(s)?.[0] ?? "").toUpperCase()}" found` });
-        break;
-      }
-    }
   }
+  const findings = lintTemplates(loaded.templates, {
+    contentRoot,
+    skillKeys: loaded.graph ? new Set(loaded.graph.skills.map((s) => str(s.doc["key"]))) : undefined,
+  });
+  for (const f of findings) out.push({ file: f.file, rule: f.rule, message: f.message, severity: enforceAll || ENFORCED.has(f.rule) ? f.severity : "W" });
   return out;
 }
