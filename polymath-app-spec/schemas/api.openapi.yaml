@@ -1059,6 +1059,13 @@ paths:
         A node is `l1_working` only when at least 90% of its skills with `tier_target` L1 or below have `tier_attained`
         L1 or higher **and** its L1 gate project has all required evidence `accepted` (contract section 7.13). Anything
         less must be shown as the counts, never as a badge. Hour estimates are not part of this response.
+
+        Additions of decision 00a J8 (all counts, nothing stored): `totals.needs_applied` (reviewing skills whose only open
+        mastery condition is the applied attempt, doc 06 section 4.3), `nodes[].l1_gate_project.evidence_required`,
+        `week.history` (the last 8 local ISO weeks, oldest first), `checkpoints` (the last 5 completed unaided checks; the
+        aided versus unaided comparison is non-null only from 3 completed checks) and `decayed`. A node's gate project is the
+        caller's started project with `tier_gate` L1 whose steps name the most skills of that node. There is no over-reliance
+        list until BL-0188.
       responses:
         '200':
           description: Progress view
@@ -1074,8 +1081,29 @@ paths:
                   end_date: '2026-11-22'
                   minutes_done: 215
                   minutes_target: 480
+                  history:
+                    - {start_date: '2026-09-28', minutes_done: 0}
+                    - {start_date: '2026-10-05', minutes_done: 120}
+                    - {start_date: '2026-10-12', minutes_done: 300}
+                    - {start_date: '2026-10-19', minutes_done: 410}
+                    - {start_date: '2026-10-26', minutes_done: 380}
+                    - {start_date: '2026-11-02', minutes_done: 455}
+                    - {start_date: '2026-11-09', minutes_done: 470}
+                    - {start_date: '2026-11-16', minutes_done: 215}
+                checkpoints:
+                  completed_count: 3
+                  recent:
+                    - {checkpoint_id: 3b3b3b3b-0000-4000-8000-000000000003, completed_at: '2026-11-14T10:00:00Z', correct: 6, total: 9}
+                    - {checkpoint_id: 3b3b3b3b-0000-4000-8000-000000000002, completed_at: '2026-10-31T10:00:00Z', correct: 5, total: 8}
+                    - {checkpoint_id: 3b3b3b3b-0000-4000-8000-000000000001, completed_at: '2026-10-17T10:00:00Z', correct: 4, total: 8}
+                  aided_vs_unaided:
+                    aided: {correct: 41, total: 50}
+                    unaided: {correct: 15, total: 25}
+                decayed:
+                  - {skill_key: elec.dc.ohms-law, title: Ohm's law, last_review_at: '2026-09-30T18:00:00Z'}
                 totals:
                   skills: 138
+                  needs_applied: 2
                   by_mastery_state: {unseen: 120, learning: 6, reviewing: 8, mastered: 3, decayed: 1}
                 nodes:
                   - node: elec
@@ -1090,6 +1118,7 @@ paths:
                       steps_done: 2
                       steps_total: 5
                       evidence_accepted: 1
+                      evidence_required: 3
                     l1_working: false
                 review_load:
                   horizon_days: 7
@@ -3440,7 +3469,7 @@ components:
                 type: integer
               reason:
                 type: [string, 'null']
-                enum: [due_review, continue, frontier, interleave, checkpoint, project, null]
+                enum: [due_review, continue, frontier, interleave, checkpoint, project, applied_gap, null]
               assessment_kind:
                 type: [string, 'null']
                 enum: [diagnostic, module_end, periodic, delayed, transfer, null]
@@ -3469,7 +3498,7 @@ components:
           type: integer
         reason:
           type: [string, 'null']
-          enum: [due_review, continue, frontier, interleave, checkpoint, project, null]
+          enum: [due_review, continue, frontier, interleave, checkpoint, project, applied_gap, null]
         assessment_kind:
           type: [string, 'null']
           enum: [diagnostic, module_end, periodic, delayed, transfer, null]
@@ -4007,6 +4036,16 @@ components:
           oneOf:
             - $ref: '#/components/schemas/Tier'
             - type: 'null'
+        needs_applied:
+          type: boolean
+          description: |
+            True when the skill is `reviewing` and the applied attempt is the only open mastery condition (derived at
+            read time, docs/06 section 4.3, 00a G2 and J9). Screens read it as "Reviewing: needs one more applied problem".
+        placement_grace:
+          type: boolean
+          description: |
+            True while a `reviewing` skill credited by placement is inside the 14-day grace (docs/06 section 6.1, 00a G1
+            and J9). Screens read it as "Seems solid (to re-check)" and never show a tier for it.
     Skill:
       type: object
       required: [key, node, module, title, tier_target, est_minutes, status]
@@ -4142,18 +4181,86 @@ components:
                 $ref: '#/components/schemas/MasteryState'
     Progress:
       type: object
-      required: [generated_at, timezone, week, totals, nodes, review_load, projects]
+      required: [generated_at, timezone, week, totals, nodes, review_load, projects, checkpoints, decayed]
       properties:
         generated_at:
           type: string
           format: date-time
+        checkpoints:
+          type: object
+          description: Completed unaided checkpoints (docs/09 S15 element d). Counts only; the UI prints any percentage.
+          required: [completed_count, recent, aided_vs_unaided]
+          properties:
+            completed_count:
+              type: integer
+              minimum: 0
+            recent:
+              type: array
+              maxItems: 5
+              description: Newest first
+              items:
+                type: object
+                required: [checkpoint_id, completed_at, correct, total]
+                properties:
+                  checkpoint_id:
+                    type: string
+                    format: uuid
+                  completed_at:
+                    type: string
+                    format: date-time
+                  correct:
+                    type: integer
+                    minimum: 0
+                  total:
+                    type: integer
+                    minimum: 0
+            aided_vs_unaided:
+              type: [object, 'null']
+              description: |
+                Null unless `completed_count` is at least 3. `unaided` sums the graded checkpoint answers of `recent`; `aided`
+                sums the graded practice answers outside checkpoints with `unaided = false` since the oldest of those checkpoints began.
+              required: [aided, unaided]
+              properties:
+                aided:
+                  $ref: '#/components/schemas/CorrectOfTotal'
+                unaided:
+                  $ref: '#/components/schemas/CorrectOfTotal'
+        decayed:
+          type: array
+          description: Skills in mastery state `decayed`, oldest review first (docs/09 S15 element g)
+          items:
+            type: object
+            required: [skill_key, title, last_review_at]
+            properties:
+              skill_key:
+                $ref: '#/components/schemas/SkillKey'
+              title:
+                type: string
+              last_review_at:
+                type: [string, 'null']
+                format: date-time
         timezone:
           type: string
           description: IANA zone of the learner; week and day boundaries use it
         week:
           type: object
-          required: [start_date, end_date, minutes_done, minutes_target]
+          required: [start_date, end_date, minutes_done, minutes_target, history]
           properties:
+            history:
+              type: array
+              minItems: 8
+              maxItems: 8
+              description: Minutes per local ISO week, oldest first, ending with the current week
+              items:
+                type: object
+                required: [start_date, minutes_done]
+                properties:
+                  start_date:
+                    type: string
+                    format: date
+                  minutes_done:
+                    type: integer
+                    minimum: 0
             start_date:
               type: string
               format: date
@@ -4169,11 +4276,15 @@ components:
               minimum: 0
         totals:
           type: object
-          required: [skills, by_mastery_state]
+          required: [skills, needs_applied, by_mastery_state]
           properties:
             skills:
               type: integer
               description: Non-stub, non-retired skills
+            needs_applied:
+              type: integer
+              minimum: 0
+              description: Skills whose derived `needs_applied` flag is true (decision 00a J8, doc 06 section 4.3)
             by_mastery_state:
               $ref: '#/components/schemas/MasteryCounts'
         nodes:
@@ -4232,6 +4343,16 @@ components:
                 type: integer
               grants_applied:
                 type: integer
+    CorrectOfTotal:
+      type: object
+      required: [correct, total]
+      properties:
+        correct:
+          type: integer
+          minimum: 0
+        total:
+          type: integer
+          minimum: 0
     MasteryCounts:
       type: object
       required: [unseen, learning, reviewing, mastered, decayed]
@@ -4280,6 +4401,7 @@ components:
         l1_gate_project:
           type: [object, 'null']
           description: The node's L1 gate project, or null when the learner has not started it
+          required: [project_key, status, steps_done, steps_total, evidence_accepted, evidence_required]
           properties:
             project_key:
               $ref: '#/components/schemas/ProjectKey'
@@ -4291,6 +4413,9 @@ components:
               type: integer
             evidence_accepted:
               type: integer
+            evidence_required:
+              type: integer
+              description: Required (step, evidence kind) pairs of the project; the UI composes "evidence 1 of 3 accepted"
         l1_working:
           type: boolean
           description: True only when `l1_scope_at_l1 / l1_scope_skills >= 0.9` and the L1 gate project has all required evidence accepted. Display aid; show counts otherwise.

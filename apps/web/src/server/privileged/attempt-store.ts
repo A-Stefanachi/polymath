@@ -43,6 +43,8 @@ export type AttemptStore = {
   /** The stored `item_secrets.answer_key`, or null when the item has none. */
   loadAnswerKey(itemId: string): Promise<unknown>;
   findByClientId(userId: string, clientAttemptId: string): Promise<AttemptRow | null>;
+  /** The attempt when it exists and belongs to `userId` (getAttempt, BL-0196). */
+  findById(userId: string, attemptId: string): Promise<AttemptRow | null>;
   /** True when the session exists and belongs to `userId`. */
   ownsSession(userId: string, sessionId: string): Promise<boolean>;
   /**
@@ -67,6 +69,10 @@ export function createAttemptStore(sql: Sql): AttemptStore {
     loadAnswerKey: async (itemId) =>
       (await sql<{ answer_key: unknown }[]>`select answer_key from public.item_secrets where item_id = ${itemId}`)[0]?.answer_key ?? null,
     findByClientId: (userId, clientAttemptId) => find(sql, userId, clientAttemptId),
+    findById: async (userId, attemptId) =>
+      (
+        await sql<AttemptRow[]>`select ${COLUMNS(sql)} from public.attempts where id = ${attemptId} and user_id = ${userId}`
+      )[0] ?? null,
     ownsSession: async (userId, sessionId) =>
       (await sql<{ ok: boolean }[]>`select exists (select 1 from public.sessions where id = ${sessionId} and user_id = ${userId}) as ok`)[0]?.ok === true,
     insert: (a) =>
@@ -90,6 +96,13 @@ export function createAttemptStore(sql: Sql): AttemptStore {
           return { row: existing, created: false };
         }
         await insertEvents(db, [{ userId: a.userId, name: "attempt_submitted", props: { ...a.eventProps, attempt_id: id } }]);
+        // 00a J9: a graded attempt closes its session task in the same transaction, so getSession is the runner's
+        // resume point. A pending (queued) grade closes it too: the learner has answered and the attempt row exists;
+        // the worker's grade needs nothing more from them. `invalid_input` is not an attempt (the learner re-answers).
+        if (a.sessionTaskId !== null && a.gradeStatus !== "invalid_input") {
+          await tx`update public.session_tasks set status = 'done', completed_at = coalesce(completed_at, ${a.submittedAt}::timestamptz)
+            where id = ${a.sessionTaskId} and user_id = ${a.userId} and status <> 'done'`;
+        }
         if (a.gradeStatus === "pending") {
           // Ids only in the payload (CLAUDE.md rule 5); the dedupe key makes a retry of this insert harmless.
           await tx`select public.enqueue_job('grade_attempt', ${tx.json({ attempt_id: id })}, ${a.userId}, ${`grade:${id}`})`;

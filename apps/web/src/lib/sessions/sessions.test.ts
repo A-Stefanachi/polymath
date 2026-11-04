@@ -378,6 +378,24 @@ describe.skipIf(!reachable)("session builder API (database)", () => {
     await clearOpen(admin);
   });
 
+  it("00a J9 (c): skill_focus is accepted for a skill due for review and builds that review; a mastered skill not yet due is still refused", async () => {
+    const ok = await post(routes(previewer).build, "/sessions/build", { ...MICRO, skill_focus: s2, dry_run: true });
+    expect(ok.status).toBe(200);
+    const tasks = ((await ok.json()) as Json)["tasks"] as { skill_key: string; reason: string }[];
+    expect(tasks.length).toBeGreaterThan(0);
+    expect(tasks.every((t) => t.skill_key === s2)).toBe(true);
+    expect(tasks[0]?.reason).toBe("due_review");
+    await sql`insert into public.skill_state (user_id, skill_key, mastery_state, due, last_review, stability, difficulty, reps, fsrs_state, tier_attained, first_seen_at)
+      values (${other}, ${s2}, 'mastered', now() + interval '5 days', now() - interval '2 days', 9, 5, 4, 2, 'L1', now() - interval '30 days')`;
+    const refused = await post(routes(other).build, "/sessions/build", { ...MICRO, skill_focus: s2, dry_run: true });
+    expect(refused.status).toBe(400);
+    expect(JSON.stringify(await refused.json())).toContain("skill_focus");
+    // Decayed and due now is accepted (the third state of the rule).
+    await addItems(other, s2, 1);
+    await sql`update public.skill_state set mastery_state = 'decayed', due = now() - interval '1 hour' where user_id = ${other} and skill_key = ${s2}`;
+    expect((await post(routes(other).build, "/sessions/build", { ...MICRO, skill_focus: s2, dry_run: true })).status).toBe(200);
+  });
+
   it("BL-0191: dry_run must be a boolean and unknown fields are still rejected", async () => {
     for (const b of [{ ...MICRO, dry_run: "yes" }, { ...MICRO, dry_run: true, surprise: 1 }]) {
       expect((await post(routes(previewer).build, "/sessions/build", b)).status).toBe(400);

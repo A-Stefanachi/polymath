@@ -46,3 +46,7 @@ Thumbs.db
 CLAUDE.local.md
 .claude/agent-memory/
 .claude/worktrees/
+
+# Built by `serwist build` (BL-0063)
+apps/web/public/sw.js
+apps/web/public/sw.js.map

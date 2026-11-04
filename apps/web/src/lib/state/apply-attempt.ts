@@ -156,8 +156,42 @@ const asUnit = (a: ClaimedAttempt, templateNObs: number): UnitAttempt => ({
   templateNObs,
 });
 
-type Ctx = { tx: StateTx; deps: StateDeps; userId: string; skillKey: string; now: Date; timezone: string };
+export type Ctx = { tx: StateTx; deps: StateDeps; userId: string; skillKey: string; now: Date; timezone: string };
 type Review = { rating: 1 | 2 | 3 | 4 };
+
+/** The FSRS card a review starts from: a fresh card for a never-reviewed skill, else the stored columns. */
+export function cardOf(fsrs: FsrsPort, skill: SkillRow, reviewedAt: Date): FsrsCard {
+  const isNew = skill.fsrsState === 0 && skill.lastReview === null && skill.due === null;
+  return isNew
+    ? fsrs.newCard(reviewedAt)
+    : fromSkillStateColumns({
+        stability: skill.stability,
+        difficulty: skill.difficulty,
+        due: (skill.due ?? reviewedAt).toISOString(),
+        last_review: skill.lastReview === null ? null : skill.lastReview.toISOString(),
+        reps: skill.reps,
+        lapses: skill.lapses,
+        fsrs_state: skill.fsrsState as 0 | 1 | 2 | 3,
+        scheduled_days: skill.scheduledDays,
+        learning_steps: skill.learningSteps,
+        fsrs_extra: skill.fsrsExtra,
+      });
+}
+
+/** Writes the card columns a review produced onto the skill row. */
+export function applyCardColumns(skill: SkillRow, cols: ReturnType<typeof toSkillStateColumns>): void {
+  skill.stability = cols.stability;
+  skill.difficulty = cols.difficulty;
+  skill.due = new Date(cols.due);
+  skill.lastReview = cols.last_review === null ? null : new Date(cols.last_review);
+  skill.reps = cols.reps;
+  skill.lapses = cols.lapses;
+  skill.fsrsState = cols.fsrs_state;
+  skill.elapsedDays = cols.elapsed_days;
+  skill.scheduledDays = cols.scheduled_days;
+  skill.learningSteps = cols.learning_steps;
+  skill.fsrsExtra = { ...cols.fsrs_extra };
+}
 
 /** One review unit: FSRS review of the skill card and the review_log row. Null when no review is due. */
 async function commitUnit(ctx: Ctx, skill: SkillRow, unit: readonly UnitAttempt[], sessionId: string | null): Promise<Review | null> {
@@ -175,37 +209,12 @@ async function commitUnit(ctx: Ctx, skill: SkillRow, unit: readonly UnitAttempt[
   const ratioMissing = (agg.template_n_obs ?? 0) < deps.params.latency_min_obs && agg.latency_ms !== undefined;
   const allFlags = ratioMissing ? [...flags, "latency_rows_ignored"] : [...flags];
 
-  const isNew = skill.fsrsState === 0 && skill.lastReview === null && skill.due === null;
-  const card: FsrsCard = isNew
-    ? deps.fsrs.newCard(reviewedAt)
-    : fromSkillStateColumns({
-        stability: skill.stability,
-        difficulty: skill.difficulty,
-        due: (skill.due ?? reviewedAt).toISOString(),
-        last_review: skill.lastReview === null ? null : skill.lastReview.toISOString(),
-        reps: skill.reps,
-        lapses: skill.lapses,
-        fsrs_state: skill.fsrsState as 0 | 1 | 2 | 3,
-        scheduled_days: skill.scheduledDays,
-        learning_steps: skill.learningSteps,
-        fsrs_extra: skill.fsrsExtra,
-      });
+  const card = cardOf(deps.fsrs, skill, reviewedAt);
   const stateBefore = skill.fsrsState;
   const predicted = deps.fsrs.retrievability(card, reviewedAt);
   const out = await deps.fsrs.review(card, rating, reviewedAt);
   const cols = toSkillStateColumns(out.card, out.log);
-
-  skill.stability = cols.stability;
-  skill.difficulty = cols.difficulty;
-  skill.due = new Date(cols.due);
-  skill.lastReview = cols.last_review === null ? null : new Date(cols.last_review);
-  skill.reps = cols.reps;
-  skill.lapses = cols.lapses;
-  skill.fsrsState = cols.fsrs_state;
-  skill.elapsedDays = cols.elapsed_days;
-  skill.scheduledDays = cols.scheduled_days;
-  skill.learningSteps = cols.learning_steps;
-  skill.fsrsExtra = { ...cols.fsrs_extra };
+  applyCardColumns(skill, cols);
 
   await tx.insertReview({
     userId,
@@ -220,7 +229,7 @@ async function commitUnit(ctx: Ctx, skill: SkillRow, unit: readonly UnitAttempt[
     stateBefore,
     stabilityAfter: cols.stability,
     difficultyAfter: cols.difficulty,
-    dueAfter: skill.due,
+    dueAfter: new Date(cols.due),
     paramsVersion: FSRS_PARAMS_VERSION,
     flags: allFlags,
   });
@@ -241,7 +250,7 @@ async function commitUnit(ctx: Ctx, skill: SkillRow, unit: readonly UnitAttempt[
 }
 
 /** Loop-step moves (06 section 7.4 "Loop-step transitions"); it moves forward except the decay reset. */
-function nextLoopStep(
+export function nextLoopStep(
   step: string | null,
   trigger: { kind: string; score: number } | null,
   state: string,
@@ -267,7 +276,7 @@ function nextLoopStep(
  * skill_state_changed event rows. `at` dates a decay (the triggering attempt), `lastRating` is the rating that
  * decides the "last rating was 1" clause.
  */
-async function settle(
+export async function settle(
   ctx: Ctx,
   skill: SkillRow,
   at: Date,

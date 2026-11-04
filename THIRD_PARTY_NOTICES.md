@@ -6,6 +6,9 @@ Direct dependencies and their licences (CLAUDE.md section 5). Transitive depende
 |---|---|---|
 | `@eslint/js` | 9.39.5 | MIT |
 | `@playwright/test` (BL-0021, dev) | 1.63.0 | Apache-2.0 |
+| `@serwist/cli` (BL-0063, dev; `serwist build`; published 2026-10-04) | 9.5.13 | MIT |
+| `esbuild` (BL-0063, dev; the optional peer `serwist build` bundles the worker with; published 2026-08-08) | 0.28.2 | MIT |
+| `serwist` (BL-0063, apps/web; service worker runtime, bundled into `public/sw.js`; published 2026-10-04) | 9.5.13 | MIT |
 | `@supabase/ssr` (BL-0021) | 0.12.7 | MIT |
 | `@supabase/supabase-js` (BL-0021) | 2.118.0 | MIT |
 | `@tailwindcss/postcss` | 4.3.4 | MIT |

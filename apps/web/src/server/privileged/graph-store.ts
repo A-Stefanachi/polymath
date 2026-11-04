@@ -41,9 +41,10 @@ export type GraphStateRow = {
   source: string;
   loopStep: string | null;
   firstSeenAt: Date | null;
+  epochStart: Date | null;
 };
 
-export type GraphSnapshot = { skills: GraphSkillRow[]; edges: GraphEdgeRow[]; states: GraphStateRow[] };
+export type GraphSnapshot = { skills: GraphSkillRow[]; edges: GraphEdgeRow[]; states: GraphStateRow[]; timezone: string };
 
 export type GraphStore = { snapshot(userId: string): Promise<GraphSnapshot> };
 
@@ -58,7 +59,7 @@ export function createGraphStore(sql: Sql): GraphStore {
     async snapshot(userId) {
       // The `skills_select` rule (skill-visibility.ts): a non-admin never sees a draft or needs_human_review skill.
       const admin = await isAdminUser(sql, userId);
-      const [skills, edges, states] = await Promise.all([
+      const [skills, edges, states, profile] = await Promise.all([
         sql<Row[]>`
           select s.key, s.node::text as node, s.module, s.title, s.description, s.tier_target::text as tier_target, s.est_minutes,
                  s.license, s.source, s.status::text as status, s.task_kinds::text[] as task_kinds,
@@ -74,8 +75,9 @@ export function createGraphStore(sql: Sql): GraphStore {
         sql<Row[]>`
           select skill_key, mastery_state::text as mastery_state, elo, stability, difficulty, due, last_review, reps, lapses,
                  fsrs_state, scheduled_days, learning_steps, fsrs_extra, tier_attained::text as tier_attained, source,
-                 loop_step, first_seen_at
+                 loop_step, first_seen_at, epoch_start
             from public.skill_state where user_id = ${userId}`,
+        sql<{ timezone: string }[]>`select timezone from public.profiles where id = ${userId}`,
       ]);
       return {
         skills: skills.map((r) => ({
@@ -118,7 +120,9 @@ export function createGraphStore(sql: Sql): GraphStore {
           source: str(r["source"]),
           loopStep: optStr(r["loop_step"]),
           firstSeenAt: optDate(r["first_seen_at"]),
+          epochStart: optDate(r["epoch_start"]),
         })),
+        timezone: profile[0]?.timezone ?? "UTC",
       };
     },
   };

@@ -10,7 +10,8 @@ import { checkEvent } from "@/lib/events/emit.ts";
 import { canServe } from "@/lib/items/serve.ts";
 import { privilegedDb } from "@/server/privileged/db";
 import { createServeStore, type ServeStore } from "@/server/privileged/item-store";
-import { createReportStore, type ReportRow, type ReportStore } from "@/server/privileged/report-store";
+import { rebuildSkillStateDefault } from "@/lib/state/rebuild-skill.ts";
+import { createReportStore, type RebuildTarget, type ReportRow, type ReportStore } from "@/server/privileged/report-store";
 
 type ItemReport = components["schemas"]["ItemReport"];
 type ItemReportRequest = components["schemas"]["ItemReportRequest"];
@@ -19,10 +20,19 @@ type ResolveItemReportRequest = components["schemas"]["ResolveItemReportRequest"
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-type Stores = { reports: ReportStore; serve: ServeStore };
+/** `rebuild` re-derives a learner's skill_state once a disputed flag changed (BL-0197, 00a J2). */
+export type Stores = {
+  reports: ReportStore;
+  serve: ServeStore;
+  rebuild: (target: RebuildTarget, now: Date) => Promise<unknown>;
+};
 const defaultStores = (): Stores => {
   const sql = privilegedDb();
-  return { reports: createReportStore(sql), serve: createServeStore(sql) };
+  return {
+    reports: createReportStore(sql),
+    serve: createServeStore(sql),
+    rebuild: (t, now) => rebuildSkillStateDefault(t.userId, t.skillKey, now),
+  };
 };
 
 const bad = (field: string, message: string) => new ApiError("validation_failed", { errors: [{ field, message }] });
@@ -56,7 +66,7 @@ export async function reportItem(ctx: ApiContext, stores: Stores = defaultStores
   if (body.attempt_id && (await stores.reports.attemptItem(userId, body.attempt_id)) !== itemId) throw new ApiError("not_found");
 
   const eventProps = checkEvent("item_reported", { item_id: itemId, template_key: item.template_key, reason: body.reason, source: "learner" });
-  await stores.reports.fileReport({
+  const filed = await stores.reports.fileReport({
     userId,
     itemId,
     reason: body.reason,
@@ -65,6 +75,8 @@ export async function reportItem(ctx: ApiContext, stores: Stores = defaultStores
     reportedByAdmin: admin,
     eventProps,
   });
+  // The attempt is out of FSRS until triage: rebuild the reporter's skill state without it (00a J2).
+  if (filed.rebuild) await stores.rebuild(filed.rebuild, new Date());
   return json({ recorded: true }, 202);
 }
 
@@ -133,5 +145,7 @@ export async function resolveItemReport(ctx: ApiContext, stores: Stores = defaul
   const out = await stores.reports.resolve({ reportId, adminId: userId, status: body.status, retireItem: body.retire_item ?? false });
   if (out === "not_found") throw new ApiError("not_found");
   if (out === "no_item") throw bad("retire_item", "this report has no item to retire");
+  // learner_error (dismissed) returns the attempt to the record: rebuild again with it (00a J2).
+  if (out.rebuild) await stores.rebuild(out.rebuild, new Date());
   return json(toReport(out.report));
 }

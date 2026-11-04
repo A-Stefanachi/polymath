@@ -42,6 +42,10 @@ export default defineConfig({
   workers: 1, // GoTrue rate limits are per IP and the stack is shared
   reporter: [["list"]],
   timeout: 90_000,
+  // The e2e app is a production build, so it registers the BL-0063 service worker, which claims the page. Fetches
+  // a service worker makes are not seen by page.route, so once it controls the page the scenarios' API mocks stop
+  // applying. Only the pwa project, which tests the worker itself, lets it register.
+  use: { serviceWorkers: "block" },
   projects: [
     { name: "signin", testMatch: "signin.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
     {
@@ -49,10 +53,27 @@ export default defineConfig({
       testMatch: "onboarding.spec.ts",
       use: { baseURL: `http://127.0.0.1:${signupPort}`, timezoneId: "Europe/Rome" },
     },
+    {
+      name: "today",
+      testMatch: "today.spec.ts",
+      use: { baseURL: `http://127.0.0.1:${signupPort}`, timezoneId: "Europe/Rome" },
+    },
+    {
+      name: "runner",
+      testMatch: "runner.spec.ts",
+      use: { baseURL: `http://127.0.0.1:${signupPort}`, timezoneId: "Europe/Rome" },
+    },
+    {
+      name: "pwa",
+      testMatch: "pwa.spec.ts",
+      use: { baseURL: `http://127.0.0.1:${signupPort}`, timezoneId: "Europe/Rome", viewport: { width: 360, height: 800 }, serviceWorkers: "allow" },
+    },
     { name: "consent", testMatch: "consent.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
     { name: "demo-item", testMatch: "demo-item.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
     { name: "ui-gallery", testMatch: "ui-gallery.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
     { name: "review-console", testMatch: "review-console.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
+    { name: "map-progress-review", testMatch: "map-progress-review.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
+    { name: "a11y", testMatch: "a11y.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}`, timezoneId: "Europe/Rome" } },
     { name: "enumeration", testMatch: "enumeration.spec.ts", use: { baseURL: `http://127.0.0.1:${noSignupPort}` } },
   ],
   webServer: [server(signupPort, "true"), server(noSignupPort, "false")],

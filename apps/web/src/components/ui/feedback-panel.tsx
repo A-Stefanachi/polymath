@@ -37,7 +37,7 @@ export function FeedbackPanel({
         <PixelIcon name={t.iconName} size={32} className={t.icon} />
         <h2 className="font-display text-[26px] leading-8 font-bold">{title}</h2>
       </div>
-      {children ? <div className="text-body">{children}</div> : null}
+      {children ? <div className="flex flex-col gap-2 text-body">{children}</div> : null}
       {actions ? <div className="flex gap-2.5">{actions}</div> : null}
     </section>
   );

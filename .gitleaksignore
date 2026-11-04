@@ -3,8 +3,10 @@
 # line's text (never the secret), so a finding stays accepted when its line moves. The
 # file:rule:line line after it is gitleaks' own fingerprint, used when gitleaks runs directly.
 #autoswe 4d26ee371f39afca generic-api-key packages/shared-types/src/api.gen.ts
+packages/shared-types/src/api.gen.ts:generic-api-key:4603
 packages/shared-types/src/api.gen.ts:generic-api-key:4468
 #autoswe 0c1d21a757442c8e generic-api-key packages/shared-types/src/api.gen.ts
+packages/shared-types/src/api.gen.ts:generic-api-key:5408
 packages/shared-types/src/api.gen.ts:generic-api-key:5273
 #autoswe 820033265646a4be generic-api-key polymath-app-spec/content/extended-project-ladder-sketch.yaml
 polymath-app-spec/content/extended-project-ladder-sketch.yaml:generic-api-key:7
@@ -19,6 +21,8 @@ polymath-app-spec/content/syllabi/skill-specs/T3.yaml:generic-api-key:188
 #autoswe ec3ecf58be8b8617 generic-api-key polymath-app-spec/content/syllabi/spine-module-plan.yaml
 polymath-app-spec/content/syllabi/spine-module-plan.yaml:generic-api-key:999
 #autoswe fd06cccb08df35af generic-api-key polymath-app-spec/schemas/api.openapi.yaml
+polymath-app-spec/schemas/api.openapi.yaml:generic-api-key:1638
 polymath-app-spec/schemas/api.openapi.yaml:generic-api-key:1609
 #autoswe 379903a52b9eeee3 generic-api-key polymath-app-spec/schemas/api.openapi.yaml
+polymath-app-spec/schemas/api.openapi.yaml:generic-api-key:2384
 polymath-app-spec/schemas/api.openapi.yaml:generic-api-key:2355

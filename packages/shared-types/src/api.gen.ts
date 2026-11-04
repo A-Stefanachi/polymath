@@ -492,6 +492,13 @@ export interface paths {
          *     A node is `l1_working` only when at least 90% of its skills with `tier_target` L1 or below have `tier_attained`
          *     L1 or higher **and** its L1 gate project has all required evidence `accepted` (contract section 7.13). Anything
          *     less must be shown as the counts, never as a badge. Hour estimates are not part of this response.
+         *
+         *     Additions of decision 00a J8 (all counts, nothing stored): `totals.needs_applied` (reviewing skills whose only open
+         *     mastery condition is the applied attempt, doc 06 section 4.3), `nodes[].l1_gate_project.evidence_required`,
+         *     `week.history` (the last 8 local ISO weeks, oldest first), `checkpoints` (the last 5 completed unaided checks; the
+         *     aided versus unaided comparison is non-null only from 3 completed checks) and `decayed`. A node's gate project is the
+         *     caller's started project with `tier_gate` L1 whose steps name the most skills of that node. There is no over-reliance
+         *     list until BL-0188.
          */
         get: operations["getProgress"];
         put?: never;
@@ -1608,7 +1615,7 @@ export interface components {
                 project_step_key?: string | null;
                 est_seconds: number;
                 /** @enum {string|null} */
-                reason?: "due_review" | "continue" | "frontier" | "interleave" | "checkpoint" | "project" | null;
+                reason?: "due_review" | "continue" | "frontier" | "interleave" | "checkpoint" | "project" | "applied_gap" | null;
                 /** @enum {string|null} */
                 assessment_kind?: "diagnostic" | "module_end" | "periodic" | "delayed" | "transfer" | null;
             }[];
@@ -1625,7 +1632,7 @@ export interface components {
             status: components["schemas"]["SessionTaskStatus"];
             est_seconds: number;
             /** @enum {string|null} */
-            reason?: "due_review" | "continue" | "frontier" | "interleave" | "checkpoint" | "project" | null;
+            reason?: "due_review" | "continue" | "frontier" | "interleave" | "checkpoint" | "project" | "applied_gap" | null;
             /**
              * @description Null for ordinary practice. Assessment-pool items are only served with a non-null kind.
              * @enum {string|null}
@@ -1917,6 +1924,16 @@ export interface components {
             reps?: number;
             lapses?: number;
             tier_attained?: components["schemas"]["Tier"] | null;
+            /**
+             * @description True when the skill is `reviewing` and the applied attempt is the only open mastery condition (derived at
+             *     read time, docs/06 section 4.3, 00a G2 and J9). Screens read it as "Reviewing: needs one more applied problem".
+             */
+            needs_applied?: boolean;
+            /**
+             * @description True while a `reviewing` skill credited by placement is inside the 14-day grace (docs/06 section 6.1, 00a G1
+             *     and J9). Screens read it as "Seems solid (to re-check)" and never show a tier for it.
+             */
+            placement_grace?: boolean;
         };
         Skill: {
             key: components["schemas"]["SkillKey"];
@@ -1978,9 +1995,43 @@ export interface components {
         Progress: {
             /** Format: date-time */
             generated_at: string;
+            /** @description Completed unaided checkpoints (docs/09 S15 element d). Counts only; the UI prints any percentage. */
+            checkpoints: {
+                completed_count: number;
+                /** @description Newest first */
+                recent: {
+                    /** Format: uuid */
+                    checkpoint_id: string;
+                    /** Format: date-time */
+                    completed_at: string;
+                    correct: number;
+                    total: number;
+                }[];
+                /**
+                 * @description Null unless `completed_count` is at least 3. `unaided` sums the graded checkpoint answers of `recent`; `aided`
+                 *     sums the graded practice answers outside checkpoints with `unaided = false` since the oldest of those checkpoints began.
+                 */
+                aided_vs_unaided: {
+                    aided: components["schemas"]["CorrectOfTotal"];
+                    unaided: components["schemas"]["CorrectOfTotal"];
+                } | null;
+            };
+            /** @description Skills in mastery state `decayed`, oldest review first (docs/09 S15 element g) */
+            decayed: {
+                skill_key: components["schemas"]["SkillKey"];
+                title: string;
+                /** Format: date-time */
+                last_review_at: string | null;
+            }[];
             /** @description IANA zone of the learner; week and day boundaries use it */
             timezone: string;
             week: {
+                /** @description Minutes per local ISO week, oldest first, ending with the current week */
+                history: {
+                    /** Format: date */
+                    start_date: string;
+                    minutes_done: number;
+                }[];
                 /** Format: date */
                 start_date: string;
                 /** Format: date */
@@ -1992,6 +2043,8 @@ export interface components {
             totals: {
                 /** @description Non-stub, non-retired skills */
                 skills: number;
+                /** @description Skills whose derived `needs_applied` flag is true (decision 00a J8, doc 06 section 4.3) */
+                needs_applied: number;
                 by_mastery_state: components["schemas"]["MasteryCounts"];
             };
             nodes: components["schemas"]["NodeProgress"][];
@@ -2020,6 +2073,10 @@ export interface components {
                 grants_applied?: number;
             }[];
         };
+        CorrectOfTotal: {
+            correct: number;
+            total: number;
+        };
         MasteryCounts: {
             unseen: number;
             learning: number;
@@ -2045,11 +2102,13 @@ export interface components {
             l1_scope_at_l1: number;
             /** @description The node's L1 gate project, or null when the learner has not started it */
             l1_gate_project?: {
-                project_key?: components["schemas"]["ProjectKey"];
-                status?: components["schemas"]["UserProjectStatus"];
-                steps_done?: number;
-                steps_total?: number;
-                evidence_accepted?: number;
+                project_key: components["schemas"]["ProjectKey"];
+                status: components["schemas"]["UserProjectStatus"];
+                steps_done: number;
+                steps_total: number;
+                evidence_accepted: number;
+                /** @description Required (step, evidence kind) pairs of the project; the UI composes "evidence 1 of 3 accepted" */
+                evidence_required: number;
             } | null;
             /** @description True only when `l1_scope_at_l1 / l1_scope_skills >= 0.9` and the L1 gate project has all required evidence accepted. Display aid; show counts otherwise. */
             l1_working: boolean;
@@ -3817,10 +3876,85 @@ export interface operations {
                      *         "start_date": "2026-11-16",
                      *         "end_date": "2026-11-22",
                      *         "minutes_done": 215,
-                     *         "minutes_target": 480
+                     *         "minutes_target": 480,
+                     *         "history": [
+                     *           {
+                     *             "start_date": "2026-09-28",
+                     *             "minutes_done": 0
+                     *           },
+                     *           {
+                     *             "start_date": "2026-10-05",
+                     *             "minutes_done": 120
+                     *           },
+                     *           {
+                     *             "start_date": "2026-10-12",
+                     *             "minutes_done": 300
+                     *           },
+                     *           {
+                     *             "start_date": "2026-10-19",
+                     *             "minutes_done": 410
+                     *           },
+                     *           {
+                     *             "start_date": "2026-10-26",
+                     *             "minutes_done": 380
+                     *           },
+                     *           {
+                     *             "start_date": "2026-11-02",
+                     *             "minutes_done": 455
+                     *           },
+                     *           {
+                     *             "start_date": "2026-11-09",
+                     *             "minutes_done": 470
+                     *           },
+                     *           {
+                     *             "start_date": "2026-11-16",
+                     *             "minutes_done": 215
+                     *           }
+                     *         ]
                      *       },
+                     *       "checkpoints": {
+                     *         "completed_count": 3,
+                     *         "recent": [
+                     *           {
+                     *             "checkpoint_id": "3b3b3b3b-0000-4000-8000-000000000003",
+                     *             "completed_at": "2026-11-14T10:00:00Z",
+                     *             "correct": 6,
+                     *             "total": 9
+                     *           },
+                     *           {
+                     *             "checkpoint_id": "3b3b3b3b-0000-4000-8000-000000000002",
+                     *             "completed_at": "2026-10-31T10:00:00Z",
+                     *             "correct": 5,
+                     *             "total": 8
+                     *           },
+                     *           {
+                     *             "checkpoint_id": "3b3b3b3b-0000-4000-8000-000000000001",
+                     *             "completed_at": "2026-10-17T10:00:00Z",
+                     *             "correct": 4,
+                     *             "total": 8
+                     *           }
+                     *         ],
+                     *         "aided_vs_unaided": {
+                     *           "aided": {
+                     *             "correct": 41,
+                     *             "total": 50
+                     *           },
+                     *           "unaided": {
+                     *             "correct": 15,
+                     *             "total": 25
+                     *           }
+                     *         }
+                     *       },
+                     *       "decayed": [
+                     *         {
+                     *           "skill_key": "elec.dc.ohms-law",
+                     *           "title": "Ohm's law",
+                     *           "last_review_at": "2026-09-30T18:00:00Z"
+                     *         }
+                     *       ],
                      *       "totals": {
                      *         "skills": 138,
+                     *         "needs_applied": 2,
                      *         "by_mastery_state": {
                      *           "unseen": 120,
                      *           "learning": 6,
@@ -3854,7 +3988,8 @@ export interface operations {
                      *             "status": "active",
                      *             "steps_done": 2,
                      *             "steps_total": 5,
-                     *             "evidence_accepted": 1
+                     *             "evidence_accepted": 1,
+                     *             "evidence_required": 3
                      *           },
                      *           "l1_working": false
                      *         }

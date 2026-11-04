@@ -17,7 +17,14 @@ export type SymbolicSpec = {
   form?: string;
   numeric_rel_tol?: number;
 };
-export type SymbolicRequest = { responseText: string; reference: string; spec: SymbolicSpec };
+/** A wrong answer of the answer key for this item's parameters (00a J4). Server-side only. */
+export type SymbolicMisconception = { tag: string; expr: string; feedback_md?: string | undefined };
+export type SymbolicRequest = {
+  responseText: string;
+  reference: string;
+  spec: SymbolicSpec;
+  misconceptions?: SymbolicMisconception[];
+};
 
 /** The worker's grade. `detail` keys are filtered by the caller before anything is stored or returned. */
 const workerGrade = z.object({
@@ -49,7 +56,12 @@ export function createSymbolicClient(
     const base = env.WORKER_URL;
     const secret = env.WORKER_HMAC_SECRET;
     if (!base || !secret) return null; // queue-only mode (00a I2)
-    const body = JSON.stringify({ response_text: req.responseText, reference: req.reference, spec: req.spec });
+    const body = JSON.stringify({
+      response_text: req.responseText,
+      reference: req.reference,
+      spec: req.spec,
+      ...(req.misconceptions?.length ? { misconceptions: req.misconceptions } : {}),
+    });
     const timestamp = String(nowS());
     try {
       const res = await fetchImpl(new URL(SYMBOLIC_PATH, base), {

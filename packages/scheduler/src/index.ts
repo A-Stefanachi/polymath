@@ -6,6 +6,7 @@ export {
   computeAvailable,
   computeFrontier,
   frontierScores,
+  inPlacementGrace,
   lockedReasons,
   prereqSatisfied,
   projectPull,

@@ -11,15 +11,19 @@ import "@fontsource/pixelify-sans/700.css";
 import "@fontsource/silkscreen/400.css";
 import "./globals.css";
 import { shell } from "@/copy/strings";
+import { RegisterServiceWorker } from "@/sw/register";
 
 export const metadata: Metadata = {
   title: "Polymath",
   description: "Adaptive practice with spaced retrieval, graded feedback and guided builds.",
+  icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "Polymath", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#f5f1e6",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -33,6 +37,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           {shell.skipToContent}
         </a>
         {children}
+        <RegisterServiceWorker />
       </body>
     </html>
   );

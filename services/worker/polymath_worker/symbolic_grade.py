@@ -30,6 +30,7 @@ from polymath_worker.content import symbolic_equiv as sq
 GRADER_TIMEOUT_S = 1.5
 MAX_REFERENCE_LEN = 2000
 MAX_VARIABLES = 8
+MAX_MISCONCEPTIONS = 16
 _IDENT = re.compile(r"^[A-Za-z][A-Za-z0-9_]{0,15}$")
 
 
@@ -67,6 +68,16 @@ class SymbolicSpec(BaseModel):
         return self
 
 
+class Misconception(BaseModel):
+    """One entry of the answer key's `misconceptions` (00a J4): the wrong answer for this item's parameters."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    tag: str = Field(min_length=1, max_length=100)
+    expr: str = Field(min_length=1, max_length=MAX_REFERENCE_LEN)
+    feedback_md: str = Field(default="", max_length=2000)
+
+
 class SymbolicGradeRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -74,6 +85,7 @@ class SymbolicGradeRequest(BaseModel):
     response_text: str
     reference: str = Field(min_length=1, max_length=MAX_REFERENCE_LEN)
     spec: SymbolicSpec
+    misconceptions: list[Misconception] = Field(default_factory=list, max_length=MAX_MISCONCEPTIONS)
 
 
 def parse_reference(reference: str, variables: list[str]) -> sp.Expr:
@@ -95,8 +107,22 @@ def grade_symbolic(req: SymbolicGradeRequest) -> dict[str, Any]:
         reference = parse_reference(req.reference, req.spec.variables)
     except se.ExprError as e:
         raise InvalidReference from e
-    grade = sq.check_equivalent(req.response_text, reference, req.spec.model_dump(), seconds=GRADER_TIMEOUT_S)
+    wrong = [m.model_dump() for m in req.misconceptions]
+    try:
+        grade = sq.check_equivalent(
+            req.response_text, reference, req.spec.model_dump(), wrong, seconds=GRADER_TIMEOUT_S
+        )
+    except (
+        se.ExprError
+    ) as e:  # the learner's text is handled inside the checker; this is a misconception expr
+        raise InvalidReference from e
     grade.setdefault("status", "graded")
+    # Only the first matching misconception is reported (00a J4), with its own feedback.
+    tags = grade["misconception_tags"]
+    if tags:
+        first = next(m for m in req.misconceptions if m.tag == tags[0])
+        grade["misconception_tags"] = [first.tag]
+        grade["feedback"] = first.feedback_md or "Not equivalent to the correct expression."
     return grade
 
 

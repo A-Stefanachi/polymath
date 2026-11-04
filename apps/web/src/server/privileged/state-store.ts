@@ -100,10 +100,34 @@ export type ReviewLogRow = {
   flags: string[];
 };
 
+export type ReplayReview = { rating: 1 | 2 | 3 | 4; reviewedAt: Date; allDisputed: boolean };
+
 /** tierTarget is read-only context (skills.tier_target) and is ignored on write. */
 export type SkillWrite = SkillRow;
 
+/** A session task with its session's status and any stored outcome (completeTask, 00a J9). */
+export type TaskLock = {
+  id: string;
+  sessionId: string;
+  sessionStatus: string;
+  position: number;
+  taskKind: string;
+  skillKey: string | null;
+  projectStepKey: string | null;
+  itemId: string | null;
+  status: string;
+  estSeconds: number;
+  reason: string | null;
+  assessmentKind: string | null;
+  /** `sessions.plan.task_outcomes[task id]`, null when none is stored. */
+  outcome: Record<string, unknown> | null;
+};
+
 export type StateTx = {
+  /** The user's own task, locked with its session row; null for another user's or a missing task. */
+  lockTask(userId: string, taskId: string): Promise<TaskLock | null>;
+  /** Closes a task and stores the outcome under `sessions.plan.task_outcomes` (a skip is not an attempt, 06 section 10). */
+  closeTask(taskId: string, sessionId: string, status: "done" | "skipped", at: Date, outcome: Record<string, unknown>): Promise<void>;
   /** Compare-and-set of attempts.state_applied_at (00a H15): the idempotency guard. */
   claim(attemptId: string, now: Date): Promise<ClaimResult>;
   /** Creates the skill_state row when missing, then returns it locked for the transaction. */
@@ -126,6 +150,8 @@ export type StateTx = {
   sessionReviewed(sessionId: string, skillKey: string): Promise<boolean>;
   reviewedSameLocalDay(userId: string, skillKey: string, at: Date, timezone: string): Promise<boolean>;
   insertReview(row: ReviewLogRow): Promise<void>;
+  /** The skill's review_log rows in order, each flagged when every attempt it covers is disputed (00a J2, BL-0197). */
+  reviewsForReplay(userId: string, skillKey: string): Promise<ReplayReview[]>;
   /** Owner check for the session-close entry point. */
   ownsSession(userId: string, sessionId: string): Promise<boolean>;
   events(rows: EventRow[]): Promise<void>;
@@ -148,6 +174,10 @@ const SCORE = (db: Sql) => db`(a.grade ->> 'score')::float8`;
 const ELIGIBLE = (db: Sql) =>
   db`(coalesce((a.grade ->> 'mastery_eligible')::boolean, true) and t.mastery_eligible and not coalesce((a.grade ->> 'disputed')::boolean, false))`;
 
+// A review_log row whose attempts are all disputed is out of FSRS evidence until triage (00a J2).
+const REVIEW_DISPUTED = (db: Sql) => db`(cardinality(r.attempt_ids) > 0 and not exists (
+  select 1 from public.attempts da where da.id = any(r.attempt_ids) and not coalesce((da.grade ->> 'disputed')::boolean, false)))`;
+
 const toHistory = (r: Row): HistoryAttempt => ({
   id: String(r["id"]),
   itemId: String(r["item_id"]),
@@ -169,6 +199,41 @@ export function createStateStore(sql: Sql): StateStore {
         const db = tx as unknown as Sql;
         const json = (v: unknown) => db.json(v as Parameters<Sql["json"]>[0]);
         const api: StateTx = {
+          async lockTask(userId, taskId) {
+            const r = (
+              await db<Row[]>`
+                select st.id, st.session_id, s.status::text as session_status, st.position, st.task_kind::text as task_kind,
+                       st.skill_key, st.project_step_key, st.item_id, st.status::text as status, st.est_seconds, st.reason,
+                       st.assessment_kind, s.plan -> 'task_outcomes' -> st.id::text as outcome
+                  from public.session_tasks st join public.sessions s on s.id = st.session_id
+                 where st.id = ${taskId} and st.user_id = ${userId} and s.user_id = ${userId}
+                   for update of st, s`
+            )[0];
+            if (!r) return null;
+            const outcome = r["outcome"];
+            return {
+              id: String(r["id"]),
+              sessionId: String(r["session_id"]),
+              sessionStatus: String(r["session_status"]),
+              position: num(r["position"]),
+              taskKind: String(r["task_kind"]),
+              skillKey: (r["skill_key"] as string | null) ?? null,
+              projectStepKey: (r["project_step_key"] as string | null) ?? null,
+              itemId: (r["item_id"] as string | null) ?? null,
+              status: String(r["status"]),
+              estSeconds: num(r["est_seconds"]),
+              reason: (r["reason"] as string | null) ?? null,
+              assessmentKind: (r["assessment_kind"] as string | null) ?? null,
+              outcome: typeof outcome === "object" && outcome !== null ? (outcome as Record<string, unknown>) : null,
+            };
+          },
+          async closeTask(taskId, sessionId, status, at, outcome) {
+            await db`update public.session_tasks set status = ${status}::public.session_task_status,
+              completed_at = ${at.toISOString()}::timestamptz where id = ${taskId}`;
+            await db`update public.sessions set plan = jsonb_set(plan, '{task_outcomes}',
+              coalesce(plan -> 'task_outcomes', '{}'::jsonb) || jsonb_build_object(${taskId}::text, ${json(outcome)}::jsonb), true)
+              where id = ${sessionId}`;
+          },
           async claim(attemptId, now) {
             const rows = await db<Row[]>`
               with c as (
@@ -312,15 +377,16 @@ export function createStateStore(sql: Sql): StateStore {
           },
           async lastRating(userId, skillKey) {
             const r = (
-              await db<{ rating: number }[]>`select rating from public.review_log where user_id = ${userId} and skill_key = ${skillKey}
-                order by reviewed_at desc, id limit 1`
+              await db<{ rating: number }[]>`select r.rating from public.review_log r where r.user_id = ${userId} and r.skill_key = ${skillKey}
+                and not ${REVIEW_DISPUTED(db)} order by r.reviewed_at desc, r.id limit 1`
             )[0];
             return r ? r.rating : null;
           },
           async lapsesSince(userId, skillKey, since) {
             return (
-              await db<{ n: number }[]>`select count(*)::int as n from public.review_log
-                where user_id = ${userId} and skill_key = ${skillKey} and rating = 1 and reviewed_at >= ${since.toISOString()}::timestamptz`
+              await db<{ n: number }[]>`select count(*)::int as n from public.review_log r
+                where r.user_id = ${userId} and r.skill_key = ${skillKey} and r.rating = 1
+                  and r.reviewed_at >= ${since.toISOString()}::timestamptz and not ${REVIEW_DISPUTED(db)}`
             )[0]?.n ?? 0;
           },
           async sessionStatus(userId, sessionId) {
@@ -377,6 +443,13 @@ export function createStateStore(sql: Sql): StateStore {
               values (${r.userId}, ${r.skillKey}, ${r.attemptId}, ${db.array(r.attemptIds)}::uuid[], ${r.sessionId}, ${r.rating},
                 ${r.reviewedAt.toISOString()}::timestamptz, ${r.elapsedDays}, ${r.scheduledDays}, ${r.stateBefore}, ${r.stabilityAfter},
                 ${r.difficultyAfter}, ${r.dueAfter.toISOString()}::timestamptz, ${r.paramsVersion}, ${db.array(r.flags)}::text[])`;
+          },
+          async reviewsForReplay(userId, skillKey) {
+            const rows = await db<{ rating: number; reviewed_at: Date; all_disputed: boolean }[]>`
+              select r.rating::int as rating, r.reviewed_at, ${REVIEW_DISPUTED(db)} as all_disputed
+              from public.review_log r where r.user_id = ${userId} and r.skill_key = ${skillKey}
+              order by r.reviewed_at, r.id`;
+            return rows.map((r) => ({ rating: r.rating as 1 | 2 | 3 | 4, reviewedAt: r.reviewed_at, allDisputed: r.all_disputed }));
           },
           async ownsSession(userId, sessionId) {
             return (

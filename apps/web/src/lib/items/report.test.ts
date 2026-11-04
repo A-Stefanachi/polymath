@@ -7,6 +7,10 @@ import { defineRoute, type ApiDeps } from "@/lib/api/route";
 import { createTestUser, dbReachable, deleteTestUser, testSql } from "@/lib/api/test-db";
 import { createServeStore } from "@/server/privileged/item-store";
 import { createReportStore } from "@/server/privileged/report-store";
+import { createStateStore } from "@/server/privileged/state-store";
+import { sharedFsrsPort } from "@/lib/state/apply-attempt.ts";
+import { rebuildSkillState } from "@/lib/state/rebuild-skill.ts";
+import { DEFAULT_PARAMS } from "@polymath/scheduler";
 import { listItemReports, reportItem, resolveItemReport, retireItem } from "./report.ts";
 import { readItem, readTask } from "./serve.ts";
 
@@ -15,7 +19,12 @@ const reachable = await dbReachable(sql);
 if (process.env["REQUIRE_DB"] === "1" && !reachable) throw new Error("REQUIRE_DB=1 but no database is reachable");
 const silent = { ...logger.child({}), info: () => undefined, error: () => undefined } as typeof logger;
 const serve = createServeStore(sql);
-const stores = { reports: createReportStore(sql), serve };
+const stores = {
+  reports: createReportStore(sql),
+  serve,
+  rebuild: async (t: { userId: string; skillKey: string }, now: Date) =>
+    rebuildSkillState(t.userId, t.skillKey, now, { store: createStateStore(sql), fsrs: await sharedFsrsPort(), params: DEFAULT_PARAMS }),
+};
 
 const deps = (userId: string, wait = 0): ApiDeps => ({
   authenticate: async () => ({ userId }),

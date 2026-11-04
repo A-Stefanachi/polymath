@@ -16,7 +16,7 @@ export async function readExisting(sql: Sql): Promise<Existing> {
   const modules = await sql<{ key: string; title: string; order_index: number; is_stub: boolean }[]>`
     select key, title, order_index, is_stub from public.modules`;
   const skills = await sql<{ key: string; content_hash: string | null; status: string }[]>`
-    select key, content_hash, status::text as status from public.skills`;
+    select key, content_hash, case when retired_at is not null then 'retired' else status::text end as status from public.skills`;
   const edges = await sql<{ from_skill_key: string; to_skill_key: string; strength: string; min_tier: string }[]>`
     select from_skill_key, to_skill_key, strength::text as strength, min_tier::text as min_tier from public.skill_edges`;
   // fuzzPassed: the G2 job recorded for this row finished successfully with result {"passed": true}.
@@ -35,6 +35,14 @@ export async function readExisting(sql: Sql): Promise<Existing> {
     edges: [...edges],
     templates: templates.map((t) => ({ key: t.key, version: t.version, status: t.status, sha256: t.sha256, fuzzPassed: t.fuzz_passed, consoleReviewSha256: t.console_review_sha256 })),
   };
+}
+
+/** Of the given skill keys, those that at least one learner holds a skill_state row for (doc 07 section 10). */
+export async function skillsHeldByLearners(sql: Sql, keys: string[]): Promise<string[]> {
+  if (keys.length === 0) return [];
+  const rows = await sql<{ skill_key: string }[]>`
+    select distinct skill_key from public.skill_state where skill_key in ${sql(keys)} order by skill_key`;
+  return rows.map((r) => r.skill_key);
 }
 
 export async function startRun(sql: Sql, gitSha: string, gitRef: string | null, trigger: RunTrigger): Promise<string> {
@@ -81,7 +89,10 @@ export async function applyPlan(sql: Sql, plan: Plan, ctx: ApplyContext): Promis
           retired_at = null, updated_at = now()`;
     }
     for (const key of plan.skills.retire) {
-      await tx`update public.skills set status = 'retired', retired_at = now(), updated_at = now() where key = ${key}`;
+      // A stub keeps its status: skills_stub_shape allows 'retired' only with a real skill's est_minutes and
+      // task kinds. retired_at is what marks the retirement for every row.
+      await tx`update public.skills set status = case when status = 'stub' then status else 'retired'::public.skill_status end,
+                                         retired_at = now(), updated_at = now() where key = ${key}`;
     }
 
     // Edges are replaced inside this one transaction (doc 03 section 8.3); the prerequisite graph was

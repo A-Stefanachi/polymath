@@ -1,7 +1,7 @@
 // content:sync orchestration (doc 07 section 10). Exit codes: 0 success; 1 validation error (nothing
 // is written); 2 fuzz failure (G2 runs in the worker after the sync, through the content_postprocess
 // job, so this tool never returns it); 3 database error.
-import { applyPlan, connect, failRun, readExisting, startRun, type RunTrigger, type Sql } from "./db.ts";
+import { applyPlan, connect, failRun, readExisting, skillsHeldByLearners, startRun, type RunTrigger, type Sql } from "./db.ts";
 import { lintContent } from "./lint.ts";
 import { loadContent, type Problem } from "./load.ts";
 import { buildPlan, countsOf, type Plan } from "./plan.ts";
@@ -83,6 +83,20 @@ export async function runSync(options: RunOptions): Promise<RunResult> {
     const plan = buildPlan(loaded, existing, { only: options.only });
     if (plan.problems.length > 0) return failure(plan.problems);
 
+    // A removed skill key is retired, never dropped; retiring one a learner holds state for would orphan
+    // that state, so the run refuses instead of guessing (BL-0193). Applies to dry runs too.
+    const held = await skillsHeldByLearners(sql, plan.skills.retire);
+    if (held.length > 0) {
+      return {
+        exitCode: 3,
+        out: [],
+        err: [
+          `content:sync: refusing to retire ${String(held.length)} skill(s) that learners hold skill_state rows for: ${held.join(", ")}. ` +
+            "Keep the key in the graph (set its status to retired) or migrate the state first; nothing was written.",
+        ],
+      };
+    }
+
     if (options.dryRun) return { exitCode: 0, out: summary(plan, 0, true, null), err: warnings };
 
     runId = await startRun(sql, options.gitSha, options.gitRef, options.trigger);
@@ -97,6 +111,7 @@ export async function runSync(options: RunOptions): Promise<RunResult> {
       runId,
       gitSha: options.gitSha,
       stats: {
+        graph_version: loaded.graph?.version ?? null,
         modules: stat(c.modules),
         skills: stat(c.skills),
         edges: stat(c.edges),
