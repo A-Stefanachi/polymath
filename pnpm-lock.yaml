@@ -38,6 +38,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@polymath/grading-core':
+        specifier: workspace:*
+        version: link:../../packages/grading-core
       '@polymath/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types

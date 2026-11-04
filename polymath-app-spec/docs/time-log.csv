@@ -27,3 +27,4 @@ BL-0023,2026-11-03,2026-11-03,,45,Profile routes and onboarding form by agent (a
 BL-0024,2026-11-03,2026-11-03,,40,Event catalogue generator, emitEvent and postEvents by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
 BL-0028,2026-11-03,2026-11-03,,30,Founder self-consent screen and consent_recorded event by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
 BL-0025,2026-11-04,2026-11-04,,30,Serve gate for getItem and getTask by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
+BL-0026,2026-11-04,2026-11-04,,30,submitAttempt for numeric and multiple-choice items by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)

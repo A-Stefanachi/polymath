@@ -13,6 +13,7 @@
     "e2e:auth": "next build && playwright test"
   },
   "dependencies": {
+    "@polymath/grading-core": "workspace:*",
     "@polymath/shared-types": "workspace:*",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.118.0",
