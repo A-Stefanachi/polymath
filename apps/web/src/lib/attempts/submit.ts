@@ -70,7 +70,17 @@ function bad(field: string, message: string): ApiError {
   return new ApiError("validation_failed", { errors: [{ field, message }] });
 }
 
-function gradeResponse(body: SubmitAttemptRequest, keyRaw: unknown, graderType: string): Grade {
+/** Option ids stored in `items.rendered.options`: the set the learner was shown (doc 08 section 2.3, G3). */
+export function shownOptionIds(rendered: unknown): string[] {
+  const options = typeof rendered === "object" && rendered !== null ? (rendered as { options?: unknown }).options : undefined;
+  if (!Array.isArray(options)) return [];
+  return options.flatMap((o: unknown) => {
+    const id = typeof o === "object" && o !== null ? (o as { id?: unknown }).id : undefined;
+    return typeof id === "string" ? [id] : [];
+  });
+}
+
+function gradeResponse(body: SubmitAttemptRequest, keyRaw: unknown, graderType: string, shown: string[]): Grade {
   const parsedKey = answerKey.safeParse(keyRaw);
   if (!parsedKey.success || parsedKey.data.grader_type !== graderType) {
     throw new Error("answer key missing or malformed"); // a data fault, mapped to 500 without detail
@@ -94,7 +104,10 @@ function gradeResponse(body: SubmitAttemptRequest, keyRaw: unknown, graderType: 
     return gradeExactNumeric(text, numeric, ref);
   }
   if (r.kind !== "choice" || r.choice_ids?.length !== 1) throw bad("response", "expected exactly one choice");
-  const grade = gradeMultipleChoice(r.choice_ids[0] ?? "", {
+  // Only an option in the rendered item counts as shown; the key's own list is not enough (G3).
+  const chosen = r.choice_ids[0] ?? "";
+  if (!shown.includes(chosen)) throw bad("response.choice_ids", "that option was not shown for this question");
+  const grade = gradeMultipleChoice(chosen, {
     options: key.reference.option_ids.map((id) => ({ id })),
     correct_option_id: key.reference.correct_option,
   });
@@ -163,7 +176,7 @@ export async function submitAttempt(ctx: ApiContext, stores: Stores = defaultSto
   }
 
   // 3-4. Key through the privileged module, grade with grading-core.
-  const grade = toStoredGrade(gradeResponse(body, await stores.attempts.loadAnswerKey(item.id), item.grader_type));
+  const grade = toStoredGrade(gradeResponse(body, await stores.attempts.loadAnswerKey(item.id), item.grader_type, shownOptionIds(item.rendered)));
   const assessmentKind = task?.assessment_kind ?? null;
   const eventProps = {
     item_id: item.id,
