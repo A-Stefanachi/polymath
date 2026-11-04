@@ -44,9 +44,15 @@ export function modelOf(t: Doc): Model {
     seen.add(str(d["name"]));
   }
   const gen = asDoc(asDoc(t["solution"])["generator"]);
-  for (const [k, v] of Object.entries(asDoc(gen["outputs"]))) if (typeof v === "string") exprs.push({ path: `solution.generator.outputs.${k}`, expr: v, scope: base, kind: "expr" });
+  // Outputs are evaluated in order, each seeing the outputs before it; the readings tables come after
+  // all outputs (reference/verifiers/tplkit.py, generate_item).
+  const outSeen = new Set(base);
+  for (const [k, v] of Object.entries(asDoc(gen["outputs"]))) {
+    if (typeof v === "string") exprs.push({ path: `solution.generator.outputs.${k}`, expr: v, scope: new Set(outSeen), kind: "expr" });
+    outSeen.add(k);
+  }
   for (const [row, table] of Object.entries(asDoc(asDoc(gen["tables"])["readings"])))
-    for (const [k, v] of Object.entries(asDoc(table))) if (typeof v === "string") exprs.push({ path: `solution.generator.tables.readings.${row}.${k}`, expr: v, scope: base, kind: "expr" });
+    for (const [k, v] of Object.entries(asDoc(table))) if (typeof v === "string") exprs.push({ path: `solution.generator.tables.readings.${row}.${k}`, expr: v, scope: outSeen, kind: "expr" });
   for (const [i, c] of asArray(t["constraints"]).map(asDoc).entries()) exprs.push({ path: `constraints.${String(i)}.expr`, expr: str(c["expr"]), scope: full, kind: "expr" });
   for (const [i, o] of asArray(answer["options"]).map(asDoc).entries()) {
     for (const k of ["value_expr", "correct_when"]) if (typeof o[k] === "string") exprs.push({ path: `answer.options.${String(i)}.${k}`, expr: str(o[k]), scope: full, kind: "expr" });
