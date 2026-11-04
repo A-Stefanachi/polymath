@@ -1703,6 +1703,18 @@ export interface components {
                     [key: string]: unknown;
                 };
                 hint_levels_available?: components["schemas"]["HintLevel"][];
+                /**
+                 * @description Solution steps shown to the learner (00a K2, K3). Present only when the item is reached through
+                 *     `getTask` for the caller's own `worked_example` or `faded_problem` task on a `practice`-pool item;
+                 *     never through `getItem`, never for other task kinds, assessment or transfer items. A
+                 *     `worked_example` carries every step; a `faded_problem` carries only the steps before the fade
+                 *     position and never the final step.
+                 */
+                worked_steps?: components["schemas"]["WorkedStep"][];
+                /** @description Number of steps in the full solution; present whenever `worked_steps` is present (00a K2) */
+                steps_total?: number;
+                /** @description One-line explanation of the method; present only on a `worked_example` task (00a K2) */
+                explanation_md?: string;
             } & {
                 [key: string]: unknown;
             };
@@ -1712,6 +1724,58 @@ export interface components {
         TaskDetail: {
             task: components["schemas"]["SessionTask"];
             item: components["schemas"]["LearnerItem"];
+            lesson?: components["schemas"]["LessonView"];
+        };
+        /** @description One step of a worked solution (00a K2, K5) */
+        WorkedStep: {
+            id: string;
+            /** @description The step's goal as a short imperative (00a K5); absent when the template has no labels */
+            label?: string;
+            /** @description Markdown with KaTeX math, filled in with the item's parameters */
+            text_md: string;
+        };
+        /**
+         * @description Concept primer of the task's skill (00a K6 to K8). Present only on a `worked_example` task whose skill has a
+         *     verified `skill_lessons` version; the newest verified version is served. `variant` is `full` when the caller
+         *     has no graded attempt on the skill, else `recap` (only `recap_md` and `misconception` are then shown). Checks
+         *     are ungraded: the correct option is part of the payload by design and answering creates no attempt.
+         */
+        LessonView: {
+            skill_key: components["schemas"]["SkillKey"];
+            version: number;
+            /** @enum {string} */
+            variant: "full" | "recap";
+            est_seconds: number;
+            screens: {
+                id: string;
+                title: string;
+                /** @description At most 150 words, Markdown with KaTeX math */
+                body_md: string;
+                figure?: {
+                    /** @description Sanitised SVG text; the client renders it only as an image data URI, never as markup */
+                    svg: string;
+                    alt: string;
+                };
+            }[];
+            misconception: {
+                /** @description Matches `Grade.misconception_tags` entries, so feedback can link back to the lesson (00a K8) */
+                tag: string;
+                wrong_idea_md: string;
+                why_tempting_md: string;
+                correct_idea_md: string;
+            };
+            checks: {
+                id: string;
+                stem_md: string;
+                options: {
+                    id: string;
+                    text_md: string;
+                    correct: boolean;
+                    feedback_md: string;
+                }[];
+            }[];
+            /** @description At most 60 words; shown alone in the `recap` variant */
+            recap_md: string;
         };
         CompleteTaskRequest: {
             /** @enum {string} */
@@ -3235,7 +3299,11 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Task and item (no answer key) */
+            /**
+             * @description Task and item (no answer key). A `worked_example` or `faded_problem` task also carries the item's
+             *     `worked_steps` (00a K2, K3), and a `worked_example` task carries the skill's verified `lesson` when one
+             *     exists (00a K8).
+             */
             200: {
                 headers: {
                     [name: string]: unknown;

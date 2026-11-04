@@ -9,6 +9,8 @@ export const EVENT_PROP_KEYS = {
   break_suggested: ["session_id", "minutes_in"],
   task_shown: ["session_id", "session_task_id", "item_id", "task_kind", "skill_key", "template_key", "pool", "assessment_kind", "offline"],
   worked_example_viewed: ["item_id", "skill_key", "dwell_ms"],
+  lesson_viewed: ["skill_key", "lesson_version", "variant", "screens_seen", "skipped", "dwell_ms"],
+  lesson_check_answered: ["skill_key", "lesson_version", "check_id", "correct"],
   attempt_submitted: ["attempt_id", "item_id", "skill_key", "task_kind", "correct", "score", "latency_ms", "active_ms", "confidence", "hints_used", "max_hint_level", "unaided", "assessment_kind"],
   hint_requested: ["item_id", "requested_level", "granted", "denied_reason"],
   tutor_message_sent: ["thread_id", "item_id", "skill_key", "role", "hint_level", "policy_flags", "model", "prompt_version", "tokens_in", "tokens_out"],

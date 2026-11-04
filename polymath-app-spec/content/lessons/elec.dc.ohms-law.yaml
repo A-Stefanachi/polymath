@@ -1,0 +1,101 @@
+# Concept primer for elec.dc.ohms-law (00a K6). Format example for BL-0203; draft until the founder reviews it.
+# Validate: python3 reference/validate_lessons.py
+schema_version: 1
+skill_key: elec.dc.ohms-law
+version: 1
+authoring_status: draft
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-04'
+  llm_assistance:
+    used: true
+    prompt_version: lesson_assist_v1
+est_seconds: 100
+screens:
+- id: why
+  title: Why this matters
+  body_md: >-
+    Almost every circuit you will build has resistors in it: they set how much current an LED gets, they
+    divide voltages for sensors, and they pull logic pins high or low. Ohm's law is the one relation you
+    use to size all of them. If you know two of voltage, current and resistance, you can always find the
+    third.
+- id: idea
+  title: The idea
+  body_md: >-
+    For a resistor, the current through it is proportional to the voltage across it:
+
+    $$V = I \times R$$
+
+    $V$ is the voltage across the resistor in volts (V), $I$ the current through it in amperes (A), and
+    $R$ its resistance in ohms ($\Omega$). Double the voltage across the same resistor and the current
+    doubles. Use a resistor twice as large on the same voltage and the current halves.
+  figure:
+    alt: A battery labelled V connected in a loop with a resistor labelled R; an arrow labelled I shows the current flowing around the loop.
+    svg: >-
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 140" width="240" height="140">
+      <g fill="none" stroke="currentColor" stroke-width="3">
+      <path d="M40 30 H200 V110 H40 Z"/>
+      <rect x="95" y="20" width="50" height="20" fill="white"/>
+      <line x1="30" y1="62" x2="50" y2="62"/>
+      <line x1="34" y1="78" x2="46" y2="78"/>
+      </g>
+      <rect x="38" y="63" width="4" height="14" fill="white"/>
+      <g font-family="sans-serif" font-size="14" fill="currentColor">
+      <text x="113" y="58">R</text>
+      <text x="8" y="75">V</text>
+      <text x="205" y="75">I</text>
+      </g>
+      <path d="M200 60 l-6 -10 h12 z" fill="currentColor"/>
+      </svg>
+- id: model
+  title: How to use it
+  body_md: >-
+    Rearrange the same law for whichever quantity is missing: $I = V/R$ and $R = V/I$. Always work in base
+    units first: convert milliamperes to amperes and kilohms to ohms before you divide or multiply, then
+    convert the answer back to a convenient prefix. A quick sense check helps: a few volts across a few
+    kilohms gives a few milliamperes.
+misconception:
+  tag: mc.ohm-milliamps-as-amps
+  wrong_idea_md: You can put the number of milliamperes straight into $R = V/I$.
+  why_tempting_md: The meter shows "20 mA", so 20 looks like the current, and the formula has no room for a prefix.
+  correct_idea_md: >-
+    Ohm's law works in volts, amperes and ohms. 20 mA is 0.020 A, so 5 V across a resistor carrying 20 mA
+    means $R = 5 / 0.020 = 250\ \Omega$, not $0.25\ \Omega$.
+checks:
+- id: double-voltage
+  stem_md: The voltage across a fixed resistor doubles. What happens to the current through it?
+  options:
+  - id: doubles
+    text_md: It doubles
+    correct: true
+    feedback_md: Right. With $R$ fixed, $I = V/R$ grows in proportion to $V$.
+  - id: halves
+    text_md: It halves
+    correct: false
+    feedback_md: That is what happens when the resistance doubles at the same voltage. Here $R$ stays fixed.
+  - id: same
+    text_md: It stays the same
+    correct: false
+    feedback_md: The current would stay the same only if the resistance doubled too. $I = V/R$.
+- id: units
+  stem_md: A resistor on 5 V carries 10 mA. Which calculation gives its resistance?
+  options:
+  - id: base-units
+    text_md: $5 / 0.010 = 500\ \Omega$
+    correct: true
+    feedback_md: Right. Convert 10 mA to 0.010 A first, then divide.
+  - id: raw-ma
+    text_md: $5 / 10 = 0.5\ \Omega$
+    correct: false
+    feedback_md: This uses milliamperes as if they were amperes. 10 mA is 0.010 A.
+  - id: multiply
+    text_md: $5 \times 0.010 = 0.05\ \Omega$
+    correct: false
+    feedback_md: Voltage times current is power in watts. Resistance is voltage divided by current.
+recap_md: >-
+  For a resistor, $V = I \times R$: current is proportional to voltage, and a larger resistor passes less
+  current. Rearrange for the missing quantity, and convert mA and k$\Omega$ to A and $\Omega$ before you
+  calculate.

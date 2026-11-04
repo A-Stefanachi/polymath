@@ -1,4 +1,4 @@
-// G1 static lint, rules L01 to L26 of doc 07 section 7. One implementation, used by `pnpm
+// G1 static lint, rules L01 to L27 of doc 07 section 7. One implementation, used by `pnpm
 // content:lint` and by content:sync.
 import { modelOf } from "./model.ts";
 import * as r from "./rules.ts";
@@ -40,9 +40,10 @@ export const RULES: readonly Rule[] = [
   { id: "L24", severity: "E", run: r.l24 },
   { id: "L25", severity: "E", run: r.l25 },
   { id: "L26", severity: "W", run: r.l26 },
+  { id: "L27", severity: "E", run: r.l27 },
 ];
 
-/** Runs L01 to L26 on G0-valid templates. A rule that throws is reported as a finding, never swallowed. */
+/** Runs L01 to L27 on G0-valid templates. A rule that throws is reported as a finding, never swallowed. */
 export function lintTemplates(templates: readonly TemplateInput[], opts: LintOptions): Finding[] {
   const out: Finding[] = [];
   let compilerWarned = false;

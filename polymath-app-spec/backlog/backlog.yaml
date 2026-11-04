@@ -5,6 +5,7 @@ meta:
   version: '1.1'
   date: '2026-10-31'
   changes:
+  - 'Teaching layer (4 Nov 2026, 00a K): BL-0198 to BL-0205 added (worked steps on the wire, stepper and faded cards, lessons content type and sync, lesson review tab, concept primer UI, 19 lean primers, step labels, five relabelled templates); BL-0069 now depends on BL-0199 and BL-0202 (K12).'
   - 'Review pass 3 (31 Oct 2026): BL-0183 to BL-0195 added (guided week-1 blink, applied-gap, span and template diversity, placement grace, retention default, tutor over-reliance, nightly_maintenance handler, getProgress, dry_run, diagnostic in two sittings, graph-content sync, claims-lint allow-context, package checks in CI); BL-0033 to BL-0061, BL-0090, BL-0112 to BL-0114, BL-0117 and BL-0179 amended. Ids are never renumbered.'
   estimate_assumptions:
   - estimate_h is the size of a task for an AI-assisted solo developer (one working session). Founder
@@ -42,7 +43,7 @@ meta:
       D9: Multi-user closed beta
     first_daily_use_task: BL-0060
     optional_tasks: [BL-0117, BL-0118, BL-0178, BL-0179, BL-0180]
-    target_founder_hours: [100, 225]   # upper bound raised from 200 on 31 Oct 2026 (review pass 3 added 10 lean tasks, BL-0183 to BL-0187, BL-0190, BL-0191, BL-0193 to BL-0195, about 20 founder-attention hours in the central case); a target, not a measurement [P]
+    target_founder_hours: [100, 250]   # upper bound raised from 200 on 31 Oct 2026 (review pass 3 added 10 lean tasks, BL-0183 to BL-0187, BL-0190, BL-0191, BL-0193 to BL-0195, about 20 founder-attention hours in the central case), and from 225 to 250 on 4 Nov 2026 (teaching layer, 00a K12: BL-0198 to BL-0205 add about 18 central founder-attention hours); a target, not a measurement [P]
   factory_gate:
     doc: docs/lean-build-gate.md
     waves: docs/factory-wave-manifest.md
@@ -2522,6 +2523,8 @@ tasks:
   - BL-0064
   - BL-0066
   - BL-0045
+  - BL-0199
+  - BL-0202
   references:
     documents:
     - 01§10
@@ -6982,3 +6985,332 @@ tasks:
     over generated rating sequences)
   - No review_log row changes during a rebuild (row hash before and after)
   risk_notes: Must use the same FSRS adapter and parameters as the live path, or the rebuild drifts.
+- id: BL-0198
+  slug: worked-steps-serve
+  title: Serve worked steps on worked-example and faded-problem tasks
+  milestone: M1
+  epic: EP-GRADE
+  owner: agent
+  cut_tier: 1
+  lean: true
+  lean_phase: L2
+  estimate_h: 4
+  estimate_status: unvalidated [P]
+  description: 'Implements 00a H1, K2 and K3, which the serve path never built: getTask copies the item''s
+    rendered steps from item_secrets.solution into LearnerItem.rendered.worked_steps, steps_total and (worked
+    examples only) explanation_md, but only for the caller''s own worked_example or faded_problem task on a
+    practice-pool item. A faded problem drops the hidden steps by the K3 rule (2 or 3 steps: hide the last;
+    4 or more: the first faded task of the skill in the session hides the second half, the second hides all
+    but the first). getItem and every other task kind keep returning no steps. The read of item_secrets stays
+    in apps/web/src/server/privileged/ (rule 6). Additive OpenAPI fields (already in the specification);
+    regenerate packages/shared-types.'
+  dependencies:
+  - BL-0025
+  - BL-0060
+  references:
+    documents:
+    - 02§3.11
+    - 09§S08
+    - 00a
+    requirements:
+    - FR-030
+    - FR-031
+    tables:
+    - item_secrets
+    - session_tasks
+    - items
+    operations:
+    - getTask
+    - getItem
+    other_ids:
+    - H1
+    - K2
+    - K3
+    - LS-098
+  acceptance_tests:
+  - 'Integration on the local stack: a worked_example task returns every step of its item with steps_total and
+    explanation_md; a faded_problem task on a 2-step template returns 1 step and never the last'
+  - 'Unit: fade positions for 2, 3, 4, 5 and 6 steps and for the first and second faded task match 00a K3'
+  - 'ST-API style: another user''s task is 404; retrieval, problem, checkpoint and diagnostic tasks, assessment-pool
+    items and getItem carry no worked_steps, steps_total or explanation_md (response schema test)'
+  - pnpm gen:api-types leaves no diff after commit; pnpm -w lint && pnpm -w typecheck pass
+  risk_notes: The first learner-facing read of item_secrets. Keep it an allow-list of three fields, never copy
+    answer_key or hidden_tests, and keep the code under server/privileged.
+- id: BL-0199
+  slug: ui-worked-stepper
+  title: Worked-example stepper and faded-problem card in the runner
+  milestone: M1
+  epic: EP-UI
+  owner: agent
+  cut_tier: 1
+  lean: true
+  lean_phase: L2
+  estimate_h: 5
+  estimate_status: unvalidated [P]
+  description: 'Doc 09 S08 cards 6 and 7 (00a K4). The worked example reveals rendered.worked_steps one at a time,
+    headed by their labels; with labels, each step asks "What is this step doing?" with the item''s step labels as
+    tap choices, shows the right label at once and unlocks the next step. After the last step it shows
+    explanation_md and an optional one-sentence field, then Next calls completeTask with outcome done and the
+    picks and text in self_explanation. The faded card shows the given steps read-only, "Step n of steps_total:
+    your turn" and the normal answer control. Emits worked_example_viewed with dwell_ms. Copy follows doc 09
+    section 11 and passes claims lint.'
+  dependencies:
+  - BL-0198
+  - BL-0060
+  references:
+    documents:
+    - 09§S08
+    - 02§3.11
+    - 00a
+    requirements:
+    - FR-030
+    - FR-032
+    operations:
+    - getTask
+    - completeTask
+    other_ids:
+    - K4
+    - LS-097
+    - LS-008
+  acceptance_tests:
+  - 'Playwright: a worked example on a 3-step item shows step 1, then 2, then 3, with the label choice before each
+    next step; completeTask is called once with self_explanation; no attempts row is written'
+  - 'Playwright: a faded problem shows its given steps and the answer box, and grades as before'
+  - 'Playwright: an unlabelled template shows no label question and only the optional text field'
+  - pnpm e2e:a11y has zero critical or serious issues on both cards; keyboard-only path and 360 px width pass
+  risk_notes: Long steps on a phone; keep one step per view and let the page scroll vertically, never horizontally.
+- id: BL-0200
+  slug: lessons-schema-sync
+  title: Lessons content type, skill_lessons migration and content:sync
+  milestone: M1
+  epic: EP-CONTENT
+  owner: agent
+  cut_tier: 1
+  lean: true
+  lean_phase: L2
+  estimate_h: 6
+  estimate_status: unvalidated [P]
+  description: 'Implements 00a K6, K7 and K9 on the data side. The migration
+    supabase/migrations/20261104000000_skill_lessons.sql and lint L27 shipped with the specification (schema.sql
+    and the migrations must match, and the lint test reads the doc 07 table); this task adds the pgTAP RLS file for
+    skill_lessons under supabase/tests/rls (ST-RLS: learner reads verified only and cannot write, admin all).
+    packages/content-schema gains the Ajv validator for schemas/lesson.schema.json and the cross-file rules of
+    reference/validate_lessons.py (L-G0, L-G1 of doc 07 section 15); pnpm content:validate and content:lint cover
+    content/lessons/. content:sync inserts a ready file as a new needs_human_review version when its hash changes,
+    retires every version for a retired file, skips drafts and never sets verified.'
+  dependencies:
+  - BL-0018
+  - BL-0050
+  - BL-0011
+  references:
+    documents:
+    - 07§15
+    - 05§5.6
+    - 04§5.2
+    - 00a
+    tables:
+    - skill_lessons
+    - skills
+    - content_sync_runs
+    other_ids:
+    - K6
+    - K7
+    - K9
+    - L27
+  acceptance_tests:
+  - supabase db reset applies the migration; pnpm db:diff-reference is clean; pnpm test:rls covers skill_lessons
+    (learner reads verified only, cannot write; admin reads all)
+  - pnpm content:validate and pnpm content:lint pass on content/lessons/ and fail on one fixture per L-G1 rule
+    with the rule named
+  - 'pnpm content:sync -- --dry-run reports the new lesson version; a second real sync is a no-op; editing the file
+    makes version 2 needs_human_review while version 1 stays verified'
+  - python3 reference/validate_lessons.py and the app validator agree on every file in content/lessons/ and on the
+    failure fixtures
+  risk_notes: The body is learner-readable by design; the sync must reject a file that fails validation rather
+    than store it, because the console renders it.
+- id: BL-0201
+  slug: lesson-review-console
+  title: Lesson tab in the review console with approve and retire
+  milestone: M1
+  epic: EP-REVIEW
+  owner: agent
+  cut_tier: 1
+  lean: true
+  lean_phase: L3
+  estimate_h: 3
+  estimate_status: unvalidated [P]
+  description: 'Implements the review step of 00a K9 in /admin/content, next to templates (J5): list lesson versions
+    waiting for review, render each exactly as the learner will see it (screens, figure, misconception, checks,
+    recap) with the doc 07 section 15 L-G3 checklist, and approve or retire through a server action that sets
+    status, reviewed_by and reviewed_at for that version only. Admin only (is_admin()); the console never writes
+    files.'
+  dependencies:
+  - BL-0200
+  - BL-0057
+  references:
+    documents:
+    - 07§15
+    - 00a
+    requirements:
+    - FR-124
+    tables:
+    - skill_lessons
+    - admin_users
+    other_ids:
+    - K9
+    - J5
+  acceptance_tests:
+  - 'Integration: approving a needs_human_review version makes it verified with reviewer and time; a learner session
+    then receives it; a non-admin call is refused'
+  - Retiring a version hides it from learners; an older verified version is served instead
+  - 'Playwright: the console preview of the sample lesson matches the learner render (same component)'
+  risk_notes: Reuse the learner primer component for the preview so the founder reviews what learners see.
+- id: BL-0202
+  slug: ui-concept-primer
+  title: Concept primer in worked-example tasks with recap and misconception link
+  milestone: M1
+  epic: EP-UI
+  owner: agent
+  cut_tier: 1
+  lean: true
+  lean_phase: L2
+  estimate_h: 6
+  estimate_status: unvalidated [P]
+  description: 'Implements 00a K8 and K10 and doc 09 S08 card 9. getTask adds TaskDetail.lesson (newest verified
+    version) on a worked_example task; variant full when the caller has no graded attempt on the skill, else recap.
+    The runner shows the primer before the stepper with "Skip to the example" on every screen, the figure as an SVG
+    image data URI with its alt text (never as markup), the misconception screen and the ungraded checks. Feedback
+    on a graded attempt whose misconception_tags contains the lesson tag shows the correct idea and a link to the
+    recap. Emits lesson_viewed and lesson_check_answered. Writes no attempt, grade, skill_state or review_log row.'
+  dependencies:
+  - BL-0199
+  - BL-0200
+  references:
+    documents:
+    - 09§S08
+    - 02§3.11
+    - 11§9
+    - 00a
+    requirements:
+    - FR-030
+    - FR-072
+    tables:
+    - skill_lessons
+    - events
+    - attempts
+    operations:
+    - getTask
+    other_ids:
+    - K8
+    - K10
+    - LS-096
+    - LS-099
+    - LS-100
+    - LS-101
+  acceptance_tests:
+  - 'Integration: a first worked example of a skill with a verified lesson returns lesson.variant full; after one
+    graded attempt on the skill the next worked example returns recap; a skill without a verified lesson returns no
+    lesson'
+  - 'Playwright: primer, misconception screen, check feedback, then step 1 of the stepper; skip from screen 1 lands
+    on step 1; lesson_viewed is recorded with skipped true'
+  - 'Integration: answering both checks writes two lesson_check_answered events and no attempts, skill_state or
+    review_log rows (counts before and after)'
+  - 'Playwright: a numeric answer equal to a misconception expression with the lesson''s tag shows "Common mix-up"
+    and opens the recap'
+  - pnpm e2e:a11y zero critical or serious issues; keyboard-only path; 360 px and 1280 px; pnpm claims:lint passes
+  risk_notes: An SVG rendered as markup could run script; the image data URI path plus the validator's SVG rules are
+    both required.
+- id: BL-0203
+  slug: founder-lessons-lean
+  title: Draft and review concept primers for the 19 lean-slice skills
+  milestone: M1
+  epic: EP-FOUNDER
+  owner: founder
+  cut_tier: 1
+  lean: true
+  lean_phase: L3
+  estimate_h: 4
+  estimate_status: unvalidated [P]
+  description: 'With an LLM draft assistant (content/prompts/lesson_assist_v1.md, written by the agent from doc 07
+    section 15 and the sample content/lessons/elec.dc.ohms-law.yaml), produce one lesson per skill of
+    content/lean-skill-slice.yaml. Drafts use the skill''s templates (steps and misconception tags). The founder
+    checks facts, units, the misconception and the checks, sets authoring_status ready and approves each version in
+    the console. Conceptual skills (elec.dc.charge-current-voltage, elec.dc.kirchhoff-laws,
+    elec.meas.lab-safety-esd, elec.meas.schematic-reading) get the fuller treatment of doc 05 section 5.6.'
+  dependencies:
+  - BL-0200
+  - BL-0201
+  - BL-0066
+  references:
+    documents:
+    - 07§15
+    - 05§5.6
+    - 00a
+    other_ids:
+    - K6
+    - BL-0067
+  acceptance_tests:
+  - 19 files in content/lessons/; python3 reference/validate_lessons.py reports 19/19 valid; pnpm claims:lint passes
+  - content:sync shows 19 lessons; each newest version is verified with a reviewer and date after its last edit
+  - Each lesson's misconception tag appears on at least one template of its skill (validator rule 5)
+  risk_notes: About 10 to 15 minutes of founder review per lesson is a guess [P]; the conceptual four will take longer.
+- id: BL-0204
+  slug: step-labels-render
+  title: Step labels in templates, the item writer and the serve path
+  milestone: M1
+  epic: EP-CONTENT
+  owner: agent
+  cut_tier: 1
+  lean: true
+  lean_phase: L2
+  estimate_h: 2
+  estimate_status: unvalidated [P]
+  description: '00a K5. The worker''s item writer copies solution.steps[].label into item_secrets.solution, filled in
+    like text_md, so BL-0198 can serve it. packages/content-schema accepts the optional label (already in
+    schemas/problem-template.schema.json). Existing items keep working without labels.'
+  dependencies:
+  - BL-0198
+  - BL-0013
+  references:
+    documents:
+    - 07§15
+    - 00a
+    tables:
+    - item_secrets
+    other_ids:
+    - K5
+  acceptance_tests:
+  - cd services/worker && uv run pytest passes, including a test that a labelled template's item solution carries
+    every label and an unlabelled one carries none
+  - python3 reference/validate_templates.py reports every template valid
+  risk_notes: Labels are template text, so they pass through the same placeholder rendering as text_md.
+- id: BL-0205
+  slug: founder-label-elec-templates
+  title: Label and expand the five multi-step electronics templates
+  milestone: M1
+  epic: EP-FOUNDER
+  owner: founder
+  cut_tier: 2
+  lean: true
+  lean_phase: L3
+  estimate_h: 3
+  estimate_status: unvalidated [P]
+  description: '00a K5. Add step labels to tpl.elec.kirchhoff-kcl, tpl.elec.nodal-unknown, tpl.elec.thevenin-model,
+    tpl.elec.voltage-divider-vout and tpl.elec.parallel-pair, and expand to 4 to 6 steps where the method has them,
+    so fading (00a K3) and the label choices (K4) work. Each edit voids the template review; re-run lint, fuzz and
+    the console approval (J5) for each.'
+  dependencies:
+  - BL-0204
+  - BL-0066
+  references:
+    documents:
+    - 07§15
+    - 00a
+    other_ids:
+    - K5
+    - L27
+  acceptance_tests:
+  - The five templates pass pnpm content:lint (including L27) and the G2 fuzz; each is verified again in the console
+    for its new hash
+  - 'Defect check: 5 items per template solved by hand with 0 disagreements, logged in content/REVIEW-LOG.md'
+  risk_notes: Five re-reviews of about 20 minutes each [P]; other templates gain labels only when next edited.

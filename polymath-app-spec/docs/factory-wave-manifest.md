@@ -82,9 +82,14 @@ Commands assume the **app monorepo** exists (post BL-0002). Until then, use **sp
 | BL-0067 | Sign off `content/lean-skill-slice.yaml` (`content-population-roadmap.md`) |
 | BL-0196, BL-0197 | Symbolic grading in the queue-only worker, and disputed attempts out of FSRS (00a J2, J3); both before BL-0060 |
 | BL-0058, BL-0059, **BL-0060**, BL-0061, BL-0063, BL-0064, BL-0190, BL-0193 | UI + PWA; **BL-0060 = first daily use** (needs template pool from BL-0065/0066 in flight) |
-| BL-0069, BL-0070 | Two-week dogfood gate |
+| **Wave 6b, teaching layer (00a K)** | Before the dogfood gate, so it judges an app that teaches |
+| BL-0198, BL-0199 | Worked steps on the wire, then the stepper and faded cards. **Start here:** the largest teaching gain per hour |
+| BL-0200, BL-0201, BL-0202 | Lessons: content type, migration and sync; console review tab; primer in the runner |
+| BL-0203 | 19 lean primers (founder review; the agent writes `content/prompts/lesson_assist_v1.md` first) |
+| BL-0204, BL-0205 | Step labels; relabel and expand the five multi-step electronics templates |
+| BL-0069, BL-0070 | Two-week dogfood gate (BL-0069 depends on BL-0199 and BL-0202) |
 
-**Green when:** 30 verified templates; `pnpm e2e:m1` (when task exists); two weeks real sessions.
+**Green when:** 30 verified templates; 19 verified lessons; worked examples show their steps; `pnpm e2e:m1` (when task exists); two weeks real sessions.
 
 **Optional:** BL-0180 (+10 templates) if pool thin before BL-0181.
 
@@ -112,7 +117,7 @@ Pick **one** deferred group (D1–D9) per `00d` section 7–8. Next template wav
 ## Full lean task list (dependency order = backlog deps, not this list)
 
 ```
-BL-0001 … BL-0197 (lean: true only — 85 ids)
+BL-0001 … BL-0205 (lean: true only — 93 ids)
 ```
 
 Generate sorted list:

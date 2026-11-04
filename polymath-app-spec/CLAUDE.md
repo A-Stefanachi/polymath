@@ -89,6 +89,7 @@ These are the command names the backlog tasks create. Until the creating task is
 | `python3 reference/validate_spine_coherence.py` | spine-module-plan vs graph + spine-planned-skills.yaml | exists (validated) |
 | `python3 reference/validate_projects.py` | project ladder validator | exists (validated) |
 | `python3 reference/validate_templates.py` | sample template schema check | exists (validated) |
+| `python3 reference/validate_lessons.py` | concept primers in `content/lessons/` (schema, word limits, misconception tag, safe SVG; 00a K6) | exists (validated) |
 | `cd reference/verifiers && python3 -m pytest tests -q` | grader and verifier reference tests | exists (validated) |
 | `python3 reference/scheduler_reference.py check reference/scheduler_test_vectors.json` | scheduler reference vectors | exists (validated) |
 | `python3 reference/validate_backlog.py` | backlog consistency | exists (validated) |

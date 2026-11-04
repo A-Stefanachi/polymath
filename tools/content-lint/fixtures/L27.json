@@ -1,0 +1,11 @@
+{
+  "base": "numeric",
+  "set": {
+    "solution.steps": [
+      { "id": "s1", "label": "Name the two resistors", "text_md": "The top resistor is $R_1$ and the bottom one $R_2$." },
+      { "id": "s2", "label": "Find the total resistance", "text_md": "$R_1 + R_2$ carries the whole input voltage." },
+      { "id": "s3", "text_md": "The current is the same through both resistors." },
+      { "id": "s4", "label": "Apply the divider ratio", "text_md": "$V_{out} = V_{in} R_2 / (R_1 + R_2)$." }
+    ]
+  }
+}

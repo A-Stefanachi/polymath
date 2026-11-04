@@ -318,6 +318,30 @@ create table public.item_secrets (
   created_at   timestamptz not null default now()
 );
 
+-- Concept primers (00a K6, K7, K9): one row per (skill_key, version), synced from content/lessons/*.yaml.
+-- The body is learner-visible by design: primer checks are never graded, so it holds no answer key.
+create table public.skill_lessons (
+  id            uuid primary key default gen_random_uuid(),
+  skill_key     text not null references public.skills (key) on update cascade on delete restrict,
+  version       integer not null default 1 check (version >= 1),
+  status        public.content_status not null default 'draft',
+  body          jsonb not null,                            -- the validated lesson file (schemas/lesson.schema.json)
+  content_hash  text not null,
+  license       text not null,
+  source        text not null,
+  reviewed_by   uuid references auth.users (id) on delete set null,
+  reviewed_at   timestamptz,
+  retired_at    timestamptz,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now(),
+  constraint skill_lessons_skill_version_unique unique (skill_key, version),
+  -- K9: a verified version always records its reviewer and review time
+  constraint skill_lessons_verified_reviewed check (status <> 'verified' or (reviewed_by is not null and reviewed_at is not null))
+);
+create index skill_lessons_serve_idx on public.skill_lessons (skill_key, version desc) where status = 'verified';
+create trigger skill_lessons_set_updated_at before update on public.skill_lessons
+  for each row execute function app_private.set_updated_at();
+
 create table public.projects (
   id            uuid primary key default gen_random_uuid(),
   key           text not null unique check (key ~ '^prj\.L[0-9]\.[a-z0-9-]+$'),
@@ -1348,6 +1372,7 @@ alter table public.skill_edges            enable row level security;
 alter table public.item_templates         enable row level security;
 alter table public.items                  enable row level security;
 alter table public.item_secrets           enable row level security;
+alter table public.skill_lessons          enable row level security;
 alter table public.projects               enable row level security;
 alter table public.project_steps          enable row level security;
 alter table public.weekly_plans           enable row level security;
@@ -1417,6 +1442,12 @@ create policy items_select on public.items for select to authenticated
   );
 
 -- item_secrets: intentionally no policy for authenticated/anon (default deny); service role bypasses RLS.
+
+-- skill_lessons (00a K7): learners read verified versions only; admins read and write every version.
+create policy skill_lessons_select on public.skill_lessons for select to authenticated
+  using (status = 'verified' or public.is_admin());
+create policy skill_lessons_admin_write on public.skill_lessons for all to authenticated
+  using (public.is_admin()) with check (public.is_admin());
 
 create policy projects_select on public.projects for select to authenticated
   using (status in ('verified', 'retired') or public.is_admin());
@@ -1503,6 +1534,7 @@ grant usage on schema app_private to service_role;
 
 -- reads for authenticated users (RLS still filters rows). Tables with hidden columns get column-level grants below.
 grant select on public.cohorts, public.profiles, public.admin_users, public.modules, public.skills, public.skill_edges,
+  public.skill_lessons,
   public.sessions, public.session_tasks, public.attempts, public.weekly_plans, public.plan_slots,
   public.skill_state, public.review_log, public.user_projects, public.project_evidence,
   public.evidence_challenges, public.project_grants,
@@ -1543,7 +1575,8 @@ grant insert, delete on public.push_subscriptions to authenticated;
 grant insert (user_id, item_id, reason, note, attempt_id, target_type, tutor_message_id) on public.item_reports to authenticated;
 
 -- admin writes (still gated by is_admin() policies)
-grant insert, update, delete on public.cohorts, public.modules, public.skills, public.skill_edges, public.projects,
+grant insert, update, delete on public.cohorts, public.modules, public.skills, public.skill_edges, public.skill_lessons,
+  public.projects,
   public.project_steps, public.experiments to authenticated;
 grant update (status, resolved_by, resolved_at) on public.item_reports to authenticated;
 grant insert on public.analysis_exclusions to authenticated;

@@ -411,7 +411,7 @@ Pure function `buildSession(input) -> {tasks[], total_est_min, fill, fits}`; ref
 | Task kind | Default | Notes |
 |---|---|---|
 | `retrieval` | 1.5 | one short fresh item |
-| `worked_example` | 4.0 | includes the self-explanation prompt |
+| `worked_example` | 4.0 | includes the self-explanation prompt and, on a skill's first example, the concept primer (00a K1, K11; unchanged value, corrected by the orientation ratio) |
 | `faded_problem` | 5.0 | |
 | `problem` | 10.0 | standard; `problem_short` = 4.0 for items with `body.short` (used in interleaved sets and phone) |
 | `perceptual_drill` | 2.0 | |
