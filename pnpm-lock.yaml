@@ -41,6 +41,9 @@ importers:
       '@polymath/grading-core':
         specifier: workspace:*
         version: link:../../packages/grading-core
+      '@polymath/scheduler':
+        specifier: workspace:*
+        version: link:../../packages/scheduler
       '@polymath/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types

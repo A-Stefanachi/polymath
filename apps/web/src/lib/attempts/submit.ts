@@ -3,7 +3,8 @@
 // answer key through the privileged module, grading-core, one transaction for the attempt and its
 // event. Replays of a client_attempt_id return the stored result (ST-API-07, ST-API-08).
 //
-// Not here: skill_state, review_log, Elo and mastery (BL-0042); asynchronous graders (202 path).
+// skill_state, review_log, Elo and mastery: lib/state/apply-attempt.ts (BL-0042), called after the insert.
+// Not here: asynchronous graders (202 path).
 // The server grade always wins: `client_grade` is stored for audit and nothing else (ST-API-06).
 import {
   gradeExactNumeric,
@@ -17,6 +18,7 @@ import { ApiError } from "@/lib/api/errors";
 import { json, type ApiContext } from "@/lib/api/route";
 import { checkEvent } from "@/lib/events/emit.ts";
 import { canServe } from "@/lib/items/serve.ts";
+import { applyGradedAttempt, defaultStateDeps, type SkillUpdate, type StateDeps } from "@/lib/state/apply-attempt.ts";
 import { createAttemptStore, type AttemptRow, type AttemptStore } from "@/server/privileged/attempt-store";
 import { privilegedDb } from "@/server/privileged/db";
 import { createServeStore, type ServeStore } from "@/server/privileged/item-store";
@@ -46,11 +48,23 @@ const answerKey = z.discriminatedUnion("grader_type", [numericKey, choiceKey]);
 /** Grader detail keys that may be stored and returned; the reference value is never one of them. */
 const SAFE_DETAIL = ["parsed", "unit", "bare_number", "typed_unit", "option_id", "late", "parse_error"];
 
-type Stores = { serve: ServeStore; attempts: AttemptStore };
+/** `state` applies a graded attempt to skill_state (BL-0042); tests that do not exercise it omit it. */
+type Stores = { serve: ServeStore; attempts: AttemptStore; state?: () => Promise<StateDeps> };
 const defaultStores = (): Stores => {
   const sql = privilegedDb();
-  return { serve: createServeStore(sql), attempts: createAttemptStore(sql) };
+  return { serve: createServeStore(sql), attempts: createAttemptStore(sql), state: defaultStateDeps };
 };
+
+/**
+ * Learner-state update after the attempt is stored (06 section 3.3 step 1). Idempotent per attempt, so a
+ * replay also calls it: that heals a crash between the insert and this call. A session attempt returns
+ * rating null until its review unit commits.
+ */
+async function applyState(stores: Stores, row: AttemptRow, now: Date): Promise<SkillUpdate | undefined> {
+  if (!stores.state || row.grade_status !== "graded") return undefined;
+  const result = await applyGradedAttempt(row.id, now, await stores.state());
+  return result.applied ? result.skillUpdate : undefined;
+}
 
 function bad(field: string, message: string): ApiError {
   return new ApiError("validation_failed", { errors: [{ field, message }] });
@@ -108,7 +122,8 @@ function toStoredGrade(grade: Grade): Record<string, unknown> {
   };
 }
 
-const toResult = (row: AttemptRow): AttemptResult => ({
+const toResult = (row: AttemptRow, skillUpdate?: SkillUpdate): AttemptResult => ({
+  ...(skillUpdate ? { skill_update: skillUpdate as NonNullable<AttemptResult["skill_update"]> } : {}),
   id: row.id,
   client_attempt_id: row.client_attempt_id,
   item_id: row.item_id,
@@ -126,7 +141,7 @@ export async function submitAttempt(ctx: ApiContext, stores: Stores = defaultSto
 
   // Replay: the stored result wins, whatever the new body says.
   const prior = await stores.attempts.findByClientId(userId, body.client_attempt_id);
-  if (prior) return json(toResult(prior));
+  if (prior) return json(toResult(prior, await applyState(stores, prior, new Date())));
 
   if (Date.parse(body.submitted_at) < Date.parse(body.started_at)) {
     throw bad("submitted_at", "must not be before started_at");
@@ -187,5 +202,5 @@ export async function submitAttempt(ctx: ApiContext, stores: Stores = defaultSto
     assessmentKind,
     eventProps,
   });
-  return json(toResult(row));
+  return json(toResult(row, await applyState(stores, row, new Date())));
 }
