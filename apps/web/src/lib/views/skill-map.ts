@@ -20,6 +20,8 @@ export type MapSkill = {
   word: string;
   /** The raw mastery state (unseen for a skill with no state yet). */
   mastery: string;
+  /** `reviewing` with the applied attempt as the only open mastery condition (BL-0184). */
+  needsApplied: boolean;
   tier: string | null;
   due: Date | null;
   /** Due at the end of today (local) or earlier, for a skill that carries a review card. */
@@ -60,15 +62,19 @@ export function buildMapSkills(graph: Graph, frontier: Frontier, now: Date): Map
     else state = available.has(s.key) ? "ready" : "locked";
     const due = s.state?.due ? new Date(s.state.due) : null;
     const carriesCard = mastery !== "unseen";
+    // Doc 09 section 3.2: a placement-grace skill reads "Seems solid (to re-check)" and never shows a tier (G1).
+    const grace = state === "reviewing" && s.state?.placement_grace === true;
+    const needsApplied = state === "reviewing" && !grace && s.state?.needs_applied === true;
     return {
       key: s.key,
       title: s.title,
       node: s.node,
       description: s.description ?? "",
       state,
-      word: WORDS[state],
+      word: grace ? lists.statePlacementGrace : needsApplied ? lists.stateReviewingApplied : WORDS[state],
       mastery,
-      tier: s.state?.tier_attained ?? null,
+      needsApplied,
+      tier: grace ? null : (s.state?.tier_attained ?? null),
       due,
       dueToday: carriesCard && due !== null && due.getTime() <= endOfToday.getTime(),
       practisable: state === "ready" || state === "learning",

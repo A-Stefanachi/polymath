@@ -8,6 +8,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { logger } from "@/lib/logger";
 import { defineRoute, type ApiDeps } from "@/lib/api/route";
 import { createTestUser, dbReachable, deleteTestUser, testSql } from "@/lib/api/test-db";
+import { getGraph } from "@/lib/graph/graph.ts";
+import { createGraphStore } from "@/server/privileged/graph-store";
 import { createIdempotencyStore } from "@/server/privileged/idempotency-store";
 import { ensurePoolStock } from "@/server/privileged/pool-store";
 import { createSessionStore } from "@/server/privileged/session-store";
@@ -183,10 +185,22 @@ describe.skipIf(!reachable)("caps and guards (database)", () => {
     const gap = await appliedGapSkills(users.gap, snap, state);
     const plan = planSession(buildPackSetup(snap, clock, state.fsrs, undefined, { appliedGap: gap, params: state.params }), "focus", "desktop", 60, state.params);
     expect(plan.tasks.find((t) => t.reason === "applied_gap")).toMatchObject({ skill_key: a1, task_kind: "problem" });
-    // Through the API the reason is the enum value `continue` (api.openapi.yaml SessionTask.reason).
+    // Through the API the reason is `applied_gap` since 00a J9 (api.openapi.yaml SessionTask.reason).
     const session = await build(users.gap, { available_minutes: 60, context: "desktop", session_type: "focus" });
     const mine = ((session["tasks"] as Task[]) ?? []).find((t) => t.skill_key === a1 && t.task_kind === "problem");
-    expect(mine).toMatchObject({ reason: "continue" });
+    expect(mine).toMatchObject({ reason: "applied_gap" });
+  });
+
+  it("00a J9 (d): getGraph exposes needs_applied for the applied-gap skill only, and placement_grace false for a learned skill", async () => {
+    const graphDeps = { store: createGraphStore(sql), fsrs: () => createFsrsAdapter(), params: DEFAULT_PARAMS, now: () => clock, state: baseDeps.state };
+    const handler = defineRoute("getGraph", (c) => getGraph(c, graphDeps), apiDeps(users.gap));
+    const res = await handler(new Request("http://localhost/api/v1/graph?nodes=math"), { params: Promise.resolve({}) });
+    expect(res.status).toBe(200);
+    const nodes = ((await res.json()) as { nodes: { key: string; state: Json }[] }).nodes;
+    const flags = (key: string) => nodes.find((n) => n.key === key)?.state;
+    expect(flags(a1)).toMatchObject({ mastery_state: "reviewing", needs_applied: true, placement_grace: false });
+    expect(flags(a3)).toMatchObject({ mastery_state: "reviewing", needs_applied: false, placement_grace: false });
+    expect(flags(a2)).toMatchObject({ mastery_state: "unseen", needs_applied: false, placement_grace: false });
   });
 
   it("AC-2: a session running over 120 minutes gets one break_suggested event and keeps going; 120 exactly does not", async () => {

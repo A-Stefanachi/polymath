@@ -135,7 +135,7 @@ describe.skipIf(!reachable)("graph read API (database)", () => {
       for (const f of ["key", "node", "module", "title", "tier_target", "est_minutes", "status"]) expect(s).toHaveProperty(f);
     }
     expect(page1["items"][0].state).toMatchObject({ mastery_state: "mastered", tier_attained: "L1", reps: 4 });
-    expect(page1["items"][1].state).toEqual({ mastery_state: "unseen" });
+    expect(page1["items"][1].state).toEqual({ mastery_state: "unseen", needs_applied: false, placement_grace: false });
     const text = JSON.stringify(page1);
     for (const secret of ["answer_key", "verification_report", "params", "body", "item_secrets"]) expect(text).not.toContain(secret);
     const filtered = await json(await call(r.list, `/skills?module=${mod}&mastery_state=reviewing`));
@@ -143,6 +143,19 @@ describe.skipIf(!reachable)("graph read API (database)", () => {
     // Another learner's state is not visible: for `other`, A is unseen and B is mastered.
     const theirs = await json(await call(routes(other).list, `/skills?module=${mod}&node=math&limit=2`));
     expect(theirs["items"].map((s: Json) => [s["key"], s["state"]["mastery_state"]])).toEqual([[A, "unseen"], [B, "mastered"]]);
+  });
+
+  it("00a J9 (d): placement_grace is true for a reviewing placement skill inside 14 days, false at 15 days and for learned skills", async () => {
+    const grace = async (skill: string) => (await json(await call(routes(learner).skill, `/skills/${skill}`, { skill_key: skill })))["state"]["placement_grace"];
+    try {
+      await sql`update public.skill_state set source = 'placement', first_seen_at = ${at(-24 * 14 + 1)} where user_id = ${learner} and skill_key = ${F}`;
+      expect(await grace(F)).toBe(true);
+      await sql`update public.skill_state set first_seen_at = ${at(-24 * 15)} where user_id = ${learner} and skill_key = ${F}`;
+      expect(await grace(F)).toBe(false);
+      expect(await grace(G)).toBe(false); // learned, not placed
+    } finally {
+      await sql`update public.skill_state set source = 'learned', first_seen_at = ${at(-720)} where user_id = ${learner} and skill_key = ${F}`;
+    }
   });
 
   it("AC-5: bad queries are rejected with 400 (limit 100 is accepted, 101 and 0 are not)", async () => {

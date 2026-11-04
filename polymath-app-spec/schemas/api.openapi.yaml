@@ -3469,7 +3469,7 @@ components:
                 type: integer
               reason:
                 type: [string, 'null']
-                enum: [due_review, continue, frontier, interleave, checkpoint, project, null]
+                enum: [due_review, continue, frontier, interleave, checkpoint, project, applied_gap, null]
               assessment_kind:
                 type: [string, 'null']
                 enum: [diagnostic, module_end, periodic, delayed, transfer, null]
@@ -3498,7 +3498,7 @@ components:
           type: integer
         reason:
           type: [string, 'null']
-          enum: [due_review, continue, frontier, interleave, checkpoint, project, null]
+          enum: [due_review, continue, frontier, interleave, checkpoint, project, applied_gap, null]
         assessment_kind:
           type: [string, 'null']
           enum: [diagnostic, module_end, periodic, delayed, transfer, null]
@@ -4036,6 +4036,16 @@ components:
           oneOf:
             - $ref: '#/components/schemas/Tier'
             - type: 'null'
+        needs_applied:
+          type: boolean
+          description: |
+            True when the skill is `reviewing` and the applied attempt is the only open mastery condition (derived at
+            read time, docs/06 section 4.3, 00a G2 and J9). Screens read it as "Reviewing: needs one more applied problem".
+        placement_grace:
+          type: boolean
+          description: |
+            True while a `reviewing` skill credited by placement is inside the 14-day grace (docs/06 section 6.1, 00a G1
+            and J9). Screens read it as "Seems solid (to re-check)" and never show a tier for it.
     Skill:
       type: object
       required: [key, node, module, title, tier_target, est_minutes, status]

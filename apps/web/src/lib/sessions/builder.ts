@@ -25,6 +25,11 @@ const DAY_MS = 86_400_000;
 /** States that carry an FSRS card and so can be due (06 section 4.3). */
 const CARD_STATES: readonly string[] = ["learning", "reviewing", "mastered", "decayed"];
 
+/** `reviewing`, `mastered` or `decayed` with `due <= now` (00a J9): the states a review focus is accepted for. */
+export function isDueForReview(st: Pick<BuildSnapshot["states"][number], "masteryState" | "due">, now: Date): boolean {
+  return (st.masteryState === "reviewing" || st.masteryState === "mastered" || st.masteryState === "decayed") && st.due !== null && st.due <= now;
+}
+
 export class BuildInputError extends Error {
   readonly field: string;
   constructor(field: string, message: string) {
@@ -151,11 +156,18 @@ export function buildPackSetup(
     };
   }
   const dueSkills = Object.values(states).filter((s) => s.due === true).length;
+  const backlog = backlogFlag(dueSkills, snap.previousBacklog, options.backlogThresholdMin);
+  // "Practise now" on a due review (00a J9, doc 09 S17 AC 2): the session is that skill's review; the other
+  // skills' reviews wait for the next build instead of crowding it out of a short window.
+  const focusState = focusSkill === undefined ? undefined : stateOf.get(focusSkill);
+  if (focusState && isDueForReview(focusState, now)) {
+    for (const [key, st] of Object.entries(states)) if (key !== focusSkill) states[key] = { ...st, due: false };
+  }
   return {
     graph,
     states,
     interleave: interleaveStages(snap.skills, snap.states, snap.interleaveSets, params),
-    backlog: backlogFlag(dueSkills, snap.previousBacklog, options.backlogThresholdMin),
+    backlog,
     newAllowance: newSkillAllowance(snap),
     nodeMinutes: snap.nodeMinutes,
     checkpoint: checkpointInput(snap, now, params),
@@ -206,8 +218,10 @@ export function apiReason(reason: string): string {
     case "project_step":
     case "lab_review":
       return "project";
+    case "applied_gap":
+      return "applied_gap"; // exposed since 00a J9 (doc 09 S07: "One more applied problem to finish this skill")
     default:
-      return "continue"; // continue, applied_gap, practice, same_day_retrieval
+      return "continue"; // continue, practice, same_day_retrieval
   }
 }
 
