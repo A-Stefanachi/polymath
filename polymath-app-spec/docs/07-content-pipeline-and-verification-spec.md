@@ -446,6 +446,8 @@ For every item the worker runs all `verifiers` that are item-level (everything e
 
 ### 8.2 Learner "report a problem" flow
 
+> The category names below are superseded by the contract's `item_reports.reason` values (00a J1), and the FSRS exclusion in step 4 is done by a rebuild (00a J2).
+
 1. Every item feedback screen and every tutor thread has a "Report a problem" control (keyboard accessible).
 2. The form asks for a category: `answer_marked_wrong`, `answer_key_wrong`, `unclear_or_ambiguous`, `display_broken`, `unsafe_or_inappropriate`, `other`; optional text up to 500 characters. Nothing else is collected.
 3. The client calls `POST /api/v1/items/{item_id}/report` (authoritative route of `schemas/api.openapi.yaml`; the first informal name is kept in `00c-route-rename-map.md`) with `item_id`, `attempt_id`, category, text. The server writes an `item_reports` row (`id`, `user_id`, `item_id`, `attempt_id`, `category`, `text`, `status`, `created_at`, `resolved_at`; ratified in 00a D5) and an `events` row `name = 'item_report_filed'` with `props = {item_id, attempt_id, template_key, template_version, category}`. The free text lives only in `item_reports`, not in the event.

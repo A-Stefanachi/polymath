@@ -2222,6 +2222,8 @@ tasks:
   - BL-0045
   - BL-0054
   - BL-0055
+  - BL-0196
+  - BL-0197
   references:
     documents:
     - 09§S08
@@ -6893,3 +6895,90 @@ tasks:
   - A PR that adds a BL task depending on a later milestone turns validate_backlog red
   - The job log shows each command and its summary line; main protection lists package-checks as required
   risk_notes: Findings in unrelated files block unrelated work; keep the baseline at zero findings.
+- id: BL-0196
+  slug: symbolic-queue-lean
+  title: Lean grade_attempt handler and apply callback for symbolic items
+  milestone: M1
+  epic: EP-GRADE
+  owner: agent
+  cut_tier: 1
+  lean: true
+  lean_phase: L2
+  estimate_h: 5
+  estimate_status: unvalidated [P]
+  description: 'The symbolic subset of BL-0085, pulled into the lean slice (00a J3) because the lean
+    worker is queue-only (00a I2) and a symbolic submit otherwise stays pending. The worker claims
+    grade_attempt jobs for symbolic_equivalence attempts only, grades with the BL-0054 grader, writes
+    the grade idempotently and calls the HMAC-signed internal apply callback of doc 03 section 7.2, so
+    skill_state and review_log stay TypeScript-only (rule 8); getAttempt returns pending until then and
+    error after three failures. The symbolic answer key also carries the template''s misconceptions
+    (tag and wrong-answer expression evaluated for the item''s parameters), and the grader returns the
+    first matching tag (00a J4). Code and SPICE grading stay in BL-0085.'
+  dependencies:
+  - BL-0054
+  - BL-0016
+  - BL-0042
+  references:
+    documents:
+    - 03§7.2
+    - 08§2.2
+    - 08§4
+    - 00a
+    requirements:
+    - FR-062
+    tables:
+    - attempts
+    - jobs
+    - item_secrets
+    other_ids:
+    - I2
+    - J3
+    - J4
+  acceptance_tests:
+  - 'Integration on the local stack: a symbolic submit with WORKER_URL unset returns 202; after the worker
+    claims the job, getAttempt returns the grade and skill_state has changed exactly once (replayed
+    callback is a no-op)'
+  - A callback with a wrong HMAC signature or a stale timestamp is refused with 401 and changes nothing
+  - A response equivalent to a misconception expression is graded incorrect with that misconception tag;
+    the reference is never in the response
+  - Three failing grade attempts leave the attempt in status error, visible to the learner as calm copy
+  risk_notes: The callback is the only worker-to-web write path; it must reuse the existing HMAC helper.
+- id: BL-0197
+  slug: disputed-fsrs-replay
+  title: Exclude disputed attempts from FSRS by rebuilding the skill state
+  milestone: M1
+  epic: EP-SCHED
+  owner: agent
+  cut_tier: 1
+  lean: true
+  lean_phase: L2
+  estimate_h: 4
+  estimate_status: unvalidated [P]
+  description: 'Doc 07 section 8.2 excludes a disputed attempt from FSRS and mastery until triage, but the
+    review is applied at submit time and review_log is append-only (00a J2). On quarantine, rebuild the
+    reporting learner''s skill_state for that skill by replaying its review_log rows in order through the
+    FSRS adapter, skipping reviews whose attempts are all disputed; on a learner_error outcome, rebuild
+    again with them. No review_log row is updated or deleted. The rebuild is TypeScript domain code
+    (rule 8), deterministic, with the clock injected.'
+  dependencies:
+  - BL-0056
+  - BL-0041
+  - BL-0042
+  references:
+    documents:
+    - 07§8.2
+    - 06§4
+    - 00a
+    tables:
+    - skill_state
+    - review_log
+    - attempts
+    other_ids:
+    - J2
+  acceptance_tests:
+  - 'Integration: three reviews, the second disputed; after quarantine skill_state equals a replay of the
+    first and third; after learner_error it equals the state before the report'
+  - Replaying all reviews of an undisputed skill reproduces the stored skill_state exactly (property test
+    over generated rating sequences)
+  - No review_log row changes during a rebuild (row hash before and after)
+  risk_notes: Must use the same FSRS adapter and parameters as the live path, or the rebuild drifts.

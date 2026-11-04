@@ -1,6 +1,6 @@
 # Factory wave manifest (lean slice only)
 
-Status: v1.0, 1 Nov 2026. **83 tasks** with `lean: true` until **BL-0181**. Gate: `docs/lean-build-gate.md`. Do not start `lean: false` / D1–D9 while the gate is closed.
+Status: v1.1, 4 Nov 2026 (v1.0 of 1 Nov had 83; BL-0196 and BL-0197 added by 00a J2 and J3). **85 tasks** with `lean: true` until **BL-0181**. Gate: `docs/lean-build-gate.md`. Do not start `lean: false` / D1–D9 while the gate is closed.
 
 Commands assume the **app monorepo** exists (post BL-0002). Until then, use **spec validators** listed under each wave.
 
@@ -80,6 +80,7 @@ Commands assume the **app monorepo** exists (post BL-0002). Until then, use **sp
 | BL-0065 | 15 math templates (**start in Wave 5**, parallel to Wave 6 UI) |
 | BL-0066 | 15 elec templates (after 0065) |
 | BL-0067 | Sign off `content/lean-skill-slice.yaml` (`content-population-roadmap.md`) |
+| BL-0196, BL-0197 | Symbolic grading in the queue-only worker, and disputed attempts out of FSRS (00a J2, J3); both before BL-0060 |
 | BL-0058, BL-0059, **BL-0060**, BL-0061, BL-0063, BL-0064, BL-0190, BL-0193 | UI + PWA; **BL-0060 = first daily use** (needs template pool from BL-0065/0066 in flight) |
 | BL-0069, BL-0070 | Two-week dogfood gate |
 
@@ -111,7 +112,7 @@ Pick **one** deferred group (D1–D9) per `00d` section 7–8. Next template wav
 ## Full lean task list (dependency order = backlog deps, not this list)
 
 ```
-BL-0001 … BL-0195 (lean: true only — 83 ids)
+BL-0001 … BL-0197 (lean: true only — 85 ids)
 ```
 
 Generate sorted list:

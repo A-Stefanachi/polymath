@@ -6,6 +6,20 @@ Record go/no-go outcomes, lean-gate releases, and scope-down choices here before
 
 <!-- Entries appear newest first. -->
 
+## 2026-11-04: Wave 5 decisions (00a J1 to J6)
+
+Decision: the founder delegated the six open questions of the Wave 5 review to the build agent ("take decisions for me"). Each is recorded as a 00a J entry.
+
+- J1: report categories follow the contract's `item_reports.reason` values. `wrong_answer` quarantines at once.
+- J2: a disputed attempt is excluded from FSRS by rebuilding `skill_state` from `review_log`. New lean task BL-0197.
+- J3: the symbolic part of BL-0085 moves into the lean slice as BL-0196, for queue-only grading with the apply callback.
+- J4: the symbolic answer key carries the misconceptions. This is part of BL-0196.
+- J5: a console approval completes G3 for the current hash. The file route stays valid.
+- J6: `tpl.elec.schematic-series` v3 fixes lint L11. `content:sync` enforces every lint rule, and L04 resolves generator outputs in evaluation order.
+- Evidence: `pnpm content:lint` gives 30 templates, 0 errors. G2 fuzz on schematic-series v3 passes 200 of 200 samples, rejection rate 0.407. `validate_backlog` and `check_package` pass.
+- Plan effect: the lean slice grows from 83 to 85 tasks, adding 9 h of task size. BL-0060 (first daily use) now also depends on BL-0196 and BL-0197. The planning totals in docs 00d, 01 and 13 still say 83 tasks and 395.5 h; refresh them when the model is refitted (00d section 8).
+- Next three tasks: BL-0058 (design tokens and layout shell), BL-0196, BL-0197. The founder can start BL-0065 (15 math templates) in parallel.
+
 ## 2026-11-04: M0 exit (BL-0032)
 
 Decision: M0 (walking skeleton, doc 01 section 10) is met on staging. The founder delegated BL-0032 to the build agent without review of the steps below.
