@@ -40,3 +40,4 @@ BL-0041,2026-11-04,2026-11-04,0,40,FSRS-6 adapter over ts-fsrs 6.0.0 with frozen
 BL-0185,2026-11-04,2026-11-04,0,0.3,Mastery span and template-diversity tests (conditions already in BL-0035) by agent (autoswe direct track)
 BL-0187,2026-11-04,2026-11-04,0,1,Desired-retention default switch and logged latency ratio by agent (autoswe direct track)
 BL-0036,2026-11-04,2026-11-04,0,1,Frontier, scores, project pull and why-locked reasons by agent (autoswe direct track)
+BL-0186,2026-11-04,2026-11-04,0,0.5,Placement grace tier tests for the frontier by agent (autoswe direct track)
