@@ -58,7 +58,9 @@ export function defineRoute(op: OperationId, run: (ctx: ApiContext) => Promise<R
       await limit(BUCKETS.api);
       const body = await parseBody(request, op);
       const ctx: ApiContext = { request, requestId, caller, body, params: (await routeContext?.params) ?? {}, limit };
-      const key = caller && meta.idempotent ? readIdempotencyKey(request) : undefined;
+      // A buildSession preview (dry_run, G16) stores nothing, so its Idempotency-Key is ignored, not consumed.
+      const preview = op === "buildSession" && (body as { dry_run?: unknown } | undefined)?.dry_run === true;
+      const key = caller && meta.idempotent && !preview ? readIdempotencyKey(request) : undefined;
       response =
         caller && key
           ? await withIdempotency(

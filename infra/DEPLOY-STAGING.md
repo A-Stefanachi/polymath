@@ -9,16 +9,17 @@ Done by the build agent at the founder's request, through the Supabase managemen
 | Step | State |
 |---|---|
 | Vercel project `polymath-staging` (`prj_V4X4YQyEAAML9eCNq1TfMWFp1gSo`, team `team_Y74kNTf8YPBhmXG1kUhQUQQ4`), root `apps/web`, Next.js, Node 24.x, functions in `lhr1` | done |
-| Vercel environment variables (production and preview targets): `APP_ENV`, `LLM_PROVIDER=fake`, `AUTH_SIGNUP_ENABLED=true`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` and `DATABASE_URL_PRIVILEGED` (transaction pooler, port 6543), the last two as sensitive | done |
+| Vercel environment variables (production and preview targets): `APP_ENV`, `LLM_PROVIDER=fake`, `AUTH_SIGNUP_ENABLED=false`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` and `DATABASE_URL_PRIVILEGED` (transaction pooler, port 6543), the last two as sensitive | done |
 | Staging URL https://polymath-staging.vercel.app; `/api/v1/health` returns 200 with `db: ok` and `version` equal to the deployed commit | done |
 | Migrations applied to staging (3), recorded in `supabase_migrations.schema_migrations` as the CLI does, so `supabase db push` treats them as applied | done |
-| Auth: OTP length 6, expiry 900 s, site URL and the redirect `https://polymath-staging.vercel.app/auth/callback`, phone and anonymous sign-in off; signup on until the founder's account exists | done |
+| Auth: OTP length 6, expiry 900 s, site URL and the redirect `https://polymath-staging.vercel.app/auth/callback`, phone and anonymous sign-in off; signup off since 4 Nov 2026 (the founder signed in and onboarded; `disable_signup` true in Supabase, `AUTH_SIGNUP_ENABLED=false` on Vercel; a new address gets the uniform "sent" reply and no account) | done |
 | Legacy `anon` and `service_role` JWT keys disabled | done |
 | OA-9 / ST-RLS-19 probe on staging (`infra/VERIFIED.md`) | done |
-| Custom email templates (six-digit code in the email) | blocked: the Free plan refuses template changes with the built-in mailer. Needs custom SMTP (step 3 below). Until then staging sends Supabase's default email: a link only, which signs in in the browser that requested it (`/auth/callback?code=...`) |
+| Custom SMTP | done by the founder (4 Nov 2026): Resend (`smtp.resend.com:465`, user `resend`), sender `onboarding@resend.dev` "Polymath", 30 emails per hour. Resend's test sender delivers only to the address of the Resend account, which suits founder-only staging; a verified domain is needed before anyone else signs in |
+| Custom email templates (six-digit code in the email) | done: `supabase/templates/magic_link.html` and `confirmation.html`, subject "Your Polymath sign-in code" |
 | GitHub environment `staging` (secrets for the deploy workflow) | open: no tool in the agent session can write repository secrets. Until it exists, deploy-staging skips and staging is deployed with `vercel deploy --prod` from a checkout |
 
-Parked by the founder (4 Nov 2026): custom SMTP with the email templates, and the GitHub environment for automatic deploys. Until they are picked up, the build agent deploys staging by hand after each merge: new migrations through the management API (recorded in `supabase_migrations.schema_migrations`), then `vercel deploy --prod` from a `git archive` of the commit, then the `/api/v1/health` version check. No sign-in emails are needed for now. Left for the founder later: the GitHub environment (step 2), custom SMTP and then the templates (step 3), and the iPhone check (`infra/VERIFIED.md`). Once the founder's account exists, set `AUTH_SIGNUP_ENABLED` to `false` on Vercel and turn off "Allow new users to sign up" in Supabase.
+Parked by the founder (4 Nov 2026): the GitHub environment for automatic deploys. Until it is picked up, the build agent deploys staging by hand after each merge: new migrations through the management API (recorded in `supabase_migrations.schema_migrations`), then `vercel deploy --prod` from a `git archive` of the commit, then the `/api/v1/health` version check. Left for the founder: the GitHub environment (step 2) and the iPhone check (`infra/VERIFIED.md`), now possible with the code email.
 
 ## One-time setup (founder)
 

@@ -79,5 +79,10 @@ export const demoItem = {
   incorrectNote: "This one will come back later for another try.",
   unitRead: "Unit read as",
   invalid: "That answer could not be read. Try a number followed by a unit, for example 2.5 V.",
+  confidenceTitle: "How sure are you?",
+  confidenceHelp: "Optional. Pick a number from 1 to 5 before you see the result.",
+  confidenceGuessing: "Guessing",
+  confidenceCertain: "Certain",
+  confidenceSkip: "Skip",
   submitFailed: "We could not check that. Nothing was lost; try again in a moment.",
 } as const;

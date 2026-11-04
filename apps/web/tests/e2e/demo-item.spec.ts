@@ -41,6 +41,7 @@ test("signed-in learner answers correctly by keyboard: statement alternative, co
   await expect(page.getByLabel("Your answer")).toBeFocused();
   await page.keyboard.type(`${REFERENCE} V`);
   await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "Skip" }).click(); // BL-0047: confidence comes before feedback
 
   await expect(page.getByRole("heading", { name: "Correct." })).toBeVisible();
   await expect(page.getByLabel("Your answer")).toHaveAttribute("readonly", "");
@@ -56,6 +57,7 @@ test("a wrong answer shows the incorrect state and never the reference value", a
   await page.goto("/demo-item");
   await page.getByLabel("Your answer").fill("4 V");
   await page.getByRole("button", { name: "Check" }).click();
+  await page.getByRole("button", { name: "Skip" }).click();
 
   await expect(page.getByRole("heading", { name: "Not quite." })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Correct." })).toHaveCount(0);

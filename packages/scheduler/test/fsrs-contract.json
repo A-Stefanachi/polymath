@@ -1,0 +1,1534 @@
+{
+ "note": "Frozen outputs of ts-fsrs 6.0.0 (FSRS-6, 21 weights) through src/fsrs-adapter.ts; regenerate only on a deliberate library change (BL-0041).",
+ "library": "ts-fsrs",
+ "library_version": "6.0.0",
+ "model": "fsrs-6",
+ "weight_count": 21,
+ "config": {
+  "desiredRetention": 0.85,
+  "maximumIntervalDays": 180,
+  "enableFuzz": false,
+  "enableShortTerm": false
+ },
+ "start": "2026-01-05T09:00:00.000Z",
+ "sequences": [
+  {
+   "id": "seq-01",
+   "steps": [
+    {
+     "rating": 3,
+     "after_days": 0
+    },
+    {
+     "rating": 4,
+     "after_days": 5
+    },
+    {
+     "rating": 1,
+     "after_days": 11
+    },
+    {
+     "rating": 2,
+     "after_days": 4
+    },
+    {
+     "rating": 4,
+     "after_days": 20
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-09T09:00:00.000Z",
+     "scheduled_days": 4,
+     "fsrs_state": "review",
+     "stability": 2.3065,
+     "difficulty": 2.11810397,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-03-12T09:00:00.000Z",
+     "scheduled_days": 61,
+     "fsrs_state": "review",
+     "stability": 32.01322223,
+     "difficulty": 1,
+     "reps": 2,
+     "lapses": 0
+    },
+    {
+     "due": "2026-01-26T09:00:00.000Z",
+     "scheduled_days": 5,
+     "fsrs_state": "review",
+     "stability": 2.40392817,
+     "difficulty": 7.02698957,
+     "reps": 3,
+     "lapses": 1
+    },
+    {
+     "due": "2026-02-06T09:00:00.000Z",
+     "scheduled_days": 12,
+     "fsrs_state": "review",
+     "stability": 6.16785225,
+     "difficulty": 8.01160551,
+     "reps": 4,
+     "lapses": 1
+    },
+    {
+     "due": "2026-04-21T09:00:00.000Z",
+     "scheduled_days": 66,
+     "fsrs_state": "review",
+     "stability": 34.4514077,
+     "difficulty": 7.3324051,
+     "reps": 5,
+     "lapses": 1
+    }
+   ]
+  },
+  {
+   "id": "seq-02",
+   "steps": [
+    {
+     "rating": 4,
+     "after_days": 0
+    },
+    {
+     "rating": 4,
+     "after_days": 30
+    },
+    {
+     "rating": 3,
+     "after_days": 14
+    },
+    {
+     "rating": 3,
+     "after_days": 17
+    },
+    {
+     "rating": 3,
+     "after_days": 8
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-21T09:00:00.000Z",
+     "scheduled_days": 16,
+     "fsrs_state": "review",
+     "stability": 8.2956,
+     "difficulty": 1,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-08-03T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 136.32049901,
+     "difficulty": 1,
+     "reps": 2,
+     "lapses": 0
+    },
+    {
+     "due": "2026-08-17T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 182.27292025,
+     "difficulty": 1,
+     "reps": 3,
+     "lapses": 0
+    },
+    {
+     "due": "2026-09-03T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 235.67160451,
+     "difficulty": 1,
+     "reps": 4,
+     "lapses": 0
+    },
+    {
+     "due": "2026-09-11T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 260.4443113,
+     "difficulty": 1,
+     "reps": 5,
+     "lapses": 0
+    }
+   ]
+  },
+  {
+   "id": "seq-03",
+   "steps": [
+    {
+     "rating": 3,
+     "after_days": 0
+    },
+    {
+     "rating": 3,
+     "after_days": 9
+    },
+    {
+     "rating": 2,
+     "after_days": 26
+    },
+    {
+     "rating": 1,
+     "after_days": 23
+    },
+    {
+     "rating": 2,
+     "after_days": 32
+    },
+    {
+     "rating": 4,
+     "after_days": 12
+    },
+    {
+     "rating": 1,
+     "after_days": 38
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-09T09:00:00.000Z",
+     "scheduled_days": 4,
+     "fsrs_state": "review",
+     "stability": 2.3065,
+     "difficulty": 2.11810397,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-03-01T09:00:00.000Z",
+     "scheduled_days": 46,
+     "fsrs_state": "review",
+     "stability": 23.9930422,
+     "difficulty": 2.11121424,
+     "reps": 2,
+     "lapses": 0
+    },
+    {
+     "due": "2026-06-17T09:00:00.000Z",
+     "scheduled_days": 128,
+     "fsrs_state": "review",
+     "stability": 67.0724693,
+     "difficulty": 4.74828477,
+     "reps": 3,
+     "lapses": 0
+    },
+    {
+     "due": "2026-03-10T09:00:00.000Z",
+     "scheduled_days": 6,
+     "fsrs_state": "review",
+     "stability": 2.94574493,
+     "difficulty": 8.25902528,
+     "reps": 4,
+     "lapses": 1
+    },
+    {
+     "due": "2026-04-25T09:00:00.000Z",
+     "scheduled_days": 20,
+     "fsrs_state": "review",
+     "stability": 10.46673201,
+     "difficulty": 8.82948822,
+     "reps": 5,
+     "lapses": 1
+    },
+    {
+     "due": "2026-06-08T09:00:00.000Z",
+     "scheduled_days": 52,
+     "fsrs_state": "review",
+     "stability": 27.53314271,
+     "difficulty": 8.42358609,
+     "reps": 6,
+     "lapses": 1
+    },
+    {
+     "due": "2026-05-29T09:00:00.000Z",
+     "scheduled_days": 4,
+     "fsrs_state": "review",
+     "stability": 2.25520437,
+     "difficulty": 9.46707183,
+     "reps": 7,
+     "lapses": 2
+    }
+   ]
+  },
+  {
+   "id": "seq-04",
+   "steps": [
+    {
+     "rating": 3,
+     "after_days": 0
+    },
+    {
+     "rating": 4,
+     "after_days": 10
+    },
+    {
+     "rating": 3,
+     "after_days": 5
+    },
+    {
+     "rating": 3,
+     "after_days": 31
+    },
+    {
+     "rating": 4,
+     "after_days": 9
+    },
+    {
+     "rating": 3,
+     "after_days": 12
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-09T09:00:00.000Z",
+     "scheduled_days": 4,
+     "fsrs_state": "review",
+     "stability": 2.3065,
+     "difficulty": 2.11810397,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-04-11T09:00:00.000Z",
+     "scheduled_days": 86,
+     "fsrs_state": "review",
+     "stability": 45.01277749,
+     "difficulty": 1,
+     "reps": 2,
+     "lapses": 0
+    },
+    {
+     "due": "2026-05-23T09:00:00.000Z",
+     "scheduled_days": 123,
+     "fsrs_state": "review",
+     "stability": 64.67479401,
+     "difficulty": 1,
+     "reps": 3,
+     "lapses": 0
+    },
+    {
+     "due": "2026-08-19T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 163.30333175,
+     "difficulty": 1,
+     "reps": 4,
+     "lapses": 0
+    },
+    {
+     "due": "2026-08-28T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 218.21892413,
+     "difficulty": 1,
+     "reps": 5,
+     "lapses": 0
+    },
+    {
+     "due": "2026-09-09T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 255.47274042,
+     "difficulty": 1,
+     "reps": 6,
+     "lapses": 0
+    }
+   ]
+  },
+  {
+   "id": "seq-05",
+   "steps": [
+    {
+     "rating": 4,
+     "after_days": 0
+    },
+    {
+     "rating": 3,
+     "after_days": 20
+    },
+    {
+     "rating": 3,
+     "after_days": 14
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-21T09:00:00.000Z",
+     "scheduled_days": 16,
+     "fsrs_state": "review",
+     "stability": 8.2956,
+     "difficulty": 1,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-05-26T09:00:00.000Z",
+     "scheduled_days": 121,
+     "fsrs_state": "review",
+     "stability": 63.44573842,
+     "difficulty": 1,
+     "reps": 2,
+     "lapses": 0
+    },
+    {
+     "due": "2026-08-07T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 112.95694017,
+     "difficulty": 1,
+     "reps": 3,
+     "lapses": 0
+    }
+   ]
+  },
+  {
+   "id": "seq-06",
+   "steps": [
+    {
+     "rating": 3,
+     "after_days": 0
+    },
+    {
+     "rating": 3,
+     "after_days": 15
+    },
+    {
+     "rating": 3,
+     "after_days": 7
+    },
+    {
+     "rating": 4,
+     "after_days": 4
+    },
+    {
+     "rating": 4,
+     "after_days": 20
+    },
+    {
+     "rating": 2,
+     "after_days": 34
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-09T09:00:00.000Z",
+     "scheduled_days": 4,
+     "fsrs_state": "review",
+     "stability": 2.3065,
+     "difficulty": 2.11810397,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-03-17T09:00:00.000Z",
+     "scheduled_days": 56,
+     "fsrs_state": "review",
+     "stability": 29.54337678,
+     "difficulty": 2.11121424,
+     "reps": 2,
+     "lapses": 0
+    },
+    {
+     "due": "2026-05-11T09:00:00.000Z",
+     "scheduled_days": 104,
+     "fsrs_state": "review",
+     "stability": 54.36301888,
+     "difficulty": 2.1043314,
+     "reps": 3,
+     "lapses": 0
+    },
+    {
+     "due": "2026-07-03T09:00:00.000Z",
+     "scheduled_days": 153,
+     "fsrs_state": "review",
+     "stability": 80.21062652,
+     "difficulty": 1,
+     "reps": 4,
+     "lapses": 0
+    },
+    {
+     "due": "2026-08-19T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 206.06036047,
+     "difficulty": 1,
+     "reps": 5,
+     "lapses": 0
+    },
+    {
+     "due": "2026-09-22T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 266.95446228,
+     "difficulty": 4.01060897,
+     "reps": 6,
+     "lapses": 0
+    }
+   ]
+  },
+  {
+   "id": "seq-07",
+   "steps": [
+    {
+     "rating": 3,
+     "after_days": 0
+    },
+    {
+     "rating": 3,
+     "after_days": 33
+    },
+    {
+     "rating": 1,
+     "after_days": 30
+    },
+    {
+     "rating": 2,
+     "after_days": 40
+    },
+    {
+     "rating": 2,
+     "after_days": 2
+    },
+    {
+     "rating": 2,
+     "after_days": 4
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-09T09:00:00.000Z",
+     "scheduled_days": 4,
+     "fsrs_state": "review",
+     "stability": 2.3065,
+     "difficulty": 2.11810397,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-04-21T09:00:00.000Z",
+     "scheduled_days": 73,
+     "fsrs_state": "review",
+     "stability": 38.514324,
+     "difficulty": 2.11121424,
+     "reps": 2,
+     "lapses": 0
+    },
+    {
+     "due": "2026-03-14T09:00:00.000Z",
+     "scheduled_days": 5,
+     "fsrs_state": "review",
+     "stability": 2.64998321,
+     "difficulty": 7.39223814,
+     "reps": 3,
+     "lapses": 1
+    },
+    {
+     "due": "2026-05-12T09:00:00.000Z",
+     "scheduled_days": 24,
+     "fsrs_state": "review",
+     "stability": 12.74836005,
+     "difficulty": 8.25407453,
+     "reps": 4,
+     "lapses": 1
+    },
+    {
+     "due": "2026-05-17T09:00:00.000Z",
+     "scheduled_days": 27,
+     "fsrs_state": "review",
+     "stability": 14.31777016,
+     "difficulty": 8.82620169,
+     "reps": 5,
+     "lapses": 1
+    },
+    {
+     "due": "2026-05-26T09:00:00.000Z",
+     "scheduled_days": 32,
+     "fsrs_state": "review",
+     "stability": 16.6297321,
+     "difficulty": 9.20600635,
+     "reps": 6,
+     "lapses": 1
+    }
+   ]
+  },
+  {
+   "id": "seq-08",
+   "steps": [
+    {
+     "rating": 4,
+     "after_days": 0
+    },
+    {
+     "rating": 4,
+     "after_days": 39
+    },
+    {
+     "rating": 3,
+     "after_days": 4
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-21T09:00:00.000Z",
+     "scheduled_days": 16,
+     "fsrs_state": "review",
+     "stability": 8.2956,
+     "difficulty": 1,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-08-12T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 153.34437003,
+     "difficulty": 1,
+     "reps": 2,
+     "lapses": 0
+    },
+    {
+     "due": "2026-08-16T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 166.70179871,
+     "difficulty": 1,
+     "reps": 3,
+     "lapses": 0
+    }
+   ]
+  },
+  {
+   "id": "seq-09",
+   "steps": [
+    {
+     "rating": 2,
+     "after_days": 0
+    },
+    {
+     "rating": 4,
+     "after_days": 39
+    },
+    {
+     "rating": 2,
+     "after_days": 25
+    },
+    {
+     "rating": 2,
+     "after_days": 9
+    },
+    {
+     "rating": 4,
+     "after_days": 23
+    },
+    {
+     "rating": 3,
+     "after_days": 6
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-07T09:00:00.000Z",
+     "scheduled_days": 2,
+     "fsrs_state": "review",
+     "stability": 1.2931,
+     "difficulty": 5.11217071,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-04-22T09:00:00.000Z",
+     "scheduled_days": 68,
+     "fsrs_state": "review",
+     "stability": 35.56011532,
+     "difficulty": 3.4641143,
+     "reps": 2,
+     "lapses": 0
+    },
+    {
+     "due": "2026-07-26T09:00:00.000Z",
+     "scheduled_days": 138,
+     "fsrs_state": "review",
+     "stability": 72.42065597,
+     "difficulty": 5.64640287,
+     "reps": 3,
+     "lapses": 0
+    },
+    {
+     "due": "2026-08-24T09:00:00.000Z",
+     "scheduled_days": 158,
+     "fsrs_state": "review",
+     "stability": 82.8836403,
+     "difficulty": 7.09510771,
+     "reps": 4,
+     "lapses": 0
+    },
+    {
+     "due": "2026-10-08T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 138.43291922,
+     "difficulty": 6.10965644,
+     "reps": 5,
+     "lapses": 0
+    },
+    {
+     "due": "2026-10-14T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 148.31547832,
+     "difficulty": 6.09877515,
+     "reps": 6,
+     "lapses": 0
+    }
+   ]
+  },
+  {
+   "id": "seq-10",
+   "steps": [
+    {
+     "rating": 2,
+     "after_days": 0
+    },
+    {
+     "rating": 3,
+     "after_days": 20
+    },
+    {
+     "rating": 2,
+     "after_days": 29
+    },
+    {
+     "rating": 4,
+     "after_days": 24
+    },
+    {
+     "rating": 2,
+     "after_days": 39
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-07T09:00:00.000Z",
+     "scheduled_days": 2,
+     "fsrs_state": "review",
+     "stability": 1.2931,
+     "difficulty": 5.11217071,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-02-25T09:00:00.000Z",
+     "scheduled_days": 31,
+     "fsrs_state": "review",
+     "stability": 16.47733575,
+     "difficulty": 5.10228691,
+     "reps": 2,
+     "lapses": 0
+    },
+    {
+     "due": "2026-05-20T09:00:00.000Z",
+     "scheduled_days": 86,
+     "fsrs_state": "review",
+     "stability": 45.25627784,
+     "difficulty": 6.73389818,
+     "reps": 3,
+     "lapses": 0
+    },
+    {
+     "due": "2026-09-15T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 108.82145311,
+     "difficulty": 5.62774752,
+     "reps": 4,
+     "lapses": 0
+    },
+    {
+     "due": "2026-10-24T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 147.30999742,
+     "difficulty": 7.08272343,
+     "reps": 5,
+     "lapses": 0
+    }
+   ]
+  },
+  {
+   "id": "seq-11",
+   "steps": [
+    {
+     "rating": 2,
+     "after_days": 0
+    },
+    {
+     "rating": 4,
+     "after_days": 21
+    },
+    {
+     "rating": 2,
+     "after_days": 28
+    },
+    {
+     "rating": 3,
+     "after_days": 22
+    },
+    {
+     "rating": 2,
+     "after_days": 13
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-07T09:00:00.000Z",
+     "scheduled_days": 2,
+     "fsrs_state": "review",
+     "stability": 1.2931,
+     "difficulty": 5.11217071,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-03-24T09:00:00.000Z",
+     "scheduled_days": 57,
+     "fsrs_state": "review",
+     "stability": 30.16054862,
+     "difficulty": 3.4641143,
+     "reps": 2,
+     "lapses": 0
+    },
+    {
+     "due": "2026-07-06T09:00:00.000Z",
+     "scheduled_days": 133,
+     "fsrs_state": "review",
+     "stability": 69.73289018,
+     "difficulty": 5.64640287,
+     "reps": 3,
+     "lapses": 0
+    },
+    {
+     "due": "2026-09-13T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 109.14647805,
+     "difficulty": 5.63598484,
+     "reps": 4,
+     "lapses": 0
+    },
+    {
+     "due": "2026-09-26T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 123.32252511,
+     "difficulty": 7.08819175,
+     "reps": 5,
+     "lapses": 0
+    }
+   ]
+  },
+  {
+   "id": "seq-12",
+   "steps": [
+    {
+     "rating": 3,
+     "after_days": 0
+    },
+    {
+     "rating": 1,
+     "after_days": 28
+    },
+    {
+     "rating": 3,
+     "after_days": 5
+    },
+    {
+     "rating": 4,
+     "after_days": 38
+    },
+    {
+     "rating": 3,
+     "after_days": 2
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-09T09:00:00.000Z",
+     "scheduled_days": 4,
+     "fsrs_state": "review",
+     "stability": 2.3065,
+     "difficulty": 2.11810397,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-02-04T09:00:00.000Z",
+     "scheduled_days": 2,
+     "fsrs_state": "review",
+     "stability": 0.89555004,
+     "difficulty": 7.39450274,
+     "reps": 2,
+     "lapses": 1
+    },
+    {
+     "due": "2026-02-18T09:00:00.000Z",
+     "scheduled_days": 11,
+     "fsrs_state": "review",
+     "stability": 5.60924798,
+     "difficulty": 7.38233661,
+     "reps": 3,
+     "lapses": 1
+    },
+    {
+     "due": "2026-06-20T09:00:00.000Z",
+     "scheduled_days": 95,
+     "fsrs_state": "review",
+     "stability": 49.91564376,
+     "difficulty": 6.49286386,
+     "reps": 4,
+     "lapses": 1
+    },
+    {
+     "due": "2026-06-29T09:00:00.000Z",
+     "scheduled_days": 102,
+     "fsrs_state": "review",
+     "stability": 53.51984733,
+     "difficulty": 6.48159937,
+     "reps": 5,
+     "lapses": 1
+    }
+   ]
+  },
+  {
+   "id": "seq-13",
+   "steps": [
+    {
+     "rating": 4,
+     "after_days": 0
+    },
+    {
+     "rating": 3,
+     "after_days": 26
+    },
+    {
+     "rating": 2,
+     "after_days": 22
+    },
+    {
+     "rating": 2,
+     "after_days": 38
+    },
+    {
+     "rating": 2,
+     "after_days": 32
+    },
+    {
+     "rating": 4,
+     "after_days": 29
+    },
+    {
+     "rating": 4,
+     "after_days": 30
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-21T09:00:00.000Z",
+     "scheduled_days": 16,
+     "fsrs_state": "review",
+     "stability": 8.2956,
+     "difficulty": 1,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-06-17T09:00:00.000Z",
+     "scheduled_days": 137,
+     "fsrs_state": "review",
+     "stability": 71.8609448,
+     "difficulty": 1,
+     "reps": 2,
+     "lapses": 0
+    },
+    {
+     "due": "2026-08-21T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 116.08244604,
+     "difficulty": 4.01060897,
+     "reps": 3,
+     "lapses": 0
+    },
+    {
+     "due": "2026-09-28T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 164.9494555,
+     "difficulty": 6.0091915,
+     "reps": 4,
+     "lapses": 0
+    },
+    {
+     "due": "2026-10-30T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 194.25508025,
+     "difficulty": 7.33594372,
+     "reps": 5,
+     "lapses": 0
+    },
+    {
+     "due": "2026-11-28T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 254.53046163,
+     "difficulty": 6.43096863,
+     "reps": 6,
+     "lapses": 0
+    },
+    {
+     "due": "2026-12-28T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 329.93606896,
+     "difficulty": 5.22359303,
+     "reps": 7,
+     "lapses": 0
+    }
+   ]
+  },
+  {
+   "id": "seq-14",
+   "steps": [
+    {
+     "rating": 1,
+     "after_days": 0
+    },
+    {
+     "rating": 4,
+     "after_days": 3
+    },
+    {
+     "rating": 3,
+     "after_days": 15
+    },
+    {
+     "rating": 3,
+     "after_days": 8
+    },
+    {
+     "rating": 1,
+     "after_days": 25
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-06T09:00:00.000Z",
+     "scheduled_days": 1,
+     "fsrs_state": "review",
+     "stability": 0.212,
+     "difficulty": 6.4133,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-01-18T09:00:00.000Z",
+     "scheduled_days": 10,
+     "fsrs_state": "review",
+     "stability": 4.98595744,
+     "difficulty": 5.20002037,
+     "reps": 2,
+     "lapses": 0
+    },
+    {
+     "due": "2026-03-19T09:00:00.000Z",
+     "scheduled_days": 55,
+     "fsrs_state": "review",
+     "stability": 28.59540995,
+     "difficulty": 5.19004872,
+     "reps": 3,
+     "lapses": 0
+    },
+    {
+     "due": "2026-04-30T09:00:00.000Z",
+     "scheduled_days": 89,
+     "fsrs_state": "review",
+     "stability": 46.90505472,
+     "difficulty": 5.18008704,
+     "reps": 4,
+     "lapses": 0
+    },
+    {
+     "due": "2026-03-02T09:00:00.000Z",
+     "scheduled_days": 5,
+     "fsrs_state": "review",
+     "stability": 2.62556192,
+     "difficulty": 8.40095576,
+     "reps": 5,
+     "lapses": 1
+    }
+   ]
+  },
+  {
+   "id": "seq-15",
+   "steps": [
+    {
+     "rating": 4,
+     "after_days": 0
+    },
+    {
+     "rating": 2,
+     "after_days": 17
+    },
+    {
+     "rating": 3,
+     "after_days": 39
+    },
+    {
+     "rating": 3,
+     "after_days": 8
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-21T09:00:00.000Z",
+     "scheduled_days": 16,
+     "fsrs_state": "review",
+     "stability": 8.2956,
+     "difficulty": 1,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-04-05T09:00:00.000Z",
+     "scheduled_days": 73,
+     "fsrs_state": "review",
+     "stability": 38.49239325,
+     "difficulty": 4.01060897,
+     "reps": 2,
+     "lapses": 0
+    },
+    {
+     "due": "2026-08-29T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 118.13581663,
+     "difficulty": 4.00182673,
+     "reps": 3,
+     "lapses": 0
+    },
+    {
+     "due": "2026-09-06T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 137.2696599,
+     "difficulty": 3.99305327,
+     "reps": 4,
+     "lapses": 0
+    }
+   ]
+  },
+  {
+   "id": "seq-16",
+   "steps": [
+    {
+     "rating": 3,
+     "after_days": 0
+    },
+    {
+     "rating": 3,
+     "after_days": 37
+    },
+    {
+     "rating": 3,
+     "after_days": 5
+    },
+    {
+     "rating": 3,
+     "after_days": 36
+    },
+    {
+     "rating": 3,
+     "after_days": 23
+    },
+    {
+     "rating": 2,
+     "after_days": 5
+    },
+    {
+     "rating": 2,
+     "after_days": 36
+    },
+    {
+     "rating": 3,
+     "after_days": 39
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-09T09:00:00.000Z",
+     "scheduled_days": 4,
+     "fsrs_state": "review",
+     "stability": 2.3065,
+     "difficulty": 2.11810397,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-04-28T09:00:00.000Z",
+     "scheduled_days": 76,
+     "fsrs_state": "review",
+     "stability": 39.82685685,
+     "difficulty": 2.11121424,
+     "reps": 2,
+     "lapses": 0
+    },
+    {
+     "due": "2026-06-06T09:00:00.000Z",
+     "scheduled_days": 110,
+     "fsrs_state": "review",
+     "stability": 57.54535912,
+     "difficulty": 2.1043314,
+     "reps": 3,
+     "lapses": 0
+    },
+    {
+     "due": "2026-09-20T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 156.2115344,
+     "difficulty": 2.09745544,
+     "reps": 4,
+     "lapses": 0
+    },
+    {
+     "due": "2026-10-13T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 220.58105029,
+     "difficulty": 2.09058635,
+     "reps": 5,
+     "lapses": 0
+    },
+    {
+     "due": "2026-10-18T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 229.01584728,
+     "difficulty": 4.73459101,
+     "reps": 6,
+     "lapses": 0
+    },
+    {
+     "due": "2026-11-23T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 268.84710626,
+     "difficulty": 6.48980451,
+     "reps": 7,
+     "lapses": 0
+    },
+    {
+     "due": "2027-01-01T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 319.41119736,
+     "difficulty": 6.47854307,
+     "reps": 8,
+     "lapses": 0
+    }
+   ]
+  },
+  {
+   "id": "seq-17",
+   "steps": [
+    {
+     "rating": 4,
+     "after_days": 0
+    },
+    {
+     "rating": 3,
+     "after_days": 21
+    },
+    {
+     "rating": 4,
+     "after_days": 30
+    },
+    {
+     "rating": 3,
+     "after_days": 35
+    },
+    {
+     "rating": 3,
+     "after_days": 7
+    },
+    {
+     "rating": 2,
+     "after_days": 15
+    },
+    {
+     "rating": 3,
+     "after_days": 13
+    },
+    {
+     "rating": 3,
+     "after_days": 10
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-21T09:00:00.000Z",
+     "scheduled_days": 16,
+     "fsrs_state": "review",
+     "stability": 8.2956,
+     "difficulty": 1,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-05-30T09:00:00.000Z",
+     "scheduled_days": 124,
+     "fsrs_state": "review",
+     "stability": 64.97124604,
+     "difficulty": 1,
+     "reps": 2,
+     "lapses": 0
+    },
+    {
+     "due": "2026-08-24T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 244.75917991,
+     "difficulty": 1,
+     "reps": 3,
+     "lapses": 0
+    },
+    {
+     "due": "2026-09-28T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 347.05280013,
+     "difficulty": 1,
+     "reps": 4,
+     "lapses": 0
+    },
+    {
+     "due": "2026-10-05T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 367.51436279,
+     "difficulty": 1,
+     "reps": 5,
+     "lapses": 0
+    },
+    {
+     "due": "2026-10-20T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 393.36827051,
+     "difficulty": 4.01060897,
+     "reps": 6,
+     "lapses": 0
+    },
+    {
+     "due": "2026-11-02T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 419.21416002,
+     "difficulty": 4.00182673,
+     "reps": 7,
+     "lapses": 0
+    },
+    {
+     "due": "2026-11-12T09:00:00.000Z",
+     "scheduled_days": 180,
+     "fsrs_state": "review",
+     "stability": 439.0003715,
+     "difficulty": 3.99305327,
+     "reps": 8,
+     "lapses": 0
+    }
+   ]
+  },
+  {
+   "id": "seq-18",
+   "steps": [
+    {
+     "rating": 1,
+     "after_days": 0
+    },
+    {
+     "rating": 2,
+     "after_days": 21
+    },
+    {
+     "rating": 3,
+     "after_days": 39
+    },
+    {
+     "rating": 2,
+     "after_days": 40
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-06T09:00:00.000Z",
+     "scheduled_days": 1,
+     "fsrs_state": "review",
+     "stability": 0.212,
+     "difficulty": 6.4133,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-01-31T09:00:00.000Z",
+     "scheduled_days": 5,
+     "fsrs_state": "review",
+     "stability": 2.65982485,
+     "difficulty": 7.60420977,
+     "reps": 2,
+     "lapses": 0
+    },
+    {
+     "due": "2026-04-10T09:00:00.000Z",
+     "scheduled_days": 35,
+     "fsrs_state": "review",
+     "stability": 18.370223,
+     "difficulty": 7.59183393,
+     "reps": 3,
+     "lapses": 0
+    },
+    {
+     "due": "2026-06-28T09:00:00.000Z",
+     "scheduled_days": 74,
+     "fsrs_state": "review",
+     "stability": 39.0557901,
+     "difficulty": 8.38657551,
+     "reps": 4,
+     "lapses": 0
+    }
+   ]
+  },
+  {
+   "id": "seq-19",
+   "steps": [
+    {
+     "rating": 4,
+     "after_days": 0
+    },
+    {
+     "rating": 2,
+     "after_days": 20
+    },
+    {
+     "rating": 1,
+     "after_days": 17
+    },
+    {
+     "rating": 4,
+     "after_days": 38
+    },
+    {
+     "rating": 3,
+     "after_days": 35
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-21T09:00:00.000Z",
+     "scheduled_days": 16,
+     "fsrs_state": "review",
+     "stability": 8.2956,
+     "difficulty": 1,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-04-14T09:00:00.000Z",
+     "scheduled_days": 79,
+     "fsrs_state": "review",
+     "stability": 41.46289325,
+     "difficulty": 4.01060897,
+     "reps": 2,
+     "lapses": 0
+    },
+    {
+     "due": "2026-02-16T09:00:00.000Z",
+     "scheduled_days": 5,
+     "fsrs_state": "review",
+     "stability": 2.48708275,
+     "difficulty": 8.01655626,
+     "reps": 3,
+     "lapses": 1
+    },
+    {
+     "due": "2026-05-12T09:00:00.000Z",
+     "scheduled_days": 52,
+     "fsrs_state": "review",
+     "stability": 27.24767442,
+     "difficulty": 7.33901016,
+     "reps": 4,
+     "lapses": 1
+    },
+    {
+     "due": "2026-08-25T09:00:00.000Z",
+     "scheduled_days": 122,
+     "fsrs_state": "review",
+     "stability": 64.11433003,
+     "difficulty": 7.32689952,
+     "reps": 5,
+     "lapses": 1
+    }
+   ]
+  },
+  {
+   "id": "seq-20",
+   "steps": [
+    {
+     "rating": 3,
+     "after_days": 0
+    },
+    {
+     "rating": 2,
+     "after_days": 37
+    },
+    {
+     "rating": 3,
+     "after_days": 21
+    }
+   ],
+   "expected": [
+    {
+     "due": "2026-01-09T09:00:00.000Z",
+     "scheduled_days": 4,
+     "fsrs_state": "review",
+     "stability": 2.3065,
+     "difficulty": 2.11810397,
+     "reps": 1,
+     "lapses": 0
+    },
+    {
+     "due": "2026-03-30T09:00:00.000Z",
+     "scheduled_days": 47,
+     "fsrs_state": "review",
+     "stability": 24.87124261,
+     "difficulty": 4.75285849,
+     "reps": 2,
+     "lapses": 0
+    },
+    {
+     "due": "2026-07-12T09:00:00.000Z",
+     "scheduled_days": 130,
+     "fsrs_state": "review",
+     "stability": 68.19463476,
+     "difficulty": 4.743334,
+     "reps": 3,
+     "lapses": 0
+    }
+   ]
+  }
+ ]
+}
