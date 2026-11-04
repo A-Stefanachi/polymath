@@ -54,3 +54,5 @@ BL-0191,2026-11-04,2026-11-04,0,0.7,dry_run session preview on POST /sessions/bu
 BL-0032,2026-11-04,2026-11-04,,90,M0 exit test on staging (pnpm e2e:m0) plus the missing content_postprocess G2 fuzz handler and the first content load to staging by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
 BL-0051,2026-11-04,2026-11-04,,20,Verifier registry with the 14 kinds and per-kind pass/fail tests by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
 BL-0052,2026-11-04,2026-11-04,,20,G2 fuzz CLI, CI content job and fuzz tests by agent (autoswe direct track); founder_hours to be filled in by the founder after review (doc 13 section 3.3)
+BL-0055,2026-11-04,2026-11-04,0,5,Shown-options check against items.rendered.options in submitAttempt by agent (autoswe direct track)
+BL-0056,2026-11-04,2026-11-04,0,25,reportItem, retireItem, listItemReports, resolveItemReport with quarantine and attempt flag by agent (autoswe direct track)
