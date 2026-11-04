@@ -161,7 +161,7 @@ While `backlog.yaml` → `meta.factory_gate.lean_only_until_task` (**BL-0181**) 
 
 - Commit message: `BL-xxxx: imperative summary` (72 characters or fewer), small commits, no unrelated reformatting. Keep any attribution trailers the harness asks for.
 - PR title: `BL-xxxx <task title>`. Body: what changed and why; how each acceptance test was run (command and result); files outside the task's expected scope (should be none); risks; docs and migrations updated; things you could not verify.
-- Squash merge. No force push to `main`. No merge with red CI.
+- Squash merge. No force push to `main`. No merge unless `pnpm ci:local` (`tools/ci/local-ci.sh`) passed on the PR's head commit, with its summary pasted into the PR. There is no GitHub Actions CI (00a L1).
 
 ## 11. Safety, security and privacy reminders for every change
 

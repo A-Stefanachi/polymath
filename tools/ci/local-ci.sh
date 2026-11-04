@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# Local CI: the jobs of .github/workflows/ci.yml, run on this machine in the same order, while GitHub CI
-# is parked by the founder (4 Nov 2026). Exit 0 only when every step passed; prints one line per step and
-# keeps full logs in .autoswe/logs/local-ci/.
+# Local CI: the only CI of this repository. GitHub Actions CI was removed by the founder (00a L1,
+# 4 Nov 2026); these are the jobs the deleted .github/workflows/ci.yml ran, in the same order. A pull
+# request merges only after a full run passes on its head commit, with the summary pasted into the PR.
+# Exit 0 only when every step passed; prints one line per step and keeps full logs in
+# .autoswe/logs/local-ci/.
 #
-#   bash tools/ci/local-ci.sh                 all jobs
+#   pnpm ci:local                             all jobs (same as bash tools/ci/local-ci.sh)
 #   bash tools/ci/local-ci.sh --skip docker   skip the worker image build (slow, needs network)
 #   bash tools/ci/local-ci.sh --only database run one job: typescript, secrets, python, docker, parity,
 #                                             content, package-checks, database, web-db

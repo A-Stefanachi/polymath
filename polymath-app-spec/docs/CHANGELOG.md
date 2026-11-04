@@ -6,6 +6,16 @@ Record go/no-go outcomes, lean-gate releases, and scope-down choices here before
 
 <!-- Entries appear newest first. -->
 
+## 2026-11-04: CI runs locally only (00a L1)
+
+Decision: the founder removed GitHub Actions CI ("remove CI altogether and run it only locally"). Runs had queued for GitHub runners and held up merges.
+
+- Deleted `.github/workflows/ci.yml`. `deploy-staging.yml` stays: it deploys `main` and is not a check.
+- `pnpm ci:local` runs `tools/ci/local-ci.sh`, the same jobs on the founder's machine. A pull request merges only after a full run passes on its head commit.
+- `tools/ci/spec-validators.sh` now runs `validate_lessons.py`.
+- `infra/BRANCH-PROTECTION.md`: required status checks off. **Founder action:** turn off "Require status checks to pass" for `main` in GitHub settings, otherwise pull requests wait for checks that never report.
+- Next three tasks: BL-0198, BL-0199, BL-0200.
+
 ## 2026-11-04: teaching layer (00a K1 to K12)
 
 Decision: the founder reported that the app "is not really teaching" and asked which teaching method fits the curriculum. After the research and the agent's recommendation, the founder asked for the specification ("create the specs for it").
