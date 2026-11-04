@@ -142,6 +142,20 @@ test.describe("phone", () => {
     await expect(page.getByText("Bench: step-by-step project work")).toBeVisible();
   });
 
+  test("S06 states: a preview that never answers ends in the doc 09 3.3 build error with retry, not an endless loading card (BL-0044)", async ({ page }) => {
+    await onboarded(page, "stall");
+    let stall = true;
+    await page.route("**/api/v1/sessions/build", (route) => (stall ? undefined : route.fallback())); // a stalled request is never answered
+    await page.clock.install();
+    await page.reload();
+    await expect(page.getByText("Building your session...")).toBeVisible();
+    await page.clock.runFor(10_500); // PREVIEW_TIMEOUT_MS plus the chip debounce
+    await expect(page.getByRole("alert").filter({ hasText: "We could not build a session. Try again." })).toBeVisible();
+    stall = false;
+    await page.getByRole("button", { name: "Try again" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "We could not build a session" })).toBeHidden();
+  });
+
   test("S06 AC-5: keyboard path, chips are a radio group operated by arrow keys, Start by Enter; axe clean in light and dark, sheet open too", async ({ page }) => {
     const userId = await onboarded(page, "kbd");
     fixtures.push(await createTodayFixture(userId));

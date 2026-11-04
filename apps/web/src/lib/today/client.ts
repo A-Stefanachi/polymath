@@ -20,16 +20,39 @@ async function failure(res: Response): Promise<Failure> {
 
 const JSON_HEADERS = { "content-type": "application/json" };
 
-/** buildSession with dry_run true: plans the session, writes nothing (G16, BL-0191). */
-export async function previewSession(minutes: number, context: Context, signal: AbortSignal): Promise<BuildResult> {
-  const res = await fetch("/api/v1/sessions/build", {
-    method: "POST",
-    headers: JSON_HEADERS,
-    body: JSON.stringify({ available_minutes: minutes, context, dry_run: true }),
-    signal,
-  });
-  if (!res.ok) return failure(res);
-  return { kind: "ok", preview: (await res.json()) as SessionPreview };
+/**
+ * A preview that has not answered by then is a failed build (doc 09 section 3.3 error copy, with retry), not an
+ * endless "Building your session...". Far above the 800 ms p95 build budget (doc 03 section 7.1), below the 30 s
+ * after which the hosting proxy gives up.
+ */
+export const PREVIEW_TIMEOUT_MS = 10_000;
+
+/**
+ * buildSession with dry_run true: plans the session, writes nothing (G16, BL-0191). Rejects when `signal` aborts
+ * (the caller moved on); a timeout or a network failure is `{ kind: "error" }`.
+ */
+export async function previewSession(minutes: number, context: Context, signal: AbortSignal, timeoutMs = PREVIEW_TIMEOUT_MS): Promise<BuildResult> {
+  const request = new AbortController();
+  const abort = () => request.abort();
+  const timer = setTimeout(abort, timeoutMs);
+  signal.addEventListener("abort", abort, { once: true });
+  if (signal.aborted) abort();
+  try {
+    const res = await fetch("/api/v1/sessions/build", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ available_minutes: minutes, context, dry_run: true }),
+      signal: request.signal,
+    });
+    if (!res.ok) return await failure(res);
+    return { kind: "ok", preview: (await res.json()) as SessionPreview };
+  } catch (error) {
+    if (signal.aborted) throw error;
+    return { kind: "error" };
+  } finally {
+    clearTimeout(timer);
+    signal.removeEventListener("abort", abort);
+  }
 }
 
 export type StartResult = { kind: "ok"; id: string } | Failure;
