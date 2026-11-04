@@ -77,6 +77,7 @@ export default defineConfig({
     { name: "demo-item", testMatch: "demo-item.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
     { name: "ui-gallery", testMatch: "ui-gallery.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
     { name: "review-console", testMatch: "review-console.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
+    { name: "lesson-console", testMatch: "lesson-console.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
     { name: "map-progress-review", testMatch: "map-progress-review.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
     { name: "a11y", testMatch: "a11y.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}`, timezoneId: "Europe/Rome" } },
     { name: "enumeration", testMatch: "enumeration.spec.ts", use: { baseURL: `http://127.0.0.1:${noSignupPort}` } },

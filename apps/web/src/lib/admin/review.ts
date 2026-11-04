@@ -17,6 +17,8 @@ export type ReviewItem = Awaited<ReturnType<ReviewStore["items"]>>[number];
 export type ReviewOutcome =
   | "approved"
   | "retired"
+  | "lesson_approved"
+  | "lesson_retired"
   | "invalid"
   | "needs_hand_solve"
   | "not_found"
