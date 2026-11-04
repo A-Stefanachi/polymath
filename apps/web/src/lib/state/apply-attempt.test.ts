@@ -10,7 +10,7 @@ import { submitAttempt } from "@/lib/attempts/submit.ts";
 import { createAttemptStore } from "@/server/privileged/attempt-store";
 import { createServeStore } from "@/server/privileged/item-store";
 import { createStateStore } from "@/server/privileged/state-store";
-import { DEFAULT_PARAMS } from "./scheduler-params.ts";
+import { DEFAULT_PARAMS } from "@polymath/scheduler";
 import { applyGradedAttempt, commitSessionReviews, sharedFsrsPort, tzOffsetMinutes, type StateDeps } from "./apply-attempt.ts";
 
 const sql = testSql();

@@ -26,8 +26,10 @@ import {
   type FsrsCard,
   type FsrsPort,
   type MasteryAttempt,
+  DEFAULT_PARAMS,
+  type AttemptSnapshot,
+  type SchedulerParams,
 } from "@polymath/scheduler";
-import { DEFAULT_PARAMS, type AttemptSnapshot, type SchedulerParams } from "./scheduler-params.ts";
 import { checkEvent } from "@/lib/events/emit.ts";
 import { privilegedDb } from "@/server/privileged/db";
 import {
