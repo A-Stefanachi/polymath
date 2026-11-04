@@ -4,6 +4,7 @@
 import Ajv2020, { type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 
+import lessonSchema from "../../../polymath-app-spec/schemas/lesson.schema.json" with { type: "json" };
 import problemTemplateSchema from "../../../polymath-app-spec/schemas/problem-template.schema.json" with { type: "json" };
 import projectSchema from "../../../polymath-app-spec/schemas/project.schema.json" with { type: "json" };
 import skillNodeSchema from "../../../polymath-app-spec/schemas/skill-node.schema.json" with { type: "json" };
@@ -29,6 +30,7 @@ function compile(schema: object): ValidateFunction {
 
 const compiled = {
   template: compile(problemTemplateSchema),
+  lesson: compile(lessonSchema),
   project: compile(projectSchema),
   skillNode: compile(skillNodeSchema),
 };
@@ -51,6 +53,11 @@ export function validateTemplate(doc: unknown): ValidationResult {
   return run(compiled.template, doc);
 }
 
+/** G0 for one concept primer file (content/lessons/*.yaml, doc 07 section 15). */
+export function validateLesson(doc: unknown): ValidationResult {
+  return run(compiled.lesson, doc);
+}
+
 /** G0 for the project ladder file. */
 export function validateProject(doc: unknown): ValidationResult {
   return run(compiled.project, doc);
@@ -64,6 +71,7 @@ export function validateSkillNode(doc: unknown): ValidationResult {
 /** The schema documents, for callers that report against them (for example content:lint). */
 export const SCHEMAS = {
   template: problemTemplateSchema,
+  lesson: lessonSchema,
   project: projectSchema,
   skillNode: skillNodeSchema,
 } as const;

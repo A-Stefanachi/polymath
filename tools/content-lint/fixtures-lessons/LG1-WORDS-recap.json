@@ -1,0 +1,1 @@
+{ "rule": "LG1-WORDS", "set": { "recap_md": { "$repeat": "word ", "times": 61 } } }

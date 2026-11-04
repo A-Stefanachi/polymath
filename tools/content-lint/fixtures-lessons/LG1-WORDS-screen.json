@@ -1,0 +1,1 @@
+{ "rule": "LG1-WORDS", "set": { "screens.0.body_md": { "$repeat": "word ", "times": 151 } } }
