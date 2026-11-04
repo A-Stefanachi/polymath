@@ -42,6 +42,10 @@ export default defineConfig({
   workers: 1, // GoTrue rate limits are per IP and the stack is shared
   reporter: [["list"]],
   timeout: 90_000,
+  // The e2e app is a production build, so it registers the BL-0063 service worker, which claims the page. Fetches
+  // a service worker makes are not seen by page.route, so once it controls the page the scenarios' API mocks stop
+  // applying. Only the pwa project, which tests the worker itself, lets it register.
+  use: { serviceWorkers: "block" },
   projects: [
     { name: "signin", testMatch: "signin.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
     {
@@ -62,7 +66,7 @@ export default defineConfig({
     {
       name: "pwa",
       testMatch: "pwa.spec.ts",
-      use: { baseURL: `http://127.0.0.1:${signupPort}`, timezoneId: "Europe/Rome", viewport: { width: 360, height: 800 } },
+      use: { baseURL: `http://127.0.0.1:${signupPort}`, timezoneId: "Europe/Rome", viewport: { width: 360, height: 800 }, serviceWorkers: "allow" },
     },
     { name: "consent", testMatch: "consent.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
     { name: "demo-item", testMatch: "demo-item.spec.ts", use: { baseURL: `http://127.0.0.1:${signupPort}` } },
