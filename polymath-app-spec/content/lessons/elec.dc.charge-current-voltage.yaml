@@ -1,0 +1,128 @@
+# Concept primer for elec.dc.charge-current-voltage (00a K6, BL-0203). Ready for the founder's review in the console (00a K9).
+# Conceptual skill: fuller treatment with a mental model, figure and prediction checks (doc 05 section 5.6).
+# Validate: python3 reference/validate_lessons.py
+schema_version: 1
+skill_key: elec.dc.charge-current-voltage
+version: 1
+authoring_status: ready
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-04'
+  llm_assistance:
+    used: true
+    model: claude-opus-5-5
+    prompt_version: lesson_assist_v1
+est_seconds: 150
+screens:
+- id: why
+  title: Why this matters
+  body_md: >-
+    Ohm's law, power, Kirchhoff's laws and every circuit you build later are statements about three
+    quantities: charge, current and voltage. Most early confusion in electronics comes from mixing them up,
+    so it pays to get a clear picture of each one now.
+- id: idea
+  title: The three quantities
+  body_md: >-
+    **Charge** $Q$ is measured in coulombs (C).
+
+
+    **Current** $I$ is the rate at which charge flows past a point, in amperes (A). One ampere is one coulomb
+    per second:
+
+
+    $$I = \frac{Q}{t}$$
+
+
+    with $t$ in seconds. Current flows *through* a part.
+
+
+    **Voltage** $V$ is the energy each coulomb gains or loses between two points, in volts (V); one volt is
+    one joule per coulomb. Voltage is always *between* two points, or across a part.
+
+
+    By convention, current flows out of the positive terminal of a source, round the circuit and back into
+    the negative terminal. In metal wires the electrons move the other way, but every calculation in this
+    course uses the conventional direction.
+  figure:
+    alt: A cell with its long plate marked plus drives a loop through a resistor R. Arrows labelled I show current leaving the plus terminal along the top wire and returning along the bottom wire. The voltage V is marked across the cell.
+    svg: >-
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 150" width="260" height="150">
+      <g fill="none" stroke="currentColor" stroke-width="3">
+      <path d="M40 62 V30 H220 V55"/>
+      <rect x="210" y="55" width="20" height="40"/>
+      <path d="M220 95 V120 H40 V78"/>
+      <line x1="30" y1="62" x2="50" y2="62"/>
+      <line x1="34" y1="78" x2="46" y2="78"/>
+      </g>
+      <path d="M136 30 l-10 -6 v12 z" fill="currentColor"/>
+      <path d="M124 120 l10 -6 v12 z" fill="currentColor"/>
+      <g font-family="sans-serif" font-size="14" fill="currentColor">
+      <text x="52" y="58">+</text>
+      <text x="8" y="75">V</text>
+      <text x="126" y="20">I</text>
+      <text x="126" y="142">I</text>
+      <text x="238" y="80">R</text>
+      </g>
+      </svg>
+- id: model
+  title: A picture to reason with
+  body_md: >-
+    Think of a closed loop of pipe full of water. The source is a pump that sets a pressure difference; that
+    is the voltage. The flow rate is the current. A resistor is a narrow section that limits the flow.
+
+
+    Two things follow. First, the source sets the voltage, and the circuit decides the current: the same 9 V
+    battery drives more current through a small resistor than through a large one. Second, current is not
+    used up. In a single loop the same current flows through every part, because charge cannot pile up
+    anywhere. What the parts take is energy, which is why the voltage drops across them.
+misconception:
+  tag: mc.current-minutes-not-seconds
+  wrong_idea_md: If 600 C passes in 5 min, the current is $600 / 5 = 120\ \text{A}$.
+  why_tempting_md: >-
+    The time is given in minutes, and dividing charge by time is the right idea, so the number looks
+    finished.
+  correct_idea_md: >-
+    An ampere is one coulomb per second. 5 min is 300 s, so $I = 600 / 300 = 2\ \text{A}$. Dividing by minutes
+    gives coulombs per minute, 60 times too large. Convert the time to seconds before you divide.
+checks:
+- id: fixed-voltage
+  stem_md: >-
+    A 9 V battery is connected first to a 1 k$\Omega$ resistor, then to a 100 $\Omega$ resistor instead. What
+    happens to the current?
+  options:
+  - id: correct
+    text_md: It is larger with the 100 $\Omega$ resistor
+    correct: true
+    feedback_md: Right. The battery sets the voltage; a smaller resistance lets more current flow.
+  - id: fixed-current
+    text_md: It stays the same, because the battery supplies a fixed current
+    correct: false
+    feedback_md: A battery sets a voltage, not a current. The circuit's resistance decides how much current flows.
+  - id: smaller
+    text_md: It is smaller with the 100 $\Omega$ resistor
+    correct: false
+    feedback_md: Less resistance lets more charge through each second, so the current rises.
+- id: used-up
+  stem_md: >-
+    A battery drives a single loop through two lamps in series. The current through the first lamp is
+    0.2 A. What is the current through the second lamp?
+  options:
+  - id: correct
+    text_md: 0.2 A
+    correct: true
+    feedback_md: Right. In a single loop the same current flows through every part.
+  - id: less
+    text_md: Less than 0.2 A, because the first lamp uses some of it up
+    correct: false
+    feedback_md: Charge is not used up; it cannot pile up or vanish in a loop. The lamps take energy, not current.
+  - id: half
+    text_md: 0.1 A, because the current is shared between the two lamps
+    correct: false
+    feedback_md: Current is shared only between parallel branches. Here there is one path, so both lamps carry 0.2 A.
+recap_md: >-
+  Current is charge per second, $I = Q/t$ with $t$ in seconds: one ampere is one coulomb per second. Voltage is
+  energy per coulomb between two points. The source sets the voltage and the circuit decides the current,
+  which is the same all round a single loop.

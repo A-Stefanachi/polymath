@@ -39,6 +39,10 @@ export type ServeStore = {
   findItem(itemId: string): Promise<ServeItemRow | null>;
   /** Only a task owned by `userId`; another user's task is null. */
   findTask(userId: string, taskId: string): Promise<ServeTaskRow | null>;
+  /** `item_secrets.solution` of an item (00a K2): the one learner-facing read of item_secrets. */
+  findSolution(itemId: string): Promise<unknown>;
+  /** Faded_problem tasks of the same skill earlier in the task's session (00a K3). */
+  countEarlierFaded(task: ServeTaskRow): Promise<number>;
   /** Writes the `task_shown` event (doc 11 section 9) that the serve audit counts. */
   recordShown(userId: string, props: Record<string, unknown>): Promise<void>;
 };
@@ -65,6 +69,16 @@ export function createServeStore(sql: Sql): ServeStore {
             from public.session_tasks
            where id = ${taskId} and user_id = ${userId}`
       )[0] ?? null,
+    findSolution: async (itemId) =>
+      (await sql<{ solution: unknown }[]>`select solution from public.item_secrets where item_id = ${itemId}`)[0]?.solution ?? null,
+    countEarlierFaded: async (task) =>
+      (
+        await sql<{ n: number }[]>`
+          select count(*)::int as n
+            from public.session_tasks
+           where session_id = ${task.session_id} and task_kind = 'faded_problem' and skill_key is not distinct from ${task.skill_key}
+             and position < ${task.position}`
+      )[0]?.n ?? 0,
     recordShown: (userId, props) => insertEvents(sql, [{ userId, name: "task_shown", props }]),
   };
 }

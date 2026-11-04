@@ -1,0 +1,98 @@
+# Concept primer for math.alg.rearrange-formulas (00a K6, BL-0203). Ready for the founder's review in the console (00a K9).
+# Validate: python3 reference/validate_lessons.py
+schema_version: 1
+skill_key: math.alg.rearrange-formulas
+version: 1
+authoring_status: ready
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-04'
+  llm_assistance:
+    used: true
+    model: claude-opus-5-5
+    prompt_version: lesson_assist_v1
+est_seconds: 90
+screens:
+- id: why
+  title: Why this matters
+  body_md: >-
+    A formula is written for one quantity, but a problem often asks for another. $V = IR$ gives the voltage;
+    to choose a resistor you need $R$. If you can rearrange, you remember one form of each formula instead of
+    three.
+- id: idea
+  title: The idea
+  body_md: >-
+    A formula is an equation, so the rules for solving equations apply: do the same to both sides to undo
+    whatever is attached to the quantity you want.
+
+
+    In $V = IR$, $R$ is multiplied by $I$. Divide both sides by $I$:
+
+
+    $$\frac{V}{I} = \frac{IR}{I} = R$$
+
+
+    In $P = VI$, to find $I$ divide both sides by $V$: $I = P/V$.
+- id: model
+  title: How to use it
+  body_md: >-
+    1. Mark the quantity you want.
+
+
+    2. Note what is done to it (multiplied, divided, squared).
+
+
+    3. Undo those operations in reverse order, on both sides.
+
+
+    For $P = V^2/R$ solved for $R$: multiply both sides by $R$ to get $PR = V^2$, then divide by $P$ to get
+    $R = V^2/P$.
+
+
+    Check with units: volts divided by amperes gives ohms, and watts divided by volts gives amperes. If the
+    units come out wrong, the fraction is upside down.
+misconception:
+  tag: mc.inverted-fraction
+  wrong_idea_md: From $V = IR$ you get $R = I/V$.
+  why_tempting_md: >-
+    Two letters change places at once, and it is easy to lose track of which one ends up on top.
+  correct_idea_md: >-
+    Divide both sides by $I$: the quantity you divided by goes underneath, so $R = V/I$. With 6 V and 0.02 A,
+    $R = 6/0.02 = 300\ \Omega$. Units confirm it: volts per ampere is ohms.
+checks:
+- id: power-v
+  stem_md: Rearrange $P = VI$ to find $V$.
+  options:
+  - id: correct
+    text_md: '$V = P/I$'
+    correct: true
+    feedback_md: Right. Divide both sides by $I$ to undo the multiplication.
+  - id: inverted
+    text_md: '$V = I/P$'
+    correct: false
+    feedback_md: This fraction is upside down. Divide both sides by $I$ and read what is left.
+  - id: multiplies
+    text_md: '$V = PI$'
+    correct: false
+    feedback_md: To undo a multiplication by $I$, divide by $I$. Multiplying makes it $VI^2$, not $V$.
+- id: power-r
+  stem_md: Rearrange $P = V^2/R$ to find $R$.
+  options:
+  - id: correct
+    text_md: '$R = V^2/P$'
+    correct: true
+    feedback_md: Right. Multiply both sides by $R$, then divide both sides by $P$.
+  - id: inverted
+    text_md: '$R = P/V^2$'
+    correct: false
+    feedback_md: This fraction is upside down. Check the units, since watts per volt squared is not ohms.
+  - id: multiplies
+    text_md: '$R = PV^2$'
+    correct: false
+    feedback_md: $R$ was dividing, so undo it by multiplying both sides by $R$, then divide by $P$.
+recap_md: >-
+  Rearrange by doing the same to both sides, undoing operations in reverse order. Whatever you divide by goes
+  underneath: from $V = IR$, $R = V/I$, not $I/V$. Check the units of the result.

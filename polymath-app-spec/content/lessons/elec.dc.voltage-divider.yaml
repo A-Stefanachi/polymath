@@ -1,0 +1,126 @@
+# Concept primer for elec.dc.voltage-divider (00a K6, BL-0203). Ready for the founder's review in the console (00a K9).
+# Validate: python3 reference/validate_lessons.py
+schema_version: 1
+skill_key: elec.dc.voltage-divider
+version: 1
+authoring_status: ready
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-04'
+  llm_assistance:
+    used: true
+    model: claude-opus-5-5
+    prompt_version: lesson_assist_v1
+est_seconds: 110
+screens:
+- id: why
+  title: Why this matters
+  body_md: >-
+    A voltage divider scales a voltage down with two resistors. You use one to read a 12 V battery with a
+    microcontroller input that accepts only 3.3 V, to set a reference voltage, or to turn a sensor whose
+    resistance changes into a voltage you can measure.
+- id: idea
+  title: The idea
+  body_md: >-
+    $R_1$ (top) and $R_2$ (bottom) are in series across $V_{in}$, so the same current flows through both:
+
+
+    $$I = \frac{V_{in}}{R_1 + R_2}$$
+
+
+    The output is the voltage across $R_2$, the resistor to ground:
+
+
+    $$V_{out} = I R_2 = V_{in} \frac{R_2}{R_1 + R_2}$$
+
+
+    This holds while whatever is connected to the output draws little current compared with $I$.
+  figure:
+    alt: A vertical voltage divider. Vin at the top connects through R1 to a junction, then through R2 to ground. Vout is taken from the junction.
+    svg: >-
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 190" width="180" height="190">
+      <g fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="60" cy="14" r="4"/>
+      <path d="M60 18 V30 M60 70 V100 M60 140 V160"/>
+      <rect x="50" y="30" width="20" height="40"/>
+      <rect x="50" y="100" width="20" height="40"/>
+      <path d="M60 85 H126"/>
+      <circle cx="130" cy="85" r="4"/>
+      <path d="M46 160 H74 M51 167 H69 M56 174 H64"/>
+      </g>
+      <circle cx="60" cy="85" r="3" fill="currentColor"/>
+      <g font-family="sans-serif" font-size="13" fill="currentColor">
+      <text x="72" y="18">Vin</text>
+      <text x="78" y="55">R1</text>
+      <text x="78" y="125">R2</text>
+      <text x="120" y="76">Vout</text>
+      </g>
+      </svg>
+- id: model
+  title: How to use it
+  body_md: >-
+    $V_{in} = 12$ V, $R_1 = 20$ k$\Omega$, $R_2 = 10$ k$\Omega$:
+
+
+    $$V_{out} = 12 \times \frac{10}{20 + 10} = 4\ \text{V}$$
+
+
+    The drop across $R_1$ is the rest, $12 - 4 = 8$ V.
+
+
+    Sense checks: equal resistors give half of $V_{in}$; a larger $R_2$ raises $V_{out}$; $V_{out}$ is
+    always between 0 and $V_{in}$.
+
+
+    To choose values, set $\frac{R_2}{R_1 + R_2} = \frac{V_{out}}{V_{in}}$, then pick a standard pair with
+    that ratio.
+misconception:
+  tag: mc.divider-swapped-resistors
+  wrong_idea_md: $V_{out} = V_{in} \frac{R_1}{R_1 + R_2}$, with the top resistor on top of the fraction.
+  why_tempting_md: >-
+    $R_1$ comes first and sits at the top of the drawing, so putting it on top of the fraction feels natural.
+  correct_idea_md: >-
+    The output is the voltage across the resistor to ground, $R_2$, so $R_2$ goes on top. Using $R_1$ gives the
+    drop across $R_1$, which is $V_{in} - V_{out}$: 8 V instead of 4 V in the example.
+checks:
+- id: vout
+  stem_md: $V_{in} = 9$ V, $R_1 = 3$ k$\Omega$ (top) and $R_2 = 1$ k$\Omega$ (bottom). What is $V_{out}$?
+  options:
+  - id: correct
+    text_md: 2.25 V
+    correct: true
+    feedback_md: Right. $9 \times \frac{1}{3 + 1} = 2.25$ V.
+  - id: swapped
+    text_md: 6.75 V
+    correct: false
+    feedback_md: That is the drop across $R_1$. The output is across $R_2$, the resistor to ground.
+  - id: half
+    text_md: 4.5 V
+    correct: false
+    feedback_md: Half the supply needs equal resistors. Here $R_1$ is three times $R_2$.
+  - id: ratio
+    text_md: 3 V
+    correct: false
+    feedback_md: This uses $\frac{R_2}{R_1}$. The fraction needs the total $R_1 + R_2$ underneath.
+- id: predict
+  stem_md: You make $R_2$ larger and keep $R_1$ and $V_{in}$ the same. What happens to $V_{out}$?
+  options:
+  - id: correct
+    text_md: It rises
+    correct: true
+    feedback_md: Right. $R_2$ takes a larger share of the total resistance, so it takes a larger share of $V_{in}$.
+  - id: falls
+    text_md: It falls
+    correct: false
+    feedback_md: The current falls a little, but $R_2$'s share of the total grows, so the voltage across it rises.
+  - id: same
+    text_md: It stays the same
+    correct: false
+    feedback_md: The output depends on the ratio $\frac{R_2}{R_1 + R_2}$, which changes when $R_2$ changes.
+recap_md: >-
+  A divider's output is the voltage across the resistor to ground: $V_{out} = V_{in} \frac{R_2}{R_1 + R_2}$,
+  valid while the load draws little current. Putting $R_1$ on top gives the drop across $R_1$ instead. Equal
+  resistors give half the supply.

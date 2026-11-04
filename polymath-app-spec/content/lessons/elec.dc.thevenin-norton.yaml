@@ -1,0 +1,121 @@
+# Concept primer for elec.dc.thevenin-norton (00a K6, BL-0203). Ready for the founder's review in the console (00a K9).
+# Validate: python3 reference/validate_lessons.py
+schema_version: 1
+skill_key: elec.dc.thevenin-norton
+version: 1
+authoring_status: ready
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-04'
+  llm_assistance:
+    used: true
+    model: claude-opus-5-5
+    prompt_version: lesson_assist_v1
+est_seconds: 130
+screens:
+- id: why
+  title: Why this matters
+  body_md: >-
+    When you connect a load to a circuit, such as a sensor input on a divider, you usually care only about
+    what happens at the two terminals. Thevenin's theorem replaces everything behind them with one source
+    and one resistor, so trying several loads takes one line each instead of a new analysis.
+- id: idea
+  title: The idea
+  body_md: >-
+    Any network of sources and resistors, seen from two terminals A and B, behaves like a voltage $V_{th}$ in
+    series with a resistance $R_{th}$:
+
+
+    - $V_{th}$ is the open-circuit voltage between A and B, with the load removed.
+
+
+    - $R_{th}$ is the resistance seen looking into A and B with every source turned off: a voltage source becomes a short, a current source becomes an open circuit.
+
+
+    The load current is then $I_L = \frac{V_{th}}{R_{th} + R_L}$.
+
+
+    The Norton form is the same network as a current source $I_N = V_{th}/R_{th}$ in parallel with $R_{th}$.
+  figure:
+    alt: The Thevenin equivalent. A voltage source Vth in series with a resistor Rth connects to terminals A and B, with a load RL across A and B.
+    svg: >-
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 150" width="240" height="150">
+      <g fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="40" cy="75" r="16"/>
+      <path d="M40 59 V30 H80 M120 30 H166 M174 30 H210 V55 M210 95 V120 H174 M166 120 H40 V91"/>
+      <rect x="80" y="22" width="40" height="16"/>
+      <rect x="200" y="55" width="20" height="40"/>
+      <circle cx="170" cy="30" r="4"/>
+      <circle cx="170" cy="120" r="4"/>
+      </g>
+      <g font-family="sans-serif" font-size="13" fill="currentColor">
+      <text x="35" y="72">+</text>
+      <text x="36" y="87">-</text>
+      <text x="2" y="80">Vth</text>
+      <text x="88" y="16">Rth</text>
+      <text x="164" y="16">A</text>
+      <text x="164" y="142">B</text>
+      <text x="226" y="80">RL</text>
+      </g>
+      </svg>
+- id: model
+  title: How to use it
+  body_md: >-
+    A divider: $V_S = 12$ V, $R_1 = 6$ k$\Omega$ from the source to A, $R_2 = 3$ k$\Omega$ from A to ground
+    (B). Load $R_L = 2$ k$\Omega$.
+
+
+    1. Remove the load: $V_{th} = 12 \times \frac{3}{6 + 3} = 4$ V.
+
+
+    2. Short the source: seen from A, $R_1$ and $R_2$ both run to ground, so they are in parallel, $R_{th} = \frac{6 \times 3}{6 + 3} = 2$ k$\Omega$.
+
+
+    3. Reconnect the load: $I_L = \frac{4}{2 + 2} = 1$ mA (volts over k$\Omega$ gives mA).
+misconception:
+  tag: mc.thevenin-r-series
+  wrong_idea_md: For a divider, $R_{th} = R_1 + R_2$.
+  why_tempting_md: >-
+    In the original circuit $R_1$ and $R_2$ sit one after the other along the path from the source, so adding
+    them looks right.
+  correct_idea_md: >-
+    Turn the source off and it becomes a short, so $R_1$ also runs from A to ground. Seen from the load, $R_1$
+    and $R_2$ are in parallel: with 6 k$\Omega$ and 3 k$\Omega$, $R_{th} = 2$ k$\Omega$, not 9 k$\Omega$.
+checks:
+- id: vth
+  stem_md: How do you find $V_{th}$ for a network seen from terminals A and B?
+  options:
+  - id: correct
+    text_md: Find the voltage between A and B with the load removed
+    correct: true
+    feedback_md: Right. $V_{th}$ is the open-circuit voltage at the terminals.
+  - id: uses-source
+    text_md: Use the source voltage
+    correct: false
+    feedback_md: The network between the source and the terminals changes the voltage. $V_{th}$ is measured at A and B with no load.
+  - id: with-load
+    text_md: Find the voltage between A and B with the load connected
+    correct: false
+    feedback_md: With the load connected, the voltage already includes the drop across $R_{th}$. Remove the load first.
+- id: load-current
+  stem_md: $V_{th} = 6$ V, $R_{th} = 1$ k$\Omega$ and $R_L = 2$ k$\Omega$. What is the load current?
+  options:
+  - id: correct
+    text_md: 2 mA
+    correct: true
+    feedback_md: Right. $\frac{6}{1 + 2} = 2$ mA; the load current flows through $R_{th}$ as well.
+  - id: omits-rth
+    text_md: 3 mA
+    correct: false
+    feedback_md: This puts $V_{th}$ straight across the load. The current also flows through $R_{th}$, so add it.
+  - id: rth-only
+    text_md: 6 mA
+    correct: false
+    feedback_md: This divides by $R_{th}$ alone. The current flows through $R_{th}$ and $R_L$ in series.
+recap_md: >-
+  Seen from two terminals, a network is $V_{th}$ in series with $R_{th}$. $V_{th}$ is the open-circuit voltage
+  with the load removed; $R_{th}$ is the resistance looking in with sources off (voltage sources shorted). For a
+  divider that makes $R_1$ and $R_2$ parallel, not series. Then $I_L = \frac{V_{th}}{R_{th} + R_L}$.

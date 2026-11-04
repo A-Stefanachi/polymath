@@ -179,14 +179,17 @@ def symbolic_misconceptions(tpl: dict, item: dict) -> list[dict[str, str]]:
     return out
 
 
+def _solution_step(step: dict, ctx: dict, units: dict) -> dict:
+    out = {"id": step["id"], "text_md": tplkit.render_text(step["text_md"], ctx, units)}
+    if step.get("label"):
+        out["label"] = tplkit.render_text(step["label"], ctx, units)
+    return out
+
+
 def build_solution(tpl: dict, item: dict) -> dict:
     c, u = item["_ctx"], tplkit.unit_map(tpl)
-    sol: dict[str, Any] = {
-        "steps": [
-            {"id": s["id"], "text_md": tplkit.render_text(s["text_md"], c, u)}
-            for s in tpl["solution"]["steps"]
-        ]
-    }
+    # 00a K5: an optional step label is template text, so it is filled in like text_md; no label, no key.
+    sol: dict[str, Any] = {"steps": [_solution_step(s, c, u) for s in tpl["solution"]["steps"]]}
     if tpl["solution"].get("explanation_md"):
         sol["explanation_md"] = tplkit.render_text(tpl["solution"]["explanation_md"], c, u)
     return sol

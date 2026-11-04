@@ -1,0 +1,110 @@
+# Concept primer for math.alg.quadratics (00a K6, BL-0203). Ready for the founder's review in the console (00a K9).
+# Validate: python3 reference/validate_lessons.py
+schema_version: 1
+skill_key: math.alg.quadratics
+version: 1
+authoring_status: ready
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-04'
+  llm_assistance:
+    used: true
+    model: claude-opus-5-5
+    prompt_version: lesson_assist_v1
+est_seconds: 110
+screens:
+- id: why
+  title: Why this matters
+  body_md: >-
+    A quadratic appears whenever the unknown is squared: power in a resistor is $P = I^2 R$, an area grows
+    with the square of a length, and later the maths of filters leads to quadratics too. A quadratic usually
+    has two roots, and deciding which one makes sense is part of the answer.
+- id: idea
+  title: The idea
+  body_md: >-
+    A quadratic equation has the form $ax^2 + bx + c = 0$. The key fact: if a product is zero, one of its
+    factors is zero.
+
+
+    For $x^2 + bx + c$, find two numbers that multiply to $c$ and add to $b$. For $x^2 - 5x + 6 = 0$ they are
+    $-2$ and $-3$:
+
+
+    $$(x - 2)(x - 3) = 0$$
+
+
+    So $x - 2 = 0$ or $x - 3 = 0$, giving $x = 2$ or $x = 3$.
+
+
+    When factoring is hard, the quadratic formula always works:
+
+
+    $$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$
+- id: model
+  title: How to use it
+  body_md: >-
+    1. Move everything to one side so the other side is 0.
+
+
+    2. Factor, or use the formula.
+
+
+    3. Set each bracket to zero and solve it.
+
+
+    4. Check each root by substitution.
+
+
+    In a physical problem, look at both roots. A negative length or a negative resistance cannot be the
+    answer, so one root is often discarded; say why when you do.
+misconception:
+  tag: mc.flipped-root-signs
+  wrong_idea_md: From $(x + 4)(x - 1) = 0$ the roots are $x = 4$ and $x = -1$.
+  why_tempting_md: >-
+    The numbers are right there in the brackets, so copying them with their signs looks like reading off the
+    answer.
+  correct_idea_md: >-
+    Set each bracket to zero: $x + 4 = 0$ gives $x = -4$, and $x - 1 = 0$ gives $x = 1$. Substitution checks
+    it: $(-4 + 4)(-4 - 1) = 0 \times (-5) = 0$.
+checks:
+- id: roots
+  stem_md: What are the roots of $(x - 3)(x + 5) = 0$?
+  options:
+  - id: correct
+    text_md: '$x = 3$ or $x = -5$'
+    correct: true
+    feedback_md: Right. $x - 3 = 0$ gives 3, and $x + 5 = 0$ gives $-5$.
+  - id: flipped
+    text_md: '$x = -3$ or $x = 5$'
+    correct: false
+    feedback_md: The signs are flipped. If a bracket is $x - 3$, the root is $+3$. Set each bracket to zero.
+  - id: sum
+    text_md: '$x = -2$'
+    correct: false
+    feedback_md: That is the sum of the two roots, not a root. Set each bracket to zero.
+- id: factor
+  stem_md: Which factorisation of $x^2 + 7x + 12$ is correct?
+  options:
+  - id: correct
+    text_md: '$(x + 3)(x + 4)$'
+    correct: true
+    feedback_md: Right. $3 \times 4 = 12$ and $3 + 4 = 7$.
+  - id: sum-wrong
+    text_md: '$(x + 2)(x + 6)$'
+    correct: false
+    feedback_md: These multiply to 12 but add to 8, so the middle term would be $8x$.
+  - id: product-wrong
+    text_md: '$(x + 5)(x + 2)$'
+    correct: false
+    feedback_md: These add to 7 but multiply to 10, so the constant would be 10.
+  - id: signs-wrong
+    text_md: '$(x - 3)(x - 4)$'
+    correct: false
+    feedback_md: This expands to $x^2 - 7x + 12$. The middle term here is $+7x$.
+recap_md: >-
+  Write the quadratic as $ax^2 + bx + c = 0$, factor it or use the formula, then set each bracket to zero. The
+  root has the opposite sign to the number in the bracket: $(x + 4)$ gives $x = -4$. Check both roots and
+  discard one only for a stated reason.

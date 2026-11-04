@@ -1,0 +1,105 @@
+# Concept primer for math.alg.units-and-prefixes (00a K6, BL-0203). Ready for the founder's review in the console (00a K9).
+# Validate: python3 reference/validate_lessons.py
+schema_version: 1
+skill_key: math.alg.units-and-prefixes
+version: 1
+authoring_status: ready
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-04'
+  llm_assistance:
+    used: true
+    model: claude-opus-5-5
+    prompt_version: lesson_assist_v1
+est_seconds: 90
+screens:
+- id: why
+  title: Why this matters
+  body_md: >-
+    Component values almost always carry a prefix: a 4.7 k$\Omega$ resistor, an LED at 20 mA, a 100 nF
+    capacitor. Formulas such as Ohm's law work in base units (volts, amperes, ohms), so converting a prefix
+    is the first step of most electronics problems, and a slip here makes the answer wrong by a factor of a
+    thousand.
+- id: idea
+  title: The idea
+  body_md: |-
+    A prefix is a multiplier written in front of a unit:
+
+    | Prefix | Symbol | Factor |
+    |---|---|---|
+    | giga | G | $10^{9}$ |
+    | mega | M | $10^{6}$ |
+    | kilo | k | $10^{3}$ |
+    | milli | m | $10^{-3}$ |
+    | micro | $\mu$ | $10^{-6}$ |
+    | nano | n | $10^{-9}$ |
+    | pico | p | $10^{-12}$ |
+
+    So $4.7\ \text{k}\Omega = 4.7 \times 10^{3}\ \Omega = 4700\ \Omega$. Neighbouring prefixes differ by a factor of 1000. Case matters: m is milli, M is mega.
+- id: model
+  title: How to use it
+  body_md: >-
+    Before you multiply or divide by the factor, ask which unit is smaller. The count in the smaller unit is
+    the larger number.
+
+
+    - k$\Omega$ to $\Omega$: an ohm is smaller, so multiply by 1000. $2.2\ \text{k}\Omega = 2200\ \Omega$.
+
+
+    - mA to A: an ampere is larger, so divide by 1000. $20\ \text{mA} = 0.020\ \text{A}$.
+
+
+    - M$\Omega$ to k$\Omega$: one step of 1000. $1.5\ \text{M}\Omega = 1500\ \text{k}\Omega$.
+
+
+    When unsure, go through the base unit first, then to the prefix you want.
+misconception:
+  tag: mc.prefix-direction
+  wrong_idea_md: To turn kilo-ohms into ohms you divide by 1000, because kilo means 1000.
+  why_tempting_md: >-
+    The prefix tells you the factor but not which way to apply it, and dividing feels like taking the prefix
+    away.
+  correct_idea_md: >-
+    A kilo-ohm is larger than an ohm: each kilo-ohm holds 1000 ohms, so the number grows.
+    $3.3\ \text{k}\Omega = 3.3 \times 1000 = 3300\ \Omega$, not $0.0033\ \Omega$.
+checks:
+- id: kilo
+  stem_md: How many ohms are in $4.7\ \text{k}\Omega$?
+  options:
+  - id: correct
+    text_md: '$4700\ \Omega$'
+    correct: true
+    feedback_md: Right. Kilo means 1000, and an ohm is smaller, so $4.7 \times 1000 = 4700$.
+  - id: direction
+    text_md: '$0.0047\ \Omega$'
+    correct: false
+    feedback_md: This divides by 1000. Ohms are smaller than kilo-ohms, so the number of ohms must be larger.
+  - id: wrong-power
+    text_md: '$470\ \Omega$'
+    correct: false
+    feedback_md: This uses a factor of 100. Kilo stands for 1000, three zeros.
+  - id: ignored
+    text_md: '$4.7\ \Omega$'
+    correct: false
+    feedback_md: This drops the prefix without converting. The prefix changes the size of the number.
+- id: mega
+  stem_md: How many k$\Omega$ are in $2.5\ \text{M}\Omega$?
+  options:
+  - id: correct
+    text_md: '$2500\ \text{k}\Omega$'
+    correct: true
+    feedback_md: Right. Mega is $10^{6}$ and kilo is $10^{3}$, so one step of 1000 separates them.
+  - id: swapped-only
+    text_md: '$2.5\ \text{k}\Omega$'
+    correct: false
+    feedback_md: This changes the prefix but keeps the number. A mega-ohm is 1000 kilo-ohms.
+  - id: base-unit
+    text_md: '$2\,500\,000\ \text{k}\Omega$'
+    correct: false
+    feedback_md: That is the value in ohms. Divide by 1000 to get kilo-ohms.
+recap_md: >-
+  A prefix is a factor: k is $10^{3}$, M is $10^{6}$, m is $10^{-3}$, $\mu$ is $10^{-6}$. Convert to base units
+  before using a formula. The count in the smaller unit is the larger number, so $3.3\ \text{k}\Omega = 3300\ \Omega$.

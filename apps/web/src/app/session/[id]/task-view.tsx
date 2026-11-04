@@ -15,6 +15,7 @@ import { runner as t } from "@/copy/strings";
 import { feedbackBody } from "@/lib/feedback-body";
 import { parseNumericAnswer, pollDelayMs, TaskTimer } from "@/lib/runner/runner";
 import { ReportProblem } from "./report-problem";
+import { WorkedStepper, type WorkedStep } from "./worked-stepper";
 
 export type RunnerTask = { id: string; task_kind: string; skill_key?: string | null; item_id?: string | null };
 
@@ -22,8 +23,19 @@ type Option = { id: string; text_md: string };
 type Item = {
   id: string;
   grader_type: string;
-  rendered: { prompt_md: string; alt_text?: string; answer_prompt?: string; options?: Option[] };
+  rendered: {
+    prompt_md: string;
+    alt_text?: string;
+    answer_prompt?: string;
+    options?: Option[];
+    worked_steps?: WorkedStep[];
+    steps_total?: number;
+    explanation_md?: string;
+  };
 };
+
+/** doc 11: worked_example_viewed.dwell_ms is capped at 300,000 ms per example. */
+const DWELL_CAP_MS = 300_000;
 type Grade = { status: string; correct: boolean | null; feedback?: string; graders?: { detail?: { unit?: unknown } }[] };
 type AttemptBody = { id: string; grade_status: string; grade: Grade | null };
 type Result = { graded: boolean; correct: boolean | null; feedback: string; unit?: string; pending?: boolean };
@@ -60,7 +72,8 @@ export function TaskView({
   label: string;
   last: boolean;
   paused: boolean;
-  onNext: () => void;
+  /** `selfExplanation` is sent only by the worked-example stepper (completeTask, FR-032). */
+  onNext: (selfExplanation?: string) => void;
   /** Leaves a task the screen cannot show yet; closes it as skipped (completeTask, `not_now`). */
   onSkip: () => void;
 }) {
@@ -248,6 +261,25 @@ export function TaskView({
   const title = result?.correct ? t.correct : t.notQuite;
   const body = result && feedbackBody(result.feedback, title);
   const touch = () => timer.current?.touch(Date.now());
+  const steps = rendered.worked_steps ?? [];
+  const stepper = task.task_kind === "worked_example" && steps.length > 0;
+  const faded = task.task_kind === "faded_problem" && steps.length > 0;
+
+  // Example closed (doc 11 section 9): fire and forget, so a failed analytics call never blocks Next.
+  function closeExample(selfExplanation: string | undefined) {
+    if (item && task.skill_key) {
+      const dwell = Math.min(DWELL_CAP_MS, timer.current?.active(Date.now()) ?? 0);
+      void fetch("/api/v1/events", {
+        method: "POST",
+        keepalive: true,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          events: [{ client_event_id: crypto.randomUUID(), name: "worked_example_viewed", at: new Date().toISOString(), props: { item_id: item.id, skill_key: task.skill_key, dwell_ms: dwell } }],
+        }),
+      }).catch(() => undefined);
+    }
+    onNext(selfExplanation);
+  }
 
   const question = (
     <p role="math" aria-label={rendered.alt_text ?? rendered.prompt_md} data-testid="statement" className="max-w-[34ch] text-question sm:max-w-[60ch]">
@@ -292,7 +324,7 @@ export function TaskView({
                   tone={result.pending ? "info" : result.correct ? "correct" : "not-quite"}
                   title={result.pending ? t.pendingTitle : title}
                   actions={
-                    <Button onClick={onNext}>
+                    <Button onClick={() => onNext()}>
                       {last ? t.finish : t.next}
                     </Button>
                   }
@@ -313,10 +345,12 @@ export function TaskView({
         }
       >
         {question}
-        {readOnly ? (
+        {stepper ? (
+          <WorkedStepper steps={steps} {...(rendered.explanation_md ? { explanationMd: rendered.explanation_md } : {})} last={last} onDone={closeExample} />
+        ) : readOnly ? (
           <div className="flex flex-col gap-3">
             <p className="text-[15px] text-muted">{t.readOnlyNext}</p>
-            <Button onClick={onNext}>{last ? t.finish : t.next}</Button>
+            <Button onClick={() => onNext()}>{last ? t.finish : t.next}</Button>
           </div>
         ) : !supported ? (
           <div className="flex flex-col gap-3">
@@ -328,6 +362,23 @@ export function TaskView({
           </div>
         ) : (
           <form onSubmit={check} className="flex flex-col gap-4" noValidate>
+            {faded && (
+              <section aria-labelledby="given-steps" className="flex flex-col gap-2" data-testid="given-steps">
+                <h2 id="given-steps" className="text-[15px] font-semibold text-muted">
+                  {t.givenSteps}
+                </h2>
+                <ol className="flex flex-col gap-2">
+                  {steps.map((step, i) => (
+                    <li key={step.id} className="border-l-[3px] border-ink pl-3">
+                      <span className="font-semibold">{step.label ? t.stepOfLabel(i + 1, rendered.steps_total ?? steps.length, step.label) : t.stepOf(i + 1, rendered.steps_total ?? steps.length)}</span>
+                      <br />
+                      <MathText source={step.text_md} />
+                    </li>
+                  ))}
+                </ol>
+                <p className="font-semibold">{t.fadedTurn(steps.length + 1, rendered.steps_total ?? steps.length + 1)}</p>
+              </section>
+            )}
             {item.grader_type === "multiple_choice" ? (
               <fieldset className="flex flex-col gap-2.5" disabled={locked}>
                 <legend className="mb-1 text-[15px] font-semibold text-muted">{t.choiceLegend}</legend>

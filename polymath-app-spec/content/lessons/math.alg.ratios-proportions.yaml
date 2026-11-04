@@ -1,0 +1,99 @@
+# Concept primer for math.alg.ratios-proportions (00a K6, BL-0203). Ready for the founder's review in the console (00a K9).
+# Validate: python3 reference/validate_lessons.py
+schema_version: 1
+skill_key: math.alg.ratios-proportions
+version: 1
+authoring_status: ready
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-04'
+  llm_assistance:
+    used: true
+    model: claude-opus-5-5
+    prompt_version: lesson_assist_v1
+est_seconds: 90
+screens:
+- id: why
+  title: Why this matters
+  body_md: >-
+    Ratios and percentages are everywhere in electronics: a voltage divider shares a supply between two
+    resistors in proportion to their values, and a resistor marked 5 percent tolerance may be off by 5 percent
+    of its value. The same few rules handle all of these.
+- id: idea
+  title: The idea
+  body_md: >-
+    A ratio $a:b$ splits a whole into $a + b$ equal parts. The first share is $\frac{a}{a+b}$ of the whole and
+    the second is $\frac{b}{a+b}$.
+
+
+    Sharing 60 in the ratio $1:2$: there are 3 parts, one part is $60/3 = 20$, so the shares are 20 and 40.
+
+
+    A percentage is a ratio out of 100: $p\% = p/100$. To take $p\%$ of $n$, multiply $n$ by $p/100$. For
+    example, $15\%$ of 240 is $0.15 \times 240 = 36$.
+- id: model
+  title: How to use it
+  body_md: >-
+    For a ratio, add the ratio numbers first to get the number of parts, find one part, then multiply by the
+    parts you need.
+
+
+    For a percentage, turn it into a decimal and apply it to the whole: a 1 k$\Omega$ resistor with 5 percent
+    tolerance can be off by $0.05 \times 1000 = 50\ \Omega$, so anywhere from 950 to 1050 $\Omega$.
+
+
+    Sense check: a share is never more than the whole, and a share with more parts is larger.
+misconception:
+  tag: mc.part-to-part
+  wrong_idea_md: In a ratio $2:3$, one share is $\frac{2}{3}$ of the whole.
+  why_tempting_md: >-
+    The ratio is written with just the two numbers, so dividing one by the other looks like the fraction you
+    need.
+  correct_idea_md: >-
+    $2:3$ means 5 equal parts, so the shares are $\frac{2}{5}$ and $\frac{3}{5}$ of the whole. $\frac{2}{3}$
+    compares one share with the other share. Sharing 50 gives 20 and 30.
+checks:
+- id: split
+  stem_md: Share 80 in the ratio $3:5$. What is the larger share?
+  options:
+  - id: correct
+    text_md: '$50$'
+    correct: true
+    feedback_md: Right. There are 8 parts of $80/8 = 10$, and the larger share has 5 of them.
+  - id: equal-split
+    text_md: '$40$'
+    correct: false
+    feedback_md: Half each is right only when the ratio numbers are equal.
+  - id: smaller-share
+    text_md: '$30$'
+    correct: false
+    feedback_md: That is the share with 3 parts, the smaller one.
+  - id: part-to-part
+    text_md: 'about $133$'
+    correct: false
+    feedback_md: This uses $\frac{5}{3}$ of the whole, which compares the shares with each other. A share cannot be more than the whole.
+- id: percent
+  stem_md: What is $20\%$ of 45?
+  options:
+  - id: correct
+    text_md: '$9$'
+    correct: true
+    feedback_md: Right. $20\% = 0.20$, and $0.20 \times 45 = 9$.
+  - id: forgets-hundred
+    text_md: '$900$'
+    correct: false
+    feedback_md: This multiplies by 20 without dividing by 100. A percentage is out of a hundred.
+  - id: stops-at-decimal
+    text_md: '$0.2$'
+    correct: false
+    feedback_md: That is the percentage as a decimal. It still has to be applied to 45.
+  - id: divides
+    text_md: '$2.25$'
+    correct: false
+    feedback_md: This divides 45 by 20. Taking a part of a whole means multiplying by $20/100$.
+recap_md: >-
+  A ratio $a:b$ has $a + b$ parts in all, so a share is $\frac{a}{a+b}$ of the whole, not $\frac{a}{b}$.
+  A percentage is out of 100: $p\%$ of $n$ is $n \times p/100$.

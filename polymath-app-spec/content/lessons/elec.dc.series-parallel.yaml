@@ -1,0 +1,109 @@
+# Concept primer for elec.dc.series-parallel (00a K6, BL-0203). Ready for the founder's review in the console (00a K9).
+# Validate: python3 reference/validate_lessons.py
+schema_version: 1
+skill_key: elec.dc.series-parallel
+version: 1
+authoring_status: ready
+license: original
+source: original
+provenance:
+  authors:
+  - founder
+  created: '2026-11-04'
+  llm_assistance:
+    used: true
+    model: claude-opus-5-5
+    prompt_version: lesson_assist_v1
+est_seconds: 110
+screens:
+- id: why
+  title: Why this matters
+  body_md: >-
+    Real circuits have many resistors. If you can reduce a group of them to one equivalent resistance, Ohm's
+    law gives the current from the source in one step, and you can then work back to each part.
+- id: idea
+  title: The idea
+  body_md: >-
+    **Series:** parts on one path, one after another. The same current flows through each, and the
+    resistances add:
+
+
+    $$R_{eq} = R_1 + R_2$$
+
+
+    The result is larger than either resistor.
+
+
+    **Parallel:** parts connected across the same two nodes. Each has the same voltage across it, and the
+    current has more than one path:
+
+
+    $$\frac{1}{R_{eq}} = \frac{1}{R_1} + \frac{1}{R_2}, \qquad R_{eq} = \frac{R_1 R_2}{R_1 + R_2}$$
+
+
+    The result is smaller than the smaller resistor. Two equal resistors in parallel give half of one.
+- id: model
+  title: How to use it
+  body_md: >-
+    Reduce the network step by step, starting with the group furthest from the terminals. Replace an obvious
+    parallel pair by its equivalent, then add any series resistor.
+
+
+    Example: $R_1 = 100\ \Omega$ in series with $R_2 = 300\ \Omega$ in parallel with $R_3 = 600\ \Omega$.
+
+
+    1. Parallel pair: $\frac{300 \times 600}{300 + 600} = \frac{180\,000}{900} = 200\ \Omega$.
+
+
+    2. Add the series resistor: $R_{eq} = 100 + 200 = 300\ \Omega$.
+
+
+    Sense checks: a parallel result is below the smaller resistor; a series result is above the larger.
+misconception:
+  tag: mc.parallel-as-average
+  wrong_idea_md: Two resistors in parallel act like their average, so 100 $\Omega$ and 300 $\Omega$ give 200 $\Omega$.
+  why_tempting_md: >-
+    Combining two values into one sounds like averaging, and the average sits safely between them.
+  correct_idea_md: >-
+    A parallel pair gives the current a second path, so the total is lower than the smaller resistor:
+    $\frac{100 \times 300}{100 + 300} = 75\ \Omega$. Two equal resistors in parallel give half of one, not the
+    same value.
+checks:
+- id: equal-pair
+  stem_md: What is the equivalent of two 1 k$\Omega$ resistors in parallel?
+  options:
+  - id: correct
+    text_md: 500 $\Omega$
+    correct: true
+    feedback_md: Right. Two equal resistors in parallel give half of one.
+  - id: average
+    text_md: 1 k$\Omega$
+    correct: false
+    feedback_md: That is the average. A parallel pair is smaller than either resistor.
+  - id: series
+    text_md: 2 k$\Omega$
+    correct: false
+    feedback_md: That is the series total. In parallel the current has two paths, so the total drops.
+- id: unequal-pair
+  stem_md: What is the equivalent of 220 $\Omega$ in parallel with 330 $\Omega$?
+  options:
+  - id: correct
+    text_md: 132 $\Omega$
+    correct: true
+    feedback_md: Right. $\frac{220 \times 330}{220 + 330} = \frac{72\,600}{550} = 132\ \Omega$, below the smaller resistor.
+  - id: series
+    text_md: 550 $\Omega$
+    correct: false
+    feedback_md: That is the series total. A parallel result must be smaller than either resistor.
+  - id: average
+    text_md: 275 $\Omega$
+    correct: false
+    feedback_md: That is the average. A parallel pair is smaller than the smaller resistor.
+  - id: forgets-invert
+    text_md: 0.0076 $\Omega$
+    correct: false
+    feedback_md: This is $\frac{1}{220} + \frac{1}{330}$, the conductance in siemens. Take its reciprocal to get ohms.
+recap_md: >-
+  Series resistances add, and the total is above the largest. Parallel resistances combine as
+  $\frac{R_1 R_2}{R_1 + R_2}$, and the total is below the smallest; two equal resistors give half of one, not
+  their average. Reduce a network one group at a time.

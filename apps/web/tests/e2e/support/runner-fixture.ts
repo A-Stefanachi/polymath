@@ -38,8 +38,26 @@ function keyFor(grader: Grader) {
   return { grader_type: grader, answer_spec: { kind: "numeric", unit: "V", tolerance: { rel: 0.01 } }, reference: NUMERIC_REFERENCE };
 }
 
-/** `onlyNewSkill`: no reviews are due, so the session is the first step of a new skill's loop (a worked example). */
-export async function createRunnerFixture(userId: string, onlyNewSkill = false): Promise<RunnerFixture> {
+export const STEP_LABELS = ["Find the series current", "Take the drop across one resistor", "Check the sum"] as const;
+
+/** BL-0199: a 3-step solution as the worker's item writer stores it (BL-0204); labels only when `labelled`. */
+function solutionFor(labelled: boolean) {
+  return {
+    steps: [
+      "The same current flows through both resistors: $I = 10\\,\\mathrm{V}/2R$.",
+      "One resistor drops $V = I R = 5\\,\\mathrm{V}$.",
+      "Both drops add up to the $10\\,\\mathrm{V}$ supply.",
+    ].map((text_md, i) => ({ id: `s${String(i + 1)}`, text_md, ...(labelled ? { label: STEP_LABELS[i] } : {}) })),
+    explanation_md: "Equal resistors in series share the supply equally.",
+  };
+}
+
+/**
+ * `onlyNewSkill`: no reviews are due, so the session is the first step of a new skill's loop (a worked example).
+ * `steps`: the new skill's worked_example and faded_problem items get a 3-step solution (labelled or not); without it
+ * they have none, like the live items today, and the runner shows the read-only card.
+ */
+export async function createRunnerFixture(userId: string, onlyNewSkill = false, steps?: "labelled" | "unlabelled"): Promise<RunnerFixture> {
   const sql = postgres(localSupabase().dbUrl, { max: 1, onnotice: () => undefined });
   const tag = randomUUID().slice(0, 8);
   const moduleName = `bl60${tag}`;
@@ -65,7 +83,11 @@ export async function createRunnerFixture(userId: string, onlyNewSkill = false):
           await sql<{ id: string }[]>`insert into public.items (template_key, template_version, seed, rendered, verification_report, status, user_id)
             values (${key}, 1, ${seed}, ${sql.json(renderedFor(grader))}, ${sql.json({ verifier: "x", agreed: true })}, 'verified', ${userId}) returning id`
         )[0];
-        await sql`insert into public.item_secrets (item_id, answer_key) values (${item?.id ?? ""}, ${sql.json(keyFor(grader))})`;
+        // The builder never serves two items with the same answer to one skill (06 section 3.8), so the worked example
+        // (never graded) carries another reference than its faded problem; otherwise the faded task is dropped.
+        const answerKey = steps && kind === "worked_example" ? { ...keyFor(grader), reference: NUMERIC_REFERENCE - 1 } : keyFor(grader);
+        const solution = steps && !due && (kind === "worked_example" || kind === "faded_problem") ? solutionFor(steps === "labelled") : null;
+        await sql`insert into public.item_secrets (item_id, answer_key, solution) values (${item?.id ?? ""}, ${sql.json(answerKey)}, ${solution === null ? null : sql.json(solution)})`;
       }
     }
     if (due) {
@@ -93,6 +115,18 @@ export async function createRunnerFixture(userId: string, onlyNewSkill = false):
       await sql.end();
     },
   };
+}
+
+/** `sessions.plan.task_outcomes` (what completeTask stored) and the learner's worked_example_viewed events. */
+export async function stepperRows(sessionId: string, userId: string) {
+  const sql = postgres(localSupabase().dbUrl, { max: 1, onnotice: () => undefined });
+  try {
+    const plan = await sql<{ plan: { task_outcomes?: Record<string, { outcome: string; self_explanation?: string }> } | null }[]>`select plan from public.sessions where id = ${sessionId}`;
+    const events = await sql<{ props: { item_id?: string; skill_key?: string; dwell_ms?: number } }[]>`select props from public.events where user_id = ${userId} and name = 'worked_example_viewed'`;
+    return { outcomes: Object.values(plan[0]?.plan?.task_outcomes ?? {}), viewed: events.map((e) => e.props) };
+  } finally {
+    await sql.end();
+  }
 }
 
 export type AttemptCounts = { attempts: number; correct: number; tasksDone: number; sessionStatus: string };
