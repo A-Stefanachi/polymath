@@ -136,9 +136,10 @@ export async function buildSession(ctx: ApiContext, deps: SessionDeps = defaultS
   const snapshot = await deps.store.snapshot(user);
   let plan;
   let type;
+  let setup;
   try {
     type = sessionTypeFor(body.available_minutes, body.session_type);
-    const setup = buildPackSetup(snapshot, now, state.fsrs, body.skill_focus);
+    setup = buildPackSetup(snapshot, now, state.fsrs, body.skill_focus);
     if (body.skill_focus !== undefined && !computeFrontier(setup.graph, setup.states, state.params).includes(body.skill_focus)) {
       throw new BuildInputError("skill_focus", "the skill is not on the frontier or in progress");
     }
@@ -164,7 +165,12 @@ export async function buildSession(ctx: ApiContext, deps: SessionDeps = defaultS
   }
 
   await deps.pool(user, [...new Set(plan.tasks.flatMap((t) => (t.skill_key === null ? [] : [t.skill_key])))], now);
-  const assigned = assignItems(plan.tasks, snapshot.candidates, body.context);
+  const assigned = assignItems(plan.tasks, snapshot.candidates, body.context, {
+    states: setup.states,
+    graph: setup.graph,
+    history: snapshot.history,
+    params: state.params,
+  });
   if (assigned.tasks.length === 0) throw new ApiError("item_pool_empty", { retryAfterS: POOL_RETRY_S });
 
   // A lab slot without project steps is served as a focus session (00a G4).

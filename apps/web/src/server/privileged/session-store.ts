@@ -78,6 +78,24 @@ export type Candidate = {
   taskKind: string;
   templateKey: string;
   phoneSuitable: boolean;
+  /** items.seed as text (bigint). */
+  seed: string;
+  /** Elo-scale template difficulty: difficulty_est, else the prior converted (06 section 5.1). */
+  difficulty: number;
+  /** item_templates.tier; null means the skill's tier_target. */
+  tier: string | null;
+  /** Canonical answer string (item_secrets.answer_key as jsonb text); null when the item has none. Never sent to clients. */
+  answer: string | null;
+  /** When the template was last put in a task for this user. */
+  lastUsed: Date | null;
+};
+
+/** What was already served to the user for one skill, most recent first (06 section 3.8 rule 2). */
+export type ServedHistory = {
+  /** `${template_key}|${seed}` of every served item. */
+  seeds: string[];
+  templates: string[];
+  answers: string[];
 };
 
 export type BuildSnapshot = {
@@ -87,6 +105,7 @@ export type BuildSnapshot = {
   edges: { from: string; to: string; strength: string; minTier: string }[];
   states: SnapshotState[];
   candidates: Candidate[];
+  history: Record<string, ServedHistory>;
 };
 
 export type NewTask = {
@@ -283,7 +302,7 @@ export function createSessionStore(sql: Sql): SessionStore {
     },
 
     async snapshot(userId) {
-      const [profile, version, skills, edges, states, candidates] = await Promise.all([
+      const [profile, version, skills, edges, states, candidates, served] = await Promise.all([
         sql<{ timezone: string }[]>`select timezone from public.profiles where id = ${userId}`,
         sql<{ v: string }[]>`select left(git_sha, 12) as v from public.content_sync_runs
           where status = 'succeeded' order by finished_at desc nulls last limit 1`,
@@ -306,6 +325,8 @@ export function createSessionStore(sql: Sql): SessionStore {
         sql<Row[]>`
           with c as (
             select i.id as item_id, t.skill_key, t.task_kind::text as task_kind, t.key as template_key, t.phone_suitable, i.created_at,
+                   i.seed::text as seed, coalesce(t.difficulty_est, 1200 + 600 * t.difficulty_prior) as difficulty,
+                   t.tier::text as tier, (select k.answer_key::text from public.item_secrets k where k.item_id = i.id) as answer,
                    (select max(st.created_at) from public.session_tasks st join public.items i2 on i2.id = st.item_id
                      where st.user_id = ${userId} and i2.template_key = t.key) as last_used
               from public.items i
@@ -314,12 +335,33 @@ export function createSessionStore(sql: Sql): SessionStore {
                and t.status = 'verified' and t.pool = 'practice' and t.retired_at is null
                and not exists (select 1 from public.session_tasks st where st.item_id = i.id)
                and not exists (select 1 from public.attempts a where a.item_id = i.id))
-          select item_id, skill_key, task_kind, template_key, phone_suitable
+          select item_id, skill_key, task_kind, template_key, phone_suitable, seed, difficulty, tier, answer, last_used
             from (select c.*, row_number() over (partition by skill_key, task_kind
                                                   order by last_used asc nulls first, created_at, item_id) as rn from c) x
-           where rn <= 10
+           where rn <= 40
            order by skill_key, task_kind, rn`,
+        sql<Row[]>`
+          select skill_key, template_key, seed, answer
+            from (select t.skill_key, i.template_key, i.seed::text as seed,
+                         (select k.answer_key::text from public.item_secrets k where k.item_id = i.id) as answer,
+                         row_number() over (partition by t.skill_key order by greatest(
+                           (select max(st.created_at) from public.session_tasks st where st.item_id = i.id and st.user_id = ${userId}),
+                           (select max(a.created_at) from public.attempts a where a.item_id = i.id and a.user_id = ${userId})) desc) as rn
+                    from public.items i
+                    join public.item_templates t on t.key = i.template_key and t.version = i.template_version
+                   where i.user_id = ${userId}
+                     and (exists (select 1 from public.session_tasks st where st.item_id = i.id and st.user_id = ${userId})
+                          or exists (select 1 from public.attempts a where a.item_id = i.id and a.user_id = ${userId}))) x
+           where rn <= 200
+           order by skill_key, rn`,
       ]);
+      const history: Record<string, ServedHistory> = {};
+      for (const r of served) {
+        const h = (history[str(r["skill_key"])] ??= { seeds: [], templates: [], answers: [] });
+        h.seeds.push(`${str(r["template_key"])}|${str(r["seed"])}`);
+        h.templates.push(str(r["template_key"]));
+        if (r["answer"] !== null && r["answer"] !== undefined) h.answers.push(str(r["answer"]));
+      }
       return {
         timezone: profile[0]?.timezone ?? "UTC",
         graphVersion: version[0]?.v ?? null,
@@ -366,7 +408,13 @@ export function createSessionStore(sql: Sql): SessionStore {
           taskKind: str(r["task_kind"]),
           templateKey: str(r["template_key"]),
           phoneSuitable: r["phone_suitable"] === true,
+          seed: str(r["seed"]),
+          difficulty: num(r["difficulty"]),
+          tier: optStr(r["tier"]),
+          answer: optStr(r["answer"]),
+          lastUsed: optDate(r["last_used"]),
         })),
+        history,
       };
     },
 

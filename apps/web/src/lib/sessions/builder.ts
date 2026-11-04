@@ -14,7 +14,8 @@ import {
   type Tier,
 } from "@polymath/scheduler";
 import { tzOffsetMinutes } from "@/lib/state/apply-attempt.ts";
-import type { BuildSnapshot, Candidate, NewTask } from "@/server/privileged/session-store";
+import type { BuildSnapshot, Candidate, NewTask, ServedHistory } from "@/server/privileged/session-store";
+import { dropSkippedWorkedExamples, enforceRetrievalGap, selectItem } from "./select-item.ts";
 
 type SkillGraph = PackInput["graph"];
 
@@ -176,27 +177,66 @@ export function apiReason(reason: string): string {
 /** The scheduler's short problem is a `problem` task of the contract's task_kind enum. */
 export const dbTaskKind = (kind: string): string => (kind === "problem_short" ? "problem" : kind);
 
+export type SelectionSetup = {
+  states: PackSetup["states"];
+  graph: SkillGraph;
+  history: BuildSnapshot["history"];
+  params: SchedulerParams;
+};
+
 /**
  * Gives each packed task one distinct verified, unserved item of its skill and kind (phone: only templates
- * flagged `phone_suitable`, 06 section 7.3). A task without an item is dropped: an unverified or missing item
- * is never substituted (CLAUDE.md rule 3). Positions are renumbered 1..n.
+ * flagged `phone_suitable`, 06 section 7.3). The item comes from `selectItem` (difficulty match, tier, no
+ * repeated seed or answer; 06 section 3.8). A worked example is skipped on placement evidence and a same-day
+ * retrieval without the PRM-04 gap is carried to the next session (select-item.ts). A task without an item is
+ * dropped: an unverified or missing item is never substituted (CLAUDE.md rule 3). Positions are 1..n.
  */
 export function assignItems(
-  tasks: readonly PackedTask[],
+  packed: readonly PackedTask[],
   candidates: readonly Candidate[],
   context: string,
+  sel: SelectionSetup,
 ): { tasks: NewTask[]; dropped: number } {
-  const queues = new Map<string, Candidate[]>();
+  const tasks = enforceRetrievalGap(dropSkippedWorkedExamples(packed, sel.states));
+  const pools = new Map<string, Candidate[]>();
   for (const c of candidates) {
     if (context === "phone" && !c.phoneSuitable) continue;
     const k = `${c.skillKey}|${c.taskKind}`;
-    queues.set(k, [...(queues.get(k) ?? []), c]);
+    pools.set(k, [...(pools.get(k) ?? []), c]);
   }
+  const history = new Map<string, ServedHistory>();
   const out: NewTask[] = [];
   let dropped = 0;
   for (const t of tasks) {
     const kind = dbTaskKind(t.task_kind);
-    const item = t.skill_key === null ? undefined : queues.get(`${t.skill_key}|${kind}`)?.shift();
+    const skill = t.skill_key;
+    const pool = skill === null ? undefined : pools.get(`${skill}|${kind}`);
+    let item: Candidate | undefined;
+    if (skill !== null && pool) {
+      let h = history.get(skill);
+      if (!h) {
+        const prior = sel.history[skill];
+        h = { seeds: [...(prior?.seeds ?? [])], templates: [...(prior?.templates ?? [])], answers: [...(prior?.answers ?? [])] };
+        history.set(skill, h);
+      }
+      const state = sel.states[skill];
+      item = selectItem(
+        pool,
+        {
+          theta: state?.elo ?? sel.params.elo_init_default,
+          tierTarget: sel.graph.skills[skill]?.tier_target ?? "L0",
+          belowMastered: state?.mastery_state !== "mastered",
+          history: h,
+        },
+        sel.params,
+      );
+      if (item) {
+        pool.splice(pool.indexOf(item), 1);
+        h.seeds.unshift(`${item.templateKey}|${item.seed}`);
+        h.templates.unshift(item.templateKey);
+        if (item.answer !== null) h.answers.unshift(item.answer);
+      }
+    }
     if (!item) {
       dropped += 1;
       continue;
