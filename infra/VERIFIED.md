@@ -35,6 +35,12 @@ Assumption: in Safari on iOS, the six-digit code from the sign-in email can be p
 |---|---|---|
 | Staging, real iPhone, Safari | 2026-11-04 | holds: the founder signed in on their iPhone with the sign-in email (reported by the founder; the server session was created at 02:53 UTC through the server-side verify). Not recorded separately: inbox or junk, delivery time, code or link, autofill versus paste and the installed app (step 5); add a row when those are checked |
 
+Installed app (BL-0063, OA-7): the manifest, icons and service worker are in place and pass Chromium's installability check in CI, but the iPhone Home Screen check below is still the founder's. Open it in f-dogfood-m1: after step 5, sign out inside the installed app, enter a newly emailed code there, close the app fully, relaunch it from the Home Screen and record whether the session persists.
+
+| Environment | Date | Result |
+|---|---|---|
+| Staging, real iPhone, installed on the Home Screen | not yet run | pending: sign out, code sign-in in the installed app, session after relaunch |
+
 Steps (staging, a real inbox on custom SMTP):
 1. On the iPhone open `/welcome` of the staging app in Safari. Enter the founder's email and tap "Email me a code".
 2. Open the email in the Mail app. Note whether it arrived in the inbox or in junk, and how long it took.

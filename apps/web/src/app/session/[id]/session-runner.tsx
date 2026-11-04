@@ -35,15 +35,15 @@ export function SessionRunner({ id }: { id: string }) {
   useEffect(() => {
     let live = true;
     void (async () => {
-      let res = await fetch(`/api/v1/sessions/${id}`);
-      if (!res.ok) throw new Error("load");
-      let body = (await res.json()) as Loaded;
-      if (body.status === "completed" || body.status === "abandoned") return router.replace(`/session/${id}/summary`);
-      if (body.status === "planned") {
-        res = await fetch(`/api/v1/sessions/${id}/start`, { method: "POST", headers: { ...json, "idempotency-key": crypto.randomUUID() }, body: "{}" });
-        if (!res.ok) throw new Error("start");
-        body = (await res.json()) as Loaded;
+      // Start first (NFR-02, BL-0063): it moves a planned session to active and returns an active one unchanged,
+      // so the common case needs one round trip. A closed session refuses it; the read then decides where to go.
+      let res = await fetch(`/api/v1/sessions/${id}/start`, { method: "POST", headers: { ...json, "idempotency-key": crypto.randomUUID() }, body: "{}" });
+      if (!res.ok) {
+        res = await fetch(`/api/v1/sessions/${id}`);
+        if (!res.ok) throw new Error("load");
       }
+      const body = (await res.json()) as Loaded;
+      if (body.status === "completed" || body.status === "abandoned") return router.replace(`/session/${id}/summary`);
       if (!live) return;
       // The server is the resume point: a graded attempt, a completed worked example or a skip closes the task there.
       setDone(body.tasks.filter((x) => x.status === "done" || x.status === "skipped").map((x) => x.id));

@@ -5,7 +5,7 @@ import { supabaseEnv } from "@/lib/supabase/env";
 
 // Request gate (doc 03 section 4.1): refreshes the session cookie and sends signed-out visitors
 // to /welcome. It is a convenience; every route handler authenticates itself.
-const PUBLIC_PREFIXES = ["/welcome", "/auth/"];
+const PUBLIC_PREFIXES = ["/welcome", "/auth/", "/offline"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -43,5 +43,5 @@ export async function proxy(request: NextRequest) {
 export const config = {
   // API routes answer 401 themselves (doc 03 section 11); static files and the service worker
   // must load while signed out.
-  matcher: ["/((?!api/|_next/|favicon.ico|manifest.webmanifest|sw.js|.*\\.(?:png|svg|jpg|ico|webp|txt)$).*)"],
+  matcher: ["/((?!api/|_next/|favicon.ico|manifest.webmanifest|sw.js|icons/|.*\\.(?:png|svg|jpg|ico|webp|txt)$).*)"],
 };
