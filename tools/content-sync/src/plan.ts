@@ -45,7 +45,7 @@ export type TemplateRow = {
   retired_reason: string | null;
 };
 
-export type ExistingTemplate = { key: string; version: number; status: string; sha256: string | null; fuzzPassed: boolean };
+export type ExistingTemplate = { key: string; version: number; status: string; sha256: string | null; fuzzPassed: boolean; consoleReviewSha256?: string | null };
 export type Existing = {
   modules: Map<string, { title: string; order_index: number; is_stub: boolean }>;
   skills: Map<string, { content_hash: string | null; status: string }>;
@@ -134,7 +134,7 @@ export function desiredEdges(loaded: Loaded): EdgeRow[] {
   return out;
 }
 
-export function templateRow(doc: Doc, sha256: string, reviewLog: string, fuzzPassed: boolean): TemplateRow {
+export function templateRow(doc: Doc, sha256: string, reviewLog: string, fuzzPassed: boolean, consoleReviewSha256: string | null = null): TemplateRow {
   const delivery = d(doc["delivery"]);
   const body: Doc = {};
   for (const [k, v] of Object.entries(doc)) if (!HOISTED.includes(k)) body[k] = v;
@@ -145,6 +145,7 @@ export function templateRow(doc: Doc, sha256: string, reviewLog: string, fuzzPas
     review: d(d(doc["provenance"])["review"]),
     reviewLog,
     fuzzPassed,
+    consoleReviewSha256,
   });
   return {
     key: s(doc["key"]),
@@ -223,7 +224,7 @@ export function buildPlan(loaded: Loaded, existing: Existing, options: PlanOptio
     }
     const sameHash = old?.sha256 === sha256;
     const keepVerified = old !== undefined && sameHash && old.status === "verified";
-    const row = templateRow(doc, sha256, loaded.reviewLog, sameHash && (old?.fuzzPassed === true || keepVerified));
+    const row = templateRow(doc, sha256, loaded.reviewLog, sameHash && (old?.fuzzPassed === true || keepVerified), old?.consoleReviewSha256 ?? null);
     if (row.status === "needs_human_review") templates.awaitingReview.push(key);
     const isNew = old === undefined;
     if (isNew || !sameHash || old.status !== row.status) {
