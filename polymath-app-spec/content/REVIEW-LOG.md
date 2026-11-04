@@ -38,7 +38,7 @@ On 2 November all 30 were rewritten as parameterised items, except 3 `concept_st
 | tpl.elec.energy-joule | 2 | 6400–6404 | pending | — |
 | tpl.elec.series-parallel-req-mc | 1 | 4000–4004 | pending | — |
 | tpl.elec.parallel-pair | 2 | 6800–6804 | pending | — |
-| tpl.elec.voltage-divider-vout | 1 | 1000–1004 | pending | — |
+| tpl.elec.voltage-divider-vout | 1 | 1000–1004 | done 2026-11-04 | 0 |
 | tpl.elec.kirchhoff-kcl | 2 | 6500–6504 | pending | — |
 | tpl.elec.nodal-unknown | 2 | 6600–6604 | pending | — |
 | tpl.elec.thevenin-model | 2 | 6700–6704 | pending | — |

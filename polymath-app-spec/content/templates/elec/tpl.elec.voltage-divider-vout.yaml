@@ -20,6 +20,14 @@ provenance:
     - misconception_tags
     model: claude-sonnet-5-5
     prompt_version: template_assist_v1
+  review:
+    reviewer: founder
+    date: '2026-11-04'
+    template_sha256: 18cf80c24ac514961d1daf0041352270c919018e9217bf144d0bfc1c3f68e53a
+    checklist_version: g3_checklist_v1
+    notes: Seeds 1000 to 1004 reviewed against g3_checklist_v1 and accepted by the founder; 0 disagreements (the build agent's
+      independent hand-solve of all five also matched the key). Recorded by the build agent on the founder's instruction.
+      Power-cap constraint added before sign-off. Logged in content/REVIEW-LOG.md.
 delivery:
   contexts:
   - phone
