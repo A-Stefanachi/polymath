@@ -55,7 +55,11 @@ export function backlogFlag(dueSkills: number, previous: boolean, thresholdMin =
  */
 export async function appliedGapSkills(
   userId: string,
-  snap: Pick<BuildSnapshot, "skills" | "states" | "timezone">,
+  snap: {
+    skills: readonly Pick<SnapshotSkill, "key" | "tierTarget">[];
+    states: readonly Pick<SnapshotState, "skillKey" | "masteryState" | "epochStart">[];
+    timezone: string;
+  },
   state: StateDeps,
 ): Promise<Set<string>> {
   const skillOf = new Map(snap.skills.map((s) => [s.key, s]));
@@ -64,7 +68,7 @@ export async function appliedGapSkills(
   return state.store.run(async (tx) => {
     const out = new Set<string>();
     for (const st of reviewing) {
-      const skill = skillOf.get(st.skillKey) as SnapshotSkill;
+      const skill = skillOf.get(st.skillKey) as Pick<SnapshotSkill, "key" | "tierTarget">;
       const [history, stats] = await Promise.all([tx.history(userId, st.skillKey, st.epochStart), tx.templateStats(st.skillKey)]);
       const attempts = history.map((h) => toMasteryAttempt(h, snap.timezone));
       const opts = { hasNonMc: stats.hasNonMc, hasApplied: stats.hasApplied, nVerifiedTemplates: stats.nVerified, params: state.params };

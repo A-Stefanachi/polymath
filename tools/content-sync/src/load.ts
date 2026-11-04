@@ -17,6 +17,7 @@ export type Doc = Record<string, unknown>;
 export type SkillEntry = { doc: Doc; sha256: string };
 export type GraphData = {
   file: string;
+  version: string | null;
   modules: Doc[];
   skills: SkillEntry[];
 };
@@ -95,6 +96,7 @@ export function loadContent(contentRoot: string): Loaded {
         const typedSkills = parsed.typed["skills"];
         graph = {
           file: graphFile,
+          version: typeof parsed.js["graph_version"] === "string" ? parsed.js["graph_version"] : null,
           modules: (parsed.js["modules"] as Doc[]) ?? [],
           skills: rawSkills.map((doc, i) => ({ doc, sha256: entrySha256(typedSkills[i] ?? null, ["prerequisites"]) })),
         };
