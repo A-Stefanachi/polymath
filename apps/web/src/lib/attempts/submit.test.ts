@@ -171,6 +171,22 @@ describe.skipIf(!reachable)("submitAttempt (database)", () => {
     expect(await count("attempts", learner)).toBe(before);
   });
 
+  it("grades the worker's key shape: option_ids maps each served option id to its template option (tplkit, item_writer)", async () => {
+    // The shape reference/verifiers/tplkit.py and the worker's item_writer store; the list shape above is legacy.
+    const workerKey = {
+      grader_type: "multiple_choice",
+      answer_spec: { n_shown: 3 },
+      reference: { correct_option: "o2", option_ids: { o1: "reversed", o2: "correct", o3: "ignored" } },
+    };
+    const id = await addItem("mcWorker", tplMc, workerKey);
+    const right = await post(learner, bodyFor(id, { kind: "choice", choice_ids: ["o2"] }));
+    expect(right.status).toBe(200);
+    expect(await right.json()).toMatchObject({ grade: { score: 1, correct: true } });
+    const wrong = await post(learner, bodyFor(id, { kind: "choice", choice_ids: ["o3"] }));
+    expect(await wrong.json()).toMatchObject({ grade: { score: 0, correct: false } });
+    expect((await post(learner, bodyFor(id, { kind: "choice", choice_ids: ["zz"] }))).status).toBe(400);
+  });
+
   it("BL-0055: an option in the key but missing from the rendered options was not shown: 400, nothing stored", async () => {
     const id = await addItem("mcHidden", tplMc, mcKey);
     await sql`update public.items set rendered = ${sql.json({ stem_md: "q", options: [{ id: "o1", text_md: "a" }, { id: "o2", text_md: "b" }] })} where id = ${id}`;
