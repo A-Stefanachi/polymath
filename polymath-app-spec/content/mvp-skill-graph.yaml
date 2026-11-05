@@ -1,5 +1,5 @@
 schema_version: 1.0.0
-graph_version: 0.10.0
+graph_version: 0.10.1
 as_of: '2026-11-02'
 scope: mvp-vertical-slice
 modules:
@@ -1528,7 +1528,7 @@ skills:
   license: original
   source: MIT 6.002 public topic order, resistive networks (topic ordering only)
 - key: elec.dc.ohms-law
-  title: Ohm law
+  title: Ohm's law
   description: Compute any one of voltage, current or resistance for a resistor from
     the other two.
   node: elec
@@ -1603,7 +1603,7 @@ skills:
   license: original
   source: MIT 6.002 public topic order, resistive networks (topic ordering only)
 - key: elec.dc.kirchhoff-laws
-  title: Kirchhoff laws
+  title: Kirchhoff's laws
   description: Apply the current law at a node and the voltage law around a loop to
     find unknown currents and voltages.
   node: elec
@@ -1718,7 +1718,7 @@ skills:
     strength: hard
     min_tier: L1
   - skill: elec.dc.superposition
-    strength: hard
+    strength: soft
     min_tier: L1
   task_kinds:
   - worked_example

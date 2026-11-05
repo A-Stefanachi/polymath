@@ -3,7 +3,7 @@
 # Validate: python3 reference/validate_lessons.py
 schema_version: 1
 skill_key: elec.meas.schematic-reading
-version: 1
+version: 2
 authoring_status: ready
 license: original
 source: original
@@ -34,7 +34,7 @@ screens:
 
 
     A capacitor also has two parallel plates, but they are the same length. Look at the plate lengths before
-    you decide which part it is.
+    you decide which part it is. A polarised (electrolytic) capacitor has one curved or hollow plate and a + mark.
 
 
     Ground is a stack of lines that get shorter towards the bottom. It marks the circuit's 0 V reference node.
@@ -80,7 +80,7 @@ misconception:
     No wire is drawn between the symbols, and everywhere else on a schematic only drawn wires seem to join
     things.
   correct_idea_md: >-
-    Every ground symbol on the sheet is the same net, the 0 V node that voltages are measured from. Separate
+    Every ground symbol of the same kind on the sheet is the same net, the 0 V node that voltages are measured from. Separate
     symbols only save drawing long wires. Net labels work the same way: two places labelled VIN are connected.
 checks:
 - id: trace

@@ -2,7 +2,7 @@
 # Validate: python3 reference/validate_lessons.py
 schema_version: 1
 skill_key: elec.dc.power-energy
-version: 1
+version: 2
 authoring_status: ready
 license: original
 source: original
@@ -20,7 +20,7 @@ screens:
   title: Why this matters
   body_md: >-
     Power tells you whether a part will overheat: a common small resistor is rated for 0.25 W, and more than
-    that makes it run hot. Energy tells you how long a battery will last. Both come from the voltage and
+    that can overheat and damage it. Energy tells you how long a battery will last. Both come from the voltage and
     current you already know how to find.
 - id: idea
   title: The idea

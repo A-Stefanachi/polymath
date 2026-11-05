@@ -2,7 +2,7 @@
 # Validate: python3 reference/validate_lessons.py
 schema_version: 1
 skill_key: math.alg.order-of-operations
-version: 1
+version: 2
 authoring_status: ready
 license: original
 source: original
@@ -20,7 +20,7 @@ screens:
   title: Why this matters
   body_md: >-
     Every formula in this course is a short chain of operations, such as $R_1 + R_2 \times k$ or
-    $V_{in} \times R_2 / (R_1 + R_2)$. Calculators, spreadsheets and other engineers all read such a chain
+    $V_{in} \times R_2 / (R_1 + R_2)$. Scientific calculators and other engineers all read such a chain
     in the same agreed order. If you use a different order you get a different number, and nothing warns
     you.
 - id: idea
@@ -51,7 +51,7 @@ screens:
 
 
     Watch the minus sign on a power: $-3^2 = -(3^2) = -9$, but $(-3)^2 = 9$, because the power comes before
-    the minus sign unless brackets say otherwise.
+    the minus sign unless brackets say otherwise. Some spreadsheets give 9 for `-3^2`, so write the brackets.
 misconception:
   tag: mc.add-first
   wrong_idea_md: You work from left to right, so in $5 + 2 \times 3$ you add first and get $7 \times 3 = 21$.

@@ -1,6 +1,6 @@
 schema_version: 1
 key: tpl.elec.ohms-law-v
-version: 2
+version: 3
 authoring_status: ready
 skill_key: elec.dc.ohms-law
 task_kind: problem
@@ -25,10 +25,10 @@ provenance:
     prompt_version: template_assist_v1
   review:
     reviewer: agent-on-founder-instruction
-    date: '2026-11-04'
-    template_sha256: df5babdcbcfc8a55c23b0f1d4d58ce8505248c8f6a7ded339e3870d0bdc0462c
+    date: '2026-11-05'
+    template_sha256: c34d7bf86ae6e6c198790c2217d5848bb440ac979ea42501e9af466ea421fccd
     checklist_version: g3_checklist_v1
-    notes: 'Approved by the build agent on the founder''s explicit instruction of 2026-11-04, not by a founder hand-solve. The agent solved seeds 6100 to 6104 from the rendered statements with 0 disagreements and read boxes 2 to 7 (content/G3-WORKSHEET.md). No person has done box 1 (own hand-solve) or checked boxes 8, 10, 11 and 12.'
+    notes: 'Approved by the build agent on the founder''s instruction of 2026-11-05 ("review them for me on my behalf and approve"), not by a founder hand-solve. After the 2026-11-05 review fixes, an independent agent solved seeds 6100 to 6104 from the rendered statements with 0 disagreements; boxes 2 to 12 read by a second agent. No person has done box 1.'
 delivery:
   contexts:
   - phone
@@ -66,7 +66,7 @@ render:
     What is the voltage across the resistor?
 
     '
-  answer_prompt: Enter the voltage with a unit, for example 2.5 V.
+  answer_prompt: Enter the voltage with a unit, for example 2.57 V. Give three significant figures.
   alt_text: A current of {{i|eng}} flows through a resistor of {{r|eng}}. Find the voltage across it.
 solution:
   generator:

@@ -1,7 +1,7 @@
 schema_version: 1
 key: tpl.elec.schematic-gnd
 concept_static: true
-version: 3
+version: 4
 authoring_status: ready
 skill_key: elec.meas.schematic-reading
 task_kind: retrieval
@@ -26,10 +26,10 @@ provenance:
     prompt_version: template_assist_v1
   review:
     reviewer: agent-on-founder-instruction
-    date: '2026-11-04'
-    template_sha256: c2bffd3361a0c5ddde9a5f217b0d0845be6e6ed8759d809d7fca91d49e5cf773
+    date: '2026-11-05'
+    template_sha256: 408f4b92c65c2fdc7bc92ed73e418bc3a6f5c9507ada62eb33410897704af1c9
     checklist_version: g3_checklist_v1
-    notes: 'Approved by the build agent on the founder''s explicit instruction of 2026-11-04, not by a founder hand-solve. The agent solved seeds 7000 to 7004 from the rendered statements with 0 disagreements and read boxes 2 to 7 (content/G3-WORKSHEET.md). No person has done box 1 (own hand-solve) or checked boxes 8, 10, 11 and 12.'
+    notes: 'Approved by the build agent on the founder''s instruction of 2026-11-05 ("review them for me on my behalf and approve"), not by a founder hand-solve. After the 2026-11-05 review fixes, an independent agent solved seeds 7000 to 7004 from the rendered statements with 0 disagreements; boxes 2 to 12 read by a second agent. No person has done box 1.'
 delivery:
   contexts:
   - phone
@@ -55,7 +55,7 @@ solution:
       w3: '5'
   steps:
   - id: s1
-    text_md: The ground symbol names a node, so every ground symbol on the sheet is the same net.
+    text_md: The ground symbol names a node, so every ground symbol of the same kind and name on the sheet is the same net.
   - id: s2
     text_md: Voltages on the schematic are measured relative to that net, which is taken as 0 V.
   explanation_md: Ground on a schematic is a reference chosen for the circuit. It need not connect to mains earth, and current
@@ -86,7 +86,7 @@ answer:
     value_expr: w2
     text_md: A separate connection at each symbol, not joined to the others
     misconception_tag: mc.gnd-separate-nets
-    feedback_md: The symbols are drawn apart to keep the sheet tidy, but they all name one net.
+    feedback_md: The symbols are drawn apart to keep the sheet tidy, but ground symbols of the same kind and name all name one net.
   - id: most-negative
     correct: false
     value_expr: w3

@@ -1,6 +1,6 @@
 schema_version: 1
 key: tpl.elec.kirchhoff-kcl
-version: 2
+version: 3
 authoring_status: ready
 skill_key: elec.dc.kirchhoff-laws
 task_kind: problem
@@ -25,10 +25,10 @@ provenance:
     prompt_version: template_assist_v1
   review:
     reviewer: agent-on-founder-instruction
-    date: '2026-11-04'
-    template_sha256: 291b795dee02fc0ecdb832847c6fa2edf0a39215da929f2ab1883944ae43d51f
+    date: '2026-11-05'
+    template_sha256: dfe79a66a57f8f7a631ae50fb8c978382d669fe6a2b46e6a5754d163743fadc4
     checklist_version: g3_checklist_v1
-    notes: 'Approved by the build agent on the founder''s explicit instruction of 2026-11-04, not by a founder hand-solve. The agent solved seeds 6500 to 6504 from the rendered statements with 0 disagreements and read boxes 2 to 7 (content/G3-WORKSHEET.md). No person has done box 1 (own hand-solve) or checked boxes 8, 10, 11 and 12.'
+    notes: 'Approved by the build agent on the founder''s instruction of 2026-11-05 ("review them for me on my behalf and approve"), not by a founder hand-solve. After the 2026-11-05 review fixes, an independent agent solved seeds 6500 to 6504 from the rendered statements with 0 disagreements; boxes 2 to 12 read by a second agent. No person has done box 1.'
 delivery:
   contexts:
   - phone
@@ -77,8 +77,8 @@ render:
     out of N.
 
 
-    The arrow for $I_4$ points out of N. Find $I_4$ as labelled. A negative answer means the actual current flows against
-    the arrow.
+    $I_4$ is defined as flowing out of N. Find $I_4$ with that direction. A negative answer means the actual current flows
+    into N.
 
     '
   answer_prompt: Enter the signed current with a unit, for example -15 mA.
@@ -97,7 +97,7 @@ solution:
   - id: s3
     text_md: 'Solve for the unknown: $I_4 = I_1 + I_2 - I_3 = {{i4|tex:A}}$.'
   explanation_md: Charge does not pile up at a node, so currents in and out must balance. The sign of the answer follows the
-    arrow as drawn.
+    direction $I_4$ is defined in.
 answer:
   kind: numeric
   value: i4
@@ -150,7 +150,7 @@ misconceptions:
 - tag: mc.kcl-sign-flipped
   description: Gets the balance backwards, giving the opposite sign.
   wrong_answer_expr: i3 - i1 - i2
-  feedback_md: The arrow for I4 points out of N, so it sits with I3 on the out side of the balance. Check your sign.
+  feedback_md: I4 is defined as flowing out of N, so it sits with I3 on the out side of the balance. Check your sign.
 - tag: mc.kcl-ignores-outflow
   description: Ignores the known outgoing current.
   wrong_answer_expr: i1 + i2

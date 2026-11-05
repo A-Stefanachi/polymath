@@ -2,7 +2,7 @@
 # Validate: python3 reference/validate_lessons.py
 schema_version: 1
 skill_key: elec.dc.thevenin-norton
-version: 1
+version: 2
 authoring_status: ready
 license: original
 source: original
@@ -38,7 +38,7 @@ screens:
     The load current is then $I_L = \frac{V_{th}}{R_{th} + R_L}$.
 
 
-    The Norton form is the same network as a current source $I_N = V_{th}/R_{th}$ in parallel with $R_{th}$.
+    The Norton form is an equivalent of the same network: a current source $I_N = V_{th}/R_{th}$ (the short-circuit current) in parallel with $R_{th}$.
   figure:
     alt: The Thevenin equivalent. A voltage source Vth in series with a resistor Rth connects to terminals A and B, with a load RL across A and B.
     svg: >-

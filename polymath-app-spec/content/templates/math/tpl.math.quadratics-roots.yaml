@@ -1,6 +1,6 @@
 schema_version: 1
 key: tpl.math.quadratics-roots
-version: 2
+version: 3
 authoring_status: ready
 skill_key: math.alg.quadratics
 task_kind: problem
@@ -23,10 +23,10 @@ provenance:
     prompt_version: template_assist_v1
   review:
     reviewer: agent-on-founder-instruction
-    date: '2026-11-04'
-    template_sha256: f6dd4365744337848b8005c895f87be93a28c9757e800f722d9bf2e9e65e74ac
+    date: '2026-11-05'
+    template_sha256: c6a1f207104a31105669affc0a1a165b11b991d0c1184b61b0f57adfb22fc936
     checklist_version: g3_checklist_v1
-    notes: 'Approved by the build agent on the founder''s explicit instruction of 2026-11-04, not by a founder hand-solve. The agent solved seeds 5000 to 5004 from the rendered statements with 0 disagreements and read boxes 2 to 7 (content/G3-WORKSHEET.md). No person has done box 1 (own hand-solve) or checked boxes 8, 10, 11 and 12.'
+    notes: 'Approved by the build agent on the founder''s instruction of 2026-11-05 ("review them for me on my behalf and approve"), not by a founder hand-solve. After the 2026-11-05 review fixes, an independent agent solved seeds 5000 to 5004 from the rendered statements with 0 disagreements; boxes 2 to 12 read by a second agent. No person has done box 1.'
 delivery:
   contexts:
   - phone
@@ -76,9 +76,9 @@ constraints:
   expr: abs(b) >= 2
   reason: A zero or unit middle coefficient would render oddly, and p + q = 0 makes the sign-flip mistake hit the answer.
 render:
-  stem_md: The equation $x^2 {{sb}} {{ab|int}}x {{sc}} {{ac|int}} = 0$ has two whole-number roots. What is the larger root?
+  stem_md: The equation $x^2 {{sb}} {{ab|int}}x {{sc}} {{ac|int}} = 0$ has two integer roots. What is the larger root?
   answer_prompt: Enter the larger root.
-  alt_text: The equation x squared {{sb}} {{ab|int}} x {{sc}} {{ac|int}} equals 0 has two whole-number roots. What is the
+  alt_text: The equation x squared {{sb}} {{ab|int}} x {{sc}} {{ac|int}} equals 0 has two integer roots. What is the
     larger root?
 solution:
   generator:
@@ -127,7 +127,7 @@ verifiers:
     strict: true
 hints:
   l1: What does it tell you when an expression has to equal zero?
-  l2: Look for two numbers whose product is the constant term and whose sum is the middle coefficient.
+  l2: Look for two numbers whose product is the constant term and whose sum is the middle coefficient; the roots are those numbers with their signs changed.
   l3: You need two numbers with product ${{c|int}}$ and sum ${{b|int}}$.
 misconceptions:
 - tag: mc.smaller-root

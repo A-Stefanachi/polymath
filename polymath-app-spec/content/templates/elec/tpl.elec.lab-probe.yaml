@@ -1,7 +1,7 @@
 schema_version: 1
 key: tpl.elec.lab-probe
 concept_static: true
-version: 3
+version: 4
 authoring_status: ready
 skill_key: elec.meas.lab-safety-esd
 task_kind: retrieval
@@ -26,10 +26,10 @@ provenance:
     prompt_version: template_assist_v1
   review:
     reviewer: agent-on-founder-instruction
-    date: '2026-11-04'
-    template_sha256: a8b7c133de9ab26aa3192377bb6a0660eb4a301f21f0d4f133432e6fa5964d67
+    date: '2026-11-05'
+    template_sha256: 6254d8ee1cf4672ba6ef1b07acf6ab1d7362932ee27aa60c0bd93f232c91e0a4
     checklist_version: g3_checklist_v1
-    notes: 'Approved by the build agent on the founder''s explicit instruction of 2026-11-04, not by a founder hand-solve. The agent solved seeds 7200 to 7204 from the rendered statements with 0 disagreements and read boxes 2 to 7 (content/G3-WORKSHEET.md). No person has done box 1 (own hand-solve) or checked boxes 8, 10, 11 and 12.'
+    notes: 'Approved by the build agent on the founder''s instruction of 2026-11-05 ("review them for me on my behalf and approve"), not by a founder hand-solve. After the 2026-11-05 review fixes, an independent agent solved seeds 7200 to 7204 from the rendered statements with 0 disagreements; boxes 2 to 12 read by a second agent. No person has done box 1.'
 delivery:
   contexts:
   - phone
@@ -119,7 +119,7 @@ verifiers:
 hints:
   l1: A measurement needs two connections. Which one has a fixed place on the circuit?
   l2: A bench scope's ground lead is usually tied to earth, so where it goes matters more than where the tip goes.
-  l3: First check the supply against what you expect and the probe's rating. Then decide where the ground lead goes.
+  l3: Decide first where the ground lead must go, and why.
 misconceptions:
 - tag: mc.probe-ground-any-node
   description: Treats the ground lead as free to go anywhere.

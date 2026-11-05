@@ -24,7 +24,7 @@ At 18:02–18:03 UTC on 4 November the founder signed off five templates in the 
 | tpl.math.units-mega | 2 | 5000–5004 | done 2026-11-04 (agent, founder instruction) | 0 |
 | tpl.math.solve-linear-v1 | 3 | 5000–5004 | done 2026-11-04 (agent, founder instruction) | 0 |
 | tpl.math.solve-linear-v2 | 3 | 5000–5004 | done 2026-11-04 (agent, founder instruction) | 0 |
-| tpl.math.rearrange-ohm | 3 | 5000–5004 | done 2026-11-04 (agent, founder instruction) | 0 |
+| tpl.math.rearrange-ohm | 4 | 5000–5004 | done 2026-11-05 (agent, founder instruction) | 0 |
 | tpl.math.rearrange-power | 3 | 5000–5004 | done 2026-11-04 (agent, founder instruction) | 0 |
 | tpl.math.ratios-percent | 2 | 5000–5004 | done 2026-11-04 (agent, founder instruction) | 0 |
 | tpl.math.ratios-split | 2 | 5000–5004 | done 2026-11-04 (agent, founder instruction) | 0 |
@@ -32,20 +32,20 @@ At 18:02–18:03 UTC on 4 November the founder signed off five templates in the 
 | tpl.math.linear-intercept | 2 | 5000–5004 | done 2026-11-04 (agent, founder instruction) | 0 |
 | tpl.math.systems-x | 2 | 5000–5004 | done 2026-11-04 (agent, founder instruction) | 0 |
 | tpl.math.exponents-square | 2 | 5000–5004 | done 2026-11-04 (agent, founder instruction) | 0 |
-| tpl.math.quadratics-roots | 2 | 5000–5004 | done 2026-11-04 (agent, founder instruction) | 0 |
+| tpl.math.quadratics-roots | 3 | 5000–5004 | done 2026-11-05 (agent, founder instruction) | 0 |
 | tpl.elec.lab-esd | 3 | 7100–7104 | done 2026-11-04 (agent, founder instruction) | 0 |
-| tpl.elec.lab-probe | 3 | 7200–7204 | done 2026-11-04 (agent, founder instruction) | 0 |
-| tpl.elec.schematic-gnd | 3 | 7000–7004 | done 2026-11-04 (agent, founder instruction) | 0 |
+| tpl.elec.lab-probe | 4 | 7200–7204 | done 2026-11-05 (agent, founder instruction) | 0 |
+| tpl.elec.schematic-gnd | 4 | 7000–7004 | done 2026-11-05 (agent, founder instruction) | 0 |
 | tpl.elec.schematic-series | 3 | 6900–6904 | done 2026-11-04 (agent, founder instruction) | 0 |
-| tpl.elec.charge-current | 2 | 6000–6004 | done 2026-11-04 (founder, review console) | 0 |
-| tpl.elec.ohms-law-v | 2 | 6100–6104 | done 2026-11-04 (founder, review console) | 0 |
-| tpl.elec.ohms-law-r | 2 | 6200–6204 | done 2026-11-04 (founder, review console) | 0 |
-| tpl.elec.power-diss | 2 | 6300–6304 | done 2026-11-04 (agent, founder instruction) | 0 |
-| tpl.elec.energy-joule | 2 | 6400–6404 | done 2026-11-04 (founder, review console) | 0 |
+| tpl.elec.charge-current | 3 | 6000–6004 | done 2026-11-05 (agent, founder instruction) | 0 |
+| tpl.elec.ohms-law-v | 3 | 6100–6104 | done 2026-11-05 (agent, founder instruction) | 0 |
+| tpl.elec.ohms-law-r | 3 | 6200–6204 | done 2026-11-05 (agent, founder instruction) | 0 |
+| tpl.elec.power-diss | 3 | 6300–6304 | done 2026-11-05 (agent, founder instruction) | 0 |
+| tpl.elec.energy-joule | 3 | 6400–6404 | done 2026-11-05 (agent, founder instruction) | 0 |
 | tpl.elec.series-parallel-req-mc | 1 | 4000–4004 | done 2026-11-04 (agent, founder instruction) | 0 |
 | tpl.elec.parallel-pair | 3 | 6800–6804 | done 2026-11-04 (agent, founder instruction) | 0 |
 | tpl.elec.voltage-divider-vout | 1 | 1000–1004 | done 2026-11-04 | 0 |
-| tpl.elec.kirchhoff-kcl | 2 | 6500–6504 | done 2026-11-04 (founder, review console) | 0 |
+| tpl.elec.kirchhoff-kcl | 3 | 6500–6504 | done 2026-11-05 (agent, founder instruction) | 0 |
 | tpl.elec.nodal-unknown | 3 | 6600–6604 | done 2026-11-04 (agent, founder instruction) | 0 |
 | tpl.elec.thevenin-model | 3 | 6700–6704 | done 2026-11-04 (agent, founder instruction) | 0 |
 
@@ -53,21 +53,23 @@ At 18:02–18:03 UTC on 4 November the founder signed off five templates in the 
 
 On 5 November, on the founder's instruction ("Approve all on my behalf"), the build agent approved version 1 of all 19 lean lessons on staging, after reading each and checking every worked example and check-question answer. No person has reviewed them yet. `skill_lessons.reviewed_by` shows the founder's account, because it must name a user and that account is the only one. See the CHANGELOG entry of 5 November. A founder approval of a later version in the console supersedes this.
 
+Later on 5 November the founder asked for a second review on their behalf ("review them for me on my behalf and approve"). An independent agent re-read all 19 and found no factual error; six lessons got wording fixes (order of operations, schematic reading, power and energy, lab safety and ESD, Thevenin and Norton, nodal analysis) and became version 2, approved by the agent on the same instruction.
+
 | Lesson (skill) | v | Approved | By |
 |---|---|---|---|
 | elec.dc.charge-current-voltage | 1 | 2026-11-05 | agent, founder instruction |
 | elec.dc.kirchhoff-laws | 1 | 2026-11-05 | agent, founder instruction |
-| elec.dc.nodal-analysis | 1 | 2026-11-05 | agent, founder instruction |
+| elec.dc.nodal-analysis | 2 | 2026-11-05 | agent, founder instruction (after the second review) |
 | elec.dc.ohms-law | 1 | 2026-11-05 | agent, founder instruction |
-| elec.dc.power-energy | 1 | 2026-11-05 | agent, founder instruction |
+| elec.dc.power-energy | 2 | 2026-11-05 | agent, founder instruction (after the second review) |
 | elec.dc.series-parallel | 1 | 2026-11-05 | agent, founder instruction |
-| elec.dc.thevenin-norton | 1 | 2026-11-05 | agent, founder instruction |
+| elec.dc.thevenin-norton | 2 | 2026-11-05 | agent, founder instruction (after the second review) |
 | elec.dc.voltage-divider | 1 | 2026-11-05 | agent, founder instruction |
-| elec.meas.lab-safety-esd | 1 | 2026-11-05 | agent, founder instruction |
-| elec.meas.schematic-reading | 1 | 2026-11-05 | agent, founder instruction |
+| elec.meas.lab-safety-esd | 2 | 2026-11-05 | agent, founder instruction (after the second review) |
+| elec.meas.schematic-reading | 2 | 2026-11-05 | agent, founder instruction (after the second review) |
 | math.alg.exponents-roots | 1 | 2026-11-05 | agent, founder instruction |
 | math.alg.linear-functions | 1 | 2026-11-05 | agent, founder instruction |
-| math.alg.order-of-operations | 1 | 2026-11-05 | agent, founder instruction |
+| math.alg.order-of-operations | 2 | 2026-11-05 | agent, founder instruction (after the second review) |
 | math.alg.quadratics | 1 | 2026-11-05 | agent, founder instruction |
 | math.alg.ratios-proportions | 1 | 2026-11-05 | agent, founder instruction |
 | math.alg.rearrange-formulas | 1 | 2026-11-05 | agent, founder instruction |
@@ -75,4 +77,4 @@ On 5 November, on the founder's instruction ("Approve all on my behalf"), the bu
 | math.alg.systems-2x2 | 1 | 2026-11-05 | agent, founder instruction |
 | math.alg.units-and-prefixes | 1 | 2026-11-05 | agent, founder instruction |
 
-Regenerate pool: `python reference/bootstrap_lean_templates.py` then re-verify and re-stamp (`reference/stamp_g3_review.py`).
+Regenerate pool: `python reference/bootstrap_lean_templates.py`, then re-verify and review each template with `reference/g3_review.py` (`stamp_g3_review.py` was deleted on 2 November).
