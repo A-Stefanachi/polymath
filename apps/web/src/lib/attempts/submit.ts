@@ -43,9 +43,15 @@ const numericKey = z.object({
   // Known wrong answers by misconception tag (doc 07 section 5 wrong_answer_expr, evaluated for the item); optional.
   misconceptions: z.array(z.object({ tag: z.string(), value: z.number(), feedback_md: z.string().nullable().optional() })).optional(),
 });
+// The worker (item_writer, from reference/verifiers/tplkit.py) stores option_ids as a map from each served
+// option id to its template option id; an array of served ids is the older test shape. Either way the keys
+// are the options the item carries.
 const choiceKey = z.object({
   grader_type: z.literal("multiple_choice"),
-  reference: z.object({ correct_option: z.string(), option_ids: z.array(z.string()) }),
+  reference: z.object({
+    correct_option: z.string(),
+    option_ids: z.union([z.array(z.string()), z.record(z.string(), z.string())]).transform((ids) => (Array.isArray(ids) ? ids : Object.keys(ids))),
+  }),
 });
 const answerKey = z.discriminatedUnion("grader_type", [numericKey, choiceKey]);
 

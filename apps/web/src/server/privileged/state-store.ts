@@ -253,8 +253,12 @@ export function createStateStore(sql: Sql): StateStore {
                      a.max_hint_level::int as max_hint_level, a.unaided, a.confidence, coalesce(a.active_ms, a.latency_ms) as latency_ms,
                      coalesce(a.expected_ms, t.reference_time_s * 1000, t.est_seconds * 1000) as expected_ms,
                      a.submitted_at, (i.status = 'verified') as verified,
-                     case when t.grader_type = 'multiple_choice' and jsonb_typeof(k.answer_key #> '{reference,option_ids}') = 'array'
-                          then jsonb_array_length(k.answer_key #> '{reference,option_ids}') end as mc_options,
+                     -- option_ids is the worker's map (served id -> template option) or a legacy array; count the options
+                     case when t.grader_type <> 'multiple_choice' then null
+                          when jsonb_typeof(k.answer_key #> '{reference,option_ids}') = 'array'
+                          then jsonb_array_length(k.answer_key #> '{reference,option_ids}')
+                          when jsonb_typeof(k.answer_key #> '{reference,option_ids}') = 'object'
+                          then (select count(*)::int from jsonb_object_keys(k.answer_key #> '{reference,option_ids}')) end as mc_options,
                      coalesce(t.difficulty_est, 1200 + 600 * t.difficulty_prior) as difficulty
               from c a
               join public.items i on i.id = a.item_id
