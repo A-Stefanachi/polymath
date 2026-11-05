@@ -6,6 +6,47 @@ Record go/no-go outcomes, lean-gate releases, and scope-down choices here before
 
 <!-- Entries appear newest first. -->
 
+## 2026-11-05: second content review, fixes and pool stock on staging (founder instruction)
+
+Decision: the founder asked the build agent to "review them for me on my behalf and approve", and then said "I dont run anything on my machine you do it". Two independent agents reviewed the 30 lean templates, the 19 lessons and the BL-0067 slice. The agent fixed what they found, approved the new versions on the founder's behalf, and loaded them onto staging from the cloud session.
+
+- **Templates (10 new versions):**
+  - charge-current, ohms-law-r and power-diss: the prompts now ask for three significant figures. A sensible two-figure answer missed the unchanged 2 % tolerance on 10 to 20 % of items.
+  - ohms-law-v and energy-joule: the same sentence.
+  - quadratics-roots: "integer roots", and the hint now says to change the signs.
+  - lab-probe: the l3 hint no longer restates the answer.
+  - schematic-gnd: "ground symbols of the same kind and name".
+  - kirchhoff-kcl: "defined as flowing out" in place of an arrow that has no figure.
+  - rearrange-ohm: a 1 W power constraint.
+  - energy-joule: the bounds check's upper limit is 21601 J, because the largest draw rounds just above 21600 J.
+  - Check results: G2 fuzz passes 200/200 for each template. An agent re-solved the new G3 seeds from the statements: 50 of 50 agree. The review blocks say `agent-on-founder-instruction`.
+  - Lost founder sign-offs: five of these templates (charge-current, energy-joule, kirchhoff-kcl, ohms-law-r, ohms-law-v) had the founder's console sign-off on their old hashes. That no longer applies to the new versions.
+- **Lessons (6 new versions, agent-approved):**
+  - order of operations: scientific calculators, and spreadsheets on `-3^2`.
+  - schematic reading: polarised capacitors, and ground symbols of the same kind.
+  - power and energy: "can overheat and damage it".
+  - lab safety and ESD: about 2 to 3 kV to feel a discharge, eye protection for soldering, and a scope-ground check that no longer gives away `tpl.elec.lab-probe`.
+  - Thevenin and Norton: the Norton line.
+  - nodal analysis: "alone".
+- **Graph 0.10.1:**
+  - `elec.dc.superposition` → `elec.dc.thevenin-norton` is now soft. Superposition is not in the lean slice, so the hard edge locked Thevenin for good. All Thevenin material uses one source (doc 05 section 4, rule 3).
+  - Titles: "Ohm's law" and "Kirchhoff's laws".
+- **Staging, done the M0 way (no TCP route, no laptop worker):**
+  - The pipeline ran against a throwaway local PostgreSQL 17 loaded with staging's content rows: content:sync, the worker's `content_postprocess` fuzz job, a second sync, and a `pregenerate_items` pool job for the founder (want 30 per skill).
+  - The new and changed rows were then upserted to staging through the management API. No status was set by hand.
+  - Result: 30 verified templates, 25 verified lesson versions, and 26 to 30 unserved verified items per skill.
+- **Not done (founder judgment):**
+  - `difficulty_prior` for nodal-unknown and thevenin-model;
+  - the two different prior-to-Elo conversions in docs 06 and 07;
+  - the weaker distractors in linear-intercept, order-parens and series-parallel-req-mc;
+  - the extra soft edges the slice reviewer suggested.
+- **Still open for BL-0067:** the per-module signed checklist entries and `status: verified` for the 19 skills.
+- **Scope:** founder-only staging, as for the entries of 4 and 5 November.
+- **Next three tasks:**
+  - a hosted worker (the pool refills only while a worker runs, and the founder runs nothing locally);
+  - the GitHub `staging` environment, so merges deploy without the agent;
+  - BL-0070 dogfood defects.
+
 ## 2026-11-05: agent approval of the 19 lean lessons (founder instruction)
 
 Decision: the founder told the build agent to approve the 19 concept primers on the founder's behalf ("Approve all on my behalf"), after they were synced to staging as `needs_human_review` (#20). The founder chose to depart from K9's rule that the founder approves each lesson version in the console.

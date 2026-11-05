@@ -2,7 +2,7 @@
 # Validate: python3 reference/validate_lessons.py
 schema_version: 1
 skill_key: elec.dc.nodal-analysis
-version: 1
+version: 2
 authoring_status: ready
 license: original
 source: original
@@ -19,7 +19,7 @@ screens:
 - id: why
   title: Why this matters
   body_md: >-
-    Some circuits cannot be reduced with series and parallel rules, for example when two sources feed the
+    Some circuits cannot be reduced with series and parallel rules alone, for example when two sources feed the
     same node. Nodal analysis is a routine that always works for resistor circuits: one KCL equation per
     unknown node. Circuit simulators such as SPICE are built on the same idea.
 - id: idea

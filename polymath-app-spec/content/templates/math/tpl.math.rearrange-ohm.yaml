@@ -1,6 +1,6 @@
 schema_version: 1
 key: tpl.math.rearrange-ohm
-version: 3
+version: 4
 authoring_status: ready
 skill_key: math.alg.rearrange-formulas
 task_kind: problem
@@ -23,10 +23,10 @@ provenance:
     prompt_version: template_assist_v1
   review:
     reviewer: agent-on-founder-instruction
-    date: '2026-11-04'
-    template_sha256: ca735763ead2db07cb3de63a1bf31692f38e7aa627636557baa7bc1d80f4ee4f
+    date: '2026-11-05'
+    template_sha256: e45450a585b00196164df4c76226aae9cc881acc1e52c602a548e3a8dfebff3d
     checklist_version: g3_checklist_v1
-    notes: 'Approved by the build agent on the founder''s explicit instruction of 2026-11-04, not by a founder hand-solve. The agent solved seeds 5000 to 5004 from the rendered statements with 0 disagreements and read boxes 2 to 7 (content/G3-WORKSHEET.md). No person has done box 1 (own hand-solve) or checked boxes 8, 10, 11 and 12.'
+    notes: 'Approved by the build agent on the founder''s instruction of 2026-11-05 ("review them for me on my behalf and approve"), not by a founder hand-solve. After the 2026-11-05 review fixes, an independent agent solved seeds 5000 to 5004 from the rendered statements with 0 disagreements; boxes 2 to 12 read by a second agent. No person has done box 1.'
 delivery:
   contexts:
   - phone
@@ -60,6 +60,9 @@ constraints:
 - id: voltage-window
   expr: v >= 1 and v <= 24
   reason: Keeps the voltage in the range of ordinary bench supplies.
+- id: power-limit
+  expr: v * i <= 1
+  reason: Keeps the dissipation at 1 W or less, a realistic through-hole resistor.
 render:
   stem_md: Rearrange $V = I R$ to find $R$ when $V = {{v}}\,\mathrm{V}$ and $I = {{i}}\,\mathrm{A}$.
   answer_prompt: Enter a value in ohms.

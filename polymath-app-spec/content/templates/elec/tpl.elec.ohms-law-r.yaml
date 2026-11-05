@@ -1,6 +1,6 @@
 schema_version: 1
 key: tpl.elec.ohms-law-r
-version: 2
+version: 3
 authoring_status: ready
 skill_key: elec.dc.ohms-law
 task_kind: problem
@@ -25,10 +25,10 @@ provenance:
     prompt_version: template_assist_v1
   review:
     reviewer: agent-on-founder-instruction
-    date: '2026-11-04'
-    template_sha256: 961d9b074bb65d9413bc8695f34cf6c9aef5591e43217e33d9120dc5c1423de3
+    date: '2026-11-05'
+    template_sha256: 35d4f7a98bdb728ce1ebc7ea36d1af155d03f2caffe52848e263d34e301d5fdf
     checklist_version: g3_checklist_v1
-    notes: 'Approved by the build agent on the founder''s explicit instruction of 2026-11-04, not by a founder hand-solve. The agent solved seeds 6200 to 6204 from the rendered statements with 0 disagreements and read boxes 2 to 7 (content/G3-WORKSHEET.md). No person has done box 1 (own hand-solve) or checked boxes 8, 10, 11 and 12.'
+    notes: 'Approved by the build agent on the founder''s instruction of 2026-11-05 ("review them for me on my behalf and approve"), not by a founder hand-solve. After the 2026-11-05 review fixes, an independent agent solved seeds 6200 to 6204 from the rendered statements with 0 disagreements; boxes 2 to 12 read by a second agent. No person has done box 1.'
 delivery:
   contexts:
   - phone
@@ -69,7 +69,7 @@ render:
     What is its resistance?
 
     '
-  answer_prompt: Enter the resistance with a unit, for example 470 ohm or 2.2 kohm.
+  answer_prompt: Enter the resistance with a unit, for example 472 ohm or 2.25 kohm. Give three significant figures.
   alt_text: A resistor across {{v|eng}} draws {{i|eng}}. Find its resistance.
 solution:
   generator:

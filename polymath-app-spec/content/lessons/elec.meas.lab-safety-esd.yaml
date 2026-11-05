@@ -3,7 +3,7 @@
 # Validate: python3 reference/validate_lessons.py
 schema_version: 1
 skill_key: elec.meas.lab-safety-esd
-version: 1
+version: 2
 authoring_status: ready
 license: original
 source: original
@@ -32,7 +32,7 @@ screens:
     - **Batteries.** Never short a cell's terminals. A shorted or damaged lithium cell can get hot enough to burn you or start a fire.
 
 
-    - **Soldering.** Keep the hot iron in its stand and work with ventilation or a fume extractor.
+    - **Soldering.** Keep the hot iron in its stand and work with ventilation or a fume extractor. Wear eye protection, and wash your hands after handling leaded solder.
 
 
     - **Measuring.** Check that the supply is what you expect and within the probe's rating. A bench oscilloscope's ground clip is normally tied to earth through its power cord, so clip it only to the circuit's ground. On any other node it can create a short.
@@ -43,7 +43,7 @@ screens:
   title: Static you cannot feel
   body_md: >-
     Moving about builds up static charge on your body, which holds it much like a capacitor. When you touch a
-    part, that charge flows through it in a brief pulse. You notice a spark only at a few thousand volts; some
+    part, that charge flows through it in a brief pulse. You feel a discharge only above about 2,000 to 3,000 V; some
     parts, such as a MOSFET's gate, can be damaged by far less, and the damage may not show until later.
 
 
@@ -103,21 +103,21 @@ checks:
     feedback_md: Static too small to feel can still damage a gate. Keep the part on the mat or in its bag.
 - id: scope-ground
   stem_md: >-
-    You want to measure a node on a powered 9 V breadboard with a bench oscilloscope probe. Where does the
-    probe's ground clip go?
+    A bench supply's negative terminal is tied to earth, and so is a bench oscilloscope's ground clip. What
+    happens if you put the clip on the supply's +9 V rail?
   options:
   - id: correct
-    text_md: On the circuit's ground node
+    text_md: The +9 V rail is shorted to earth through the scope's ground lead
     correct: true
-    feedback_md: Right. The clip is normally earthed through the scope's power cord, so it belongs on circuit ground only.
+    feedback_md: Right. Both ends are earthed, so the clip joins +9 V to 0 V. Clip it only to circuit ground.
   - id: nearest
-    text_md: On whichever node is closest to the one you are measuring
+    text_md: Nothing, because the clip only sets the reference for the reading
     correct: false
-    feedback_md: The clip is normally earthed, so on another node it can create a short. Use circuit ground.
+    feedback_md: The clip is earthed through the scope's power cord. On a node that is not at earth potential it creates a short when the circuit is also earth-referenced.
   - id: nowhere
-    text_md: Nowhere, because the tip alone is enough
+    text_md: The trace just shifts down by 9 V
     correct: false
-    feedback_md: A voltage needs a reference. Without the ground clip the reading is unreliable.
+    feedback_md: Before any trace appears, the earthed clip shorts the rail to the earthed negative terminal.
 recap_md: >-
   Stay at 24 V or less and never work on mains. Never short a battery. Clip a scope's ground lead only to
   circuit ground. Wear a grounded wrist strap on an ESD mat and handle parts by their bodies: static too small

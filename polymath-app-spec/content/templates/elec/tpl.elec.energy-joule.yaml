@@ -1,6 +1,6 @@
 schema_version: 1
 key: tpl.elec.energy-joule
-version: 2
+version: 3
 authoring_status: ready
 skill_key: elec.dc.power-energy
 task_kind: problem
@@ -25,10 +25,10 @@ provenance:
     prompt_version: template_assist_v1
   review:
     reviewer: agent-on-founder-instruction
-    date: '2026-11-04'
-    template_sha256: 840d8b90a6c7bdd3ae34eeeb0180ad8733534782c63b682492910da76914ec7d
+    date: '2026-11-05'
+    template_sha256: 038f069c52968e58e6e8002c75f940e2240f9791ab02209f7bf529e7805115d4
     checklist_version: g3_checklist_v1
-    notes: 'Approved by the build agent on the founder''s explicit instruction of 2026-11-04, not by a founder hand-solve. The agent solved seeds 6400 to 6404 from the rendered statements with 0 disagreements and read boxes 2 to 7 (content/G3-WORKSHEET.md). No person has done box 1 (own hand-solve) or checked boxes 8, 10, 11 and 12.'
+    notes: 'Approved by the build agent on the founder''s instruction of 2026-11-05 ("review them for me on my behalf and approve"), not by a founder hand-solve. After the 2026-11-05 review fixes, an independent agent solved seeds 6400 to 6404 from the rendered statements with 0 disagreements; boxes 2 to 12 read by a second agent. No person has done box 1.'
 delivery:
   contexts:
   - phone
@@ -82,7 +82,7 @@ render:
     How much energy does it use, in joules?
 
     '
-  answer_prompt: Enter the energy with a unit, for example 1800 J.
+  answer_prompt: Enter the energy with a unit, for example 1820 J. Give three significant figures.
   alt_text: A DC load draws {{i|eng}} from a {{v|eng}} supply for {{tmin|int}} minutes. Find the energy in joules.
 solution:
   generator:
@@ -132,11 +132,11 @@ verifiers:
       result_unit: J
 - id: window
   kind: bounds
-  independence: Upper limit from the largest allowed draw, 24 V at 0.5 A for 30 minutes; fixed and independent of the generator.
+  independence: Upper limit from the largest allowed draw, 24 V at 0.5 A for 30 minutes (21600 J), plus 1 J so floating-point rounding at that draw stays inside; fixed and independent of the generator.
   spec:
     output: energy_j
     lo: '0'
-    hi: '21600'
+    hi: '21601'
     strict: true
 hints:
   l1: Energy depends on how fast it is used and for how long. Which of those do you need to find first?
