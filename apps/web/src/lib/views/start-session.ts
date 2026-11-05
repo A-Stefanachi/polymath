@@ -1,4 +1,15 @@
 // "Practise now", "Practise this" and "Practise all due" all build a session through buildSession (doc 09 S14, S17).
+import type { SkillState } from "@/components/ui/status-chip";
+
+/**
+ * Minutes "Practise this" asks for. A review fits 5 minutes. A skill not yet in review starts the learning loop
+ * (worked example 4 min, faded problem 5 min, retrieval 1.5 min; 06 section 7.1), which needs 15 minutes of
+ * micro budget (B = 0.9 x available, 06 section 7.4); 5 minutes would plan nothing.
+ */
+export function practiseMinutes(state: SkillState): number {
+  return state === "reviewing" || state === "mastered" || state === "refresher" ? 5 : 15;
+}
+
 export type StartBody = { available_minutes: number; context: "phone" | "desktop"; skill_focus?: string };
 export type StartResult = { ok: true; id: string } | { ok: false; reason: "open" | "pool" | "focus" | "failed" };
 
@@ -20,7 +31,9 @@ export async function startSession(body: StartBody): Promise<StartResult> {
   }
   if (response.ok) {
     const session = (await response.json()) as { id?: unknown };
-    return typeof session.id === "string" ? { ok: true, id: session.id } : { ok: false, reason: "failed" };
+    if (typeof session.id === "string") return { ok: true, id: session.id };
+    // 200 without an id is the builder's empty plan (06 section 7.4): nothing of this skill fits the minutes.
+    return { ok: false, reason: body.skill_focus !== undefined ? "focus" : "failed" };
   }
   const problem = (await response.json().catch(() => ({}))) as { code?: unknown };
   if (problem.code === "open_session_exists") return { ok: false, reason: "open" };
