@@ -2,6 +2,7 @@ import { PractiseButton } from "@/components/practise-button";
 import { StatusChip } from "@/components/ui/status-chip";
 import { lists, skillMap as t } from "@/copy/strings";
 import { formatDay } from "@/lib/views/format";
+import { practiseMinutes } from "@/lib/views/start-session";
 import type { MapEdge, MapSkill } from "@/lib/views/skill-map";
 
 /** The unmet hard prerequisites of a locked skill, as the scheduler computed them (getSkill.blocked_by, FR-013). */
@@ -92,7 +93,7 @@ export function SkillDetail({
         </div>
       ) : null}
 
-      {skill.practisable ? <PractiseButton label={t.practiseThis} name={`${t.practiseThis}: ${skill.title}`} body={{ available_minutes: 5, skill_focus: skill.key }} variant="primary" size="md" /> : null}
+      {skill.practisable ? <PractiseButton label={t.practiseThis} name={`${t.practiseThis}: ${skill.title}`} body={{ available_minutes: practiseMinutes(skill.state), skill_focus: skill.key }} variant="primary" size="md" /> : null}
     </section>
   );
 }
