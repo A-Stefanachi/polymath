@@ -228,6 +228,14 @@ export function apiReason(reason: string): string {
 /** The scheduler's short problem is a `problem` task of the contract's task_kind enum. */
 export const dbTaskKind = (kind: string): string => (kind === "problem_short" ? "problem" : kind);
 
+/**
+ * 00a H1: one template serves every loop stage, so task kind is a property of the served task, not of the
+ * template. These kinds draw on any practice item of the skill whatever kind its template declares; every
+ * other kind still needs a template of its own kind.
+ */
+const LOOP_KINDS: ReadonlySet<string> = new Set(["worked_example", "faded_problem", "retrieval", "problem"]);
+const poolKind = (kind: string): string => (LOOP_KINDS.has(kind) ? "loop" : kind);
+
 export type SelectionSetup = {
   states: PackSetup["states"];
   graph: SkillGraph;
@@ -236,7 +244,8 @@ export type SelectionSetup = {
 };
 
 /**
- * Gives each packed task one distinct verified, unserved item of its skill and kind (phone: only templates
+ * Gives each packed task one distinct verified, unserved item of its skill: the loop kinds share one pool
+ * (00a H1), other kinds need a template of their own kind (phone: only templates
  * flagged `phone_suitable`, 06 section 7.3). The item comes from `selectItem` (difficulty match, tier, no
  * repeated seed or answer; 06 section 3.8). A worked example is skipped on placement evidence and a same-day
  * retrieval without the PRM-04 gap is carried to the next session (select-item.ts). A task without an item is
@@ -252,7 +261,7 @@ export function assignItems(
   const pools = new Map<string, Candidate[]>();
   for (const c of candidates) {
     if (context === "phone" && !c.phoneSuitable) continue;
-    const k = `${c.skillKey}|${c.taskKind}`;
+    const k = `${c.skillKey}|${poolKind(c.taskKind)}`;
     pools.set(k, [...(pools.get(k) ?? []), c]);
   }
   const history = new Map<string, ServedHistory>();
@@ -261,7 +270,7 @@ export function assignItems(
   for (const t of tasks) {
     const kind = dbTaskKind(t.task_kind);
     const skill = t.skill_key;
-    const pool = skill === null ? undefined : pools.get(`${skill}|${kind}`);
+    const pool = skill === null ? undefined : pools.get(`${skill}|${poolKind(kind)}`);
     let item: Candidate | undefined;
     if (skill !== null && pool) {
       let h = history.get(skill);
