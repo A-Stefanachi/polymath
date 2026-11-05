@@ -167,7 +167,13 @@ const ATTEMPT_FROM = (db: Sql) => db`
   public.attempts a
   join public.items i on i.id = a.item_id
   join public.item_templates t on t.key = i.template_key and t.version = i.template_version
-  join public.skills s on s.key = t.skill_key`;
+  join public.skills s on s.key = t.skill_key
+  left join public.session_tasks st on st.id = a.session_task_id`;
+
+// 00a H1: one template serves every loop stage, so an attempt's kind is the kind of the session task it
+// answered (a `problem` template served as a faded problem is a faded problem). Without a session task
+// (a standalone item) the template's kind stands. Needs `st` and `t` from ATTEMPT_FROM.
+const KIND = (db: Sql) => db`coalesce(st.task_kind, t.task_kind)`;
 
 const SCORE = (db: Sql) => db`(a.grade ->> 'score')::float8`;
 // A reported attempt (`grade.disputed`, doc 07 section 8.2) is out of mastery evidence until triage clears it.
@@ -240,7 +246,7 @@ export function createStateStore(sql: Sql): StateStore {
                 update public.attempts set state_applied_at = ${now.toISOString()}::timestamptz
                 where id = ${attemptId} and state_applied_at is null and grade_status = 'graded'
                 returning *)
-              select a.id, a.user_id, a.session_id, a.item_id, t.skill_key, t.task_kind::text as task_kind,
+              select a.id, a.user_id, a.session_id, a.item_id, t.skill_key, ${KIND(db)}::text as task_kind,
                      t.grader_type::text as grader_type, t.key as template_key, t.version as template_version,
                      coalesce(t.tier, s.tier_target)::text as item_tier,
                      (a.grade ->> 'score')::float8 as score, ${ELIGIBLE(db)} as mastery_eligible,
@@ -254,6 +260,7 @@ export function createStateStore(sql: Sql): StateStore {
               join public.items i on i.id = a.item_id
               join public.item_templates t on t.key = i.template_key and t.version = i.template_version
               join public.skills s on s.key = t.skill_key
+              left join public.session_tasks st on st.id = a.session_task_id
               left join public.item_secrets k on k.item_id = a.item_id`;
             const r = rows[0];
             if (!r) {
@@ -354,7 +361,7 @@ export function createStateStore(sql: Sql): StateStore {
           async history(userId, skillKey, since) {
             const rows = await db<Row[]>`
               select a.id, a.item_id, t.key as template_key, coalesce(t.tier, s.tier_target)::text as item_tier,
-                     t.task_kind::text as task_kind, t.grader_type::text as grader_type, ${SCORE(db)} as score,
+                     ${KIND(db)}::text as task_kind, t.grader_type::text as grader_type, ${SCORE(db)} as score,
                      a.max_hint_level::int as max_hint_level, a.unaided, (i.status = 'verified') as verified, a.submitted_at
               from ${ATTEMPT_FROM(db)}
               where a.user_id = ${userId} and t.skill_key = ${skillKey} and a.state_applied_at is not null
@@ -397,14 +404,14 @@ export function createStateStore(sql: Sql): StateStore {
           async sessionUnit(userId, sessionId, skillKey) {
             const rows = await db<Row[]>`
               select a.id, a.item_id, t.key as template_key, coalesce(t.tier, s.tier_target)::text as item_tier,
-                     t.task_kind::text as task_kind, t.grader_type::text as grader_type, ${SCORE(db)} as score,
+                     ${KIND(db)}::text as task_kind, t.grader_type::text as grader_type, ${SCORE(db)} as score,
                      a.max_hint_level::int as max_hint_level, a.unaided, (i.status = 'verified') as verified, a.submitted_at,
                      a.confidence, coalesce(a.active_ms, a.latency_ms) as latency_ms,
                      coalesce(a.expected_ms, t.reference_time_s * 1000, t.est_seconds * 1000) as expected_ms, t.n_obs as template_n_obs
               from ${ATTEMPT_FROM(db)}
               where a.user_id = ${userId} and a.session_id = ${sessionId} and t.skill_key = ${skillKey}
                 and a.state_applied_at is not null and a.grade_status = 'graded' and ${ELIGIBLE(db)}
-                and t.task_kind in ('retrieval', 'problem', 'perceptual_drill', 'debug_case', 'explain_back', 'checkpoint')
+                and ${KIND(db)} in ('retrieval', 'problem', 'perceptual_drill', 'debug_case', 'explain_back', 'checkpoint')
               order by a.submitted_at, a.created_at, a.id`;
             return rows.map((r) => ({
               ...toHistory(r),
@@ -419,7 +426,7 @@ export function createStateStore(sql: Sql): StateStore {
               select distinct t.skill_key from ${ATTEMPT_FROM(db)}
               where a.user_id = ${userId} and a.session_id = ${sessionId} and a.state_applied_at is not null
                 and a.grade_status = 'graded' and ${ELIGIBLE(db)}
-                and t.task_kind in ('retrieval', 'problem', 'perceptual_drill', 'debug_case', 'explain_back', 'checkpoint')
+                and ${KIND(db)} in ('retrieval', 'problem', 'perceptual_drill', 'debug_case', 'explain_back', 'checkpoint')
               order by t.skill_key`;
             return rows.map((r) => r.skill_key);
           },
