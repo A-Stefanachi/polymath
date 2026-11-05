@@ -1,5 +1,5 @@
 {
- "count": 166,
+ "count": 167,
  "generated_by": "reference/scheduler_reference.py generate",
  "params_version": "06-spec-1.0",
  "reference_date": "2026-10-31",
@@ -4658,6 +4658,95 @@
     }
    },
    "note": "no in-progress skill: one new frontier skill (worked + faded) plus same-day retrieval"
+  },
+  {
+   "expected": {
+    "available_minutes": 15.0,
+    "fill": 0.9,
+    "fits": true,
+    "tasks": [
+     {
+      "est_min": 1.5,
+      "position": 1,
+      "reason": "due_review",
+      "skill_key": "sw.c.variables",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 1.5,
+      "position": 2,
+      "reason": "due_review",
+      "skill_key": "elec.dc.ohms-law",
+      "task_kind": "retrieval"
+     },
+     {
+      "est_min": 4.0,
+      "position": 3,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "worked_example"
+     },
+     {
+      "est_min": 5.0,
+      "position": 4,
+      "reason": "new_frontier",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "faded_problem"
+     },
+     {
+      "est_min": 1.5,
+      "position": 5,
+      "reason": "same_day_retrieval",
+      "skill_key": "sw.c.control-flow",
+      "task_kind": "retrieval"
+     }
+    ],
+    "total_est_min": 13.5
+   },
+   "fn": "pack_session",
+   "id": "pack-loop-done-waits",
+   "input": {
+    "available_minutes": 15,
+    "context": "phone",
+    "node_minutes": {},
+    "project_pull": {
+     "elec.dc.ohms-law": 0.3333,
+     "elec.dc.series-parallel": 0.3333,
+     "elec.dc.voltage-divider": 0.5,
+     "math.alg.linear-equations": 0.25,
+     "sw.c.control-flow": 0.3333,
+     "sw.c.variables": 0.25,
+     "sw.fw.adc-reading": 1.0,
+     "sw.fw.gpio": 0.5
+    },
+    "session_type": "micro",
+    "states": {
+     "elec.dc.ohms-law": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.82,
+      "tier_attained": "L1"
+     },
+     "elec.dc.series-parallel": {
+      "loop_step": "done",
+      "mastery_state": "learning",
+      "retrievability": 0.9,
+      "tier_attained": "L0"
+     },
+     "math.alg.linear-equations": {
+      "mastery_state": "mastered",
+      "retrievability": 0.95,
+      "tier_attained": "L1"
+     },
+     "sw.c.variables": {
+      "due": true,
+      "mastery_state": "mastered",
+      "retrievability": 0.75,
+      "tier_attained": "L1"
+     }
+    }
+   },
+   "note": "00a M1: a learning skill whose loop is done is not taught again as new; the slot goes to another frontier skill"
   },
   {
    "expected": {

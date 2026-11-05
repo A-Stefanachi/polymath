@@ -432,6 +432,8 @@ export function packSession(input: PackInput, params: SchedulerParams = DEFAULT_
     for (const r of ranked) {
       const k = r.key;
       if (inProgSet.has(k) || skillSlots <= 0 || dailyLeft <= 0 || truthyBlock(states[k]?.blocked_by)) continue;
+      // 00a M1: a learning skill whose loop is done waits for its FSRS review; it is not taught again as new.
+      if (states[k]?.mastery_state === "learning" && states[k]?.loop_step === "done") continue;
       for (const seq of [loopSeq("worked_example", true), loopSeq("worked_example", false)]) {
         const need = seq.reduce((s, x) => s + estimateMinutes(x), 0) + estimateMinutes("retrieval");
         if (seq.every((x) => okCtx(x, k)) && fits(need)) {

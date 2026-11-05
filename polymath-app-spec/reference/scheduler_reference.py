@@ -758,6 +758,9 @@ def pack_session(inp: Dict[str, Any], params=None) -> Dict[str, Any]:
             k = r["key"]
             if k in in_prog or skill_slots <= 0 or states.get(k, {}).get("blocked_by"):
                 continue
+            # 00a M1: a learning skill whose loop is done waits for its FSRS review; it is not taught again as new
+            if states.get(k, {}).get("mastery_state") == "learning" and states.get(k, {}).get("loop_step") == "done":
+                continue
             for seq in (loop_seq("worked_example", True), loop_seq("worked_example", False)):
                 need = sum(estimate_minutes(x) for x in seq) + estimate_minutes("retrieval")
                 if all(ok_ctx(x, k) for x in seq) and fits(need):
@@ -1324,6 +1327,8 @@ def vector_inputs() -> List[Dict[str, Any]]:
           "elec.dc.ohms-law": S("mastered", 0.82, "L1", due=True),
           "sw.c.variables": S("mastered", 0.75, "L1", due=True)}
     add("pack-micro-new-skill", "pack_session", {"available_minutes": 20, "context": "phone", "session_type": "micro", "states": sn, "project_pull": pp, "node_minutes": {}}, "no in-progress skill: one new frontier skill (worked + faded) plus same-day retrieval")
+    sd = dict(sn); sd["elec.dc.series-parallel"] = S("learning", 0.9, "L0", loop_step="done")  # the top-ranked frontier skill of pack-micro-new-skill
+    add("pack-loop-done-waits", "pack_session", {"available_minutes": 15, "context": "phone", "session_type": "micro", "states": sd, "project_pull": pp, "node_minutes": {}}, "00a M1: a learning skill whose loop is done is not taught again as new; the slot goes to another frontier skill")
     sv = dict(sn); sv["elec.dc.series-parallel"] = S("learning", 0.9, "L0", loop_step="verify"); sv["math.alg.exponents-logs"] = S("learning", 0.9, "L0", loop_step="verify")
     spu = {"elec.dc.ohms-law": S("mastered", 0.82, "L1", due=True), "elec.dc.voltage-divider": S("mastered", 0.8, "L1", due=True)}
     add("pack-untagged-not-interleaved", "pack_session", {"available_minutes": 30, "context": "desktop", "session_type": "focus", "states": spu, "interleave": {"dc": 1}, "node_minutes": {}}, "06 section 7.6: a skill with no confusable_set is never interleaved")

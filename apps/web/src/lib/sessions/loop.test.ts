@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { logger } from "@/lib/logger";
 import { defineRoute, type ApiDeps } from "@/lib/api/route";
 import { createTestUser, dbReachable, deleteTestUser, testSql } from "@/lib/api/test-db";
-import { applyGradedAttempt, sharedFsrsPort } from "@/lib/state/apply-attempt.ts";
+import { applyGradedAttempt, commitSessionReviews, sharedFsrsPort } from "@/lib/state/apply-attempt.ts";
 import { createIdempotencyStore } from "@/server/privileged/idempotency-store";
 import { ensurePoolStock } from "@/server/privileged/pool-store";
 import { createSessionStore } from "@/server/privileged/session-store";
@@ -43,7 +43,11 @@ const apiDeps = (): ApiDeps => ({
 });
 
 async function build(): Promise<Task[]> {
-  await sql`update public.sessions set status = 'abandoned', ended_at = now() where user_id = ${user} and status in ('planned', 'active')`;
+  // Close the previous session as the app does (complete, then commit its review units, 06 section 3.3), so a
+  // same-day retrieval creates the FSRS card that later brings the skill back as a due review (00a M1).
+  const open = await sql<{ id: string }[]>`update public.sessions set status = 'completed', ended_at = ${clock.toISOString()}
+    where user_id = ${user} and status in ('planned', 'active') returning id`;
+  for (const s of open) await commitSessionReviews(user, s.id, clock, { store: createStateStore(sql), fsrs: await sharedFsrsPort(), params: DEFAULT_PARAMS });
   const route = defineRoute("buildSession", (c) => buildSession(c, sessionDeps), apiDeps());
   const res = await route(
     new Request("http://localhost/api/v1/sessions/build", {
@@ -143,6 +147,8 @@ describe.skipIf(!reachable)("new-skill learning loop (database)", () => {
     expect(seen.size).toBe(4);
     clock = new Date(clock.getTime() + 20 * 86_400_000);
     const next = await build();
+    // The finished loop comes back through its FSRS review, not as a new skill again (00a M1).
+    expect(next.map((t) => `${t.task_kind}:${t.skill_key}`)).toEqual([`retrieval:${skill}`]);
     for (const t of next) {
       const row = (await sql<{ template_key: string; seed: string }[]>`select template_key, seed::text as seed from public.items where id = ${t.item_id}`)[0];
       expect(seen.has(`${row?.template_key}|${row?.seed}`)).toBe(false);

@@ -450,6 +450,8 @@ Budget `B = available x (1 - 0.10)`; for `micro`, available is first capped at 2
 2b. (b2) Applied gap (design review F-01): each `reviewing` skill whose flag `needs_applied` is true (derived at read time from `mastery_rule(...).checks`, 4.3; the caller puts it in the state snapshot; its only open mastery condition is condition 6, *applied*; contract 7.2 (b), 00a G2) is *in progress* for the purposes of contract 7.2 (b): add one `problem` (`problem_short` on phone), at most `applied_gap_max[type]` per session (micro 1, focus 3, lab 0), ranked by number of hard dependents (what it unblocks), then key. It uses no new-skill slot and is placed before class (c). Vectors `pack-applied-gap-micro`, `pack-applied-gap-focus`. The practice fill (step 5) skips a second problem for a skill that already received one this way.
 3. (c) New frontier skills in ranked order (6.3), while slots remain and backlog_suspend_new is false:
         same chunk as above (try 2 faded problems in focus, fall back to 1).
+        Skip a `learning` skill whose loop_step is `done` (00a M1): its loop is complete and it waits for its
+        FSRS review; it is not taught again as new. Vector `pack-loop-done-waits`.
 4. (d) Interleaved practice: for each module (name order) with stage >= 1, not already used,
         >= 2 skills in {reviewing, mastered}: one interleaved set over the least-recently-strong skills,
         if it plus pending same-day retrievals fits.
