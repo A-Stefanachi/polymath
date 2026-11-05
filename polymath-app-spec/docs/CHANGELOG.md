@@ -6,6 +6,25 @@ Record go/no-go outcomes, lean-gate releases, and scope-down choices here before
 
 <!-- Entries appear newest first. -->
 
+## 2026-11-05: repair of the founder's order-of-operations state after #25 (founder instruction)
+
+Decision: the founder asked for the repair ("apply the repair") after #25 fixed attempts being applied with the template's kind instead of the served task's kind (00a H1).
+
+- **What was wrong:** the founder's 4 faded problems on `math.alg.order-of-operations` had been applied as `problem`s. As a result:
+  - `loop_step` stayed `faded_problem`;
+  - one `review_log` row and an FSRS card (reps 1, due 9 November) were created from faded attempts;
+  - Elo was 1390.
+- **How it was repaired:** the founder's staging rows were copied to a throwaway local PostgreSQL 17. This one skill's derived state was cleared, and the history was replayed in time order through the fixed domain code: the `completeTask` step for the worked example, `applyGradedAttempt` for each attempt, and `commitSessionReviews` for each session close, each at the event's own time.
+- **The result, written to staging through the management API:**
+  - `loop_step = retrieval_same_day`, `learning`;
+  - no card (reps 0, due null);
+  - Elo 1344;
+  - the faded-derived `review_log` row deleted;
+  - the 4 attempts' `state_applied_at` restamped.
+- **Guard:** the write was conditional on staging still holding exactly the exported 4 attempts, 7 sessions and 1 review row.
+- **Departure from the rules:** `review_log` is otherwise append-only (BL-0197 rebuilds never delete). This deletion removes a row the bug wrote, on the founder's own data, at the founder's request.
+- **Next three tasks:** the founder continues the loop (retrieval, then practice); a hosted worker; the GitHub `staging` environment.
+
 ## 2026-11-05: second content review, fixes and pool stock on staging (founder instruction)
 
 Decision: the founder asked the build agent to "review them for me on my behalf and approve", and then said "I dont run anything on my machine you do it". Two independent agents reviewed the 30 lean templates, the 19 lessons and the BL-0067 slice. The agent fixed what they found, approved the new versions on the founder's behalf, and loaded them onto staging from the cloud session.
