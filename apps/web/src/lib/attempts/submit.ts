@@ -191,7 +191,7 @@ export async function submitAttempt(ctx: ApiContext, stores: Stores = defaultSto
   const eventProps = {
     item_id: item.id,
     skill_key: task?.skill_key ?? item.skill_key,
-    task_kind: item.task_kind,
+    task_kind: task?.task_kind ?? item.task_kind, // the served kind (00a H1), else the template's
     correct: grade?.["correct"] ?? null,
     score: grade?.["score"] ?? null,
     latency_ms: body.latency_ms ?? null,

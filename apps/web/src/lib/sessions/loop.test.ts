@@ -34,7 +34,7 @@ const tpl = (k: string) => `tpl.math.bl45-${k.replaceAll("_", "")}-${tag}`;
 let user = "";
 let seed = 1;
 
-type Task = { task_kind: string; item_id: string; skill_key: string };
+type Task = { id: string; task_kind: string; item_id: string; skill_key: string };
 const apiDeps = (): ApiDeps => ({
   authenticate: async () => ({ userId: user }),
   idempotency: () => createIdempotencyStore(sql),
@@ -60,10 +60,13 @@ async function build(): Promise<Task[]> {
 async function answer(task: Task, score = 1): Promise<void> {
   clock = new Date(clock.getTime() + 60_000);
   const grade = { status: "graded", score, correct: score >= 0.8, graders: [], mastery_eligible: true };
+  // The attempt answers its session task, as submitAttempt records it: the loop follows the served task's kind,
+  // and since one template can serve every stage (00a H1) the item's template kind may differ from it.
   const row = (
     await sql<{ id: string }[]>`
-      insert into public.attempts (user_id, item_id, started_at, submitted_at, response, grade, grade_status, graded_at, client_attempt_id)
-      values (${user}, ${task.item_id}, ${new Date(clock.getTime() - 30_000).toISOString()}, ${clock.toISOString()},
+      insert into public.attempts (user_id, item_id, session_id, session_task_id, started_at, submitted_at, response, grade, grade_status, graded_at, client_attempt_id)
+      values (${user}, ${task.item_id}, (select session_id from public.session_tasks where id = ${task.id}), ${task.id},
+              ${new Date(clock.getTime() - 30_000).toISOString()}, ${clock.toISOString()},
               ${sql.json({ kind: "numeric", value: 1 })}, ${sql.json(grade)}, 'graded', ${clock.toISOString()}, ${randomUUID()}) returning id`
   )[0];
   await applyGradedAttempt(row?.id ?? "", clock, { store: createStateStore(sql), fsrs: await sharedFsrsPort(), params: DEFAULT_PARAMS });
