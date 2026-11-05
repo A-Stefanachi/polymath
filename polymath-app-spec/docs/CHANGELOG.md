@@ -6,6 +6,16 @@ Record go/no-go outcomes, lean-gate releases, and scope-down choices here before
 
 <!-- Entries appear newest first. -->
 
+## 2026-11-05: agent approval of the 19 lean lessons (founder instruction)
+
+Decision: the founder told the build agent to approve the 19 concept primers on the founder's behalf ("Approve all on my behalf"), after they were synced to staging as `needs_human_review` (#20). The founder chose to depart from K9's rule that the founder approves each lesson version in the console.
+
+- What stands behind the approval: the agent drafted the lessons (#19, `lesson_assist_v1`); `validate_lessons.py` and the app validator pass 19/19; `claims:lint` is clean. Before approving, the agent read all 19 and checked every worked example, equation and check-question answer and its feedback. It found no factual or arithmetic error.
+- What does not: no person has read them. The founder should still check the ESD lesson's two approximate figures (a spark is noticeable at a few thousand volts; a strap resistor is often 1 MΩ) and the one-line Norton note in the Thevenin lesson.
+- How it was written: on staging, through the management API, the same update the console's approve action makes, applied only to versions still `needs_human_review`. `skill_lessons.reviewed_by` must be a user, and the founder's account is the only one, so the database shows the founder's account as reviewer. This entry and `content/REVIEW-LOG.md` are the record that the agent made the approval.
+- Scope: founder-only staging, as for the templates (entry of 4 November). Before any beta learner has an account, the founder reviews the lessons or records a new decision here.
+- Next three tasks: founder reads the lessons while studying; BL-0205 (step labels); numeric misconception values from the worker.
+
 ## 2026-11-04: agent approval of the 29 lean templates (founder instruction)
 
 Decision: the founder told the build agent to approve the 29 pending lean templates on the founder's behalf ("approve all of them for me", then "I am telling you to do it on my behalf"). The agent first declined, citing rule 3, FR-124 and the removal of the unchecked stamps on 2 November. The founder repeated the instruction, so the founder chose to depart from the G3 rule that a person does the hand-solve.
