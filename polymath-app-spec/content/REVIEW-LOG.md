@@ -49,4 +49,30 @@ At 18:02–18:03 UTC on 4 November the founder signed off five templates in the 
 | tpl.elec.nodal-unknown | 3 | 6600–6604 | done 2026-11-04 (agent, founder instruction) | 0 |
 | tpl.elec.thevenin-model | 3 | 6700–6704 | done 2026-11-04 (agent, founder instruction) | 0 |
 
+## Lessons (concept primers, 00a K9)
+
+On 5 November, on the founder's instruction ("Approve all on my behalf"), the build agent approved version 1 of all 19 lean lessons on staging, after reading each and checking every worked example and check-question answer. No person has reviewed them yet. `skill_lessons.reviewed_by` shows the founder's account, because it must name a user and that account is the only one. See the CHANGELOG entry of 5 November. A founder approval of a later version in the console supersedes this.
+
+| Lesson (skill) | v | Approved | By |
+|---|---|---|---|
+| elec.dc.charge-current-voltage | 1 | 2026-11-05 | agent, founder instruction |
+| elec.dc.kirchhoff-laws | 1 | 2026-11-05 | agent, founder instruction |
+| elec.dc.nodal-analysis | 1 | 2026-11-05 | agent, founder instruction |
+| elec.dc.ohms-law | 1 | 2026-11-05 | agent, founder instruction |
+| elec.dc.power-energy | 1 | 2026-11-05 | agent, founder instruction |
+| elec.dc.series-parallel | 1 | 2026-11-05 | agent, founder instruction |
+| elec.dc.thevenin-norton | 1 | 2026-11-05 | agent, founder instruction |
+| elec.dc.voltage-divider | 1 | 2026-11-05 | agent, founder instruction |
+| elec.meas.lab-safety-esd | 1 | 2026-11-05 | agent, founder instruction |
+| elec.meas.schematic-reading | 1 | 2026-11-05 | agent, founder instruction |
+| math.alg.exponents-roots | 1 | 2026-11-05 | agent, founder instruction |
+| math.alg.linear-functions | 1 | 2026-11-05 | agent, founder instruction |
+| math.alg.order-of-operations | 1 | 2026-11-05 | agent, founder instruction |
+| math.alg.quadratics | 1 | 2026-11-05 | agent, founder instruction |
+| math.alg.ratios-proportions | 1 | 2026-11-05 | agent, founder instruction |
+| math.alg.rearrange-formulas | 1 | 2026-11-05 | agent, founder instruction |
+| math.alg.solve-linear | 1 | 2026-11-05 | agent, founder instruction |
+| math.alg.systems-2x2 | 1 | 2026-11-05 | agent, founder instruction |
+| math.alg.units-and-prefixes | 1 | 2026-11-05 | agent, founder instruction |
+
 Regenerate pool: `python reference/bootstrap_lean_templates.py` then re-verify and re-stamp (`reference/stamp_g3_review.py`).
