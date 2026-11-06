@@ -27,6 +27,8 @@ export type LessonStore = {
   newestVerified(skillKey: string): Promise<{ version: number; body: unknown } | null>;
   /** True when the user has a graded attempt on an item of the skill: the primer is then served as a recap (K8). */
   hasGradedAttempt(userId: string, skillKey: string): Promise<boolean>;
+  /** True when the user has a skill_state row that is not `unseen`: the skill's primer may be re-read (00a M3). */
+  hasStarted(userId: string, skillKey: string): Promise<boolean>;
 };
 
 /** What getTask needs: the two reads, nothing that writes. */
@@ -78,6 +80,14 @@ export function createLessonStore(sql: Sql): LessonStore {
               join public.items i on i.id = a.item_id
               join public.item_templates t on t.key = i.template_key and t.version = i.template_version
              where a.user_id = ${userId} and a.grade_status = 'graded' and t.skill_key = ${skillKey}) as ok`
+      )[0]?.ok === true,
+
+    hasStarted: async (userId, skillKey) =>
+      (
+        await sql<{ ok: boolean }[]>`
+          select exists (
+            select 1 from public.skill_state
+             where user_id = ${userId} and skill_key = ${skillKey} and mastery_state <> 'unseen') as ok`
       )[0]?.ok === true,
   };
 }

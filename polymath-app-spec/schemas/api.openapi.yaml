@@ -969,6 +969,30 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /skills/{skill_key}/lesson:
+    get:
+      tags: [Skills and graph]
+      operationId: getSkillLesson
+      summary: Re-read the concept primer of a skill I have started
+      description: |
+        00a M3: the skill's newest verified concept primer, for reading again from the skill map. Only for a skill
+        the caller has started (`skill_state.mastery_state` is not `unseen`); otherwise, and when the skill has no
+        verified lesson, `404`. `variant` is always `full`. Read-only: it writes no attempt, grade, state, session or
+        event (no `lesson_viewed`, K10), and the checks are never graded.
+      parameters:
+        - $ref: '#/components/parameters/SkillKey'
+      responses:
+        '200':
+          description: The lesson
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LessonView'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /graph:
     get:
       tags: [Skills and graph]
