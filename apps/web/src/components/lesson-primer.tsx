@@ -98,8 +98,9 @@ function CheckStep({ check, answered, onAnswer }: { check: Check; answered: stri
 }
 
 /**
- * Concept primer, doc 09 S08 card 9 (00a K8). One step at a time. Used by the runner (`learner`) and by the review
- * console (`preview`), so the founder reviews exactly what learners see. Nothing here is graded: answering a check
+ * Concept primer, doc 09 S08 card 9 (00a K8). One step at a time. Used by the runner (`learner`), and read-only
+ * (`preview`) by the review console, so the founder reviews exactly what learners see, and by re-reading from the
+ * skill map (00a M3). Nothing here is graded: answering a check
  * only reports through `onCheckAnswered`; the runner turns that into an analytics event and nothing else.
  */
 export function LessonPrimer({

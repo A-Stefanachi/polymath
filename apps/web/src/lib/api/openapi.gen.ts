@@ -192,6 +192,14 @@ export const OPERATIONS = {
     "bodyRequired": false,
     "body": null
   },
+  "getSkillLesson": {
+    "method": "GET",
+    "path": "/skills/{skill_key}/lesson",
+    "public": false,
+    "idempotent": false,
+    "bodyRequired": false,
+    "body": null
+  },
   "getGraph": {
     "method": "GET",
     "path": "/graph",

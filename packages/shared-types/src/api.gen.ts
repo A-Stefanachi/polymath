@@ -416,6 +416,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/skills/{skill_key}/lesson": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Re-read the concept primer of a skill I have started
+         * @description 00a M3: the skill's newest verified concept primer, for reading again from the skill map. Only for a skill
+         *     the caller has started (`skill_state.mastery_state` is not `unseen`); otherwise, and when the skill has no
+         *     verified lesson, `404`. `variant` is always `full`. Read-only: it writes no attempt, grade, state, session or
+         *     event (no `lesson_viewed`, K10), and the checks are never graded.
+         */
+        get: operations["getSkillLesson"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/graph": {
         parameters: {
             query?: never;
@@ -3830,6 +3853,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SkillDetail"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getSkillLesson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                skill_key: components["parameters"]["SkillKey"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The lesson */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonView"];
                 };
             };
             401: components["responses"]["Unauthorized"];

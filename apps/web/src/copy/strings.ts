@@ -474,6 +474,13 @@ export const lists = {
 } as const;
 
 // S14 Skill map (/map), doc 09.
+// Re-reading a concept primer from the skill map (00a M3).
+export const lessonReader = {
+  title: "Lesson",
+  none: "There is no lesson to read again for this skill. Lessons open here once you have started the skill.",
+  back: "Back to the map",
+} as const;
+
 export const skillMap = {
   title: "Skill map",
   intro: (started: number, total: number) => `${started} of ${total} skills started`,
@@ -510,6 +517,7 @@ export const skillMap = {
   reviewingNote: "Reviewing: your recall is being checked again over the next days.",
   appliedNote: "You have the recall evidence. One worked problem, a debugging case or a checkpoint item completes it.",
   practiseThis: "Practise this",
+  readLesson: "Read the lesson",
   nothingToday: "Nothing of this skill fits a session today. Practise all due on Today builds one from what is ready.",
   practiseUnavailable: "Practice opens when the prerequisites above are solid.",
   stubNote: "Content for this skill is not written yet.",

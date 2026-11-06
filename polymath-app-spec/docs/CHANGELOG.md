@@ -6,6 +6,15 @@ Record go/no-go outcomes, lean-gate releases, and scope-down choices here before
 
 <!-- Entries appear newest first. -->
 
+## 2026-11-06: lessons can be read again from the skill map (00a M3, founder decision)
+
+Decision: the founder asked to "open and read lessons again" and chose "Skills I have started" and "Nothing recorded".
+
+- **API:** new read-only operation `getSkillLesson` (`GET /skills/{skill_key}/lesson`), 404 unless the caller has started the skill and it has a verified lesson.
+- **UI:** "Read the lesson" on a started skill's detail opens `/lessons/{skill_key}` with the primer in read-only mode.
+- **Evidence:** `reread.test.ts` against a local Supabase (served version and fields, nothing written, 404 cases, strict query), its started-check guard shown failing once.
+- **Next three tasks:** deploy to staging; the founder re-reads a lesson on the phone; the e2e failures on main (worked-example flows).
+
 ## 2026-11-06: one session can master a skill; "Practise this" serves a finished loop early (00a M2, founder decision)
 
 Decision: the founder asked that qualifying answers given before the review unlock the next skills ("if I provide the qualified answers before the review you need to let me go to the next lesson / module") and chose "Same session is enough" and "Practise this only".

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { StatusChip } from "@/components/ui/status-chip";
 import { lists, skillMap as t } from "@/copy/strings";
 import { formatDay } from "@/lib/views/format";
@@ -93,6 +94,16 @@ export function SkillDetail({
       ) : null}
 
       {skill.practisable ? <PractiseThis skill={skill} /> : null}
+      {/* 00a M3: a started skill's primer can be read again; the page says so when the skill has none. */}
+      {skill.mastery !== "unseen" ? (
+        <Link
+          href={`/lessons/${encodeURIComponent(skill.key)}`}
+          aria-label={`${t.readLesson}: ${skill.title}`}
+          className="inline-flex min-h-12 items-center self-start font-semibold text-primary underline underline-offset-4"
+        >
+          {t.readLesson}
+        </Link>
+      ) : null}
     </section>
   );
 }
