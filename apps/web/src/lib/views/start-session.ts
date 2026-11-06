@@ -19,9 +19,8 @@ export function currentContext(): "phone" | "desktop" {
 }
 
 /**
- * Whether a focus build would plan anything, asked as a dry run (G16: nothing is written or reserved). A learning
- * skill whose loop is done waits for its review (00a M1) and plans nothing, so the map shows its review date
- * instead of a button that can only refuse. Any refusal or network error is "unknown" and the button stays.
+ * Whether a focus build would plan anything, asked as a dry run (G16: nothing is written or reserved), so the map
+ * does not offer a button that can only refuse. Any refusal or network error is "unknown" and the button stays.
  */
 export async function previewFocus(body: StartBody): Promise<"empty" | "plannable" | "unknown"> {
   try {

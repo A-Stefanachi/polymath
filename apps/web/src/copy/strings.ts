@@ -510,8 +510,6 @@ export const skillMap = {
   reviewingNote: "Reviewing: your recall is being checked again over the next days.",
   appliedNote: "You have the recall evidence. One worked problem, a debugging case or a checkpoint item completes it.",
   practiseThis: "Practise this",
-  // 00a M1: a learning skill whose lessons are done waits for its review; there is nothing to practise before then.
-  nothingUntilReview: (day: string) => `You have done the lessons for this skill. It comes back for review on ${day}.`,
   nothingToday: "Nothing of this skill fits a session today. Practise all due on Today builds one from what is ready.",
   practiseUnavailable: "Practice opens when the prerequisites above are solid.",
   stubNote: "Content for this skill is not written yet.",

@@ -188,7 +188,7 @@ All values are configuration. "Owner" is the document that is canonical if value
 | PRM-06 | Interleave entry criterion | ≥ 2 correct with `max_hint_level ≤ 1` per skill | 1–4 | Blocked-first staging [inf] | 02 |
 | PRM-07 | Confusable set size | 3 | 2–4 | Dose not established [inf] | 02 |
 | PRM-08 | Interleaved share of module practice | 60% | 30–80% | Heuristic [P]; varied in EXP-002 only as arm (blocked vs interleaved), not as dose | 02 |
-| PRM-09 | Mastery rule | ≥ 3 correct (score ≥ 0.8) unaided (hints ≤ 1) attempts, ≥ 2 local days with the first and last attempt ≥ 2 calendar days apart, ≥ 2 variants from ≥ 2 distinct templates when the skill has two or more verified templates (00a G3), plus conditions 4–6 of 06 section 4.2 | per 06 | Contract 7.5; successive relearning logic [R] | 06 |
+| PRM-09 | Mastery rule | ≥ 3 correct (score ≥ 0.8) unaided (hints ≤ 1) attempts (any days: 00a M2 dropped the 2-day and 2-calendar-day-span conditions of 00a G3), ≥ 2 variants from ≥ 2 distinct templates when the skill has two or more verified templates (00a G3), plus conditions 4–6 of 06 section 4.2 | per 06 | Contract 7.5; successive relearning logic [R] | 06 |
 | PRM-10 | Checkpoint cadence and size | Module end and ≤ 14 days; 8–12 items; ≤ 25 min; ≥ 50% from skills last practised ≥ 14 d | 7–28 d | Contract 7.7; sizes [P] | 02 |
 | PRM-11 | Delayed test lag | 56 days (±7) | 56–84 | "8+ weeks" in Report B experiment template; Sirius-style retention at 2+ months [V abstract] | 11 |
 | PRM-12 | Tutor policy | Attempt or ≥ 20 words first; one level per turn; proactive after 2 wrong or 3 min; 100 messages per day | 10–200/day | Harvard design [V secondary], Bastani guardrails [V]; thresholds [P] | tutor-policy document |

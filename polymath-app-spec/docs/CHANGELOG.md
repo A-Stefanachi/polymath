@@ -6,6 +6,16 @@ Record go/no-go outcomes, lean-gate releases, and scope-down choices here before
 
 <!-- Entries appear newest first. -->
 
+## 2026-11-06: one session can master a skill; "Practise this" serves a finished loop early (00a M2, founder decision)
+
+Decision: the founder asked that qualifying answers given before the review unlock the next skills ("if I provide the qualified answers before the review you need to let me go to the next lesson / module") and chose "Same session is enough" and "Practise this only".
+
+- **Mastery rule:** `mastery_min_days` 2 → 1 and `mastery_min_span_days` 2 → 0 in the reference and in `packages/scheduler`; the other conditions of 06 section 4.2 are unchanged. Vectors: `mast-one-day` now passes, five mechanism vectors pass the G3 parameters explicitly, `mast-project-credit-only` changes its `days` check only, new `mast-one-day-param`; 168 vectors.
+- **Early practice:** a focus build on a `learning` skill whose loop is done plans it as a review before its due date; builds without a focus still wait (M1).
+- **Evidence:** reference check 168/168 and selftest; scheduler 343 tests; web 456 tests against a local Supabase (none skipped); spec validators pass.
+- **Risk to watch:** `mastered` now means three short-term successes; checkpoint accuracy of mastered skills (06 section 12) is the check. The 06 section 14 workload model was not re-run.
+- **Next three tasks:** deploy to staging; the founder answers one more Order of operations question through "Practise this"; re-run the 06 section 14 simulation under M2.
+
 ## 2026-11-05: repair of the founder's order-of-operations state after #25 (founder instruction)
 
 Decision: the founder asked for the repair ("apply the repair") after #25 fixed attempts being applied with the template's kind instead of the served task's kind (00a H1).

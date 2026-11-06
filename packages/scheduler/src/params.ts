@@ -96,9 +96,9 @@ export const DEFAULT_PARAMS: SchedulerParams = {
   easy_min_confidence: 4,
   easy_min_reps: 2,
   mastery_min_correct: 3,
-  mastery_min_days: 2,
+  mastery_min_days: 1, // 00a M2: one session can master a skill (was 2 distinct local days)
   mastery_min_variants: 2,
-  mastery_min_span_days: 2,
+  mastery_min_span_days: 0, // 00a M2: off (00a G3 had 2 calendar days)
   mastery_min_templates: 2,
   decay_threshold_r: 0.7,
   prereq_r_threshold: 0.8,

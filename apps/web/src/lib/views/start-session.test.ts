@@ -28,8 +28,8 @@ describe("startSession", () => {
   });
 });
 
-// Doc 09 S14: a learning skill whose loop is done waits for its FSRS review (00a M1), so "Practise this" planned
-// nothing and the map offered a button that could only refuse. The map now asks the builder first (dry run, G16).
+// Doc 09 S14: when a focus build would plan nothing, the map offered a button that could only refuse. The map now
+// asks the builder first (dry run, G16).
 describe("previewFocus", () => {
   afterEach(() => vi.unstubAllGlobals());
   const body = { available_minutes: 15, context: "desktop", skill_focus: "math.alg.s" } as const;
