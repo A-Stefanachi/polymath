@@ -31,11 +31,18 @@ describe("isQualifying limits", () => {
   });
 });
 
+// The 00a G3 rule (2 distinct days, first and last qualifying attempts 2 calendar days apart), opt-in since 00a M2.
+const G3 = { ...DEFAULT_PARAMS, mastery_min_days: 2, mastery_min_span_days: 2 };
+
 describe("masteryRule limits", () => {
-  it("is met with 3 qualifying attempts spanning exactly 2 days, not with 2 or a 1-day span", () => {
-    expect(masteryRule([att(1), att(2), att(3)], "L1").met).toBe(true);
-    expect(masteryRule([att(1), att(2)], "L1").checks.count).toBe(false);
-    const short = masteryRule([att(1), att(2), att(2, { item_id: "x" })], "L1");
+  it("00a M2: is met with 3 qualifying attempts in one session, not with 2", () => {
+    const sameDay = [1, 2, 3].map((n) => att(n, { submitted_at: `2026-10-11T09:0${n}:00Z` }));
+    expect(masteryRule(sameDay, "L1").met).toBe(true);
+    expect(masteryRule(sameDay.slice(0, 2), "L1").checks.count).toBe(false);
+  });
+  it("with the G3 parameters, is met with 3 qualifying attempts spanning exactly 2 days, not with a 1-day span", () => {
+    expect(masteryRule([att(1), att(2), att(3)], "L1", { params: G3 }).met).toBe(true);
+    const short = masteryRule([att(1), att(2), att(2, { item_id: "x" })], "L1", { params: G3 });
     expect(short.checks.days).toBe(false); // 2 days with a 1-day span
   });
   it("uses the learner-local calendar day", () => {
@@ -51,35 +58,35 @@ describe("masteryRule limits", () => {
 });
 
 describe("BL-0185 span and template diversity (00a G3)", () => {
-  const P0 = { ...DEFAULT_PARAMS, mastery_min_span_days: 0 };
   const three = (times: readonly string[], key: (n: number) => string = () => "t") =>
     times.map((s, i) => att(i + 1, { submitted_at: s, template_key: key(i) }));
 
-  it("defaults: span 2 days and 2 templates", () => {
-    expect(DEFAULT_PARAMS.mastery_min_span_days).toBe(2);
+  it("defaults (00a M2): no span, one day, 2 templates", () => {
+    expect(DEFAULT_PARAMS.mastery_min_span_days).toBe(0);
+    expect(DEFAULT_PARAMS.mastery_min_days).toBe(1);
     expect(DEFAULT_PARAMS.mastery_min_templates).toBe(2);
   });
-  it("does not count 23:50 and 00:10 as a 2-day span, and counts a full 2-day gap", () => {
+  it("with the G3 parameters, does not count 23:50 and 00:10 as a 2-day span, and counts a full 2-day gap", () => {
     const gaming = three(["2026-10-10T09:00:00Z", "2026-10-10T23:50:00Z", "2026-10-11T00:10:00Z"]);
-    const r = masteryRule(gaming, "L1");
+    const r = masteryRule(gaming, "L1", { params: G3 });
     expect(r.days).toBe(2);
     expect(r.checks.days).toBe(false);
     expect(r.met).toBe(false);
     const ok = three(["2026-10-10T23:50:00Z", "2026-10-11T12:00:00Z", "2026-10-12T00:10:00Z"]);
-    expect(masteryRule(ok, "L1").checks.days).toBe(true);
+    expect(masteryRule(ok, "L1", { params: G3 }).checks.days).toBe(true);
   });
-  it("measures the span in learner-local days with a timezone offset (and across a DST change)", () => {
+  it("with the G3 parameters, measures the span in learner-local days with a timezone offset", () => {
     // UTC days 10 and 12 (span 2). At UTC-2 the last attempt is 23:00 on the 11th (span 1).
     const t = three(["2026-10-10T09:00:00Z", "2026-10-10T12:00:00Z", "2026-10-12T01:00:00Z"]);
-    expect(masteryRule(t, "L1", { tzOffsetMin: 0 }).checks.days).toBe(true);
-    expect(masteryRule(t, "L1", { tzOffsetMin: -120 }).checks.days).toBe(false);
+    expect(masteryRule(t, "L1", { tzOffsetMin: 0, params: G3 }).checks.days).toBe(true);
+    expect(masteryRule(t, "L1", { tzOffsetMin: -120, params: G3 }).checks.days).toBe(false);
     // At UTC+2 the first attempt (09:00Z -> 11:00) stays on the 10th and the last (03:00) on the 12th.
-    expect(masteryRule(t, "L1", { tzOffsetMin: 120 }).checks.days).toBe(true);
+    expect(masteryRule(t, "L1", { tzOffsetMin: 120, params: G3 }).checks.days).toBe(true);
   });
-  it("mastery_min_span_days = 0 restores the v1.1 behaviour", () => {
+  it("mastery_min_span_days = 0 with two days restores the v1.1 behaviour", () => {
     const gaming = three(["2026-10-10T09:00:00Z", "2026-10-10T23:50:00Z", "2026-10-11T00:10:00Z"]);
-    expect(masteryRule(gaming, "L1", { params: P0 }).met).toBe(true);
-    expect(masteryRule(gaming, "L1").met).toBe(false);
+    expect(masteryRule(gaming, "L1", { params: { ...G3, mastery_min_span_days: 0 } }).met).toBe(true);
+    expect(masteryRule(gaming, "L1", { params: G3 }).met).toBe(false);
   });
   it("a single-template skill is not blocked; two templates need a second one used", () => {
     const one = [1, 2, 3].map((n) => att(n, { template_key: "only" }));

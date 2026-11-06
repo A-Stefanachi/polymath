@@ -30,6 +30,11 @@ export function isDueForReview(st: Pick<BuildSnapshot["states"][number], "master
   return (st.masteryState === "reviewing" || st.masteryState === "mastered" || st.masteryState === "decayed") && st.due !== null && st.due <= now;
 }
 
+/** A `learning` skill whose loop is done and that trace-back does not block: "Practise this" may serve it early (00a M2). */
+export function isEarlyPractice(st: Pick<BuildSnapshot["states"][number], "masteryState" | "loopStep" | "blockedBy">): boolean {
+  return st.masteryState === "learning" && st.loopStep === "done" && st.blockedBy.length === 0;
+}
+
 export class BuildInputError extends Error {
   readonly field: string;
   constructor(field: string, message: string) {
@@ -160,7 +165,11 @@ export function buildPackSetup(
   // "Practise now" on a due review (00a J9, doc 09 S17 AC 2): the session is that skill's review; the other
   // skills' reviews wait for the next build instead of crowding it out of a short window.
   const focusState = focusSkill === undefined ? undefined : stateOf.get(focusSkill);
-  if (focusState && isDueForReview(focusState, now)) {
+  // 00a M2: "Practise this" on a learning skill whose loop is done serves it as a review before its due date, so
+  // the learner can supply the qualifying attempts now. Builds without a focus still wait for the due date (M1).
+  const early = focusSkill !== undefined && focusState !== undefined && isEarlyPractice(focusState) && states[focusSkill] !== undefined;
+  if (early) states[focusSkill] = { ...(states[focusSkill] as PackSkillState), due: true };
+  if (focusState && (early || isDueForReview(focusState, now))) {
     for (const [key, st] of Object.entries(states)) if (key !== focusSkill) states[key] = { ...st, due: false };
   }
   return {

@@ -18,6 +18,26 @@ export function currentContext(): "phone" | "desktop" {
   return typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches ? "desktop" : "phone";
 }
 
+/**
+ * Whether a focus build would plan anything, asked as a dry run (G16: nothing is written or reserved), so the map
+ * does not offer a button that can only refuse. Any refusal or network error is "unknown" and the button stays.
+ */
+export async function previewFocus(body: StartBody): Promise<"empty" | "plannable" | "unknown"> {
+  try {
+    const response = await fetch("/api/v1/sessions/build", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...body, dry_run: true }),
+    });
+    if (!response.ok) return "unknown";
+    const preview = (await response.json()) as { tasks?: unknown };
+    if (!Array.isArray(preview.tasks)) return "unknown";
+    return preview.tasks.length === 0 ? "empty" : "plannable";
+  } catch {
+    return "unknown";
+  }
+}
+
 export async function startSession(body: StartBody): Promise<StartResult> {
   let response: Response;
   try {

@@ -47,9 +47,9 @@ PARAMS: Dict[str, Any] = {
     "easy_min_confidence": 4,
     "easy_min_reps": 2,
     "mastery_min_correct": 3,
-    "mastery_min_days": 2,
+    "mastery_min_days": 1,        # 00a M2: one session can master a skill (was 2 distinct local days)
     "mastery_min_variants": 2,
-    "mastery_min_span_days": 2,   # 00a G3: calendar days (learner-local) between the first and the last qualifying attempt; 0 = off (rule of contract v1.1)
+    "mastery_min_span_days": 0,   # 00a M2: off (00a G3 had 2 calendar days, learner-local, between the first and the last qualifying attempt)
     "mastery_min_templates": 2,   # 00a G3: distinct verified templates among qualifying attempts, required only when the skill has >= 2 verified templates
     "decay_threshold_r": 0.70,
     "prereq_r_threshold": 0.80,
@@ -1207,7 +1207,8 @@ def vector_inputs() -> List[Dict[str, Any]]:
     # mastery
     ok3 = [A(24, "i1"), A(25, "i2", kind="retrieval"), A(27, "i3")]
     add("mast-met", "mastery_rule", {"attempts": ok3, "tier": "L1"}, "3 correct, 3 days, 3 variants")
-    add("mast-one-day", "mastery_rule", {"attempts": [A(24, "i1"), A(24, "i2", sub="10:00:00"), A(24, "i3", sub="11:00:00")], "tier": "L1"}, "same day: fails days")
+    add("mast-one-day", "mastery_rule", {"attempts": [A(24, "i1"), A(24, "i2", sub="10:00:00"), A(24, "i3", sub="11:00:00")], "tier": "L1"}, "00a M2: three qualifying attempts in one session pass (they failed the days check before M2)")
+    add("mast-one-day-param", "mastery_rule", {"attempts": [A(24, "i1"), A(24, "i2", sub="10:00:00"), A(24, "i3", sub="11:00:00")], "tier": "L1", "params": {"mastery_min_days": 2}}, "mastery_min_days = 2 (the rule before 00a M2): the same attempts fail the days check")
     add("mast-one-variant", "mastery_rule", {"attempts": [A(24, "i1"), A(25, "i1"), A(27, "i1")], "tier": "L1"}, "same item: fails variants")
     add("mast-hint2", "mastery_rule", {"attempts": [A(24, "i1"), A(25, "i2", hint=2, unaided=False), A(27, "i3")], "tier": "L1"}, "hint 2 attempt does not qualify")
     add("mast-last-fail", "mastery_rule", {"attempts": ok3 + [A(28, "i4", score=0.2)], "tier": "L1"}, "recent unaided failure blocks")
@@ -1219,10 +1220,11 @@ def vector_inputs() -> List[Dict[str, Any]]:
     add("mast-span-2d-ok", "mastery_rule", {"attempts": [A(24, "i1"), A(25, "i2"), A(27, "i3")], "tier": "L1", "params": {"mastery_min_span_days": 2}}, "proposed span parameter: attempts on day 24, 25, 27 pass")
     # --- contract v1.2 (00a G3): span default 2 calendar days; template diversity
     gam = [A(24, "i1", sub="23:50:00"), A(25, "i2", sub="00:10:00"), A(25, "i3", sub="09:00:00")]
-    add("mast-span-default-blocks", "mastery_rule", {"attempts": gam, "tier": "L1"}, "00a G3: with the default span of 2 calendar days, qualifying attempts on day 24 and day 25 only fail the days check, even 20 minutes apart")
+    G3 = {"mastery_min_days": 2, "mastery_min_span_days": 2}  # the 00a G3 rule, now opt-in (00a M2); these vectors test the mechanism
+    add("mast-span-default-blocks", "mastery_rule", {"attempts": gam, "tier": "L1", "params": G3}, "00a G3 (parameters passed since 00a M2 made 0 the default): with a span of 2 calendar days, qualifying attempts on day 24 and day 25 only fail the days check, even 20 minutes apart")
     add("mast-span-exactly-2", "mastery_rule", {"attempts": [A(24, "i1"), A(25, "i2"), A(26, "i3")], "tier": "L1"}, "00a G3: first and last qualifying attempt exactly 2 calendar days apart pass")
-    add("mast-span-1-day-short", "mastery_rule", {"attempts": [A(24, "i1"), A(25, "i2", sub="08:00:00"), A(25, "i3", sub="21:00:00")], "tier": "L1"}, "00a G3: three attempts on two consecutive days fail the span (1 calendar day)")
-    add("mast-span-local-days", "mastery_rule", {"attempts": [A(24, "i1", sub="23:30:00"), A(25, "i2", sub="12:00:00"), A(26, "i3", sub="00:10:00")], "tier": "L1", "tz_offset_min": 120}, "00a G3: the span is counted in the learner's local days: UTC days 24 to 26 are local days 25 to 26, span 1, fails")
+    add("mast-span-1-day-short", "mastery_rule", {"attempts": [A(24, "i1"), A(25, "i2", sub="08:00:00"), A(25, "i3", sub="21:00:00")], "tier": "L1", "params": G3}, "00a G3 parameters: three attempts on two consecutive days fail the span (1 calendar day)")
+    add("mast-span-local-days", "mastery_rule", {"attempts": [A(24, "i1", sub="23:30:00"), A(25, "i2", sub="12:00:00"), A(26, "i3", sub="00:10:00")], "tier": "L1", "tz_offset_min": 120, "params": G3}, "00a G3 parameters: the span is counted in the learner's local days: UTC days 24 to 26 are local days 25 to 26, span 1, fails")
     tpl1 = [A(24, "i1", tpl="t1"), A(25, "i2", tpl="t1"), A(27, "i3", tpl="t1")]
     add("mast-tpl-single-blocks", "mastery_rule", {"attempts": tpl1, "tier": "L1", "n_verified_templates": 2}, "00a G3: the skill has 2 verified templates but every qualifying attempt used the same one: variants check fails")
     add("mast-tpl-two-ok", "mastery_rule", {"attempts": [A(24, "i1", tpl="t1"), A(25, "i2", tpl="t1"), A(27, "i3", tpl="t2")], "tier": "L1", "n_verified_templates": 2}, "00a G3: two distinct templates among the qualifying attempts pass")
@@ -1235,12 +1237,12 @@ def vector_inputs() -> List[Dict[str, Any]]:
     r3 = [A(24, "i1", kind="retrieval"), A(25, "i2", kind="retrieval"), A(27, "i3", kind="retrieval")]
     add("needs-applied-yes", "needs_applied", {"attempts": r3, "tier": "L1", "mastery_state": "reviewing"}, "00a G2: reviewing, three correct retrievals on three days, no applied attempt: the applied condition is the only gap")
     add("needs-applied-count-also-short", "needs_applied", {"attempts": r3[:2], "tier": "L1", "mastery_state": "reviewing"}, "two attempts only: count is also unmet, so not flagged yet")
-    add("needs-applied-span-also-short", "needs_applied", {"attempts": [A(24, "i1", kind="retrieval"), A(25, "i2", kind="retrieval"), A(25, "i3", kind="retrieval", sub="15:00:00")], "tier": "L1", "mastery_state": "reviewing"}, "span also unmet: not flagged")
+    add("needs-applied-span-also-short", "needs_applied", {"attempts": [A(24, "i1", kind="retrieval"), A(25, "i2", kind="retrieval"), A(25, "i3", kind="retrieval", sub="15:00:00")], "tier": "L1", "mastery_state": "reviewing", "params": G3}, "00a G3 parameters: span also unmet: not flagged")
     add("needs-applied-mastered", "needs_applied", {"attempts": ok3, "tier": "L1", "mastery_state": "mastered"}, "only reviewing skills are flagged")
     add("needs-applied-project-credit", "needs_applied", {"attempts": r3, "tier": "L1", "mastery_state": "reviewing", "project_credit_applied": True}, "accepted project credit satisfies the applied condition: nothing missing, not flagged")
     add("needs-applied-l0-skill", "needs_applied", {"attempts": r3, "tier": "L0", "mastery_state": "reviewing"}, "an L0 target never needs an applied attempt")
     add("needs-applied-no-applied-template", "needs_applied", {"attempts": r3, "tier": "L1", "mastery_state": "reviewing", "has_applied": False}, "no applied template exists: condition waived, not flagged")
-    add("mast-day-boundary-tz2", "mastery_rule", {"attempts": [A(24, "i1", sub="23:30:00"), A(25, "i2", sub="00:10:00"), A(25, "i3", sub="09:00:00")], "tier": "L1", "tz_offset_min": 120}, "UTC+2: all three fall on local day 25")
+    add("mast-day-boundary-tz2", "mastery_rule", {"attempts": [A(24, "i1", sub="23:30:00"), A(25, "i2", sub="00:10:00"), A(25, "i3", sub="09:00:00")], "tier": "L1", "tz_offset_min": 120, "params": {"mastery_min_days": 2, "mastery_min_span_days": 0}}, "UTC+2: all three fall on local day 25 (mastery_min_days = 2 passed since 00a M2)")
     add("mast-l0-items-for-l1", "mastery_rule", {"attempts": [A(24, "i1", tier="L0"), A(25, "i2", tier="L0"), A(27, "i3", tier="L0")], "tier": "L1"}, "L0 items do not qualify for an L1 skill")
     add("state-unseen", "mastery_state", {"attempts": [], "tier": "L1", "retrievability": None, "ever_mastered": False, "last_rating": None}, "no attempts")
     add("state-learning", "mastery_state", {"attempts": [A(24, "i1")], "tier": "L1", "retrievability": 0.95, "ever_mastered": False, "last_rating": 3}, "one qualifying attempt")
@@ -1454,7 +1456,8 @@ def selftest() -> int:
         assert weekly_plan_slots(w)["planned_total_min"] <= w
     assert weekly_plan_slots(480)["planned_total_min"] == 460
     # contract v1.2 additions (00a G1-G6)
-    assert PARAMS["mastery_min_span_days"] == 2 and PARAMS["mastery_min_templates"] == 2
+    # 00a M2 (6 Nov 2026) replaced the G3 span of 2 days and the 2-day rule: one session can master a skill
+    assert PARAMS["mastery_min_span_days"] == 0 and PARAMS["mastery_min_days"] == 1 and PARAMS["mastery_min_templates"] == 2
     assert PARAMS["desired_retention_initial"] == 0.85 and PARAMS["latency_min_obs"] == 20
     assert desired_retention(0, None) == 0.85 and desired_retention(9, 0.0) == 0.90 and desired_retention(9, 0.2) == 0.85
     pl = {"mastery_state": "reviewing", "retrievability": 0.3, "tier_attained": "L0", "source": "placement", "placement_age_days": 3}

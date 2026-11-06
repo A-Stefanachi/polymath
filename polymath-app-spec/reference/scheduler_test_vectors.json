@@ -1,5 +1,5 @@
 {
- "count": 167,
+ "count": 168,
  "generated_by": "reference/scheduler_reference.py generate",
  "params_version": "06-spec-1.0",
  "reference_date": "2026-10-31",
@@ -787,12 +787,12 @@
      "applied": true,
      "constructed_response": true,
      "count": true,
-     "days": false,
+     "days": true,
      "last_two_not_failed": true,
      "variants": true
     },
     "days": 1,
-    "met": false,
+    "met": true,
     "qualifying": 3,
     "variants": 3
    },
@@ -833,7 +833,64 @@
     ],
     "tier": "L1"
    },
-   "note": "same day: fails days"
+   "note": "00a M2: three qualifying attempts in one session pass (they failed the days check before M2)"
+  },
+  {
+   "expected": {
+    "checks": {
+     "applied": true,
+     "constructed_response": true,
+     "count": true,
+     "days": false,
+     "last_two_not_failed": true,
+     "variants": true
+    },
+    "days": 1,
+    "met": false,
+    "qualifying": 3,
+    "variants": 3
+   },
+   "fn": "mastery_rule",
+   "id": "mast-one-day-param",
+   "input": {
+    "attempts": [
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i1",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T09:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i2",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T10:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     },
+     {
+      "grader_type": "exact_numeric",
+      "item_id": "i3",
+      "item_tier": "L1",
+      "max_hint_level": 0,
+      "score": 1.0,
+      "submitted_at": "2026-10-24T11:00:00Z",
+      "task_kind": "problem",
+      "unaided": true
+     }
+    ],
+    "params": {
+     "mastery_min_days": 2
+    },
+    "tier": "L1"
+   },
+   "note": "mastery_min_days = 2 (the rule before 00a M2): the same attempts fail the days check"
   },
   {
    "expected": {
@@ -1395,9 +1452,13 @@
       "unaided": true
      }
     ],
+    "params": {
+     "mastery_min_days": 2,
+     "mastery_min_span_days": 2
+    },
     "tier": "L1"
    },
-   "note": "00a G3: with the default span of 2 calendar days, qualifying attempts on day 24 and day 25 only fail the days check, even 20 minutes apart"
+   "note": "00a G3 (parameters passed since 00a M2 made 0 the default): with a span of 2 calendar days, qualifying attempts on day 24 and day 25 only fail the days check, even 20 minutes apart"
   },
   {
    "expected": {
@@ -1503,9 +1564,13 @@
       "unaided": true
      }
     ],
+    "params": {
+     "mastery_min_days": 2,
+     "mastery_min_span_days": 2
+    },
     "tier": "L1"
    },
-   "note": "00a G3: three attempts on two consecutive days fail the span (1 calendar day)"
+   "note": "00a G3 parameters: three attempts on two consecutive days fail the span (1 calendar day)"
   },
   {
    "expected": {
@@ -1557,10 +1622,14 @@
       "unaided": true
      }
     ],
+    "params": {
+     "mastery_min_days": 2,
+     "mastery_min_span_days": 2
+    },
     "tier": "L1",
     "tz_offset_min": 120
    },
-   "note": "00a G3: the span is counted in the learner's local days: UTC days 24 to 26 are local days 25 to 26, span 1, fails"
+   "note": "00a G3 parameters: the span is counted in the learner's local days: UTC days 24 to 26 are local days 25 to 26, span 1, fails"
   },
   {
    "expected": {
@@ -2058,9 +2127,13 @@
      }
     ],
     "mastery_state": "reviewing",
+    "params": {
+     "mastery_min_days": 2,
+     "mastery_min_span_days": 2
+    },
     "tier": "L1"
    },
-   "note": "span also unmet: not flagged"
+   "note": "00a G3 parameters: span also unmet: not flagged"
   },
   {
    "expected": false,
@@ -2282,10 +2355,14 @@
       "unaided": true
      }
     ],
+    "params": {
+     "mastery_min_days": 2,
+     "mastery_min_span_days": 0
+    },
     "tier": "L1",
     "tz_offset_min": 120
    },
-   "note": "UTC+2: all three fall on local day 25"
+   "note": "UTC+2: all three fall on local day 25 (mastery_min_days = 2 passed since 00a M2)"
   },
   {
    "expected": {
@@ -2901,7 +2978,7 @@
      "applied": true,
      "constructed_response": true,
      "count": false,
-     "days": false,
+     "days": true,
      "last_two_not_failed": true,
      "variants": false
     },

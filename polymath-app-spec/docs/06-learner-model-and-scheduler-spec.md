@@ -208,7 +208,7 @@ FSRS was fitted on identical cards. A fresh variant tests *transfer to new numbe
 A skill is **mastered** when, counting only attempts since `epoch_start` (4.4), **all** of the following hold at tier `T*`:
 
 1. at least **3** qualifying attempts;
-2. on at least **2** distinct local days, **and the first and last qualifying attempts are at least `mastery_min_span_days` = 2 learner-local calendar days apart** (00a G3; calendar-date difference in `profiles.timezone`, so the minimum elapsed time is just over 24 hours);
+2. on at least `mastery_min_days` distinct local days, **and the first and last qualifying attempts are at least `mastery_min_span_days` learner-local calendar days apart** (00a G3; calendar-date difference in `profiles.timezone`). **00a M2 (6 Nov 2026) sets the defaults to 1 day and span 0, so this condition is off and one session can master a skill;** G3 had 2 and 2;
 3. on at least **2** distinct item variants (distinct `items.id`), **drawn from at least `mastery_min_templates` = 2 distinct verified templates when the skill has 2 or more verified templates** (00a G3; the caller passes `n_verified_templates` and each attempt carries `template_key`; with one verified template the condition is waived, and an attempt without a `template_key` cannot show diversity);
 4. the **last two graded unaided review-eligible attempts** both have `score >= 0.5` (a fresh failure blocks mastery until recovered);
 5. **constructed-response**: at least one qualifying attempt has `grader_type != multiple_choice`, unless the skill has no verified non-MC template;

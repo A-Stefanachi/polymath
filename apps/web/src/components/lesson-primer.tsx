@@ -171,12 +171,15 @@ export function LessonPrimer({
             <LessonMarkdown source={step.screen.body_md} />
             {step.screen.figure && (
               // An image data URI keeps the SVG inert; the alt text is the text alternative (WCAG 1.1.1).
+              // Inside an <img>, the figure's currentColor resolves to black whatever the theme, so the
+              // panel is always white (black ink on a dark surface was unreadable). The drawing is scaled
+              // up to the column width because figures are authored at about 300 px wide.
               <Image
                 unoptimized
                 src={svgDataUri(step.screen.figure.svg)}
                 alt={step.screen.figure.alt}
                 {...svgSize(step.screen.figure.svg)}
-                className="h-auto max-w-full self-start bg-surface p-2"
+                className="h-auto w-full max-w-xl self-start border-2 border-ink bg-white p-3"
               />
             )}
           </>

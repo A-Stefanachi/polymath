@@ -459,7 +459,7 @@ export const lists = {
   sessionOpen: "You already have a session open. Resume it from Today.",
   sessionOpenLink: "Go to Today",
   poolEmpty: "Practice items are being prepared. Try again in a little while.",
-  focusUnavailable: "This skill cannot be practised on its own just now. Practise all due builds a session that includes it.",
+  focusUnavailable: "Nothing of this skill fits a session just now. Practise all due on Today builds one from what is ready.",
   startFailed: "A session could not be built just now. Try again.",
   // Skill-state words, doc 09 section 3.2.
   stateReviewing: "Reviewing",
@@ -510,6 +510,7 @@ export const skillMap = {
   reviewingNote: "Reviewing: your recall is being checked again over the next days.",
   appliedNote: "You have the recall evidence. One worked problem, a debugging case or a checkpoint item completes it.",
   practiseThis: "Practise this",
+  nothingToday: "Nothing of this skill fits a session today. Practise all due on Today builds one from what is ready.",
   practiseUnavailable: "Practice opens when the prerequisites above are solid.",
   stubNote: "Content for this skill is not written yet.",
   recommendedLabel: "Recommended first",
