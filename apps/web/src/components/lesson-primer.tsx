@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { lesson as t } from "@/copy/strings";
+import { svgDataUri, svgSize } from "@/lib/lessons/figure";
 import { Inline, LessonMarkdown } from "@/lib/lessons/markdown";
 
 export type LessonView = components["schemas"]["LessonView"];
@@ -26,20 +27,6 @@ export function stepsOf(lesson: LessonView): Step[] {
   ];
 }
 
-/** A figure is shown only as an image: SVG text is never put into the page as markup, so no script in it can run. */
-export function svgDataUri(svg: string): string {
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-}
-
-/** The width and height attributes of the root element, for the image box; a default when they are missing. */
-export function svgSize(svg: string): { width: number; height: number } {
-  const root = /<svg\b[^>]*>/.exec(svg)?.[0] ?? "";
-  const pick = (name: string): number => {
-    const n = Number(new RegExp(`\\s${name}="([0-9.]+)"`).exec(root)?.[1]);
-    return Number.isFinite(n) && n > 0 ? n : 0;
-  };
-  return { width: pick("width") || 260, height: pick("height") || 150 };
-}
 
 function Mixup({ lesson, withTempting }: { lesson: LessonView; withTempting: boolean }) {
   const m = lesson.misconception;
@@ -65,8 +52,8 @@ function Mixup({ lesson, withTempting }: { lesson: LessonView; withTempting: boo
 
 /**
  * A screen or check figure. An image data URI keeps the SVG inert; the alt text is the text alternative (WCAG 1.1.1).
- * Inside an <img>, the figure's currentColor resolves to black whatever the theme, so the panel is always white
- * (black ink on a dark surface was unreadable). The drawing is scaled up to the column width because figures are
+ * Inside an <img>, the figure's currentColor resolves to black whatever the theme, so the image carries its own white
+ * paper (svgDataUri) and the panel is white too. The drawing is scaled up to the column width because figures are
  * authored at about 300 px wide.
  */
 function Figure({ figure }: { figure: { svg: string; alt: string } }) {

@@ -2,7 +2,7 @@
 # Validate: python3 reference/validate_lessons.py
 schema_version: 1
 skill_key: math.alg.exponents-roots
-version: 1
+version: 2
 authoring_status: ready
 license: original
 source: original
@@ -24,6 +24,11 @@ screens:
     expressions instead of multiplying everything out.
 - id: idea
   title: The rules
+  figure:
+    alt: >-
+      Exponents as counted factors. 2 cubed times 2 squared is three 2s and two 2s, five 2s in all, so 2 to the 5. 2 cubed, squared, is two groups of three 2s, six 2s, so 2 to the 6. And 5 squared is 5 times 5, 25, not 5 times 2.
+    svg: >-
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 330 230" width="330" height="230"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="10" y="34" width="22" height="26" rx="3"/><rect x="36" y="34" width="22" height="26" rx="3"/><rect x="62" y="34" width="22" height="26" rx="3"/><rect x="110" y="34" width="22" height="26" rx="3"/><rect x="136" y="34" width="22" height="26" rx="3"/><rect x="10" y="140" width="22" height="26" rx="3"/><rect x="36" y="140" width="22" height="26" rx="3"/><rect x="62" y="140" width="22" height="26" rx="3"/><rect x="96" y="140" width="22" height="26" rx="3"/><rect x="122" y="140" width="22" height="26" rx="3"/><rect x="148" y="140" width="22" height="26" rx="3"/></g><g fill="currentColor"></g><g font-family="sans-serif" fill="currentColor"><text x="10" y="22" text-anchor="start" font-size="13">Multiply: add the exponents</text><text x="21" y="53" text-anchor="middle" font-size="15">2</text><text x="47" y="53" text-anchor="middle" font-size="15">2</text><text x="73" y="53" text-anchor="middle" font-size="15">2</text><text x="94" y="53" text-anchor="start" font-size="15">×</text><text x="121" y="53" text-anchor="middle" font-size="15">2</text><text x="147" y="53" text-anchor="middle" font-size="15">2</text><text x="170" y="53" text-anchor="start" font-size="16">= 2⁵</text><text x="10" y="82" text-anchor="start" font-size="12" font-style="italic">2³ × 2²: 3 twos and 2 twos make 5 twos</text><text x="10" y="128" text-anchor="start" font-size="13">Power of a power: multiply them</text><text x="21" y="159" text-anchor="middle" font-size="15">2</text><text x="47" y="159" text-anchor="middle" font-size="15">2</text><text x="73" y="159" text-anchor="middle" font-size="15">2</text><text x="107" y="159" text-anchor="middle" font-size="15">2</text><text x="133" y="159" text-anchor="middle" font-size="15">2</text><text x="159" y="159" text-anchor="middle" font-size="15">2</text><text x="182" y="159" text-anchor="start" font-size="16">= 2⁶</text><text x="10" y="188" text-anchor="start" font-size="12" font-style="italic">(2³)²: two groups of 3 twos make 6 twos</text><text x="10" y="216" text-anchor="start" font-size="12">5² = 5 × 5 = 25, not 5 × 2</text></g></svg>
   body_md: >-
     For the same base $a$:
 

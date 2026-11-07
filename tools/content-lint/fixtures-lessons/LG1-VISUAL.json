@@ -1,0 +1,1 @@
+{ "rule": "LG1-VISUAL", "set": { "screens.1": { "id": "idea", "title": "The idea", "body_md": "The same idea, in words only." } } }

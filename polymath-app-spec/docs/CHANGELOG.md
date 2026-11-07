@@ -6,6 +6,15 @@ Record go/no-go outcomes, lean-gate releases, and scope-down choices here before
 
 <!-- Entries appear newest first. -->
 
+## 2026-11-07: visual first (00a M6, founder decision)
+
+Decision: "favor for visual learning adding schematics and diagrams so i can quickly understand", after the symbols figure was hard to read on the founder's phone.
+
+- **Rule:** every lesson has a figure and figure text is at least 12 (LG1-VISUAL, LG1-FIGTEXT, both validators); authoring guidance in the runbook.
+- **Content:** 7 new figures, the symbols figure redrawn, small labels raised in 3 figures; all 19 lessons now have figures.
+- **App:** figures carry their own white background inside the image, so a browser night mode cannot darken it.
+- **Evidence:** `figure.test.ts` (guard shown failing once), content-schema LG1 tests seen failing first, `validate_lessons.py` 19/19 and a figure-less copy rejected; an iPhone-size render of the symbols figure checked by eye.
+
 ## 2026-11-07: figures for lesson checks and for circuits described in words (00a M5, founder request)
 
 Decision: the founder could not follow the schematic-reading trace check without a drawing and asked for every lesson that needs visual support to get it.

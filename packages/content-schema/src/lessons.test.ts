@@ -138,6 +138,19 @@ describe("L-G1: cross-file rules", () => {
     check.figure = { svg: '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>', alt: "An unsafe test drawing" };
     expect(rules(d)).toEqual(["LG1-SVG"]);
   });
+  it("00a M6 LG1-VISUAL: a lesson without any figure is reported", () => {
+    const d = base() as unknown as { screens: { figure?: unknown }[]; checks: { figure?: unknown }[] };
+    for (const s of d.screens) delete s.figure;
+    for (const c of d.checks) delete c.figure;
+    expect(rules(d as unknown as ReturnType<typeof base>)).toEqual(["LG1-VISUAL"]);
+  });
+  it("00a M6 LG1-FIGTEXT: figure text smaller than 12 is reported; 12 passes", () => {
+    const d = base();
+    d.screens[1].figure.svg = '<svg xmlns="http://www.w3.org/2000/svg"><text font-size="11">x</text></svg>';
+    expect(rules(d)).toEqual(["LG1-FIGTEXT"]);
+    d.screens[1].figure.svg = '<svg xmlns="http://www.w3.org/2000/svg"><g font-size="12"><text>x</text></g></svg>';
+    expect(rules(d)).toEqual([]);
+  });
   it("LG1-SVG: a local href and a local url() are allowed", () => {
     const d = base();
     d.screens[1].figure.svg =

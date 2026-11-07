@@ -2,7 +2,7 @@
 # Validate: python3 reference/validate_lessons.py
 schema_version: 1
 skill_key: math.alg.units-and-prefixes
-version: 1
+version: 2
 authoring_status: ready
 license: original
 source: original
@@ -41,6 +41,11 @@ screens:
     So $4.7\ \text{k}\Omega = 4.7 \times 10^{3}\ \Omega = 4700\ \Omega$. Neighbouring prefixes differ by a factor of 1000. Case matters: m is milli, M is mega.
 - id: model
   title: How to use it
+  figure:
+    alt: >-
+      A row of units from large to small: mega, kilo, the base unit ohm, milli and micro, each 1000 times the next. Going to a smaller unit multiplies the number by 1000 per step; going to a larger unit divides it by 1000. Examples: 2.2 kilohms is 2200 ohms, 20 milliamps is 0.020 amps.
+    svg: >-
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 330 170" width="330" height="170"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="15" y="40" width="52" height="44"/><rect x="77" y="40" width="52" height="44"/><rect x="139" y="40" width="52" height="44"/><rect x="201" y="40" width="52" height="44"/><rect x="263" y="40" width="52" height="44"/><path d="M30 22 H300"/><path d="M300 128 H30"/></g><g fill="currentColor"><polygon points="300,22 291.8,18.2 291.8,25.8"/><polygon points="30,128 38.2,131.8 38.2,124.2"/></g><g font-family="sans-serif" fill="currentColor"><text x="41" y="68" text-anchor="middle" font-size="18">M</text><text x="41" y="102" text-anchor="middle" font-size="12">×10⁶</text><text x="103" y="68" text-anchor="middle" font-size="18">k</text><text x="103" y="102" text-anchor="middle" font-size="12">×10³</text><text x="165" y="68" text-anchor="middle" font-size="18">Ω</text><text x="165" y="102" text-anchor="middle" font-size="12">base</text><text x="227" y="68" text-anchor="middle" font-size="18">m</text><text x="227" y="102" text-anchor="middle" font-size="12">×10⁻³</text><text x="289" y="68" text-anchor="middle" font-size="18">µ</text><text x="289" y="102" text-anchor="middle" font-size="12">×10⁻⁶</text><text x="165" y="14" text-anchor="middle" font-size="12">to a smaller unit: multiply by 1000 each step</text><text x="165" y="148" text-anchor="middle" font-size="12">to a larger unit: divide by 1000 each step</text><text x="90" y="166" text-anchor="middle" font-size="12">2.2 kΩ = 2200 Ω</text><text x="240" y="166" text-anchor="middle" font-size="12">20 mA = 0.020 A</text></g></svg>
   body_md: >-
     Before you multiply or divide by the factor, ask which unit is smaller. The count in the smaller unit is
     the larger number.

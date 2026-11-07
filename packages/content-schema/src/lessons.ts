@@ -31,6 +31,17 @@ function duplicates(ids: string[]): boolean {
   return new Set(ids).size !== ids.length;
 }
 
+/**
+ * 00a M6: figure text is at least this size in SVG user units. Figures are drawn about 300 units wide and shown at
+ * about the column width, so on a phone a unit is about one CSS pixel; smaller labels were hard to read.
+ */
+export const MIN_FIGURE_FONT = 12;
+
+/** The font-size attributes of a figure that are below MIN_FIGURE_FONT. */
+export function smallFigureFonts(svg: string): number[] {
+  return [...svg.matchAll(/font-size="([0-9.]+)"/g)].map((m) => Number(m[1])).filter((n) => n < MIN_FIGURE_FONT);
+}
+
 /** L-G1 on a document that already passed L-G0 (validateLesson). */
 export function lessonProblems(doc: unknown, ctx: LessonContext): LessonProblem[] {
   const d = rec(doc);
@@ -60,6 +71,15 @@ export function lessonProblems(doc: unknown, ctx: LessonContext): LessonProblem[
     if (duplicates(options.map((o) => str(o["id"])))) add("LG1-IDS", `check ${str(c["id"])}: option ids are not unique`);
     const correct = options.filter((o) => o["correct"] === true).length;
     if (correct !== 1) add("LG1-CORRECT", `check ${str(c["id"])}: ${String(correct)} correct options (exactly 1 required)`);
+  }
+  // 00a M6, visual first: every lesson has at least one figure, and figure text is large enough to read on a phone.
+  const figures = [...screens.map((s) => ({ where: `screen ${str(s["id"])}`, f: rec(s["figure"]) })), ...checks.map((c) => ({ where: `check ${str(c["id"])}`, f: rec(c["figure"]) }))].filter(
+    (x) => "svg" in x.f,
+  );
+  if (figures.length === 0) add("LG1-VISUAL", "the lesson has no figure; draw the idea (00a M6)");
+  for (const { where, f } of figures) {
+    const small = smallFigureFonts(str(f["svg"]));
+    if (small.length > 0) add("LG1-FIGTEXT", `${where}: figure text of size ${small.join(", ")} (min ${String(MIN_FIGURE_FONT)})`);
   }
   const known = ctx.tags.get(key);
   const tag = str(rec(d["misconception"])["tag"]);
