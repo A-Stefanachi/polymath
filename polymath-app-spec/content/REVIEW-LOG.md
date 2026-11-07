@@ -55,26 +55,28 @@ On 5 November, on the founder's instruction ("Approve all on my behalf"), the bu
 
 Later on 5 November the founder asked for a second review on their behalf ("review them for me on my behalf and approve"). An independent agent re-read all 19 and found no factual error; six lessons got wording fixes (order of operations, schematic reading, power and energy, lab safety and ESD, Thevenin and Norton, nodal analysis) and became version 2, approved by the agent on the same instruction.
 
+On 7 November, on the founder's instruction ("Approve on my behalf"), the build agent approved the 16 versions that add figures (00a M5, M6), after they were synced to staging as `needs_human_review` (#32). Only figures changed (plus the larger, two-row symbols figure in schematic reading); no lesson text changed. Before inserting each figure the agent rendered it and checked every component, value, connection and label against the lesson text, and checked the inserted SVG byte-for-byte against the rendered one. The approval used the console's update, restricted to the exact skill, version and content hash that were synced. No person has reviewed the figures yet.
+
 | Lesson (skill) | v | Approved | By |
 |---|---|---|---|
-| elec.dc.charge-current-voltage | 1 | 2026-11-05 | agent, founder instruction |
-| elec.dc.kirchhoff-laws | 1 | 2026-11-05 | agent, founder instruction |
-| elec.dc.nodal-analysis | 2 | 2026-11-05 | agent, founder instruction (after the second review) |
+| elec.dc.charge-current-voltage | 2 | 2026-11-07 | agent, founder instruction (figures, 00a M5 and M6) |
+| elec.dc.kirchhoff-laws | 2 | 2026-11-07 | agent, founder instruction (figures, 00a M5 and M6) |
+| elec.dc.nodal-analysis | 3 | 2026-11-07 | agent, founder instruction (figures, 00a M5 and M6) |
 | elec.dc.ohms-law | 1 | 2026-11-05 | agent, founder instruction |
-| elec.dc.power-energy | 2 | 2026-11-05 | agent, founder instruction (after the second review) |
-| elec.dc.series-parallel | 1 | 2026-11-05 | agent, founder instruction |
-| elec.dc.thevenin-norton | 2 | 2026-11-05 | agent, founder instruction (after the second review) |
+| elec.dc.power-energy | 3 | 2026-11-07 | agent, founder instruction (figures, 00a M5 and M6) |
+| elec.dc.series-parallel | 2 | 2026-11-07 | agent, founder instruction (figures, 00a M5 and M6) |
+| elec.dc.thevenin-norton | 3 | 2026-11-07 | agent, founder instruction (figures, 00a M5 and M6) |
 | elec.dc.voltage-divider | 1 | 2026-11-05 | agent, founder instruction |
-| elec.meas.lab-safety-esd | 2 | 2026-11-05 | agent, founder instruction (after the second review) |
-| elec.meas.schematic-reading | 2 | 2026-11-05 | agent, founder instruction (after the second review) |
-| math.alg.exponents-roots | 1 | 2026-11-05 | agent, founder instruction |
+| elec.meas.lab-safety-esd | 3 | 2026-11-07 | agent, founder instruction (figures, 00a M5 and M6) |
+| elec.meas.schematic-reading | 3 | 2026-11-07 | agent, founder instruction (figures, 00a M5 and M6) |
+| math.alg.exponents-roots | 2 | 2026-11-07 | agent, founder instruction (figures, 00a M5 and M6) |
 | math.alg.linear-functions | 1 | 2026-11-05 | agent, founder instruction |
-| math.alg.order-of-operations | 2 | 2026-11-05 | agent, founder instruction (after the second review) |
-| math.alg.quadratics | 1 | 2026-11-05 | agent, founder instruction |
-| math.alg.ratios-proportions | 1 | 2026-11-05 | agent, founder instruction |
-| math.alg.rearrange-formulas | 1 | 2026-11-05 | agent, founder instruction |
-| math.alg.solve-linear | 1 | 2026-11-05 | agent, founder instruction |
-| math.alg.systems-2x2 | 1 | 2026-11-05 | agent, founder instruction |
-| math.alg.units-and-prefixes | 1 | 2026-11-05 | agent, founder instruction |
+| math.alg.order-of-operations | 3 | 2026-11-07 | agent, founder instruction (figures, 00a M5 and M6) |
+| math.alg.quadratics | 2 | 2026-11-07 | agent, founder instruction (figures, 00a M5 and M6) |
+| math.alg.ratios-proportions | 2 | 2026-11-07 | agent, founder instruction (figures, 00a M5 and M6) |
+| math.alg.rearrange-formulas | 2 | 2026-11-07 | agent, founder instruction (figures, 00a M5 and M6) |
+| math.alg.solve-linear | 2 | 2026-11-07 | agent, founder instruction (figures, 00a M5 and M6) |
+| math.alg.systems-2x2 | 2 | 2026-11-07 | agent, founder instruction (figures, 00a M5 and M6) |
+| math.alg.units-and-prefixes | 2 | 2026-11-07 | agent, founder instruction (figures, 00a M5 and M6) |
 
 Regenerate pool: `python reference/bootstrap_lean_templates.py`, then re-verify and review each template with `reference/g3_review.py` (`stamp_g3_review.py` was deleted on 2 November).

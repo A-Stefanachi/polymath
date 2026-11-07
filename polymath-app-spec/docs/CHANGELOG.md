@@ -6,6 +6,16 @@ Record go/no-go outcomes, lean-gate releases, and scope-down choices here before
 
 <!-- Entries appear newest first. -->
 
+## 2026-11-07: lessons with figures synced to staging and approved on the founder's behalf (founder instruction)
+
+Decision: after #32 was merged and deployed, the founder said "Approve on my behalf", as for the lessons on 5 November. This again departs from K9's rule that the founder approves each lesson version in the console.
+
+- **Sync:** the content-sync planner (`buildPlan`) ran against staging's current `skill_lessons` rows and gave 16 new versions (3 lessons unchanged). The rows were read again just before writing, then inserted through the management API as `needs_human_review`. No status was set by the insert.
+- **Approval:** the console's approve update (status `verified`, `reviewed_by`, `reviewed_at`), restricted to the exact skill, version and content hash that were synced; 16 rows approved. `reviewed_by` shows the founder's account, which is the only user. Staging now serves the new versions, for example `elec.meas.schematic-reading` v3.
+- **What stands behind it:** only figures changed; each was rendered and checked against its lesson text before insertion, and the inserted SVG matches the rendered one byte for byte. No person has reviewed the figures. `content/REVIEW-LOG.md` lists each version.
+- **Scope:** founder-only staging, as for the entries of 4 and 5 November.
+- **Next three tasks:** practice-item figures (`svg_template`); the worked-example e2e failures on main; a Settings screen for the daily new-skill cap.
+
 ## 2026-11-07: visual first (00a M6, founder decision)
 
 Decision: "favor for visual learning adding schematics and diagrams so i can quickly understand", after the symbols figure was hard to read on the founder's phone.
