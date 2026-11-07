@@ -130,6 +130,14 @@ describe("L-G1: cross-file rules", () => {
     d.screens[1].figure.svg = svg;
     expect(rules(d)).toEqual(["LG1-SVG"]);
   });
+  it("00a M5: a check may carry a figure, and an unsafe one is reported as LG1-SVG", () => {
+    const d = base();
+    const check = d.checks[0] as unknown as { figure?: { svg: string; alt: string } };
+    check.figure = { svg: '<svg xmlns="http://www.w3.org/2000/svg"/>', alt: "An empty test drawing" };
+    expect(rules(d)).toEqual([]);
+    check.figure = { svg: '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>', alt: "An unsafe test drawing" };
+    expect(rules(d)).toEqual(["LG1-SVG"]);
+  });
   it("LG1-SVG: a local href and a local url() are allowed", () => {
     const d = base();
     d.screens[1].figure.svg =

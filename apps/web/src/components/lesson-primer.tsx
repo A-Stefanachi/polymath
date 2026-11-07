@@ -63,6 +63,24 @@ function Mixup({ lesson, withTempting }: { lesson: LessonView; withTempting: boo
   );
 }
 
+/**
+ * A screen or check figure. An image data URI keeps the SVG inert; the alt text is the text alternative (WCAG 1.1.1).
+ * Inside an <img>, the figure's currentColor resolves to black whatever the theme, so the panel is always white
+ * (black ink on a dark surface was unreadable). The drawing is scaled up to the column width because figures are
+ * authored at about 300 px wide.
+ */
+function Figure({ figure }: { figure: { svg: string; alt: string } }) {
+  return (
+    <Image
+      unoptimized
+      src={svgDataUri(figure.svg)}
+      alt={figure.alt}
+      {...svgSize(figure.svg)}
+      className="h-auto w-full max-w-xl self-start border-2 border-ink bg-white p-3"
+    />
+  );
+}
+
 function CheckStep({ check, answered, onAnswer }: { check: Check; answered: string | undefined; onAnswer: (optionId: string) => void }) {
   const chosen = check.options.find((o) => o.id === answered);
   return (
@@ -70,6 +88,7 @@ function CheckStep({ check, answered, onAnswer }: { check: Check; answered: stri
       <p id={`stem-${check.id}`} className="font-semibold">
         <Inline source={check.stem_md} />
       </p>
+      {check.figure && <Figure figure={check.figure} />}
       <p className="text-[15px] text-muted">{t.checkHelp}</p>
       <div role="group" aria-labelledby={`stem-${check.id}`} className="flex flex-col gap-2">
         {check.options.map((o) => (
@@ -170,19 +189,7 @@ export function LessonPrimer({
         {step.kind === "screen" && (
           <>
             <LessonMarkdown source={step.screen.body_md} />
-            {step.screen.figure && (
-              // An image data URI keeps the SVG inert; the alt text is the text alternative (WCAG 1.1.1).
-              // Inside an <img>, the figure's currentColor resolves to black whatever the theme, so the
-              // panel is always white (black ink on a dark surface was unreadable). The drawing is scaled
-              // up to the column width because figures are authored at about 300 px wide.
-              <Image
-                unoptimized
-                src={svgDataUri(step.screen.figure.svg)}
-                alt={step.screen.figure.alt}
-                {...svgSize(step.screen.figure.svg)}
-                className="h-auto w-full max-w-xl self-start border-2 border-ink bg-white p-3"
-              />
-            )}
+            {step.screen.figure && <Figure figure={step.screen.figure} />}
           </>
         )}
         {step.kind === "misconception" && <Mixup lesson={lesson} withTempting />}

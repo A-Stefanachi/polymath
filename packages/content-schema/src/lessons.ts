@@ -54,6 +54,8 @@ export function lessonProblems(doc: unknown, ctx: LessonContext): LessonProblem[
   const checks = arr(d["checks"]);
   if (duplicates(checks.map((c) => str(c["id"])))) add("LG1-IDS", "check ids are not unique");
   for (const c of checks) {
+    const figure = rec(c["figure"]); // 00a M5: checks may carry a figure too
+    if ("svg" in figure) for (const p of svgProblems(str(figure["svg"]))) add("LG1-SVG", `check ${str(c["id"])}: ${p}`);
     const options = arr(c["options"]);
     if (duplicates(options.map((o) => str(o["id"])))) add("LG1-IDS", `check ${str(c["id"])}: option ids are not unique`);
     const correct = options.filter((o) => o["correct"] === true).length;

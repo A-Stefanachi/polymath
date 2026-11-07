@@ -3786,6 +3786,17 @@ components:
                 type: string
               stem_md:
                 type: string
+              figure:
+                type: object
+                description: 00a M5, optional drawing of the circuit or graph the stem describes, shown above the options
+                required: [svg, alt]
+                additionalProperties: false
+                properties:
+                  svg:
+                    type: string
+                    description: Sanitised SVG text; the client renders it only as an image data URI, never as markup
+                  alt:
+                    type: string
               options:
                 type: array
                 minItems: 2

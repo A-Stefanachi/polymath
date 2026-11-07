@@ -61,7 +61,16 @@ export function toLessonView(skillKey: string, version: number, body: unknown, v
       if (!oid || !text || !feedback || typeof o["correct"] !== "boolean") return null;
       options.push({ id: oid, text_md: text, correct: o["correct"], feedback_md: feedback });
     }
-    checks.push({ id, stem_md: stem, options });
+    const check: LessonView["checks"][number] = { id, stem_md: stem, options };
+    // 00a M5: a check may carry a figure, under the same rule as a screen figure (both fields or no lesson).
+    const figure = rec(c["figure"]);
+    if (figure) {
+      const svg = str(figure["svg"]);
+      const alt = str(figure["alt"]);
+      if (!svg || !alt) return null;
+      check.figure = { svg, alt };
+    }
+    checks.push(check);
   }
 
   return {

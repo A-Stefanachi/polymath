@@ -103,6 +103,16 @@
         "properties": {
           "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
           "stem_md": { "type": "string", "minLength": 1 },
+          "figure": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["svg", "alt"],
+            "description": "00a M5: an optional drawing of the circuit or graph the stem describes, shown above the options. Same rules as a screen figure.",
+            "properties": {
+              "svg": { "type": "string", "minLength": 1, "maxLength": 30000, "description": "Inline SVG; no script, no event attributes, no external references (validator)." },
+              "alt": { "type": "string", "minLength": 10, "maxLength": 300 }
+            }
+          },
           "options": {
             "type": "array",
             "minItems": 2,

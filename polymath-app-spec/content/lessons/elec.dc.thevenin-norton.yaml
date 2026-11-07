@@ -2,7 +2,7 @@
 # Validate: python3 reference/validate_lessons.py
 schema_version: 1
 skill_key: elec.dc.thevenin-norton
-version: 2
+version: 3
 authoring_status: ready
 license: original
 source: original
@@ -63,6 +63,11 @@ screens:
       </svg>
 - id: model
   title: How to use it
+  figure:
+    alt: >-
+      A 12 V source feeds R1, 6 kilohms, to node A. R2, 3 kilohms, runs from A to the bottom wire B. The load RL, 2 kilohms, also runs from A to B.
+    svg: >-
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 170" width="340" height="170"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M70 73 L70 30 L100 30"/><rect x="100" y="22" width="40" height="16"/><path d="M140 30 L270 30"/><path d="M190 30 L190 55"/><rect x="182" y="55" width="16" height="40"/><path d="M190 95 L190 140"/><path d="M270 30 L270 55"/><rect x="262" y="55" width="16" height="40"/><path d="M270 95 L270 140"/><path d="M270 140 L70 140 L70 105"/><path d="M70 73 V85 M56 85 H84 M63 93 H77 M70 93 V105"/></g><g fill="currentColor"><circle cx="190" cy="30" r="3.5"/><circle cx="190" cy="140" r="3.5"/></g><g font-family="sans-serif" fill="currentColor"><text x="120.0" y="17" text-anchor="middle" font-size="13">R1</text><text x="120.0" y="54" text-anchor="middle" font-size="13">6 kΩ</text><text x="190" y="18" text-anchor="middle" font-size="13">A</text><text x="203" y="73.0" text-anchor="start" font-size="13">R2</text><text x="203" y="89.0" text-anchor="start" font-size="13">3 kΩ</text><text x="283" y="73.0" text-anchor="start" font-size="13">RL</text><text x="283" y="89.0" text-anchor="start" font-size="13">2 kΩ</text><text x="202" y="158" text-anchor="start" font-size="13">B (ground)</text><text x="88" y="87" text-anchor="start" font-size="12">+</text><text x="50" y="94" text-anchor="end" font-size="13">12 V</text></g></svg>
   body_md: >-
     A divider: $V_S = 12$ V, $R_1 = 6$ k$\Omega$ from the source to A, $R_2 = 3$ k$\Omega$ from A to ground
     (B). Load $R_L = 2$ k$\Omega$.

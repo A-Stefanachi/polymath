@@ -1796,6 +1796,12 @@ export interface components {
             checks: {
                 id: string;
                 stem_md: string;
+                /** @description 00a M5, optional drawing of the circuit or graph the stem describes, shown above the options */
+                figure?: {
+                    /** @description Sanitised SVG text; the client renders it only as an image data URI, never as markup */
+                    svg: string;
+                    alt: string;
+                };
                 options: {
                     id: string;
                     text_md: string;
