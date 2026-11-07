@@ -56,6 +56,14 @@ Status: v1.0, 1 Nov 2026. Companion: `07-content-pipeline-and-verification-spec.
 
 An edit to a verified lesson makes a new version that waits for review; learners keep the old one until it is approved.
 
+**Visual first (00a M6).** The founder learns fastest from pictures, so draw the idea before explaining it in words:
+
+- Every lesson has at least one figure (validator rule, LG1-VISUAL). Any circuit, symbol, graph, layout or step sequence that a screen or a check describes gets its own figure on that screen or check (checks may carry a figure, 00a M5).
+- Draw circuits as schematics in the house style of the existing figures: box resistors, stroke 2, `currentColor`, sans-serif labels, about 300 to 340 units wide. Label every part with its name and value as the text uses them, and mark the unknown with "?".
+- Figure text is at least 12 units (LG1-FIGTEXT); body labels 13. Use a second row instead of shrinking text.
+- Write the `alt` text as the same picture in words (WCAG 1.1.1).
+- Render each figure and look at it at phone width before committing; check that every value and connection matches the text.
+
 **Step labels (00a K5).** A template with 4 or more steps needs a `label` on every step (lint L27): the step's goal as a short imperative, at most 60 characters ("Write KCL at node A"). Adding a label changes the hash, so the template needs G3 again.
 
 ## Phase -1 (parallel, no app)

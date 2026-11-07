@@ -2,7 +2,7 @@
 # Validate: python3 reference/validate_lessons.py
 schema_version: 1
 skill_key: math.alg.order-of-operations
-version: 2
+version: 3
 authoring_status: ready
 license: original
 source: original
@@ -25,6 +25,11 @@ screens:
     you.
 - id: idea
   title: The idea
+  figure:
+    alt: >-
+      2 + 3 × 4 worked in steps. The multiplication 3 × 4 is boxed and done first, giving 2 + 12. Then the addition gives 14.
+    svg: >-
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 180" width="300" height="180"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="52" y="20" width="64" height="28" rx="4"/><rect x="14" y="75" width="70" height="28" rx="4"/><path d="M40 54 V70"/><path d="M40 109 V125"/></g><g fill="currentColor"><polygon points="40,70 43.8,61.8 36.2,61.8"/><polygon points="40,125 43.8,116.8 36.2,116.8"/></g><g font-family="sans-serif" fill="currentColor"><text x="20" y="40" text-anchor="start" font-size="20">2 + 3 × 4</text><text x="130" y="40" text-anchor="start" font-size="12" font-style="italic">multiply first</text><text x="20" y="95" text-anchor="start" font-size="20">2 + 12</text><text x="130" y="95" text-anchor="start" font-size="12" font-style="italic">then add</text><text x="20" y="150" text-anchor="start" font-size="20">14</text></g></svg>
   body_md: >-
     Work in this order:
 

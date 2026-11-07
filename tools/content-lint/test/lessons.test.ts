@@ -70,7 +70,7 @@ describe("content:lint on content/lessons", () => {
 
   it("the fixtures cover every L-G1 rule", () => {
     const covered = new Set(fixtures.map(([, p]) => p.rule));
-    for (const rule of ["LG0", "LG1-FILE", "LG1-SKILL", "LG1-STUB", "LG1-WORDS", "LG1-IDS", "LG1-CORRECT", "LG1-TAG", "LG1-SVG"]) {
+    for (const rule of ["LG0", "LG1-FILE", "LG1-SKILL", "LG1-STUB", "LG1-WORDS", "LG1-IDS", "LG1-CORRECT", "LG1-TAG", "LG1-SVG", "LG1-VISUAL", "LG1-FIGTEXT"]) {
       expect(covered.has(rule), rule).toBe(true);
     }
   });

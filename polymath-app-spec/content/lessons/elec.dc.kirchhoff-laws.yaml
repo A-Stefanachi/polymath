@@ -3,7 +3,7 @@
 # Validate: python3 reference/validate_lessons.py
 schema_version: 1
 skill_key: elec.dc.kirchhoff-laws
-version: 1
+version: 2
 authoring_status: ready
 license: original
 source: original
@@ -65,6 +65,11 @@ screens:
       </svg>
 - id: kvl
   title: The voltage law (KVL)
+  figure:
+    alt: >-
+      A single loop with source VS on the left, R1 along the top with voltage V1 across it, and R2 down the right side with voltage V2 across it.
+    svg: >-
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 170" width="260" height="170"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M50 73 L50 30 L100 30"/><rect x="100" y="22" width="40" height="16"/><path d="M140 30 L210 30 L210 65"/><rect x="202" y="65" width="16" height="40"/><path d="M210 105 L210 140 L50 140 L50 105"/><path d="M50 73 V85 M36 85 H64 M43 93 H57 M50 93 V105"/></g><g fill="currentColor"></g><g font-family="sans-serif" fill="currentColor"><text x="120.0" y="17" text-anchor="middle" font-size="13">R1</text><text x="120.0" y="54" text-anchor="middle" font-size="13">V1</text><text x="223" y="83.0" text-anchor="start" font-size="13">R2</text><text x="223" y="99.0" text-anchor="start" font-size="13">V2</text><text x="68" y="87" text-anchor="start" font-size="12">+</text><text x="30" y="94" text-anchor="end" font-size="13">VS</text></g></svg>
   body_md: >-
     Think of voltage as height. Walk round any closed loop and you end at the height where you started, so
     the rises and drops along the way add to zero.
@@ -93,6 +98,11 @@ misconception:
     30 mA and 20 mA in and 10 mA out, $I_4 = 50 - 10 = 40$ mA out, not $30 + 20 + 10 = 60$ mA.
 checks:
 - id: node
+  figure:
+    alt: >-
+      A node where three wires meet. 5 mA flows in on the left wire, 2 mA flows out on the right wire, and the current on the third wire, going down, is unknown.
+    svg: >-
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 150" width="260" height="150"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M30 60 L130 60"/><path d="M130 60 L230 60"/><path d="M130 60 L130 130"/></g><g fill="currentColor"><circle cx="130" cy="60" r="3.5"/><polygon points="92,60 83.8,56.2 83.8,63.8"/><polygon points="200,60 191.8,56.2 191.8,63.8"/></g><g font-family="sans-serif" fill="currentColor"><text x="60" y="48" text-anchor="middle" font-size="13">5 mA in</text><text x="200" y="48" text-anchor="middle" font-size="13">2 mA out</text><text x="142" y="110" text-anchor="start" font-size="13">? (third wire)</text></g></svg>
   stem_md: >-
     Three wires meet at a node. 5 mA flows in on the first wire and 2 mA flows out on the second. What does
     the third wire carry?
@@ -110,6 +120,11 @@ checks:
     correct: false
     feedback_md: The size is right but the direction is not. More flows in than out so far, so the rest must leave.
 - id: loop
+  figure:
+    alt: >-
+      A single loop with a 12 V source on the left, R1 along the top with 5 V across it, and R2 down the right side with an unknown voltage across it.
+    svg: >-
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 170" width="260" height="170"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M50 73 L50 30 L100 30"/><rect x="100" y="22" width="40" height="16"/><path d="M140 30 L210 30 L210 65"/><rect x="202" y="65" width="16" height="40"/><path d="M210 105 L210 140 L50 140 L50 105"/><path d="M50 73 V85 M36 85 H64 M43 93 H57 M50 93 V105"/></g><g fill="currentColor"></g><g font-family="sans-serif" fill="currentColor"><text x="120.0" y="17" text-anchor="middle" font-size="13">R1</text><text x="120.0" y="54" text-anchor="middle" font-size="13">5 V</text><text x="223" y="83.0" text-anchor="start" font-size="13">R2</text><text x="223" y="99.0" text-anchor="start" font-size="13">? V</text><text x="68" y="87" text-anchor="start" font-size="12">+</text><text x="30" y="94" text-anchor="end" font-size="13">12 V</text></g></svg>
   stem_md: >-
     A 12 V source drives a single loop through two resistors. The voltage across the first resistor is 5 V.
     What is the voltage across the second?

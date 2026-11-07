@@ -51,7 +51,7 @@ const tpl = (skill: string, kind: string) => `tpl.math.bl46-${skill.slice(-2)}-$
 const tplAlt = `tpl.math.bl46-a1-retrievalalt-${tag}`;
 const templates: string[] = [tplAlt];
 let seed = 1;
-const users: Record<"cap" | "backlog" | "gap" | "brk", string> = { cap: "", backlog: "", gap: "", brk: "" };
+const users: Record<"cap" | "backlog" | "gap" | "brk" | "capped", string> = { cap: "", backlog: "", gap: "", brk: "", capped: "" };
 
 type Json = Record<string, unknown>;
 type Task = { task_kind: string; skill_key: string; reason: string; item_id: string; id: string };
@@ -135,6 +135,12 @@ describe.skipIf(!reachable)("caps and guards (database)", () => {
     }
 
     await addItems(users.brk, a1, 3);
+    await addItems(users.brk, a2, 3);
+
+    // capped: a cap of 1, already used today by a1 (first seen today, loop done).
+    await sql`update public.profiles set settings = jsonb_build_object('max_new_skills_per_day', 1) where id = ${users.capped}`;
+    await sql`insert into public.skill_state (user_id, skill_key, mastery_state, loop_step, first_seen_at) values (${users.capped}, ${a1}, 'learning', 'done', now())`;
+    await addItems(users.capped, a2, 3);
   });
 
   afterAll(async () => {
@@ -163,6 +169,16 @@ describe.skipIf(!reachable)("caps and guards (database)", () => {
     const secondTasks = (second["tasks"] as Task[] | undefined) ?? [];
     expect(secondTasks.filter((t) => t.reason === "frontier")).toHaveLength(0);
     expect(await frontierSkills(users.cap)).toHaveLength(2);
+  });
+
+  it("00a M4: a preview that plans nothing because today's new-skill cap is used says so; with allowance left it does not", async () => {
+    const preview = { available_minutes: 15, context: "desktop", skill_focus: a2, dry_run: true };
+    const capped = await build(users.capped, preview);
+    expect(capped["tasks"]).toEqual([]);
+    expect(capped["new_skill_cap_reached"]).toBe(true);
+    const open = await build(users.brk, preview);
+    expect((open["tasks"] as Task[]).some((t) => t.skill_key === a2)).toBe(true);
+    expect(open["new_skill_cap_reached"]).toBe(false);
   });
 
   it("AC-3: the backlog flag lets reviews fill the whole budget instead of 70 percent, and is kept on the session", async () => {

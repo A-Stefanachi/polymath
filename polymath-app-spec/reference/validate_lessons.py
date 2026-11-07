@@ -8,8 +8,9 @@ Checks, per file:
   4. Screen ids, check ids and option ids within a check are unique; each check has exactly one correct option.
   5. When any template of the skill (content/templates/**) declares misconception tags, the lesson's
      misconception.tag is one of them, so a graded misconception can link back to the lesson (00a K8).
-  6. Figures are safe, self-contained SVG: well-formed XML with an <svg> root, no script, foreignObject or
-     event attributes, and no reference outside the document.
+  6. Figures (on screens, and on checks since 00a M5) are safe, self-contained SVG: well-formed XML with an
+     <svg> root, no script, foreignObject or event attributes, and no reference outside the document.
+  7. Visual first (00a M6): every lesson has at least one figure, and no figure text is smaller than 12.
 
 Usage: python3 reference/validate_lessons.py [lesson.yaml ...]
 Exit code 0 when every file passes (an empty folder passes), 1 otherwise.
@@ -31,6 +32,7 @@ GRAPH = ROOT / "content" / "mvp-skill-graph.yaml"
 
 MAX_SCREEN_WORDS = 150
 MAX_RECAP_WORDS = 60
+MIN_FIGURE_FONT = 12  # 00a M6: figure text size in SVG user units (figures are drawn about 300 wide)
 SVG_NS = "{http://www.w3.org/2000/svg}"
 FORBIDDEN_TAGS = {"script", "foreignobject", "iframe", "object", "embed", "image", "use"}
 HREF_ATTRS = {"href", "{http://www.w3.org/1999/xlink}href"}
@@ -126,12 +128,23 @@ def check_file(path, validator, skills, tags):
     if len(check_ids) != len(set(check_ids)):
         problems.append("check ids are not unique")
     for c in doc["checks"]:
+        if "figure" in c:  # 00a M5
+            problems += [f"check {c['id']}: {p}" for p in svg_problems(c["figure"]["svg"])]
         opt_ids = [o["id"] for o in c["options"]]
         if len(opt_ids) != len(set(opt_ids)):
             problems.append(f"check {c['id']}: option ids are not unique")
         n_correct = sum(1 for o in c["options"] if o["correct"])
         if n_correct != 1:
             problems.append(f"check {c['id']}: {n_correct} correct options (exactly 1 required)")
+    # 00a M6, visual first: at least one figure per lesson, and figure text large enough to read on a phone
+    figures = [(f"screen {x['id']}", x["figure"]) for x in doc["screens"] if "figure" in x] + \
+              [(f"check {x['id']}", x["figure"]) for x in doc["checks"] if "figure" in x]
+    if not figures:
+        problems.append("the lesson has no figure; draw the idea (00a M6)")
+    for where, fig in figures:
+        small = [float(n) for n in re.findall(r'font-size="([0-9.]+)"', fig["svg"]) if float(n) < MIN_FIGURE_FONT]
+        if small:
+            problems.append(f"{where}: figure text of size {', '.join(f'{n:g}' for n in small)} (min {MIN_FIGURE_FONT})")
     known = tags.get(key)
     if known and doc["misconception"]["tag"] not in known:
         problems.append(

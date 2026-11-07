@@ -2,7 +2,7 @@
 # Validate: python3 reference/validate_lessons.py
 schema_version: 1
 skill_key: math.alg.ratios-proportions
-version: 1
+version: 2
 authoring_status: ready
 license: original
 source: original
@@ -24,6 +24,11 @@ screens:
     of its value. The same few rules handle all of these.
 - id: idea
   title: The idea
+  figure:
+    alt: >-
+      A bar of 60 split into 3 equal parts of 20. The first part, 20, is share 1; the other two parts together, 40, are share 2.
+    svg: >-
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 150" width="320" height="150"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="40" y="40" width="80" height="40"/><rect x="120" y="40" width="80" height="40"/><rect x="200" y="40" width="80" height="40"/><path d="M42 92 V100 H118 V92"/><path d="M122 92 V100 H278 V92"/></g><g fill="currentColor"><rect x="40" y="40" width="80" height="40" fill-opacity="0.18"/></g><g font-family="sans-serif" fill="currentColor"><text x="160" y="22" text-anchor="middle" font-size="13">Share 60 in the ratio 1 : 2</text><text x="80" y="66" text-anchor="middle" font-size="15">20</text><text x="160" y="66" text-anchor="middle" font-size="15">20</text><text x="240" y="66" text-anchor="middle" font-size="15">20</text><text x="80" y="118" text-anchor="middle" font-size="13">share 1 = 20</text><text x="200" y="118" text-anchor="middle" font-size="13">share 2 = 2 × 20 = 40</text><text x="160" y="142" text-anchor="middle" font-size="12">3 equal parts, one part = 60 ÷ 3 = 20</text></g></svg>
   body_md: >-
     A ratio $a:b$ splits a whole into $a + b$ equal parts. The first share is $\frac{a}{a+b}$ of the whole and
     the second is $\frac{b}{a+b}$.

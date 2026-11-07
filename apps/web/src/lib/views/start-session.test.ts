@@ -22,6 +22,11 @@ describe("startSession", () => {
     expect(await startSession({ available_minutes: 5, context: "desktop", skill_focus: "math.alg.s" })).toEqual({ ok: false, reason: "focus" });
   });
 
+  it("00a M4: reports an empty plan with today's new-skill cap used as capped, not as nothing to practise", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ dry_run: true, tasks: [], new_skill_cap_reached: true }), { status: 200 })));
+    expect(await startSession({ available_minutes: 15, context: "desktop", skill_focus: "math.alg.s" })).toEqual({ ok: false, reason: "capped" });
+  });
+
   it("opens a built session", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ id: "s-1", tasks: [{}] }), { status: 201 })));
     expect(await startSession({ available_minutes: 15, context: "desktop" })).toEqual({ ok: true, id: "s-1" });
@@ -44,6 +49,11 @@ describe("previewFocus", () => {
   it("reports an empty dry-run plan as nothing to practise", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ dry_run: true, tasks: [] }), { status: 200 })));
     expect(await previewFocus(body)).toBe("empty");
+  });
+
+  it("00a M4: reports an empty plan with today's new-skill cap used as capped", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ dry_run: true, tasks: [], new_skill_cap_reached: true }), { status: 200 })));
+    expect(await previewFocus(body)).toBe("capped");
   });
 
   it("reports a plan with tasks as practisable", async () => {

@@ -11,7 +11,7 @@ export function practiseMinutes(state: SkillState): number {
 }
 
 export type StartBody = { available_minutes: number; context: "phone" | "desktop"; skill_focus?: string };
-export type StartResult = { ok: true; id: string } | { ok: false; reason: "open" | "pool" | "focus" | "failed" };
+export type StartResult = { ok: true; id: string } | { ok: false; reason: "open" | "pool" | "focus" | "capped" | "failed" };
 
 /** Phone layout below 1024 px (the same breakpoint as the navigation), desktop from there. */
 export function currentContext(): "phone" | "desktop" {
@@ -20,9 +20,10 @@ export function currentContext(): "phone" | "desktop" {
 
 /**
  * Whether a focus build would plan anything, asked as a dry run (G16: nothing is written or reserved), so the map
- * does not offer a button that can only refuse. Any refusal or network error is "unknown" and the button stays.
+ * does not offer a button that can only refuse. "capped" is an empty plan because today's new-skill cap is used
+ * (00a M4). Any refusal or network error is "unknown" and the button stays.
  */
-export async function previewFocus(body: StartBody): Promise<"empty" | "plannable" | "unknown"> {
+export async function previewFocus(body: StartBody): Promise<"empty" | "capped" | "plannable" | "unknown"> {
   try {
     const response = await fetch("/api/v1/sessions/build", {
       method: "POST",
@@ -30,9 +31,10 @@ export async function previewFocus(body: StartBody): Promise<"empty" | "plannabl
       body: JSON.stringify({ ...body, dry_run: true }),
     });
     if (!response.ok) return "unknown";
-    const preview = (await response.json()) as { tasks?: unknown };
+    const preview = (await response.json()) as { tasks?: unknown; new_skill_cap_reached?: unknown };
     if (!Array.isArray(preview.tasks)) return "unknown";
-    return preview.tasks.length === 0 ? "empty" : "plannable";
+    if (preview.tasks.length > 0) return "plannable";
+    return preview.new_skill_cap_reached === true ? "capped" : "empty";
   } catch {
     return "unknown";
   }
@@ -50,9 +52,11 @@ export async function startSession(body: StartBody): Promise<StartResult> {
     return { ok: false, reason: "failed" };
   }
   if (response.ok) {
-    const session = (await response.json()) as { id?: unknown };
+    const session = (await response.json()) as { id?: unknown; new_skill_cap_reached?: unknown };
     if (typeof session.id === "string") return { ok: true, id: session.id };
-    // 200 without an id is the builder's empty plan (06 section 7.4): nothing of this skill fits the minutes.
+    // 200 without an id is the builder's empty plan (06 section 7.4): today's new-skill cap is used (00a M4), or
+    // nothing of this skill fits the minutes.
+    if (session.new_skill_cap_reached === true) return { ok: false, reason: "capped" };
     return { ok: false, reason: body.skill_focus !== undefined ? "focus" : "failed" };
   }
   const problem = (await response.json().catch(() => ({}))) as { code?: unknown };

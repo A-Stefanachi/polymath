@@ -20,7 +20,7 @@ type Props = {
 export function PractiseButton({ label, name, body, variant = "secondary", size = "md" }: Props) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<"open" | "pool" | "focus" | "failed" | null>(null);
+  const [message, setMessage] = useState<"open" | "pool" | "focus" | "capped" | "failed" | null>(null);
 
   async function start() {
     setBusy(true);
@@ -50,6 +50,7 @@ export function PractiseButton({ label, name, body, variant = "secondary", size 
         ) : null}
         {message === "pool" ? <p className="text-[16px]">{lists.poolEmpty}</p> : null}
         {message === "focus" ? <p className="text-[16px]">{lists.focusUnavailable}</p> : null}
+        {message === "capped" ? <p className="text-[16px]">{lists.newSkillCapped}</p> : null}
         {message === "failed" ? <p className="text-[16px]">{lists.startFailed}</p> : null}
       </div>
     </div>

@@ -2,7 +2,7 @@
 # Validate: python3 reference/validate_lessons.py
 schema_version: 1
 skill_key: math.alg.solve-linear
-version: 1
+version: 2
 authoring_status: ready
 license: original
 source: original
@@ -24,6 +24,11 @@ screens:
     simplest case, and the same method carries over to every formula you rearrange later.
 - id: idea
   title: The idea
+  figure:
+    alt: >-
+      An equation drawn as a level balance, three times. 3x + 5 balances 20. Subtract 5 from both sides, and 3x balances 15. Divide both sides by 3, and x balances 5.
+    svg: >-
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 250" width="320" height="250"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M60 40 H260"/><path d="M150 58 L160 40 L170 58 Z"/><path d="M60 125 H260"/><path d="M150 143 L160 125 L170 143 Z"/><path d="M60 210 H260"/><path d="M150 228 L160 210 L170 228 Z"/></g><g fill="currentColor"></g><g font-family="sans-serif" fill="currentColor"><text x="100" y="34" text-anchor="middle" font-size="16">3x + 5</text><text x="220" y="34" text-anchor="middle" font-size="16">20</text><text x="160" y="91" text-anchor="middle" font-size="12" font-style="italic">subtract 5 from both sides</text><text x="100" y="119" text-anchor="middle" font-size="16">3x</text><text x="220" y="119" text-anchor="middle" font-size="16">15</text><text x="160" y="176" text-anchor="middle" font-size="12" font-style="italic">divide both sides by 3</text><text x="100" y="204" text-anchor="middle" font-size="16">x</text><text x="220" y="204" text-anchor="middle" font-size="16">5</text></g></svg>
   body_md: >-
     An equation is a balance: both sides have the same value. Doing the same operation to both sides keeps it
     balanced. To free $x$, undo what was done to it in reverse order: first remove what is added or

@@ -1,0 +1,1 @@
+{ "rule": "LG1-FIGTEXT", "set": { "screens.1.figure.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\"><text font-size=\"10\">tiny</text></svg>" } }

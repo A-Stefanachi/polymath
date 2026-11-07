@@ -2,7 +2,7 @@
 # Validate: python3 reference/validate_lessons.py
 schema_version: 1
 skill_key: elec.dc.power-energy
-version: 2
+version: 3
 authoring_status: ready
 license: original
 source: original
@@ -24,6 +24,11 @@ screens:
     current you already know how to find.
 - id: idea
   title: The idea
+  figure:
+    alt: >-
+      Left, a resistor R with current I through it and voltage V across it; its power is P = V times I. Right, a graph of constant power P against time; the shaded rectangle up to time t is the energy E = P times t.
+    svg: >-
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 330 170" width="330" height="170"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M20 60 L50 60"/><rect x="50" y="52" width="40" height="16"/><path d="M90 60 L120 60"/><path d="M50 92 H90"/><path d="M170 130 H310 M170 130 V30"/><path d="M170 70 H270 V130"/></g><g fill="currentColor"><polygon points="40,60 31.8,56.2 31.8,63.8"/><polygon points="50,92 58.2,95.8 58.2,88.2"/><polygon points="90,92 81.8,88.2 81.8,95.8"/><polygon points="310,130 301.8,126.2 301.8,133.8"/><polygon points="170,30 166.2,38.2 173.8,38.2"/><rect x="170" y="70" width="100" height="60" fill-opacity="0.18"/></g><g font-family="sans-serif" fill="currentColor"><text x="70.0" y="47" text-anchor="middle" font-size="13">R</text><text x="30" y="50" text-anchor="middle" font-size="13" font-style="italic">I</text><text x="70" y="112" text-anchor="middle" font-size="12">V across</text><text x="70" y="145" text-anchor="middle" font-size="15">P = V × I</text><text x="220" y="105" text-anchor="middle" font-size="14">E = P × t</text><text x="164" y="74" text-anchor="end" font-size="13" font-style="italic">P</text><text x="270" y="146" text-anchor="middle" font-size="13" font-style="italic">t</text><text x="240" y="164" text-anchor="middle" font-size="12">power over time</text></g></svg>
   body_md: >-
     **Power** is the rate at which energy is delivered, in watts (W):
 

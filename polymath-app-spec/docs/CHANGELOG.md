@@ -6,6 +6,33 @@ Record go/no-go outcomes, lean-gate releases, and scope-down choices here before
 
 <!-- Entries appear newest first. -->
 
+## 2026-11-07: visual first (00a M6, founder decision)
+
+Decision: "favor for visual learning adding schematics and diagrams so i can quickly understand", after the symbols figure was hard to read on the founder's phone.
+
+- **Rule:** every lesson has a figure and figure text is at least 12 (LG1-VISUAL, LG1-FIGTEXT, both validators); authoring guidance in the runbook.
+- **Content:** 7 new figures, the symbols figure redrawn, small labels raised in 3 figures; all 19 lessons now have figures.
+- **App:** figures carry their own white background inside the image, so a browser night mode cannot darken it.
+- **Evidence:** `figure.test.ts` (guard shown failing once), content-schema LG1 tests seen failing first, `validate_lessons.py` 19/19 and a figure-less copy rejected; an iPhone-size render of the symbols figure checked by eye.
+
+## 2026-11-07: figures for lesson checks and for circuits described in words (00a M5, founder request)
+
+Decision: the founder could not follow the schematic-reading trace check without a drawing and asked for every lesson that needs visual support to get it.
+
+- **Format:** lesson checks may carry a `figure` (schema, both validators, `LessonView`, primer).
+- **Content:** 13 figures in 9 lessons (see 00a M5), drawn with one generator in the house style and each rendered and checked by eye before insertion; versions bumped, so each lesson returns to review.
+- **Evidence:** `validate_lessons.py` 19/19; content-schema LG1-SVG test for a check figure and `view.test.ts` both seen failing first.
+- **Next three tasks:** sync the lessons to staging and approve them in the review console; practice-item figures (`svg_template` rendering in the item writer and the runner); the e2e failures on main.
+
+## 2026-11-07: the daily new-skill cap says so (00a M4, founder decision)
+
+Decision: the founder hit the default cap of 3 new skills a day (LS-053) and saw only "Nothing of this skill fits a session just now". The founder chose to raise their cap to 6 and to fix the message.
+
+- **Staging data:** `profiles.settings.max_new_skills_per_day = 6` for the founder's profile, written through the management API on 7 Nov 2026 (inside the 1 to 6 range of `dailyCap`).
+- **API:** optional `new_skill_cap_reached` on `SessionPreview`; the map and the Practise button show "New material is capped today…".
+- **Evidence:** `caps.test.ts` (capped preview true, allowance left false), `start-session.test.ts` (capped outcome), both seen failing first.
+- **Next three tasks:** deploy to staging; a Settings screen for the cap (LS-053 promises one); the e2e failures on main.
+
 ## 2026-11-06: lessons can be read again from the skill map (00a M3, founder decision)
 
 Decision: the founder asked to "open and read lessons again" and chose "Skills I have started" and "Nothing recorded".
