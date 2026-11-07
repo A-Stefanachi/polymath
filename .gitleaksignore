@@ -3,6 +3,7 @@
 # line's text (never the secret), so a finding stays accepted when its line moves. The
 # file:rule:line line after it is gitleaks' own fingerprint, used when gitleaks runs directly.
 #autoswe 4d26ee371f39afca generic-api-key packages/shared-types/src/api.gen.ts
+packages/shared-types/src/api.gen.ts:generic-api-key:4724
 packages/shared-types/src/api.gen.ts:generic-api-key:4718
 packages/shared-types/src/api.gen.ts:generic-api-key:4671
 packages/shared-types/src/api.gen.ts:generic-api-key:4603

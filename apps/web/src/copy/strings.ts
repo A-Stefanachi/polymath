@@ -460,6 +460,8 @@ export const lists = {
   sessionOpenLink: "Go to Today",
   poolEmpty: "Practice items are being prepared. Try again in a little while.",
   focusUnavailable: "Nothing of this skill fits a session just now. Practise all due on Today builds one from what is ready.",
+  // 00a M4, LS-053 (PRD: "New material is capped today"). No Settings screen exists yet, so it is not promised.
+  newSkillCapped: "New material is capped today: you have started today's limit of new skills. New skills open again tomorrow. Skills you have started can still be practised.",
   startFailed: "A session could not be built just now. Try again.",
   // Skill-state words, doc 09 section 3.2.
   stateReviewing: "Reviewing",

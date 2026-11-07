@@ -167,6 +167,8 @@ export async function buildSession(ctx: ApiContext, deps: SessionDeps = defaultS
     throw error;
   }
 
+  // 00a M4: today's new-skill cap (LS-053) is used up, so no new skill can be planned until the next local day.
+  const capReached = setup.newAllowance === 0;
   // Nothing useful is eligible: a clear empty result, not an error and not a stored row (06 section 7.4).
   if (plan.tasks.length === 0) {
     return json({
@@ -178,8 +180,9 @@ export async function buildSession(ctx: ApiContext, deps: SessionDeps = defaultS
       builder_version: "v1",
       graph_version: snapshot.graphVersion,
       plan_slot_id: body.plan_slot_id ?? null,
+      new_skill_cap_reached: capReached,
       tasks: [],
-    });
+    } satisfies PreviewBody);
   }
 
   if (!preview) await deps.pool(user, [...new Set(plan.tasks.flatMap((t) => (t.skill_key === null ? [] : [t.skill_key])))], now);
@@ -204,6 +207,7 @@ export async function buildSession(ctx: ApiContext, deps: SessionDeps = defaultS
       builder_version: "v1",
       graph_version: snapshot.graphVersion,
       plan_slot_id: body.plan_slot_id ?? null,
+      new_skill_cap_reached: capReached,
       tasks: assigned.tasks.map((t) => ({
         position: t.position,
         task_kind: t.taskKind,

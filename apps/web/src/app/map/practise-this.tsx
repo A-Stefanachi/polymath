@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { PractiseButton } from "@/components/practise-button";
-import { skillMap as t } from "@/copy/strings";
+import { lists, skillMap as t } from "@/copy/strings";
 import type { MapSkill } from "@/lib/views/skill-map";
 import { currentContext, practiseMinutes, previewFocus } from "@/lib/views/start-session";
 
@@ -13,22 +13,20 @@ import { currentContext, practiseMinutes, previewFocus } from "@/lib/views/start
  */
 export function PractiseThis({ skill }: { skill: MapSkill }) {
   const minutes = practiseMinutes(skill.state);
-  const [empty, setEmpty] = useState<{ key: string; empty: boolean } | null>(null);
+  const [empty, setEmpty] = useState<{ key: string; outcome: "empty" | "capped" | null } | null>(null);
 
   useEffect(() => {
     let live = true;
     void previewFocus({ available_minutes: minutes, context: currentContext(), skill_focus: skill.key }).then((r) => {
-      if (live) setEmpty({ key: skill.key, empty: r === "empty" });
+      if (live) setEmpty({ key: skill.key, outcome: r === "empty" || r === "capped" ? r : null });
     });
     return () => {
       live = false;
     };
   }, [skill.key, minutes]);
 
-  if (empty?.key === skill.key && empty.empty) {
-    return (
-      <p data-testid="nothing-to-practise">{t.nothingToday}</p>
-    );
+  if (empty?.key === skill.key && empty.outcome !== null) {
+    return <p data-testid="nothing-to-practise">{empty.outcome === "capped" ? lists.newSkillCapped : t.nothingToday}</p>;
   }
   return (
     <PractiseButton

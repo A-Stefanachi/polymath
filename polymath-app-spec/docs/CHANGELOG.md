@@ -6,6 +6,15 @@ Record go/no-go outcomes, lean-gate releases, and scope-down choices here before
 
 <!-- Entries appear newest first. -->
 
+## 2026-11-07: the daily new-skill cap says so (00a M4, founder decision)
+
+Decision: the founder hit the default cap of 3 new skills a day (LS-053) and saw only "Nothing of this skill fits a session just now". The founder chose to raise their cap to 6 and to fix the message.
+
+- **Staging data:** `profiles.settings.max_new_skills_per_day = 6` for the founder's profile, written through the management API on 7 Nov 2026 (inside the 1 to 6 range of `dailyCap`).
+- **API:** optional `new_skill_cap_reached` on `SessionPreview`; the map and the Practise button show "New material is capped today…".
+- **Evidence:** `caps.test.ts` (capped preview true, allowance left false), `start-session.test.ts` (capped outcome), both seen failing first.
+- **Next three tasks:** deploy to staging; a Settings screen for the cap (LS-053 promises one); the e2e failures on main.
+
 ## 2026-11-06: lessons can be read again from the skill map (00a M3, founder decision)
 
 Decision: the founder asked to "open and read lessons again" and chose "Skills I have started" and "Nothing recorded".

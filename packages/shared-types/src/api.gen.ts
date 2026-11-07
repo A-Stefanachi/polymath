@@ -1631,6 +1631,12 @@ export interface components {
             graph_version?: string | null;
             /** Format: uuid */
             plan_slot_id?: string | null;
+            /**
+             * @description 00a M4: true when the learner has already introduced today's maximum of new skills (LS-053,
+             *     `profiles.settings.max_new_skills_per_day`, default 3), so the builder starts no new skill until the next
+             *     local day. Lets the client say why a plan has no new skill instead of a generic message.
+             */
+            new_skill_cap_reached?: boolean;
             tasks: {
                 position: number;
                 task_kind: components["schemas"]["TaskKind"];
